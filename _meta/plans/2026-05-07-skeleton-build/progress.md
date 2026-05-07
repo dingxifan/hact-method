@@ -132,3 +132,79 @@
 - 4 个"为什么不就地做"的理由：规范加载错位 / 审计可追溯 / 状态污染 / 摩擦是设计的
 
 **没改**：§6 边界处理表保持原样（已经够清楚）。
+
+---
+
+## 2026-05-07 任务 3 step 1+2：27 task → 7 discipline 聚类 + 路径 X 决策
+
+### Step 1：27 task 全谱（敲定）
+
+按生命周期分组：
+
+| 段 | task |
+|---|---|
+| 父级 (2) | init-project, adjust-method |
+| A 类·准备 (10) | draft-prd-vN, sign-gate-1, revise-prd, draft-trd-vN, sign-gate-2, revise-trd, write-standards, revise-standards, plan-sprint, sign-gate-3 |
+| A 类·开发循环 (8) | feature, fix, code-review, generate-integration-tests, fix-integration, **acceptance**（用户加的 Gate 4 联调后人工验收任务）, fix-acceptance, sign-gate-4 |
+| A 类·收尾 (3) | deploy, wrap-up-iteration, sign-gate-5 |
+| B 类 (4) | dispatch-bug, dispatch-optimization, fix-bug, optimization |
+
+属性：urgency=normal/hotfix；layer=frontend/backend/shared/null。
+
+5 个待议点的回答：
+- sign-gate-N: 5 个独立 type ✓
+- code-review: 是任务（CR 主体不在 CC）✓
+- 人工验收: 加 acceptance 任务 ✓
+- Gate 准备就绪判定: 自动判定，不单独 task ✓
+- 派 hotfix: 不单独 type，是 urgency 属性 ✓
+
+### Step 2：7 discipline 聚类
+
+| discipline | 命名理由 |
+|---|---|
+| `management` | 治理 / 方法论维护 / 立项 |
+| `product` | 产品需求 / 用户视角验证 |
+| `architecture` | 技术架构 / standards |
+| `dispatch` | 任务派发 / 协调 / CR |
+| `dev-frontend` | 前端开发 |
+| `dev-backend` | 后端开发 |
+| `deploy` | 部署运维 |
+
+Q4 应用：sign-gate-N 分散到内容对应的 discipline——sign-gate-1=product / sign-gate-2=architecture / sign-gate-3..5=dispatch。management discipline 因此变瘦，只剩 init-project + adjust-method + wrap-up-iteration。
+
+### 路径决策：X（1:N）vs Y（M:N）
+
+**用户挑战**：27 task 里跨学科只有 6 个，M:N 这层复杂度真的值吗？
+
+**讨论过程**：
+1. 用户提议合并 dispatch-bug + dispatch-optimization 的 disciplines（两者本来都是 [product, dispatch]，可以都简化为 [dispatch]，因为"派"的核心是包装动作，不是 product 判定）
+2. 我重新审视其他跨学科 task：
+   - generate-integration-tests 可 collapse 到 [dispatch]
+   - write-standards (shared) 可 collapse 到 [architecture]
+   - 真"难拆"的只剩 wrap-up-iteration
+3. 我提出 X / Y 两条路径：
+   - X：纯 1:N，跨学科信息进 spec 文本
+   - Y：保留 M:N
+4. **用户选 X**，并明确 **wrap-up-iteration 不拆子任务**——理由：实践中 3 步合在一起 1 分钟内完成，拆子任务过度
+
+### 最终 27 task 的 discipline 分配
+
+| discipline | task |
+|---|---|
+| `management` | init-project, adjust-method, wrap-up-iteration |
+| `product` | draft-prd-vN, revise-prd, sign-gate-1, acceptance |
+| `architecture` | draft-trd-vN, revise-trd, write-standards, revise-standards, sign-gate-2 |
+| `dispatch` | plan-sprint, code-review*, generate-integration-tests, sign-gate-3, sign-gate-4, sign-gate-5, dispatch-bug, dispatch-optimization |
+| `dev-frontend` | feature/fix/fix-integration/fix-acceptance/fix-bug/optimization (layer=frontend) |
+| `dev-backend` | (同上, layer=backend) |
+| `deploy` | deploy |
+
+*code-review 待 Q3 最终确认，暂归 dispatch
+
+### 改动
+
+- BRIEF.md 决策 #18 改写：M:N → 1:N (task 侧) + M:N (user 侧)
+- BRIEF.md 决策 #19 拉取规则更新：`task.disciplines ∩ user.disciplines ≠ ∅` → `task.discipline ∈ user.disciplines`
+- 01-identity.md Section 3 同步更新
+
+**Step 2 完成**。下一步 Step 3：写 `03-disciplines.md`（7 discipline 完整定义）。

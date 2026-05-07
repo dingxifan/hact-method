@@ -53,24 +53,25 @@ task.type → spec → standards
 
 ## 3. 权限通过 user-discipline 关联表达
 
-权限不是用户的固有标签——而是**用户与 discipline 之间的多对多关联**：
+权限不是用户的固有标签——而是**用户对 discipline 的授权集合**：
 
 ```
-user_disciplines (junction)
+tasks.discipline             ← 单值（每个 task 挂一个主 discipline）
+user_disciplines (junction)  ← 多值（一个 user 可被授权多个 discipline）
 ├── user_id
 └── discipline_id
 ```
 
-每个用户被授权一组 discipline，表示"被允许拉哪些类型的任务"。
+非对称：**task 侧 1:N**（一个 discipline 涵盖多个 task），**user 侧 M:N**（一个人可被授权多个领域）。
 
 ### 拉取准入
 
 ```
 user 能拉 task 的条件：
-  task.disciplines ∩ user.disciplines ≠ ∅
+  task.discipline ∈ user.disciplines
 ```
 
-任一交集即可——v2 的精神是"规范是工具书"，缺的领域 CC 辅助补，不是身份测试。
+跨学科辅助知识由 spec 文本里跨引用相邻子规范来补——不在 schema 表达。
 
 ### 任务级写权限（taken-by）
 
@@ -81,9 +82,9 @@ user 能拉 task 的条件：
 
 ### 管理性操作不另开后门
 
-立项、签 Gate、调整方法论这类工作，在 v2 里都是任务（type 类似 `init-project` / `sign-gate-N` / `adjust-method`），它们的 disciplines 含 `management`（具体见 03）。
+"立项 / 签 Gate / 调方法论"这类工作在 v2 里都是普通任务（type 例如 `init-project` / `sign-gate-1` / `adjust-method`），各自挂自己的 discipline（具体见 03+04）。
 
-只有被授权 `management` 的用户能拉这些任务。"谁能签 Gate"从"用户身份"降维到"任务准入"——跟其他任务一视同仁。
+谁能拉这些任务由 `user_disciplines` 授权决定——跟其他任务一视同仁。"谁能签 G1"等于"哪个用户被授权了 product"，不靠管理员标签开后门。
 
 ---
 

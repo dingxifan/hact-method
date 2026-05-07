@@ -20,7 +20,7 @@
 | 0 | 骨架文档清单（含两轮调整：03 改为 disciplines 知识聚类 + 03/04 合并写） | ✅ |
 | 1 | 写 `01-identity.md`（含 Section 3 权限模型重写） | ✅ |
 | 2 | 写 `02-workspaces.md` | ✅ |
-| 3 | 写 `03-disciplines.md` + `04-task-catalog.md`（合并写：先草拟 04 任务清单 → 自然聚类成 disciplines → 写 03 定义 → 回 04 补 disciplines 字段；disciplines 清单需含 `management`，对应管理性任务的拉取准入） | ⏸️ 下一步 |
+| 3 | 写 `03-disciplines.md` + `04-task-catalog.md`（合并写：step 1 任务清单 27 项 ✅；step 2 聚类成 7 discipline + 路径 X (1:N) ✅；step 3 ⏳ 写 03 定义；step 4 写 04 含 discipline 字段） | ⏳ 进行中 |
 | 4 | 写 `05-state-machine.md` | ⏸️ |
 | 5 | 写 `06-gates.md` | ⏸️ |
 | 6 | 写 `README.md`（入口导读） | ⏸️ |
@@ -34,14 +34,13 @@
 
 ## 下一步起点
 
-任务 0 已完成。下一步：任务 1 写 `01-identity.md`。
-
-01 大纲：
-- 用户是唯一身份（git author + web 登录打通；跨工作区不变）
-- 任务是路由键（task.type → spec，不经过 user.role）
-- users.role 退化为权限标记（manager / developer 仅决定写权限）
-- 跨会话身份连续性（CC 启动协议靠 git config 推断当前操作者）
-- 边界划分（不在 01 讲什么，链到其他文档）
+任务 1 ✅ 完成（含 Section 3 权限模型重写）
+任务 2 ✅ 完成（含 §6 触发点≠执行点的解释）
+任务 3 ⏳ 进行中：
+  - step 1 ✅ 任务清单 27 项
+  - step 2 ✅ 聚类成 7 discipline + 走路径 X (task→discipline 1:N)
+  - step 3 ⏸️ 下一步：写 `03-disciplines.md`（7 discipline 完整定义）
+  - step 4 ⏸️ 之后：写 `04-task-catalog.md`（27 task 含 discipline 单值字段）
 
 ## 仍 park 的项
 
