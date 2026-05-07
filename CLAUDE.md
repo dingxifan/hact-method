@@ -11,8 +11,12 @@
 项目根目录只允许：
 - CLAUDE.md / BRIEF.md / STATUS.md
 - skeleton/、specs-structural/、specs-execution/（方法论核心文档）
-- product/、tech/、projects/、templates/（项目编排目录，结构延续 v1）
+- projects/、templates/（项目编排）
 - _meta/（研发过程产物：input/、plans/、.current_plan 及历史迭代文档）
+
+`projects/` 子结构（迭代一等公民）：
+- `projects/{项目}/` 根目录：跨迭代产物（project / decisions / design / reusables / backlog / feedback / b-tasks）
+- `projects/{项目}/iterations/vN/`：迭代内产物（prd / trd / iteration Gate 状态 / standards / sprint）
 
 _meta/plans/ 目录由 planning-with-files-zh skill 自动管理：
 _meta/plans/YYYY-MM-DD-[阶段名]/

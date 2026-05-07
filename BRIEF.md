@@ -64,3 +64,4 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 14. **task.type 是路由键**：决定加载哪份 standards、所属 Gate、完成判据
 15. **任务范围扩到全流程**：PRD 起草、TRD 起草、standards 写作、联调脚本、修复任务、部署任务全部 task 化
 16. **users.role 退化为权限标记**：只管"能不能写"，与流程角色解绑
+17. **迭代是项目下一等公民**：目录结构 `projects/{项目}/iterations/vN/` 反映这一层级——跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks）留项目根，迭代内产物（prd / trd / iteration Gate 状态 / standards / sprint）入迭代目录。目录与未来 hact-app 数据模型 `projects → iterations → sprints/tasks` 同构。取消 v1 沿用的 product/ tech/ 角色风目录（与任务驱动模型冲突）

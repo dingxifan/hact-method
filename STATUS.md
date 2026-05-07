@@ -22,7 +22,8 @@
 
 ## 已决策
 - **新建独立仓库 hact-method**（vs 在 human-ai-col 内并行）：物理隔离，避免新旧混淆（2026-05-07）
-- **目录基底**：skeleton/ + specs-structural/ + specs-execution/ + product/ + tech/ + projects/ + templates/ + _meta/
+- **目录基底**：skeleton/ + specs-structural/ + specs-execution/ + projects/ + templates/ + _meta/
+- **项目编排切法**：迭代一等公民——`projects/{项目}/iterations/vN/` 装迭代内产物，跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks）留项目根（2026-05-07，取消 v1 沿用的 product/ tech/ 角色风目录）
 - **第一个应用**：hact-app（v1 看板的精神继承），将作为方法论的首个落地实例
 - **gitee 远端**：本地先跑，待 skeleton/ 稳定再推
 
@@ -32,6 +33,12 @@
 ---
 
 ## 历史里程碑
+
+### 2026-05-07 目录结构调整
+- 发现沿用 v1 的 product/ tech/ projects/ 三分结构跟 v2 任务驱动模型冲突（product/ 命名隐含"产品助手固定工作区"，但 v2 没有这个角色）
+- 改为"迭代一等公民"切法：取消 product/ tech/，编排产物全部进 `projects/{项目}/`，迭代内产物入 `iterations/vN/` 子目录
+- 决策动机：未来 hact-app 数据模型是 projects → iterations → sprints/tasks，目录跟 schema 同构，命名摩擦最小
+- BRIEF.md 关键设计决策加 #17
 
 ### 2026-05-07 仓库初始化
 - 在 `E:\group-code\hact-method\` 新建仓库（与 human-ai-col 同级、独立 git 仓）
