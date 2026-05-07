@@ -48,7 +48,7 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 ## 关键设计决策（继承自重构讨论，不要绕回）
 
-1. **角色清单 5 个**：管理员（group-code）/ PM / 架构师 / devmgr（含 Gate 5 兼任）/ 开发者前后端
+1. **摒弃角色身份模型，改用 discipline 知识聚类**：discipline 不是身份、不是路由，只是任务知识的聚类维度。具体 discipline 清单不预设，由 04 任务全谱自然涌现（详见 skeleton/03 + 04）
 2. **工作区 3 个**：group-code 父级 / 项目根 / dispatch
 3. **任务驱动**：人无身份，CC 加载工作规范靠任务声明
 4. **B 类没 Gate**：只有任务流 + b-tasks.md 总账
@@ -65,3 +65,4 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 15. **任务范围扩到全流程**：PRD 起草、TRD 起草、standards 写作、联调脚本、修复任务、部署任务全部 task 化
 16. **users.role 退化为权限标记**：只管"能不能写"，与流程角色解绑
 17. **迭代是项目下一等公民**：目录结构 `projects/{项目}/iterations/vN/` 反映这一层级——跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks）留项目根，迭代内产物（prd / trd / iteration Gate 状态 / standards / sprint）入迭代目录。目录与未来 hact-app 数据模型 `projects → iterations → sprints/tasks` 同构。取消 v1 沿用的 product/ tech/ 角色风目录（与任务驱动模型冲突）
+18. **task ↔ discipline 是 M:N**：每个 task 可触多个 discipline，每个 discipline 涉及多个 task。schema 上 task 的 disciplines 字段是集合（数组）而非单值。M:N 由 04 字段表达，03 不做元叙述
