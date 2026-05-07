@@ -21,8 +21,8 @@
 | 1 | 写 `01-identity.md`（含 Section 3 权限模型重写） | ✅ |
 | 2 | 写 `02-workspaces.md` | ✅ |
 | 3 | 写 `03-disciplines.md` + `04-task-catalog.md`（合并写：所有 4 step 完成）| ✅ |
-| 4 | 写 `05-state-machine.md` | ⏸️ 下一步 |
-| 5 | 写 `06-gates.md` | ⏸️ |
+| 4 | 写 `05-state-machine.md` | ✅ |
+| 5 | 写 `06-gates.md` | ⏸️ 下一步 |
 | 6 | 写 `README.md`（入口导读） | ⏸️ |
 | 7 | 骨架自检（覆盖度 + 互引一致性） | ⏸️ |
 
@@ -37,7 +37,8 @@
 任务 1 ✅ 完成
 任务 2 ✅ 完成
 任务 3 ✅ 完成（step 1+2 任务全谱定稿；step 3 03-disciplines.md 含 CC 上下文管理段；step 4 04-task-catalog.md 12 task 完整字段 + 前置检查表 + attribute 汇总）
-任务 4 ⏸️ 下一步：写 `05-state-machine.md`（状态枚举 + 流转规则 + 软锁 + 双向暂停 + 召回）
+任务 4 ✅ 完成（6 状态 + 流转表 + 软锁 + 主动放弃 + 召回 + 双向暂停 + 跨任务联动）
+任务 5 ⏸️ 下一步：写 `06-gates.md`（5 Gate 内涵 + 子状态聚合 + A 类 5 Gate vs B 类无 Gate）
 
 ## 仍 park 的项
 
