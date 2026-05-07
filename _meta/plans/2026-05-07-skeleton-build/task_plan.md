@@ -21,10 +21,10 @@
 | 1 | 写 `01-identity.md`（含 Section 3 权限模型重写） | ✅ |
 | 2 | 写 `02-workspaces.md` | ✅ |
 | 3 | 写 `03-disciplines.md` + `04-task-catalog.md`（合并写：所有 4 step 完成）| ✅ |
-| 4 | 写 `05-state-machine.md` | ✅ |
-| 5 | 写 `06-gates.md` | ⏸️ 下一步 |
-| 6 | 写 `README.md`（入口导读） | ⏸️ |
-| 7 | 骨架自检（覆盖度 + 互引一致性） | ⏸️ |
+| 4 | 写 `05-state-machine.md`（简化版 4 状态） | ✅ |
+| 5 | 写 `06-gates.md` | ✅ |
+| 6 | 写 `README.md`（入口导读） | ✅ |
+| 7 | 骨架自检（覆盖度 + 互引一致性） | ✅ |
 
 写作顺序：01 → 02 → (03+04 合并) → 05 → 06 → README → 自检。
 

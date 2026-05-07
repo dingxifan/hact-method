@@ -225,7 +225,7 @@
   - 清空的 `feedback.md`
   - 更新的 `project.md`（去除"开发中"标注）
 - **关联 Gate**: **G5**（可选签于任务尾部）
-- **前置条件**: G4 已签 + deploy 完成
+- **前置条件**: G4 已签（与 `deploy` 任务并行可执行，无依赖）
 - **属性**: `version`（vN）
 
 详见 `specs-structural/wrap-up-iteration.md`。

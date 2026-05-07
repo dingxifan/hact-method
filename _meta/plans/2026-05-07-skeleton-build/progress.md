@@ -343,6 +343,95 @@ step 2 经过多轮快速迭代。从 27 task 降到 12 task，从 7 discipline 
 
 ---
 
+## 2026-05-07 任务 5/6/7 一次性执行完成 + 第一阶段收尾
+
+### 任务 5：06-gates.md（约 113 行）
+
+7 节结构：
+1. 5 Gate 内涵（G1 PRD / G2 TRD+standards / G3 开发包就绪 / G4 开发完成 / G5 迭代收尾，每个 Gate 明确签于哪个 task）
+2. Gate 是任务集合的聚合视图（每个 Gate 关联的 task 集合）
+3. Gate 子状态（未开始 / 进行中 / 阻塞 / 待签 / 已签）——UI 展示用，不是状态机层面
+4. A 类 vs B 类（A 类 5 Gate / B 类无 Gate；表格对比 6 维度）
+5. 多迭代并行（vN+1 准备段可并行 vN G4 开发段，开发段串行）
+6. Gate 与修订的关系（已签 Gate 不撤销）
+7. 边界
+
+### 任务 6：README.md（约 52 行）
+
+骨架目录入口：6 文档阅读顺序 + 6 条核心设计原则 + 跟其他目录的关系图 + 第一阶段完成标志 + 下游文档预期。
+
+### 任务 7：骨架自检
+
+#### 完成标志覆盖（8 项）
+
+| # | 完成标志 | 文档 | 状态 |
+|---|---|---|---|
+| 1 | 用户唯一身份模型 + 跨工作区身份打通 + users.role 权限标记 | 01 §1-§4 | ✅ |
+| 2 | 项目根/dispatch/group-code 父级 三种工作心态边界、文件读写权限 | 02 §1-§6 | ✅ |
+| 3 | discipline 知识聚类定义；每个 discipline 的范围/边界/典型工作 | 03 §1-§4 + §派生 + §CC 上下文管理 | ✅ |
+| 4 | 12 task 清单 + 字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性） | 04 §1-§3 + 12 task 详定 | ✅ |
+| 5 | 状态枚举 + 流转规则 + 软锁 + 异常转移 | 05 §1-§7（4 状态简化版） | ✅ |
+| 6 | 5 Gate 内涵 + 子状态聚合 + A 类 5 Gate vs B 类无 Gate | 06 §1-§7 | ✅ |
+| 7 | README.md 入口导读 | README.md | ✅ |
+| 8 | 骨架自检通过（覆盖度 + 互引一致性） | 本节 | ✅ |
+
+#### 互引一致性
+
+| 引用方向 | 验证 |
+|---|---|
+| 01 → 02（跨工作区身份不变） | 02 §1 三个工作区定义 ✅ |
+| 01 → 03（discipline 概念） | 03 §1 概念定义 ✅ |
+| 01 → 04（task.type 路由） | 04 12 个 task 全列 ✅ |
+| 01 → 05（软锁机制） | 05 §3 软锁定义 ✅ |
+| 02 → 04（典型任务列表） | 02 各 § 引用的 task 全部在 04 存在 ✅ |
+| 02 → 05（状态字段引用） | 05 4 状态定义 ✅ |
+| 02 §6 → 04 revise-doc | 02 §6 举例引用 revise-doc(target=prd)，04 §5 存在 ✅ |
+| 03 → 04（派生 discipline） | 04 develop / revise-doc 用了派生模式 ✅ |
+| 04 → 03（discipline 引用） | 03 9 discipline 全列 ✅ |
+| 04 → 05（状态字段） | 05 4 状态枚举 ✅ |
+| 04 → 06（关联 Gate） | 06 5 Gate + 各 task 关联清单 ✅ |
+| 05 → 04（任务前置检查） | 04 §"任务前置检查" 存在 ✅ |
+| 05 → 06（状态机 vs Gate） | 06 整体描述 Gate 是聚合 ✅ |
+| 06 → 04（关联 task 集合） | 04 12 task 全列 ✅ |
+| 06 → 05（状态聚合） | 05 状态枚举存在 ✅ |
+
+#### 概念一致性
+
+| 概念 | 文档间一致性 |
+|---|---|
+| 9 个 discipline 列表 | 03 §"9 个 discipline" 9 个段（management / product / architecture / dispatch / review / integration-testing / dev-frontend / dev-backend / deploy）+ 04 各 task discipline 字段 ✅ |
+| 12 个 task | 04 §1-§12 + 02 各 § 典型任务 + 06 关联任务 ✅ |
+| 4 个状态 | 05 §1（可取 / taken-by / done / merged）+ 04 + 02 引用 ✅ |
+| 5 个 Gate（G1-G5） | 06 §1 + 04 各 task "含 Gate 签字" 字段 ✅ |
+| path X（1:N task→discipline） | BRIEF.md #18 + 01 §3 + 03 §派生 ✅ |
+| 异常转移 | 05 §4 + 02 §6 + 04 revise-doc 触发段 ✅ |
+| Gate 签字合并到前置 task | 06 §1 + 04 各任务"含 Gate 签字"字段 ✅ |
+
+#### 自检发现 + 修复
+
+**1 处不一致已修**：04 `wrap-up-iteration` 的"前置条件"写"G4 已签 + deploy 完成"，但 06 §2 表明 deploy 与 wrap-up 都是 G5 关联任务可并行。改为"G4 已签（与 deploy 并行可执行，无依赖）"。
+
+#### 遗留 / 后续待办
+
+| 项 | 何时做 |
+|---|---|
+| `specs-structural/{task}.md` 12 份 | 第二阶段 |
+| `specs-execution/{task}.md` 12 份 + subagent 协议 | 第四阶段 |
+| hact-app schema 实施验证（验证 path X / user_disciplines / 4 状态等） | 第三阶段 |
+| `templates/standards/` + `templates/project/` 模板 | 第二阶段后期 / 实施时按需 |
+
+---
+
+## 第一阶段·搭骨架 完成（2026-05-07）
+
+骨架进度：1 ✅ / 2 ✅ / 3 ✅ / 4 ✅ / 5 ✅ / 6 ✅ / 7 ✅
+
+**下次起点**：第二阶段·结构层规范——基于 `skeleton/04-task-catalog.md` 列出的 12 个 task type，依次写 `specs-structural/{task}.md`，覆盖完整契约（含 04 之外的边界场景、错误处理、字段细节）。建议优先写高频 task：先 develop / code-review，再 draft-prd-vN / draft-tech-design / plan-sprint，再其他。
+
+新会话进入 hact-method 时，建议先建一个新 plan：`_meta/plans/2026-05-XX-specs-structural/`，本 plan（`2026-05-07-skeleton-build/`）作为第一阶段历史记录留存。
+
+---
+
 ## 2026-05-07 任务 4 简化：05-state-machine.md 6 状态 → 4 状态
 
 **触发**：用户读完 05 觉得 §4（主动放弃）/ §5（召回）/ §6（双向暂停）三段过度设计——"团队小，好沟通"，早期阶段不需要这么形式化。
