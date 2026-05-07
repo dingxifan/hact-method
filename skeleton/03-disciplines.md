@@ -158,6 +158,44 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ---
 
+## 关于 CC 上下文管理
+
+某些 discipline 的工作模式天然吃主会话上下文——特别是涉及"读多个文件 + 写代码 + 调试"的循环任务。这些 discipline 的执行规范（specs-execution）会显式规定 subagent 使用策略，以保住主会话的认知带宽。
+
+按经验粗分三档：
+
+| discipline | 上下文密度 | 主要消耗源 |
+|---|---|---|
+| `dev-frontend` / `dev-backend` | 高 | dispatch 循环里的多次读/写/调试 |
+| `review` | 高 | 每次 CR 要读 PR + 相关上下文文件 + standards |
+| `integration-testing` | 高 | 写脚本时探索系统行为 |
+| `architecture` | 中 | 设计 TRD 时探索现有代码 |
+| `product` | 中 | PRD 写作的资料整理 |
+| `management` / `dispatch` / `deploy` | 低 | 主要是对话 / 简单操作 |
+
+具体的 subagent 使用策略（何时 spawn Explore、何时 spawn general-purpose、failure handling 等）属于执行层规范，在 `specs-execution/` 第四阶段编写时落地。本骨架仅做密度声明，让规范作者知道哪些地方该重点设计 subagent 协议。
+
+---
+
+## 关于 CC 上下文管理
+
+某些 discipline 的工作模式天然吃主会话上下文——特别是涉及"读多个文件 + 写代码 + 调试"的循环任务。这些 discipline 的执行规范（specs-execution）会显式规定 subagent 使用策略，以保住主会话的认知带宽。
+
+按经验粗分三档：
+
+| discipline | 上下文密度 | 主要消耗源 |
+|---|---|---|
+| `dev-frontend` / `dev-backend` | 高 | dispatch 循环里的多次读/写/调试 |
+| `review` | 高 | 每次 CR 要读 PR + 相关上下文文件 + standards |
+| `integration-testing` | 高 | 写脚本时探索系统行为 |
+| `architecture` | 中 | 设计 TRD 时探索现有代码 |
+| `product` | 中 | PRD 写作的资料整理 |
+| `management` / `dispatch` / `deploy` | 低 | 主要是对话 / 简单操作 |
+
+具体的 subagent 使用策略（何时 spawn Explore、何时 spawn general-purpose、failure handling 等）属于执行层规范，在 `specs-execution/` 第四阶段编写时落地。**本骨架仅做密度声明**——让规范作者知道哪些 discipline 该重点设计 subagent 协议。
+
+---
+
 ## 边界（不在本文档讲）
 
 | 你想知道 | 去哪个文档 |

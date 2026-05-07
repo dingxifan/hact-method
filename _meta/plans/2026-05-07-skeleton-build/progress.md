@@ -276,3 +276,42 @@ step 2 经过多轮快速迭代。从 27 task 降到 12 task，从 7 discipline 
 - 02-workspaces.md §2-§6 多处更新：父级"典型任务"去掉 adjust-method 加"无 task 包活动"；§3 项目根典型任务改用合并后的 task 名；§4 dispatch 同；§5 §6 的 feature/revise-prd 例子改用 develop/revise-doc
 
 **Step 2 终稿完成**。下一步 Step 3：写 `03-disciplines.md`（9 discipline 完整定义 + 边界 + 典型工作）。
+
+---
+
+## 2026-05-07 任务 3 step 3+4：03-disciplines.md + 04-task-catalog.md 完成
+
+### Step 3: `03-disciplines.md` 落地（169+ 行）
+
+结构：
+- 什么是 discipline（概念定义 + 用途 + 它不是什么）
+- 9 个 discipline（每个：范围 / 边界 / 典型工作）
+- 派生 discipline 的两个特例（develop / revise-doc）
+- **CC 上下文管理**——按经验粗分三档（高 / 中 / 低），让 specs-execution 作者知道哪里重点设计 subagent 协议（用户在 step 3+4 中途加的）
+- 边界（链 04 / 01 / 05 / 06 / 02）
+
+### Step 4: `04-task-catalog.md` 落地
+
+结构：
+- 总览表（12 task × 段 / discipline / Gate）
+- 通用属性定义（urgency / layer / source / target / target-source / version / pr-link）
+- 12 task 完整定义（每个：discipline / 完成判据 / 主要产物 / 关联 Gate / 前置条件 / 属性 / 加载规范分支）
+
+每个 task 给"简表契约 + 指向 specs-structural/{task}.md"——具体边界场景、错误处理等留给第二阶段写的 specs-structural。
+
+### 衍生说明
+
+中途用户提了一个实操问题："dispatch 工作区的循环任务吃 CC 上下文很厉害，03 要不要声明哪些 discipline 用 subagent？"
+
+我的判断：**该声明，但只声明哪些 discipline 是高密度，具体策略留 specs-execution**——03 的抽象级别是"是什么"，不是"怎么做"，混着写会让 03 失焦。最终在 03 末尾加了一个密度三档表，作为给 spec 作者的 heat map。
+
+### 衍生改动
+
+- 03 末尾加 CC 上下文管理小节
+- 04 完整新建（约 220 行）
+- task_plan.md 任务 3 状态 → ✅；任务 4 → ⏸️ 下一步
+- 下一步起点更新
+
+### 任务 3 完成。下一步：任务 4 写 `05-state-machine.md`。
+
+骨架进度：1 ✅ / 2 ✅ / 3 ✅ / 4 ⏸️ / 5 ⏸️ / 6 ⏸️ / 7 ⏸️
