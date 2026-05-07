@@ -18,9 +18,9 @@
 | # | 任务 | 状态 |
 |---|------|------|
 | 0 | 骨架文档清单（含两轮调整：03 改为 disciplines 知识聚类 + 03/04 合并写） | ✅ |
-| 1 | 写 `01-identity.md` | ⏸️ 下一步 |
-| 2 | 写 `02-workspaces.md` | ⏸️ |
-| 3 | 写 `03-disciplines.md` + `04-task-catalog.md`（合并写：先草拟 04 任务清单 → 自然聚类成 disciplines → 写 03 定义 → 回 04 补 disciplines 字段；disciplines 清单需含 `management`，对应管理性任务的拉取准入） | ⏸️ |
+| 1 | 写 `01-identity.md`（含 Section 3 权限模型重写） | ✅ |
+| 2 | 写 `02-workspaces.md` | ✅ |
+| 3 | 写 `03-disciplines.md` + `04-task-catalog.md`（合并写：先草拟 04 任务清单 → 自然聚类成 disciplines → 写 03 定义 → 回 04 补 disciplines 字段；disciplines 清单需含 `management`，对应管理性任务的拉取准入） | ⏸️ 下一步 |
 | 4 | 写 `05-state-machine.md` | ⏸️ |
 | 5 | 写 `06-gates.md` | ⏸️ |
 | 6 | 写 `README.md`（入口导读） | ⏸️ |
