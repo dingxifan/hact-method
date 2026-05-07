@@ -112,7 +112,7 @@ CC 启动协议在不同工作目录下读到不同的 `CLAUDE.md` 和状态文�
 
 心态由"做什么"决定，不由"在哪个目录"决定。如果一个动作的本质是编排（修订、部署），即使**触发点**在 dispatch，**执行点**也回项目根。
 
-**举例**：你在 dispatch 拉了个 `develop` 任务，写代码到一半发现 PRD 有歧义。**正确做法不是就地改 PRD**——而是：当前 develop 任务标 `[paused-by-deviation]` → 关 dispatch 会话 → 进项目根开新 CC 会话 → 拉 `revise-doc`（target=prd）任务 → 修订完回 dispatch 续 develop。
+**举例**：你在 dispatch 拉了个 `develop` 任务，写代码到一半发现 PRD 有歧义。**正确做法不是就地改 PRD**——而是：当前 develop 任务通过异常转移回退到 `可取` + 写阻塞理由 → 关 dispatch 会话 → 进项目根开新 CC 会话 → 拉 `revise-doc`（target=prd）任务 → 修订完后回 dispatch 重新拉起该 develop 继续。
 
 **为什么不就地做**：
 
