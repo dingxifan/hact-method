@@ -34,11 +34,17 @@
 
 ## 下一步起点
 
-任务 1 ✅ 完成
-任务 2 ✅ 完成
-任务 3 ✅ 完成（step 1+2 任务全谱定稿；step 3 03-disciplines.md 含 CC 上下文管理段；step 4 04-task-catalog.md 12 task 完整字段 + 前置检查表 + attribute 汇总）
-任务 4 ✅ 完成（6 状态 + 流转表 + 软锁 + 主动放弃 + 召回 + 双向暂停 + 跨任务联动）
-任务 5 ⏸️ 下一步：写 `06-gates.md`（5 Gate 内涵 + 子状态聚合 + A 类 5 Gate vs B 类无 Gate）
+**第一阶段所有 7 个任务全部完成**（2026-05-07）：
+
+任务 1 ✅ 01-identity.md
+任务 2 ✅ 02-workspaces.md
+任务 3 ✅ 03-disciplines.md + 04-task-catalog.md
+任务 4 ✅ 05-state-machine.md（简化版 4 状态）
+任务 5 ✅ 06-gates.md
+任务 6 ✅ README.md
+任务 7 ✅ 骨架自检通过（详见 progress.md）
+
+**下一阶段**：第二阶段·结构层规范——基于本骨架展开 `specs-structural/`，每个 task 一份独立 spec 文档，覆盖完整契约（含边界场景、错误处理、字段细节）。
 
 ## 仍 park 的项
 
