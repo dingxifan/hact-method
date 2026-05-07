@@ -208,3 +208,71 @@ Q4 应用：sign-gate-N 分散到内容对应的 discipline——sign-gate-1=pro
 - 01-identity.md Section 3 同步更新
 
 **Step 2 完成**。下一步 Step 3：写 `03-disciplines.md`（7 discipline 完整定义）。
+
+---
+
+## 2026-05-07 任务 3 step 2 终稿（多轮迭代后定稿 12 task / 9 discipline）
+
+step 2 经过多轮快速迭代。从 27 task 降到 12 task，从 7 discipline 扩到 9 discipline。基底由 M:N 改为 1:N（路径 X）。
+
+### 简化轨迹
+
+| 决策 | task 数 | 备注 |
+|---|---|---|
+| 起点（用户加 acceptance） | 27 | |
+| 路径 X（task→discipline 1:N） | 27 | 不改 task 数，只改 schema |
+| sign-gate-N 合并到前置任务（G4=A） | 22 | 5 个 sign-gate 撤掉 |
+| 6 dev task → 1 `develop`（source 区分） | 17 | source/urgency/layer 作 attribute |
+| dispatch-bug + dispatch-optimization → `dispatch-new` | 16 | target-source 区分 |
+| draft-trd + write-standards → `draft-tech-design` | 15 | 一个 task 出 4 份产物（TRD + 3 standards） |
+| 3 revise → 1 `revise-doc`（target 派生 discipline） | 13 | 与 develop 同模式 |
+| 移除 adjust-method | **12** | 复杂动作不强行预定义 |
+
+### Discipline 演变 7 → 9
+
+- `code-review` 从 dispatch 拆出 → 独立 `review` discipline
+- `generate-integration-tests` 从 dispatch 拆出 → 独立 `integration-testing` discipline
+- 理由：dispatch 一锅炖了 4 个任务（plan-sprint / code-review / gen-int-tests / dispatch-new），CR 和 int-tests 是独立专业活，不该跟 dispatch 抢。dispatch 瘦回到 2 个 task（纯协调动作）
+
+### 命名调整
+
+- `acceptance` 名字有歧义（UAT / 接受准则 / 交付验收都能套）→ 改名 `manual-test`
+- `develop.source=acceptance` 同步改为 `source=manual-test`
+
+### 最终 12 task / 9 discipline
+
+| # | task | discipline | Gate |
+|---|---|---|---|
+| 1 | init-project | management | — |
+| 2 | draft-prd-vN | product | G1 |
+| 3 | draft-tech-design | architecture | G2 |
+| 4 | plan-sprint | dispatch | G3 |
+| 5 | revise-doc | product/architecture（target 派生） | — |
+| 6 | develop | dev-frontend/dev-backend（layer 派生） | — |
+| 7 | code-review | review | — |
+| 8 | generate-integration-tests | integration-testing | — |
+| 9 | manual-test | product | G4 |
+| 10 | deploy | deploy | — |
+| 11 | wrap-up-iteration | management | G5 |
+| 12 | dispatch-new | dispatch | — |
+
+### 衍生原则（写进 BRIEF.md 决策 #20）
+
+复杂到无法预定义清晰 spec 的工作不强行做成 task type。任务驱动模型不要求"所有动作都是任务"，只要求"被反复执行的、有清晰 spec 的动作是任务"。例：方法论调整本身发散，由有 `management` discipline 授权的 user 在父级工作区按需做，无 task 包。
+
+### Schema 派生 discipline 的两个特例
+
+| task | 派生维度 | 取值 |
+|---|---|---|
+| `develop` | layer | frontend → dev-frontend / backend → dev-backend |
+| `revise-doc` | target | prd → product / trd → architecture / standards → architecture |
+
+实施：task 创建时把派生结果写到 `task.discipline` denormalized 字段。
+
+### 文档同步改动
+
+- BRIEF.md：决策 #19 改写（去 adjust-method、把 sign-gate 描述切到合并后形态）；新增决策 #20（复杂工作不强行预定义）
+- 01-identity.md Section 2 例子 + Section 3 管理性操作小节同步更新（去 adjust-method / feature / fix-cr 引用，加例外段）
+- 02-workspaces.md §2-§6 多处更新：父级"典型任务"去掉 adjust-method 加"无 task 包活动"；§3 项目根典型任务改用合并后的 task 名；§4 dispatch 同；§5 §6 的 feature/revise-prd 例子改用 develop/revise-doc
+
+**Step 2 终稿完成**。下一步 Step 3：写 `03-disciplines.md`（9 discipline 完整定义 + 边界 + 典型工作）。

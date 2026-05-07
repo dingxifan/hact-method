@@ -34,9 +34,9 @@
 同一用户的不同会话：
 
 ```
-上午：拉 draft-prd 任务   → CC 加载 PRD 起草规范
-下午：拉 feature 任务     → CC 加载前端开发规范
-晚上：做 fix-cr 任务      → CC 加载 code review 处理规范
+上午：拉 draft-prd-vN 任务  → CC 加载 PRD 起草规范
+下午：拉 develop 任务        → CC 加载 dev-{layer} 开发规范
+晚上：拉 code-review 任务    → CC 加载 code review 规范
 ```
 
 三次会话都是同一个 user，加载的规范完全不同——驱动它的是"手上是哪类任务"，不是"扮演什么角色"。
@@ -82,9 +82,11 @@ user 能拉 task 的条件：
 
 ### 管理性操作不另开后门
 
-"立项 / 签 Gate / 调方法论"这类工作在 v2 里都是普通任务（type 例如 `init-project` / `sign-gate-1` / `adjust-method`），各自挂自己的 discipline（具体见 03+04）。
+"立项 / 签 Gate"这类工作在 v2 里都是普通任务——立项是独立 task `init-project`(management)；Gate 签字合并入最近前置任务（G1 在 draft-prd-vN，G2 在 draft-tech-design，G3 在 plan-sprint，G4 在 manual-test，G5 在 wrap-up-iteration——详见 `06-gates.md`）。
 
 谁能拉这些任务由 `user_disciplines` 授权决定——跟其他任务一视同仁。"谁能签 G1"等于"哪个用户被授权了 product"，不靠管理员标签开后门。
+
+**例外**：方法论调整本身是发散性工作，没清晰 spec，**不预定义为 task type**——有 `management` 授权的 user 在父级工作区按需直接做（详见 `02-workspaces.md` §2）。
 
 ---
 

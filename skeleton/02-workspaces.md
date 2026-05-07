@@ -23,9 +23,11 @@
 **触发场景**：调整方法论 / 跨项目浏览 / 立新项目。
 
 **典型任务**（详见 04）：
-- `adjust-method`（改 skeleton / specs / templates）
 - `init-project`（立项）
 - 纯读浏览（无任务实体）
+
+**无 task 包的活动**：
+- 方法论调整（改 skeleton / specs / templates / BRIEF / 等）——**发散性工作，不预定义为 task type**，由有 `management` 授权的 user 直接做（BRIEF.md 决策 #20）
 
 **文件权限**：
 - **可写**：`hact-method/` 自身所有文件（skeleton / specs-* / templates / CLAUDE / BRIEF / STATUS）
@@ -39,12 +41,13 @@
 **触发场景**：写 PRD / TRD / 签 Gate / 规划迭代 / 跑部署 / 修订上一关。
 
 **典型任务**：
-- `draft-prd-vN` / `draft-trd-vN` / `write-standards`
-- `sign-gate-N`
-- `plan-sprint`
+- `draft-prd-vN`（含 G1 签字）
+- `draft-tech-design`（含 G2 签字；出 TRD + 3 份 standards）
+- `revise-doc`（修订归项目根，详见 §6）
+- `plan-sprint`（含 G3 签字）
+- `manual-test`（含 G4 签字）
 - `deploy`（部署归项目根，详见 §6）
-- `revise-prd` / `revise-trd`（修订归项目根，详见 §6）
-- `wrap-up-iteration`（Gate 5 收尾）
+- `wrap-up-iteration`（含 G5 签字）
 
 **工作目录**（一个心态、两个物理位置）：
 - **协调侧**：`hact-method/projects/{项目}/` —— PRD / TRD / iteration Gate 状态 / decisions / design / b-tasks
@@ -62,9 +65,10 @@
 **触发场景**：拉任务 / 写代码 / 推 PR / 处理 CR / 派 BUG / 派优化。
 
 **典型任务**：
-- `feature` / `fix` / `hotfix` / `fix-integration` / `fix-acceptance`（开发循环）
-- `code-review`（devmgr 复核 PR）
-- `dispatch-bug` / `dispatch-optimization`（B 类入口；BRIEF.md 决策 #5）
+- `develop`（开发循环；source 区分 sprint / integration / manual-test / bug / optimization；urgency=hotfix 时是热修）
+- `code-review`（PR 复核）
+- `generate-integration-tests`（联调脚本生成）
+- `dispatch-new`（B 类入口：派新 BUG / 优化任务；BRIEF.md 决策 #5）
 
 **物理形态**：
 - **文件式**：项目代码仓内的 `queue/*.md` 任务包文件
@@ -83,8 +87,8 @@
 工作心态**不是用户固有属性**——是用户当前活动决定的：
 
 - 同一用户上午在父级调整方法论 → 关 CC 会话
-- 下午进项目根写 TRD → 开新 CC 会话，新工作目录
-- 晚上进 dispatch 拉 feature → 又一个新 CC 会话
+- 下午进项目根做 `draft-tech-design` → 开新 CC 会话，新工作目录
+- 晚上进 dispatch 拉 `develop` → 又一个新 CC 会话
 
 CC 启动协议在不同工作目录下读到不同的 `CLAUDE.md` 和状态文件，自动识别当前心态，给出对应推荐——这是"心态由活动驱动"的物理体现。
 
@@ -108,11 +112,11 @@ CC 启动协议在不同工作目录下读到不同的 `CLAUDE.md` 和状态文�
 
 心态由"做什么"决定，不由"在哪个目录"决定。如果一个动作的本质是编排（修订、部署），即使**触发点**在 dispatch，**执行点**也回项目根。
 
-**举例**：你在 dispatch 拉了个 `feature` 任务，写代码到一半发现 PRD 有歧义。**正确做法不是就地改 PRD**——而是：当前 feature 任务标 `[paused-by-deviation]` → 关 dispatch 会话 → 进项目根开新 CC 会话 → 拉 `revise-prd` 任务 → 修订完回 dispatch 续 feature。
+**举例**：你在 dispatch 拉了个 `develop` 任务，写代码到一半发现 PRD 有歧义。**正确做法不是就地改 PRD**——而是：当前 develop 任务标 `[paused-by-deviation]` → 关 dispatch 会话 → 进项目根开新 CC 会话 → 拉 `revise-doc`（target=prd）任务 → 修订完回 dispatch 续 develop。
 
 **为什么不就地做**：
 
-1. **规范加载错位**——dispatch 当前会话加载的是 `feature` 开发规范；要改 PRD 应该加载 PRD 修订规范。错位心态下做错位事情，工具书不对路
+1. **规范加载错位**——dispatch 当前会话加载的是 `develop` 开发规范；要改 PRD 应该加载 `revise-doc`（target=prd）规范。错位心态下做错位事情，工具书不对路
 2. **审计/可追溯**——编排动作和开发循环的 commit 模式不同（信息风格、改动文件、签字流程）。混在一起做会让事后回看搞不清这个 commit 是开发还是编排
 3. **状态污染**——dispatch 是高频拉/释/CR 的工作区，部署、修订这种"低频但重大"的动作就地做容易跟 dispatch 状态纠缠
 4. **摩擦是设计的**——切心态有成本（关会话、开新会话、换目录、加载新规范）。这个摩擦强迫你"停下来想一下：我要做的事属于哪个心态"，而不是顺手做错位的事
