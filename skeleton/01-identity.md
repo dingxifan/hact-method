@@ -51,18 +51,39 @@ task.type → spec → standards
 
 ---
 
-## 3. users.role 退化为权限标记
+## 3. 权限通过 user-discipline 关联表达
 
-`users.role` 字段在 v2 里**只用于权限授予**，与流程无关：
+权限不是用户的固有标签——而是**用户与 discipline 之间的多对多关联**：
 
-| 取值 | 含义 |
-|---|---|
-| `manager` | 可读写所有项目数据；可触发立项、迭代、Gate 签署等管理性写操作 |
-| `developer` | 只能修改与自己相关的任务状态、提交完成报告 |
+```
+user_disciplines (junction)
+├── user_id
+└── discipline_id
+```
 
-仅对应"能不能写哪些表"（hact-app 后端的权限守卫）。
+每个用户被授权一组 discipline，表示"被允许拉哪些类型的任务"。
 
-无论是 `manager` 还是 `developer`，做事时都按当前 task 加载规范——`manager` 不会因为是 manager 就懂前端开发，`developer` 不会因为是 developer 就只能写代码。**规范由 task.type 决定，不由 user.role 决定。**
+### 拉取准入
+
+```
+user 能拉 task 的条件：
+  task.disciplines ∩ user.disciplines ≠ ∅
+```
+
+任一交集即可——v2 的精神是"规范是工具书"，缺的领域 CC 辅助补，不是身份测试。
+
+### 任务级写权限（taken-by）
+
+拉取后，**任务的产物只能由 taken-by 的 user 写入**——粒度细到单个 task：
+
+- `draft-prd` 任务的 taken-by 是 X → 该 task 关联的 PRD 文档只能 X 改
+- `feature` 任务的 taken-by 是 Y → 该 task 关联的代码、完成报告只能 Y 改
+
+### 管理性操作不另开后门
+
+立项、签 Gate、调整方法论这类工作，在 v2 里都是任务（type 类似 `init-project` / `sign-gate-N` / `adjust-method`），它们的 disciplines 含 `management`（具体见 03）。
+
+只有被授权 `management` 的用户能拉这些任务。"谁能签 Gate"从"用户身份"降维到"任务准入"——跟其他任务一视同仁。
 
 ---
 

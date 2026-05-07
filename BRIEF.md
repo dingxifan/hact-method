@@ -66,3 +66,4 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 16. **users.role 退化为权限标记**：只管"能不能写"，与流程角色解绑
 17. **迭代是项目下一等公民**：目录结构 `projects/{项目}/iterations/vN/` 反映这一层级——跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks）留项目根，迭代内产物（prd / trd / iteration Gate 状态 / standards / sprint）入迭代目录。目录与未来 hact-app 数据模型 `projects → iterations → sprints/tasks` 同构。取消 v1 沿用的 product/ tech/ 角色风目录（与任务驱动模型冲突）
 18. **task ↔ discipline 是 M:N**：每个 task 可触多个 discipline，每个 discipline 涉及多个 task。schema 上 task 的 disciplines 字段是集合（数组）而非单值。M:N 由 04 字段表达，03 不做元叙述
+19. **权限模型 = user-discipline 关联（废弃 user.role）**：新增 `user_disciplines (user_id, discipline_id)` junction 表达"用户被授权做哪类 discipline 的任务"。拉取准入 = `task.disciplines ∩ user.disciplines ≠ ∅`（任一交集即可）；任务级写权限由 taken-by 决定。管理性操作（立项 / 签 Gate / 调方法论）不另开后门——它们是 disciplines 含 `management` 的任务，跟其他任务一视同仁

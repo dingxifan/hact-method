@@ -65,3 +65,37 @@
 **写作顺序**：01 → 02 → (03+04 合并) → 05 → 06 → README → 自检
 
 **任务 0 完成**。下一步开写 `01-identity.md`。
+
+---
+
+## 2026-05-07 权限模型重新设计（01 Section 3 重写）
+
+**触发**：用户挑战 01 Section 3 复用 hact v1 的 `manager`/`developer` 二态——v1 没真正建模权限（单 manager + 单 developer 假设），v2 复用必出问题。
+
+**分析**：
+- v1 实际场景：1 manager + 1 developer。二态是"老板 + 小工"模式
+- v2 是 5-8 人团队 + 任务驱动 + discipline 模型：PM、架构师、devmgr 三个不该都是 manager 也不该都是 developer
+- v2 真正要回答 4 层权限：(1) 能不能登录、(2) 能拉哪类任务、(3) 拉到后能改什么、(4) 管理性操作允许；v1 用 manager/developer 模糊处理 1+4，2/3 没建模
+
+**最终决定（候选 A）**：
+- 废弃 `user.role` 字段
+- 新增 `user_disciplines (user_id, discipline_id)` junction
+- 拉取准入 = `task.disciplines ∩ user.disciplines ≠ ∅`（任一即可）
+- 任务级写权限由 taken-by 决定
+- 管理性操作（立项 / 签 Gate / 调方法论）作为 disciplines 含 `management` 的任务存在，不另开后门
+
+**为什么不选 B（保留 user.role 二态作系统级 + 加 user_disciplines 作业务级）**：
+- 系统级权限是 hact-app 产品自己的事，方法论文档不该管
+- 在骨架里写两层划分反而越界
+
+**为什么不选 C（ABAC 现场判断）**：太复杂，备选不首选
+
+**改动**：
+- 01 Section 3 重写（"users.role 退化"改为"权限通过 user-discipline 关联表达"）
+- BRIEF.md 加决策 #19：权限模型 = user-discipline 关联
+- 03 disciplines 清单要含 `management`（task_plan 任务 3 注明）
+- hact-app schema 改造延后到 hact-app v2 落地时处理
+
+**搁置**：
+- 跨学科任务（disciplines = [devmgr, pm, architect]）的拉取规则——任一即可 vs 必须全部？倾向"任一"，hact-app 真做时回来敲
+- `management` 这个 discipline 的最终命名（可能改为 `governance` / `admin` 等），写 03 时定
