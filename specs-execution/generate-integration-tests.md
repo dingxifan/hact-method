@@ -132,6 +132,7 @@
 
 **`[阻断]`**（影响主流程，必须修复）：
 - 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `queue/{task-id}.md`
+  - task-id 命名：`{项目缩写}-it-{三位序号}`，如 `hact-it-001`
 - 更新 `_meta/sessions/generate-integration-tests-progress.md`，记录已派修复的 task-id
 
 **`[不阻断]`**（边界或视觉问题）：

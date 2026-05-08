@@ -30,6 +30,9 @@
 
 ## 会话启动
 
+**task-id 命名规范**：`{项目缩写}-rd-{三位序号}`，如 `hact-rd-001`
+（创建 revise-doc 任务包时，由触发方按此规范生成 task-id 写入任务包）
+
 读任务包，确认：
 - `target`：`prd` / `trd` / `standards`
 - `reason`：修订原因（触发来源 + 具体问题）
@@ -122,7 +125,16 @@ git commit -m "fix(doc): {修订内容摘要} [{项目名}]"
 
 ---
 
-## Step 7：feedback 检查
+## Step 7：反向交接（触发方为 wrap-up-iteration 时）
+
+读任务包的 `source` 或 `context` 字段，确认本次 revise-doc 是否由 `wrap-up-iteration` 偏离对账创建：
+
+- **是**：通知 wrap-up-iteration 执行人：「revise-doc {task-id}（target={target}）已完成，可继续偏离对账」
+- **否**（由 code-review / manual-test / develop / 用户触发）：无需额外交接，直接完成
+
+---
+
+## Step 8：feedback 检查
 
 回顾触发本次修订的根因：
 - 同一文档短期内被多次修订（≥2 次）→ 说明上游文档质量有问题，写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 {draft-prd-vN / draft-tech-design} 阶段加强 {哪个环节}`）
