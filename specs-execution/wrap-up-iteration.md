@@ -99,11 +99,14 @@
 
 | feedback 内容 | 目的地 | 操作 |
 |---|---|---|
-| 开发踩的坑、禁止事项、项目编码规范 | `templates/standards/{backend\|frontend}.md`（项目模板层） | 直接追加至对应文件 |
+| 开发踩的坑、禁止事项、项目编码规范（原则级） | `templates/standards/{backend\|frontend}.md` | 直接追加至对应文件 |
+| 某个验证动作被漏掉，code review 才发现（能写成 `[ ]` checkbox） | `templates/checklists/{backend\|frontend}-checklist.md` | 追加至对应分类下 |
 | 项目架构决策有遗漏 | `decisions.md` | 追加条目 |
 | 角色工作流 / 规范结构 / 方法论有问题 | 待议清单（见下方） | 记录，不在此处修改方法论文件 |
 | 跨项目通用机制问题 | 待议清单（见下方） | 记录 |
 | 无价值 | 直接删除 | — |
+
+> **standards vs checklist 判断标准**：feedback 是"以后写代码要遵守某规则"→ standards；feedback 是"以后自检时要专门核查这一项，否则容易漏"→ checklist。
 
 **待议清单写入方式**：在 `_meta/plans/` 下找现有的方法论讨论计划文件（如果没有，新建 `_meta/plans/方法论待议.md`），追加条目：
 ```markdown

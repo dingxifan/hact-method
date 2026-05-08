@@ -143,17 +143,39 @@ hotfix 模式：最小化修复路径，直接开始实现，不等用户确认�
 
 ### Step 5：自检
 
-**对照 checklist 逐项检查**（layer 决定用哪份）：
+自检分四个维度，依次完成：
 
-- `layer=backend` → backend-checklist：DB Schema 核对 / API 错误码覆盖 / 权限校验 / 并发安全 / 静默失败防御
-- `layer=frontend` → responsive-checklist：断点适配 / 触控最小 44×44px / 事件兼容 / XSS 防护
+**① Checklist 核查**（layer 决定用哪份，以"挑刺"视角逐项过）：
 
-每项标 ✅ 或 ❌（❌ 的必须修复后重新标）。
+- `layer=backend` → 读 `templates/checklists/backend-checklist.md`，逐项标 ✅ / ❌
+- `layer=frontend` → 读 `templates/checklists/frontend-checklist.md`，逐项标 ✅ / ❌
+- `layer=shared` → 两份都过
 
-**冗余检查**：有重复实现或可以精简的部分 → 精简后再继续。
+❌ 的必须修复后重新标，不带 ❌ 推 PR。
+
+**② 冗余检查**：调用 `simplify` skill，检查有无重复实现或可精简处 → 精简后继续。
+
+**③ AC 逐条验证**（功能层面，不是代码风格）：
+
+读任务包 `acceptance-criteria` 字段，逐条在代码中追溯确认：
+- 接口返回预期结果
+- 边界条件（空值、越权、并发）有处理
+- 前端状态覆盖完整
+
+每条标 ✅ 或 ❌（❌ 的修复后重标，无法实现的记入"遗留问题"）。
+
+**④ 偏离核查**：
+
+```bash
+git diff --stat
+```
+
+对比任务包 `files` 字段：
+- 有多改的文件 → 记入 PR description「偏离说明」
+- 有 AC 未能实现 → 记入 PR description「遗留问题」
 
 ```
-✅ 自检完成：checklist 全部通过，[无冗余 / 已精简 N 处]。
+✅ 自检完成：checklist {X}/{Y} 通过，AC {M}/{N} 验证，[无偏离 / 偏离已记录]。
 → 下一步：commit + PR
 继续？
 ```
