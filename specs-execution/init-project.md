@@ -75,8 +75,9 @@ mkdir -p "E:/group-code/{name}/_meta/sessions"
 
 ---
 
-### Step 4：Git 初始化
+### Step 4：Git 初始化 + 远端绑定
 
+**4.1 本地初始化：**
 ```bash
 cd "E:/group-code/{name}"
 git init
@@ -84,12 +85,34 @@ git add .
 git commit -m "feat: 初始化项目 {name}"
 ```
 
+**4.2 强制获取 Gitee 远端地址：**
+
+```
+请提供项目的 Gitee 远端仓库地址（格式：https://gitee.com/{user}/{repo}.git）。
+远端仓库需在 Gitee 上提前创建好（空仓库即可）。
+```
+
+🚫 等用户提供远端地址，**不得跳过**
+
+**4.3 绑定远端并完成首次推送：**
+```bash
+git remote add origin {gitee-url}
+git push -u origin master
+```
+
+推送成功后确认：
+```
+✅ 首次推送完成：{gitee-url}
+```
+
+推送失败（如仓库不存在或无权限）→ 提示用户先在 Gitee 创建仓库并确认权限，修复后重试。
+
 ---
 
 ### Step 5：移交
 
 ```
-✅ init-project 完成：`E:\group-code\{name}\` 已创建，占位文件已写入，git 已初始化。
+✅ init-project 完成：`E:\group-code\{name}\` 已创建，远端已绑定至 {gitee-url}。
 → 下一步：draft-prd-vN — A 类需求从产品阶段开始；B 类需求直接用 dispatch-new。
 ```
 
