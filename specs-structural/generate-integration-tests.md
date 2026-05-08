@@ -35,7 +35,7 @@
 5. **处理失败**：
    - 失败条目分级：`[阻断]`（影响主流程）/ `[不阻断]`（边界或视觉问题）
    - `[阻断]` 失败 → 立即创建 develop 任务包（source=integration，urgency 按影响程度），写入 queue
-   - `[不阻断]` 失败 → 记入 `projects/{项目}/backlog.md`
+   - `[不阻断]` 失败 → 记入 `backlog.md`
 6. **复测**：develop(source=integration) 任务全部 [merged] 后，重跑受影响的测试脚本，确认通过
 7. **三条件满足后进入 manual-test**：见"完成判据"
 

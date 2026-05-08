@@ -39,7 +39,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 验收报告 | `projects/{项目}/iterations/vN/acceptance-report.md` | 见下方格式 |
+| 验收报告 | `iterations/vN/acceptance-report.md` | 见下方格式 |
 | 修复任务包（如有） | `queue/{task-id}.md` | 见 develop.md §字段规范 |
 
 **验收报告格式：**

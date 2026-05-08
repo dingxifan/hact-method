@@ -13,9 +13,9 @@
 - **Gate**：G4 已签
 - **与 `deploy` 的关系**：无强依赖，可并行执行；部署失败不阻断收尾，两者结论独立
 - **文件**：
-  - `projects/{项目}/backlog.md`（偏离记录）
-  - `projects/{项目}/feedback.md`（各阶段反馈）
-  - `projects/{项目}/iterations/vN/prd.md` / `trd.md` / `standards-*.md`
+  - `backlog.md`（偏离记录）
+  - `feedback.md`（各阶段反馈）
+  - `iterations/vN/prd.md` / `trd.md` / `standards-*.md`
 
 ---
 
@@ -49,7 +49,7 @@
 |---|---|
 | 开发踩的坑、禁止事项 | `templates/standards/{backend\|frontend}.md` |
 | 角色工作流 / 规范有问题 | 记入 `_meta/plans/` 待议清单，在专门的方法论讨论会话中处理，不在收尾阶段直接改方法论文件 |
-| 项目架构决策有遗漏 | `projects/{项目}/decisions.md` |
+| 项目架构决策有遗漏 | `decisions.md` |
 | 跨项目通用机制问题 | `_meta/plans/` 记录，待方法论讨论 |
 | 无价值 | 直接删除 |
 
@@ -57,7 +57,7 @@
 
 ### 第三步：project.md 合并
 
-确认 `projects/{项目}/project.md` 已反映本期最终状态：
+确认 `project.md` 已反映本期最终状态：
 - 产品层（目标 / 用户 / 功能边界）与最终 PRD 一致
 - 技术层（技术选型 / 数据库结构 / 模块划分）与最终 TRD 一致
 - 去除"开发中"标注，标记为"已上线"（若已部署）
@@ -73,11 +73,11 @@
 | 产物 | 路径 | 说明 |
 |------|------|------|
 | 反向更新的 PRD / TRD（如有偏离） | `iterations/vN/prd.md` / `trd.md` | 通过 `revise-doc` task 执行 |
-| 更新的 decisions.md | `projects/{项目}/decisions.md` | 实现细节偏离的沉淀 |
+| 更新的 decisions.md | `decisions.md` | 实现细节偏离的沉淀 |
 | 更新的模板 / 规范 | `templates/standards/` | feedback 分流产物（仅模板层，方法论文件不在此改） |
 | 方法论待议清单 | `_meta/plans/` | 需专门讨论的规范 / 流程问题，留待方法论会话处理 |
-| 清空的 feedback.md | `projects/{项目}/feedback.md` | 分流完成后清空 |
-| 更新的 project.md | `projects/{项目}/project.md` | 本期最终状态快照 |
+| 清空的 feedback.md | `feedback.md` | 分流完成后清空 |
+| 更新的 project.md | `project.md` | 本期最终状态快照 |
 
 ---
 

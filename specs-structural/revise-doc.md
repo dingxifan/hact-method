@@ -32,7 +32,7 @@
 
 1. **读原文档**：读待修订文档的当前版本，定位需要修改的段落
 2. **修订内容**：按 `reason` 所述问题做最小化修订，不扩大范围
-3. **记入 backlog**：在 `projects/{项目}/backlog.md` 追加 `[修订]` 条目，说明改了什么 + 原因
+3. **记入 backlog**：在 `backlog.md` 追加 `[修订]` 条目，说明改了什么 + 原因
 4. **判断下游影响**：
    - `target=prd`：是否影响 TRD 的接口 / 数据结构 → 若是，同时创建 `revise-doc(target=trd)`
    - `target=trd`：是否影响已派发的任务包 → 若是，更新 queue 中对应任务包，通知相关 develop task 重新拾取
@@ -46,7 +46,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 修订后的目标文档 | `iterations/vN/prd.md` / `trd.md` / `standards-*.md` | 原文件直接修改，commit 记录变更 |
-| backlog 修订条目 | `projects/{项目}/backlog.md` | `- [修订] {日期} \| {改了什么} \| {原因}` |
+| backlog 修订条目 | `backlog.md` | `- [修订] {日期} \| {改了什么} \| {原因}` |
 
 ---
 

@@ -14,7 +14,7 @@
 - **文件**：
   - `iterations/vN/trd.md`
   - `iterations/vN/standards-shared.md` / `standards-frontend.md` / `standards-backend.md`
-  - `projects/{项目}/reusables.md`（了解可复用资产，避免任务包重复指派已有实现）
+  - `reusables.md`（了解可复用资产，避免任务包重复指派已有实现）
 
 ---
 
@@ -40,7 +40,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 各 develop 任务包 | `queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范 |
-| sprint.md | `projects/{项目}/iterations/vN/sprint.md` | 见下方格式说明 |
+| sprint.md | `iterations/vN/sprint.md` | 见下方格式说明 |
 
 **sprint.md 格式：**
 

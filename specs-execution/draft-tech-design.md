@@ -23,9 +23,9 @@
 
 **必读文件**（用 Explore subagent 并行读取，不占主线上下文）：
 - `iterations/vN/prd.md`
-- `projects/{项目}/project.md`（技术层已有决策）
-- `projects/{项目}/decisions.md`
-- `projects/{项目}/reusables.md`
+- `project.md`（技术层已有决策）
+- `decisions.md`
+- `reusables.md`
 - `templates/standards/backend.md`
 - `templates/standards/frontend.md`
 
@@ -142,9 +142,9 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 
 ### Step 5：知识沉淀
 
-更新 `projects/{项目}/decisions.md`，追加本期关键架构决策（格式：决策 / 原因 / 日期）。
+更新 `decisions.md`，追加本期关键架构决策（格式：决策 / 原因 / 日期）。
 
-更新 `projects/{项目}/project.md` 技术层（技术选型 / 数据库结构 / 模块划分）。
+更新 `project.md` 技术层（技术选型 / 数据库结构 / 模块划分）。
 
 ---
 

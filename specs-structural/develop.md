@@ -49,7 +49,7 @@
    - `files` ≤ 3 且逻辑简单 → 直接开始
    - `files` > 3 或跨模块 → 输出拆分计划，等确认后再动手
    - `urgency=hotfix` → 跳过拆分评估，走最小化修复路径
-3. **复用检查**：读 `projects/{项目}/reusables.md`；有可用资产必须复用，不重新实现
+3. **复用检查**：读 `reusables.md`；有可用资产必须复用，不重新实现
 4. **加载规范上下文**：按 `relevant-standards` 精确加载对应章节；source 决定额外上下文：
    - `sprint` → 读 sprint.md 对应行 + PRD 相关段落
    - `integration` → 读失败的联调脚本场景

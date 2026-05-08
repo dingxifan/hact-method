@@ -94,7 +94,7 @@
 
 ### Step 3：复用检查
 
-用 Explore subagent 读 `projects/{项目}/reusables.md`，标记与本任务相关的已有资产：
+用 Explore subagent 读 `reusables.md`，标记与本任务相关的已有资产：
 
 ```
 可复用资产：

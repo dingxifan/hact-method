@@ -58,7 +58,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 各 PR 的 review comment + 决定 | 代码仓库各 PR | Markdown，含 [阻断]/[建议] 标记 |
-| sprint.md CR 结论备注 | `projects/{项目}/iterations/vN/sprint.md` | 在对应行追加 `CR:通过` 或 `CR:打回(原因)` |
+| sprint.md CR 结论备注 | `iterations/vN/sprint.md` | 在对应行追加 `CR:通过` 或 `CR:打回(原因)` |
 
 ---
 

@@ -36,7 +36,7 @@
    - `target-source=optimization`：收集改进目标 / 基线指标（如有）/ 验收标准
 3. **判断 urgency**：影响核心功能且无法绕过 → `hotfix`；其余 → `normal`
 4. **写任务包**：按 develop.md §字段规范写完整任务包，写入 `queue/{task-id}.md`，状态 [可取]
-5. **记入 b-tasks.md**：在 `projects/{项目}/b-tasks.md` 追加一行（见"主要产物"格式）
+5. **记入 b-tasks.md**：在 `b-tasks.md` 追加一行（见"主要产物"格式）
 
 ---
 
@@ -45,7 +45,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | develop 任务包 | `queue/{task-id}.md` | 见 develop.md §字段规范 |
-| b-tasks.md 条目 | `projects/{项目}/b-tasks.md` | 见下方格式 |
+| b-tasks.md 条目 | `b-tasks.md` | 见下方格式 |
 
 **b-tasks.md 行格式：**
 

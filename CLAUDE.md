@@ -5,18 +5,16 @@
 @STATUS.md
 
 ## 文件规范（覆盖 file-organizer skill）
-本项目是管理项目（方法论研发 + 新项目编排），不是软件开发项目。
+本仓是纯方法论仓库，只存放方法论文档和模板，不包含任何具体项目内容。
 文件存放以本目录结构为准：
 
 项目根目录只允许：
 - CLAUDE.md / BRIEF.md / STATUS.md
 - skeleton/、specs-structural/、specs-execution/（方法论核心文档）
-- projects/、templates/（项目编排）
+- templates/（可复用模板）
 - _meta/（研发过程产物：input/、plans/、.current_plan 及历史迭代文档）
 
-`projects/` 子结构（迭代一等公民）：
-- `projects/{项目}/` 根目录：跨迭代产物（project / decisions / design / reusables / backlog / feedback / b-tasks）
-- `projects/{项目}/iterations/vN/`：迭代内产物（prd / trd / iteration Gate 状态 / standards / sprint）
+**项目内容不存放在本仓**——每个项目是独立仓库，代码与协调文件（PRD/TRD/任务包/Gate等）合并存放在项目仓根目录下。本仓模板和规范被项目仓引用，但不拥有项目数据。
 
 _meta/plans/ 目录由 planning-with-files-zh skill 自动管理：
 _meta/plans/YYYY-MM-DD-[阶段名]/

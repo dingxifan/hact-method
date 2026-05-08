@@ -12,7 +12,7 @@
 
 - **触发**：G1 已签，`iterations/vN/prd.md` 已存在
 - **Gate**：G1 未签则阻断
-- **文件**：`projects/{项目}/project.md`（了解技术约束和已有决策）；`projects/{项目}/reusables.md`（了解已有共享组件，避免重复建议）
+- **文件**：`project.md`（了解技术约束和已有决策）；`reusables.md`（了解已有共享组件，避免重复建议）
 
 ---
 
@@ -36,7 +36,7 @@
    - `standards-shared.md`：跨层共同约束（命名规范 / 错误码 / API 响应格式 / 权限模型）
    - `standards-frontend.md`：前端实现约束，来源于模板或上期 standards + 本期 TRD 新要求
    - `standards-backend.md`：后端实现约束，同上
-5. **知识沉淀**：将本期关键架构决策写入 `projects/{项目}/decisions.md`；更新 `project.md` 技术层
+5. **知识沉淀**：将本期关键架构决策写入 `decisions.md`；更新 `project.md` 技术层
 6. **询问签 G2**：「TRD 和 standards 已完成，要签 G2 吗？」——用户确认后 commit，G2 签字写入 `iterations/vN/gates.md`
 
 ---
@@ -45,12 +45,12 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| TRD | `projects/{项目}/iterations/vN/trd.md` | Markdown，含 7 个固定段落 |
-| 共享规范 | `projects/{项目}/iterations/vN/standards-shared.md` | Markdown；v1 源于 `templates/standards/`，vN+1 源于上期同文件增量更新 |
-| 前端规范 | `projects/{项目}/iterations/vN/standards-frontend.md` | 同上 |
-| 后端规范 | `projects/{项目}/iterations/vN/standards-backend.md` | 同上 |
-| decisions.md 更新 | `projects/{项目}/decisions.md` | 表格追加：决策 / 原因 / 日期 |
-| project.md 更新（技术层） | `projects/{项目}/project.md` | 追加或更新技术层内容 |
+| TRD | `iterations/vN/trd.md` | Markdown，含 7 个固定段落 |
+| 共享规范 | `iterations/vN/standards-shared.md` | Markdown；v1 源于 `templates/standards/`，vN+1 源于上期同文件增量更新 |
+| 前端规范 | `iterations/vN/standards-frontend.md` | 同上 |
+| 后端规范 | `iterations/vN/standards-backend.md` | 同上 |
+| decisions.md 更新 | `decisions.md` | 表格追加：决策 / 原因 / 日期 |
+| project.md 更新（技术层） | `project.md` | 追加或更新技术层内容 |
 
 **TRD 必含段落：**
 

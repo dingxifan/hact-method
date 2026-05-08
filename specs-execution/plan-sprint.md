@@ -26,8 +26,8 @@
 - `iterations/vN/standards-shared.md`
 - `iterations/vN/standards-frontend.md`
 - `iterations/vN/standards-backend.md`
-- `projects/{项目}/reusables.md`
-- `projects/{项目}/decisions.md`
+- `reusables.md`
+- `decisions.md`
 
 开场说：「我将分三层完成 sprint 规划：先输出疑点清单和任务骨架等你确认，确认后再写完整任务包。骨架确认前不开始写任务包。」
 

@@ -13,7 +13,7 @@
 - **常规部署（A 类迭代）**：G4 已签（manual-test 通过）
 - **B 类独立部署**：无进行中的 A 类迭代时，B 类 [merged] 任务积累到一定程度，由有 `dispatch` discipline 的用户主动触发；无需 G4
 - **hotfix 快速通道**：`urgency=hotfix` 的 develop 任务 [merged] 后，可不等 G4，由有 `dispatch` discipline 的用户授权后立即部署
-- **文件**：`projects/{项目}/deployment.config`（服务器地址 / 启动命令 / 健康检查端点等，首次部署时创建）
+- **文件**：`deployment.config`（服务器地址 / 启动命令 / 健康检查端点等，首次部署时创建）
 
 ---
 
@@ -45,8 +45,8 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 部署日志 | `projects/{项目}/deploy-log.md` | 见下方格式（追加，不覆盖） |
-| deployment.config（首次） | `projects/{项目}/deployment.config` | 键值对配置文件 |
+| 部署日志 | `deploy-log.md` | 见下方格式（追加，不覆盖） |
+| deployment.config（首次） | `deployment.config` | 键值对配置文件 |
 
 **deploy-log.md 追加格式：**
 
