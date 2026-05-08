@@ -107,6 +107,14 @@ NestJS 遇到路由冲突时，静默使用先注册的 Controller，后注册�
 1. 云控制台安全组中已添加该端口
 2. 服务器执行 `sudo ufw allow <port>/tcp` 并 `sudo ufw reload`
 
+## 环境配置
+
+- **`.env` 密码值含 `#` 必须加引号**：dotenv 将 `#` 视为注释符，`DB_PASSWORD=#4400MAma#` 会被截断为空。正确写法：`DB_PASSWORD="#4400MAma#"`。在 `.env.example` 中加注释提示。
+
+## TypeORM 类型陷阱补充
+
+- **`BIGINT` 列运行时返回字符串**：TypeORM 将 MySQL `bigint` 映射为 JS `string`，Entity 的 `id` 字段类型必须声明为 `string`，不能用 `number`，否则比较时静默失败。
+
 ## 代码整洁
 
 - 禁止提交含 `// TODO`、`// FIXME` 的未完成代码

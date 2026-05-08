@@ -164,6 +164,10 @@ try {
 
 ---
 
+## 常量管理
+
+- **Token key 必须复用统一常量**：路由守卫、composable、工具函数中凡涉及 `localStorage` token 读写，必须引用统一定义的 `TOKEN_KEY` 常量，不得在各处硬编码字符串（如 `'token'`）。key 名变更时只改一处，避免静默不一致。
+
 ## 代码整洁
 
 - 禁止提交含 `// TODO`、`// FIXME` 的未完成代码
