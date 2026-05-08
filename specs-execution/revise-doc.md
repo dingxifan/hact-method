@@ -104,6 +104,11 @@
 | `trd` | 是否影响已派发的 queue 任务包？ | 是 → 更新对应任务包的 `relevant-standards` / `acceptance-criteria` 字段，在任务包备注「TRD 已修订，请重新拾取」 |
 | `standards` | 是否影响进行中的 develop task？ | 是 → 在对应任务包 `relevant-standards` 字段追加变更说明 |
 
+**修订影响已 [merged] 的 develop PR**（该 PR 代码已合并但与修订内容不一致）：
+- 创建新的 develop 任务包（`source=sprint`，urgency 按影响程度），说明需要修正已合并代码以与修订后文档对齐
+- 在 `backlog.md` 追加 `[偏离]` 条目，留 `wrap-up-iteration` 偏离对账时处理
+- 不回滚已合并 PR
+
 无下游影响 → 记录「无下游影响」，继续 Step 6。
 
 ---

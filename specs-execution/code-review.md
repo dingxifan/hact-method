@@ -181,6 +181,11 @@
 - 每完成 3 个 PR 后考虑一次 compact
 - compact 前确认：已审 PR 的 CR 结论已写入 sprint.md（写入即持久化，compact 不丢失进度）
 
+**多 PR 并行审查**（PR 数量 ≥5 且各 PR layer 独立时）：
+- 可派 2 个 Explore subagent 并行读取不同 PR 的 diff + description，各自返回"五段完整性结论 + 改动文件列表 + 疑点摘要"
+- 主线汇总后逐 PR 执行 Step 3–6（standards 核查和决策仍由主线完成，不委托 subagent）
+- subagent 失败 → 主线直接读该 PR，不阻断其他 PR 的审查
+
 **打回 PR 二次 review**（同一 PR 修复后重新提交）：
 1. 读上次 review comment 中的 `[阻断]` 清单
 2. 只核查 `[阻断]` 是否已修复 + 有无新引入问题
