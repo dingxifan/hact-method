@@ -22,8 +22,67 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 ├── findings.md     # 分析发现和洞察沉淀（按需创建）
 └── progress.md     # 会话日志，用于跨会话接续
 
+## 工作区使用指南
+
+**本仓（hact-method）是所有任务的规范来源，但不是所有任务的执行位置。**
+
+### 何时在本仓开 CC 会话
+
+| 场景 | 说明 |
+|------|------|
+| 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `E:\group-code\{project-name}\` |
+| 方法论调整（修改 skeleton / specs / templates） | 在本仓执行，直接编辑方法论文件 |
+| 跨项目浏览 / 对比 | 在本仓执行 |
+
+### 何时在项目仓开 CC 会话
+
+项目仓创建后，**以下所有任务都在项目仓（`E:\group-code\{project-name}\`）中执行**：
+
+| 任务 | 说明 |
+|------|------|
+| `draft-prd-vN` / `draft-tech-design` / `plan-sprint` | 写 PRD、TRD、规划 sprint，产物存入项目仓 |
+| Gate 签署（G1–G5） | 在项目仓的 `iterations/vN/gates.md` 写入 |
+| `develop` / `code-review` | 写代码、审查，在项目仓操作 |
+| `dispatch-new` / `generate-integration-tests` / `manual-test` / `deploy` | 全部在项目仓执行 |
+| `wrap-up-iteration` / `revise-doc` | 迭代收尾和文档修订，在项目仓执行 |
+
+### 项目仓结构（init-project 创建）
+
+```
+E:\group-code\{project-name}\
+├── [代码文件]               ← 前后端代码
+├── iterations/
+│   └── vN/
+│       ├── prd.md
+│       ├── trd.md
+│       ├── standards-shared.md
+│       ├── standards-frontend.md
+│       ├── standards-backend.md
+│       └── gates.md
+├── project.md               ← 跨迭代项目快照
+├── decisions.md             ← 架构决策记录
+├── design.md                ← 视觉规格
+├── reusables.md             ← 可复用资产
+├── backlog.md               ← 积压与偏离
+├── feedback.md              ← 各阶段反馈
+├── b-tasks.md               ← B 类任务总账
+├── queue/                   ← 任务包
+│   └── done/
+├── deployment.config        ← 首次部署时创建
+└── deploy-log.md            ← 部署记录
+```
+
+### 加载规范的方式
+
+项目仓 CLAUDE.md 中用 `@` 引用 hact-method 的规范：
+```
+@../../hact-method/specs-execution/{task-type}.md
+```
+
+---
+
 ## 跨会话接续规则
-每次打开项目时：
+每次打开本仓时：
 1. 读取 _meta/.current_plan 获取当前阶段目录
 2. 读取该目录下的 task_plan.md / findings.md / progress.md
 3. 接续上次工作状态，不要重新开始
@@ -33,13 +92,11 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 - **brainstorming skill 不适用**：项目内的分析讨论即为 brainstorming 阶段
 - **planning-with-files-zh skill 适用**：_meta/plans/ 目录由该 skill 管理
 
-## 当前阶段：第一阶段·搭骨架
+## 当前阶段：第三阶段·开发 hact-app
 
-新方法论摒弃了"角色扮演"模式，采用"任务驱动"——用户登录系统/CC 都是自己的身份，task.type 决定加载哪份规范。规范是任务的工具书，不是身份的定义。
-
-第一阶段产出：在 `skeleton/` 下完成方法论骨架（用户身份模型 / 角色清单 / 工作区定义 / 任务全谱 / 状态机 / Gate 与子阶段定义）。
-
-骨架完成后进入第二阶段（写结构层规范），再进入第三阶段（开发首个应用 hact-app）。
+- 第一阶段（搭骨架）✅：skeleton/ 下 6 份骨架文档
+- 第二阶段（结构层规范）✅：specs-structural/ 下 12 份任务契约 + specs-execution/ 下 5 份主线执行规范
+- 第三阶段（开发 hact-app）进行中：用本方法论走完 PRD→TRD→sprint→develop 完整流程，开发 hact-app 看板应用
 
 ## 与 human-ai-col 的关系
 - `../human-ai-col/` 是 v1 方法论仓库，已冻结，仅维护存量项目（simple-auth 等）
