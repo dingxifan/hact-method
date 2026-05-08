@@ -1,9 +1,18 @@
 # exec: revise-doc
 
 > CC 加载本文时，当前任务是对一份已签 Gate 的文档（PRD / TRD / standards）做最小化修订，记录原因，判断下游影响。
-> 已签 Gate 不撤销，只记录变更；修订范围最小化。
+> 已签 Gate 不撤销，只记录变更；修订范围严格最小化，不借机重写或扩展。
 
-**上下文密度**：低-中。只读目标文档 + backlog，不加载代码。
+**上下文密度**：低–中。只读目标文档 + backlog，不加载代码。
+
+---
+
+## 红线
+
+- **已签 Gate 不撤销**：修订不影响已签的 Gate 状态，只在文档上记录变更
+- **修订范围严格最小化**：只改 `reason` 所指的具体段落，不借机重写其他部分，不扩大范围
+- **涉及核心定义变更须先上报**：接口 schema 大幅变动 / 数据库表结构重大修改 → 在 backlog 标注并上报，等用户确认修订边界后再动手，不静默修改
+- **级联修订不合并在一个 task 里**：PRD 修订影响 TRD 时，创建新的 `revise-doc(target=trd)` 任务，不在同一会话里同时改两份文档
 
 ---
 
@@ -22,75 +31,109 @@
 ## 会话启动
 
 读任务包，确认：
-- `target` 字段：`prd` / `trd` / `standards`
-- `reason` 字段：修订原因（触发来源 + 具体问题）
+- `target`：`prd` / `trd` / `standards`
+- `reason`：修订原因（触发来源 + 具体问题）
 
 ---
 
 ## Step 1：读原文档，定位问题段落
 
 按 `target` 读对应文件：
-- `target=prd` → `iterations/vN/prd.md`
-- `target=trd` → `iterations/vN/trd.md`
-- `target=standards` → `iterations/vN/standards-{backend|frontend|shared}.md`（由 reason 决定具体文件）
+
+| target | 文件路径 |
+|--------|---------|
+| `prd` | `iterations/vN/prd.md` |
+| `trd` | `iterations/vN/trd.md` |
+| `standards` | `iterations/vN/standards-{backend\|frontend\|shared}.md`（由 reason 决定具体文件） |
 
 定位 `reason` 所指的具体段落，输出：
 ```
-问题位置：{文件} 第 {章节} 节
-问题描述：{一句话说明原文哪里有歧义或缺失}
+问题位置：{文件} § {章节名}
+当前内容：{原文摘要}
+问题描述：{一句话说明哪里有歧义或缺失}
 ```
 
 ---
 
-## Step 2：修订内容
+## Step 2：确认修订内容
 
-按 `reason` 所述做**最小化**修订：
-- 只改有歧义或缺失的段落
-- 不借机重写或扩展范围
-- 修订涉及已签 Gate 核心定义（接口 schema 大幅变动等）时 → 在 backlog 标注并上报，等用户确认修订边界后再动手
+提出最小化修订方案，输出「原文 → 修订后」对照，等用户确认：
 
-**输出修订内容摘要**（改了什么 / 原文 vs 修订后），等用户确认。
+```
+修订范围：{文件} § {章节}
+
+原文：
+{原始段落}
+
+修订后：
+{改动后段落}
+
+改动说明：{一句话说明改了什么，为什么这样改}
+```
+
+**涉及核心定义**（接口 schema / 数据库表结构 / 权限模型大幅变动）→ 上报：
+```
+⚠️ 本次修订涉及核心定义变更（{具体内容}），请确认修订边界后再执行。
+```
 
 🚫 等用户确认修订内容
 
 ---
 
-## Step 3：记入 backlog
+## Step 3：执行修订
+
+用户确认后，直接编辑目标文件对应段落。
+
+---
+
+## Step 4：记入 backlog
 
 在 `backlog.md` 追加 `[修订]` 条目：
 
 ```markdown
-- [修订] {YYYY-MM-DD} | {改了什么，一句话} | 原因：{reason 字段内容}
+- [修订] {YYYY-MM-DD} | target={target} | {改了什么，一句话} | 原因：{reason 字段内容}
 ```
 
 ---
 
-## Step 4：判断下游影响
+## Step 5：判断下游影响
 
 | target | 判断逻辑 | 动作 |
 |--------|---------|------|
-| `prd` | 是否影响 TRD 的接口 / 数据结构？ | 是 → 同时创建 `revise-doc(target=trd)` |
-| `trd` | 是否影响已派发的任务包？ | 是 → 更新 queue 中对应任务包，通知相关 develop 重新拾取 |
+| `prd` | 是否影响 TRD 的接口 / 数据结构？ | 是 → 创建 `revise-doc(target=trd)` 任务包，写入 queue；不在本会话改 TRD |
+| `trd` | 是否影响已派发的 queue 任务包？ | 是 → 更新对应任务包的 `relevant-standards` / `acceptance-criteria` 字段，在任务包备注「TRD 已修订，请重新拾取」 |
 | `standards` | 是否影响进行中的 develop task？ | 是 → 在对应任务包 `relevant-standards` 字段追加变更说明 |
 
-无下游影响 → 记录「无下游影响」，继续 Step 5。
+无下游影响 → 记录「无下游影响」，继续 Step 6。
 
 ---
 
-## Step 5：commit
+## Step 6：commit
 
 ```bash
-git add {修订的文件} backlog.md
+git add {修订的文件} backlog.md {受影响的任务包（如有）}
 git commit -m "fix(doc): {修订内容摘要} [{项目名}]"
 ```
 
+---
+
+## Step 7：feedback 检查
+
+回顾触发本次修订的根因：
+- 同一文档短期内被多次修订（≥2 次）→ 说明上游文档质量有问题，写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 {draft-prd-vN / draft-tech-design} 阶段加强 {哪个环节}`）
+- 单次偶发修订 → 跳过
+
 ```
-✅ revise-doc 完成：{target} 已修订，backlog 已记录，[无下游影响 / 已创建级联修订 revise-doc(target=trd) / 已通知相关 develop 任务]。
+✅ revise-doc 完成：{target} 已修订，backlog 已记录，[无下游影响 / 已创建级联修订 / 已更新 {N} 个任务包]。
 ```
 
 ---
 
 ## 上下文管理
 
-本 task 无需复杂断点续做——修订内容少，通常一次会话完成。
-如中断，读 `backlog.md` 确认 `[修订]` 条目是否已追加，判断从 Step 3 还是 Step 4 继续。
+本 task 修订范围小，通常单次会话完成，无需断点续做文件。
+
+**中断续做**：
+1. 读 `backlog.md`：`[修订]` 条目是否已追加 → 已追加说明 Step 4 完成，从 Step 5 继续
+2. 读目标文件：内容是否已是修订后版本 → 已修订说明 Step 3 完成，从 Step 4 继续
+3. 读 `queue/`：是否已有对应级联 revise-doc 任务包 → 有则 Step 5 已完成
