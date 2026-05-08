@@ -1,9 +1,18 @@
 # exec: deploy
 
-> CC 加载本文时，当前任务是将已验收代码部署到目标环境，验证服务正常。
+> CC 加载本文时，当前任务是将已验收的代码部署到目标环境，验证服务正常。
 > 默认合并部署：一次包含所有已验收改动（A 类迭代 + B 类 normal + hotfix）。
 
-**上下文密度**：中。需读 `deployment.config` + 执行若干 shell 命令。
+**上下文密度**：中。需读 `deployment.config`，执行若干 shell 命令，全程在主线操作，不派 subagent。
+
+---
+
+## 红线
+
+- **禁止在服务器上直接修改代码**：唯一合法路径是本地修改 → `git push` → 服务器 `git pull`
+- **构建失败不重启服务**：保留旧版本运行，记录错误上报，等修复后重走步骤
+- **健康检查未通过不算完成**：服务重启成功不等于部署成功，必须健康检查通过才记录结果
+- **hotfix 快速通道须有授权**：urgency=hotfix 的任务需有 `dispatch` discipline 用户授权后才能不等 G4 部署
 
 ---
 
@@ -23,9 +32,17 @@
 
 读任务包，确认：
 - `target` 字段（目标环境，如 `prod` / `staging`）
-- 触发来源（A 类 G4 签字 / B 类积累 / hotfix 授权）
+- 触发来源（A 类 G4 已签 / B 类积累触发 / hotfix 授权）
 
-读 `deployment.config`（首次部署时不存在，见"边界场景"）。
+**首次部署（`deployment.config` 不存在）**：先建 `deployment.config`，填入以下字段，commit 后继续：
+```
+server-address=
+build-command=
+health-check-url=
+restart-command=
+```
+
+读 `deployment.config`，确认配置完整。
 
 ```
 部署目标：{target}
@@ -39,13 +56,9 @@
 
 ## Step 1：本地构建验证
 
-```bash
-npm run build   # 或对应构建命令（见 deployment.config）
-```
+执行 `deployment.config` 中的 `build-command`（如 `npm run build`）及类型检查。
 
-并执行类型检查（如 `npm run type-check`）。
-
-**构建失败** → 立即阻断，输出错误日志，不进行后续步骤。等修复后重新开始。
+**构建失败** → 立即阻断，输出完整错误日志，不进行后续步骤，等修复后重新开始。
 
 ```
 ✅ 本地构建验证通过。
@@ -57,31 +70,33 @@ npm run build   # 或对应构建命令（见 deployment.config）
 
 ## Step 2：推送代码
 
-将所有待部署分支合并至主分支，push 到远端：
+将所有待部署分支合并至主分支，推送到远端：
 ```bash
 git push origin master
 ```
 
-**hotfix 快速通道**（`urgency=hotfix`）：仅合并 hotfix 分支，不合并其他未验收改动。
+**hotfix 快速通道**：仅合并 hotfix 分支，不合并其他未验收的改动。
 
 ---
 
 ## Step 3：服务器拉取
 
-通过 SSH 在服务器执行：
+SSH 到服务器，执行：
 ```bash
 git pull
 ```
 
-确认拉取成功（无冲突 / 无错误）。拉取失败 → 检查冲突原因，解决后重试。
+确认拉取成功（无冲突 / 无报错）。
+
+**拉取有冲突** → 解决冲突后重试，不强制覆盖。
 
 ---
 
 ## Step 4：服务器构建
 
-执行 `deployment.config` 中的构建命令。
+执行 `deployment.config` 中的 `build-command`。
 
-**构建失败** → 保留旧版本，**不重启服务**，记录错误，上报。等修复后重走步骤 3–7。
+**构建失败** → 保留旧版本运行，**不执行 Step 5**，记录错误，上报，等修复后重走 Step 3–7。
 
 ```
 ✅ 服务器构建完成。
@@ -95,20 +110,20 @@ git pull
 
 ## Step 5：重启服务
 
-执行 `deployment.config` 中的重启命令（如 `pm2 restart {app}`）。
+执行 `deployment.config` 中的 `restart-command`（如 `pm2 restart {app}`）。
 
 ---
 
 ## Step 6：健康验证
 
-curl 健康检查端点（见 `deployment.config`）：
+执行健康检查：
 ```bash
 curl -f {health-check-url}
 ```
 
-检查服务日志（最近 50 行），确认无异常错误。
+检查服务日志最近 50 行，确认无异常错误。
 
-**健康检查失败** → 检查日志定位原因；无法快速修复则回滚至上一个成功版本。
+**健康检查失败** → 检查日志定位原因；无法快速修复则回滚至上一个成功版本，记录并上报。
 
 ---
 
@@ -126,30 +141,31 @@ curl -f {health-check-url}
 
 ```
 ✅ deploy 完成：{target} 部署成功，健康检查通过。
-→ 下一步：wrap-up-iteration（可并行执行，无强依赖）
+→ 下一步：wrap-up-iteration（可并行执行）
 ```
 
 ---
 
 ## 边界场景
 
-**首次部署（`deployment.config` 不存在）**：
-1. 先建 `deployment.config`，填入：服务器地址 / 构建命令 / 健康检查端点 / 重启命令
-2. commit 后继续 Step 1
-
 **无服务器（纯静态 / Gitee Pages 等）**：
 - 跳过 Step 3–6，替换为对应平台发布命令
-- 健康验证改为访问页面确认
+- 健康验证改为访问页面确认可打开
 
 **多环境（staging 先于 prod）**：
 - 按 `target` 依次执行完整流程
 - 每个环境独立验证通过后再推进下一个
 
+**部署后发现功能异常**：
+- 立即走 `dispatch-new(target-source=bug, urgency=hotfix)` → develop → deploy 快速通道
+
 ---
 
 ## 上下文管理
 
-**中断续做**：
-1. 读 `deploy-log.md` 确认最后一条记录的步骤
-2. 读 `deployment.config` 确认配置
-3. 从上次中断的步骤继续（Step 4 之后的步骤可重跑，不破坏幂等性）
+deploy 通常单次会话完成，无需专门的断点续做文件。
+
+**中断续做**：读 `deploy-log.md` 最后一条记录，判断中断在哪个步骤：
+- 无新记录 → 从 Step 1 重新开始
+- 有"构建结果：成功"但无"健康检查"结论 → 从 Step 6 继续
+- 已有完整记录 → 任务已完成
