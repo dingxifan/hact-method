@@ -43,6 +43,7 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 
 三条件满足 → 精确读取：
 - `iterations/vN/prd.md`（acceptance criteria 段落）
+- `iterations/vN/standards-shared.md`（测试环境约定段落）
 
 ---
 

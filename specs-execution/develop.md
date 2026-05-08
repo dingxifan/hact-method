@@ -29,6 +29,12 @@
 
 🚫 等用户确认（或从任务包 layer 字段自动判断后向用户确认）
 
+**G3 前置检查（source=sprint 时必做）**
+
+拾取任务包后，确认 `source` 字段：
+- `source=sprint` → 读 `iterations/vN/gates.md`，确认 G3 已签。未签则阻断：「⚠️ G3 未通过，Sprint 尚未规划，请先完成 plan-sprint。」
+- `source=integration` / `source=manual-test` / `source=bug` / `source=optimization` → 无 Gate 前置，直接继续
+
 **拾取任务**：
 1. 读 `queue/` 目录，找 [可取] 状态且 `layer` 匹配当前执行层的任务包
 2. 确认 `user.disciplines` 包含对应 discipline（dev-frontend 或 dev-backend）

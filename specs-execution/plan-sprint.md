@@ -75,7 +75,7 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后，按 `specs-structural/develop.md §字段规范` 为每个任务写完整 12 字段任务包。
+骨架确认后，按 `specs-structural/develop.md §字段规范` 为每个任务写完整 14 字段任务包。
 
 **字段完整性自检**（每包写完前对照 `specs-structural/develop.md §字段规范` 检查 14 字段，无空字段方可写入 queue）。
 
@@ -143,7 +143,7 @@
 | 触发点 | Subagent 任务 | Subagent Prompt 要点 | 失败处理 |
 |--------|-------------|---------------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件 | — | 读取失败则主线单独读 |
-| Step 3（任务 > 4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layer / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 12 字段 YAML | 失败则主线接管该包 |
+| Step 3（任务 > 4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layer / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 14 字段 YAML | 失败则主线接管该包 |
 
 **重要**：subagent 只返回任务包内容，**由主线负责写入文件**，不让 subagent 直接操作文件系统。
 

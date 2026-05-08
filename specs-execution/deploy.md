@@ -32,7 +32,10 @@
 
 读任务包，确认：
 - `target` 字段（目标环境，如 `prod` / `staging`）
-- 触发来源（A 类 G4 已签 / B 类积累触发 / hotfix 授权）
+- 触发来源（任务包 `target` 字段说明触发方式）：
+  - **A 类**：G4 由 manual-test 签署后，由有 `dispatch` discipline 的用户主动创建本 deploy 任务并触发
+  - **B 类**：B 类 [merged] 任务积累到一定数量，由有 `dispatch` discipline 的用户主动触发
+  - **hotfix 快速通道**：`urgency=hotfix` 的 develop 任务 [merged] 后，有 `dispatch` discipline 的用户授权后立即触发
 
 **首次部署（`deployment.config` 不存在）**：先建 `deployment.config`，填入以下字段，commit 后继续：
 ```
