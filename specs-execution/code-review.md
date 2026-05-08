@@ -139,7 +139,17 @@
 - 无业务逻辑改动（允许：null 防护、缺失字段补全、类型修复、配置笔误、错误拦截格式；不允许：条件判断逻辑、数据处理算法、权限规则、接口行为）
 - 原因显而易见，无需上下文讨论
 
-→ 直接修改并合并，原 PR comment 注明「已直修」。无需新 PR，无需他人 review。
+→ 操作步骤：
+```bash
+git checkout -b fix/cr-{task-id}-{desc}
+# 修改代码
+git add {改动文件}
+git commit -m "fix(cr): {描述}"
+git push origin fix/cr-{task-id}-{desc}
+git checkout master && git merge fix/cr-{task-id}-{desc} && git push origin master
+git branch -d fix/cr-{task-id}-{desc}
+```
+原 PR comment 注明「已直修」。无需 PR review，直接 merge。
 
 **同一 PR 打回 3 次仍有同一 `[阻断]` 问题** → 停止反复 review，上报；判断根因是否在 TRD/standards 层，若是则创建 `revise-doc` 任务，再决定如何继续。
 

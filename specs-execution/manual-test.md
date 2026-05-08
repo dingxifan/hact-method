@@ -136,7 +136,17 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 - 无业务逻辑改动（null 防护、缺失字段补全、类型修复、配置笔误等）
 - 原因显而易见，无需上下文讨论
 
-**满足 → 快速通道**：直接修复，commit（格式：`fix(mt): {描述}`），在验收报告对应条目备注「已直修」，通知用户复测。
+**满足 → 快速通道**：
+```bash
+git checkout -b fix/mt-{desc}
+# 修改代码
+git add {改动文件}
+git commit -m "fix(mt): {描述}"
+git push origin fix/mt-{desc}
+git checkout master && git merge fix/mt-{desc} && git push origin master
+git branch -d fix/mt-{desc}
+```
+在验收报告对应条目备注「已直修」，通知用户复测。
 
 **不满足 → 写 develop 任务包**：
 - `source=manual-test`

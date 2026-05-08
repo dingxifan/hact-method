@@ -183,7 +183,17 @@ G3 签署时已确认环境可达，此处快速复核：
 - 无业务逻辑改动（null 防护、缺失字段补全、类型修复、配置笔误等）
 - 原因显而易见，无需上下文讨论
 
-满足 → 直接修复，commit（格式：`fix(it): {描述}`），在结果表对应条目备注「已直修」，继续复测。
+满足 → 快速通道：
+```bash
+git checkout -b fix/it-{desc}
+# 修改代码
+git add {改动文件}
+git commit -m "fix(it): {描述}"
+git push origin fix/it-{desc}
+git checkout master && git merge fix/it-{desc} && git push origin master
+git branch -d fix/it-{desc}
+```
+在结果表对应条目备注「已直修」，继续复测。
 
 不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `queue/{task-id}.md`
   - task-id 命名：`{项目缩写}-it-{三位序号}`，如 `hact-it-001`
