@@ -128,7 +128,7 @@
 **通过**：
 1. 调平台 merge API 合并 PR
 2. 对应 develop task 状态推 [merged]
-3. 有 `[建议]` → 写入 `backlog.md`
+3. 有 `[建议]` → 写入 `backlog.md`，格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径} | 待联调阶段处理`
 
 **打回**：
 1. PR comment 中列出全部 `[阻断]` 问题（已在 Step 5 写好）
@@ -139,7 +139,7 @@
 - 原因显而易见（配置笔误、空指针防御等非业务逻辑）
 - 无需理解上下文即可确认正确
 
-→ 直接修改，建新 PR（`fix/cr-{task-id}-{desc}`），指定原 develop 执行人 review 后合并；原 PR comment 注明「已直修，见 {新PR链接}」。
+→ 直接修改并合并，原 PR comment 注明「已直修」。无需新 PR，无需他人 review。
 
 **同一 PR 打回 3 次仍有同一 `[阻断]` 问题** → 停止反复 review，上报；判断根因是否在 TRD/standards 层，若是则创建 `revise-doc` 任务，再决定如何继续。
 

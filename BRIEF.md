@@ -68,3 +68,25 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 18. **task → discipline 是 1:N；user → discipline 是 M:N**（路径 X）：每个 task 挂**单一**主 discipline（schema 上 `tasks.discipline` 是单值字段）；每个用户可被授权多个 discipline（schema 上 `user_disciplines` 是 junction 表）。跨学科辅助知识由 spec 文本跨引用相邻子规范来补，不在 schema 表达。理由：27 个 task 里真跨学科的极少（≤2），M:N 的 schema 复杂度对实际场景投资回报低；wrap-up-iteration 这种"看似跨学科"的任务实际是机械化分流，1 分钟内可完成，无需拆子任务
 19. **权限模型 = user-discipline 关联（废弃 user.role）**：新增 `user_disciplines (user_id, discipline_id)` junction 表达"用户被授权做哪类 discipline 的任务"。拉取准入 = `task.discipline ∈ user.disciplines`（task 侧 1:N，user 侧 M:N）；任务级写权限由 taken-by 决定。管理性操作不另开后门——立项是独立 task `init-project`(management)；Gate 签字合并入最近前置任务（G1 在 draft-prd-vN/product，G2 在 draft-tech-design/architecture，G3 在 plan-sprint/dispatch，G4 在 manual-test/product，G5 在 wrap-up-iteration/management），通过 user 授权决定谁能拉
 20. **复杂工作不强行预定义为 task type**：任务驱动模型不要求"所有动作都是任务"，只要求"被反复执行的、有清晰 spec 的动作是任务"。例：方法论调整本身是发散性工作，没清晰 spec——由有 `management` discipline 授权的 user 在父级工作区按需直接做，无固定任务包。本原则适用于所有低频+复杂+难标准化的活动
+
+## 工具依赖
+
+使用 hact-method 前需一次性配置以下工具，配置完成后无需重复操作：
+
+### 开发机 / CC 工具
+
+| 工具 | 调用位置 | 安装 / 配置方式 |
+|------|---------|----------------|
+| **superpowers** | 所有 skill 的基础框架 | 按 superpowers 官方文档安装 |
+| **pinchtab skill** | generate-integration-tests 前端场景脚本 | 通过 superpowers 安装 |
+| **simplify skill** | develop 自检阶段，检查冗余实现 | 通过 superpowers 安装 |
+| **pic skill** | 联调前全面检查（`/pic`） | 通过 superpowers 安装 |
+| **gitee-ops skill** | Gitee PR 操作（`/gitee-ops`，禁止使用 gh CLI） | 通过 superpowers 安装 + 配置 Gitee token |
+| **SSH MCP** | deploy 阶段执行远端命令 | 在 Claude Code MCP 配置中添加 SSH server alias |
+
+### 服务器端工具
+
+| 工具 | 用途 |
+|------|------|
+| **pm2** | 后端进程管理，deploy 阶段重启服务 |
+| **nginx** | 前端静态文件服务 |

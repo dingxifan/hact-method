@@ -96,10 +96,10 @@
 |------|---------|
 | 多个 PR 的 layer 混合（部分 frontend、部分 backend） | 按各 PR 各自的 layer 加载对应 checklist，不混用 |
 | PR description 缺失任意必填段落（task-id / AC 验证 / 偏离说明 / 遗留问题） | 视为 `[阻断]`，要求补充后重新提交 |
-| **简单 bug 直修**：改动 ≤5 行 + 原因显而易见 + 非业务逻辑（配置笔误、空指针防御等） | CR 人直接修，建新 PR（`fix/cr-{task-id}-{desc}`），指定原 develop 执行人 review 后合并；在原 PR comment 注明"已直修，见 {新PR链接}" |
+| **简单 bug 直修**：改动 ≤5 行 + 原因显而易见 + 非业务逻辑（配置笔误、空指针防御等） | CR 人直接修改并合并，原 PR comment 注明「已直修」。无需新 PR，无需他人 review |
 | `layer=null`（仅配置/文档改动） | 跳过 checklist，只核对 PR description 完整性 + 无凭据泄露 |
 | 同一批次有 PR 需要打回、有 PR 可以通过 | 各自独立决定，不因为有打回就阻塞可通过的 PR |
-| sprint 全部 PR 已通过但某个有 `[建议]` 未处理 | 不阻断合并，将 `[建议]` 记入 backlog |
+| sprint 全部 PR 已通过但某个有 `[建议]` 未处理 | 不阻断合并，将 `[建议]` 写入 backlog.md 并标记 `[CR-建议]`，联调阶段统一处理 |
 
 ---
 

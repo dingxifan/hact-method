@@ -136,8 +136,17 @@
 
 ### Step 5：G3
 
+**测试环境确认**（签 G3 前必做）：
+
+逐项核对：
+- [ ] 后端服务可访问（curl 健康检查端点返回正常）
+- [ ] 前端页面可打开
+- [ ] 数据库指向测试库（非生产库）
+
+任一未就绪 → 提示用户先拉起环境，就绪后再签 G3。
+
 ```
-✅ Sprint 规划完成：[N] 个任务包已入 queue，sprint.md 已生成，依赖关系已标注。
+✅ Sprint 规划完成：[N] 个任务包已入 queue，sprint.md 已生成，依赖关系已标注，测试环境已确认可达。
 要签 G3 吗？
 ```
 
@@ -147,7 +156,7 @@
 ```markdown
 - [x] G3：开发包就绪 — {YYYY-MM-DD}
 ```
-执行 `git add . && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]"`
+执行 `git add queue/ iterations/vN/sprint.md iterations/vN/gates.md && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]"`
 
 **feedback 检查**（签 G3 后）：
 - 疑点清单超过 3 条且根因集中（如 TRD 某类接口描述普遍不完整）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-tech-design 的疑点确认步骤中加强 {哪类场景}`）

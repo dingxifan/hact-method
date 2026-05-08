@@ -28,16 +28,30 @@
 |------|---------|------|
 | 联调前全面检查 | `/pic` | 四阶段检查：机械验证 → 逐层 checklist → 接口契约对齐 → AI review |
 | Gitee 仓库操作 | `/gitee-ops` | 远端为 Gitee 时，创建 PR / 合并 PR / 查询分支，**禁止使用 gh CLI** |
+| 浏览器自动化 | `/pinchtab` | 前端场景测试：打开页面、点击操作、填表、截图、导出 PDF；联调阶段 generate-integration-tests 前端脚本使用 |
 
 ## 跨会话接续规则
 每次打开本仓时，按顺序执行：
 
-**Step 0：确认 hact-method 是最新版本**
+**Step 0：确认本地代码与远端同步**
+
+对项目仓和 hact-method 各执行一遍：
+
 ```bash
-cd E:\group-code\hact-method && git fetch && git status
+git fetch origin master
+git status
 ```
-- 显示「Your branch is behind」→ 执行 `git pull`，拉取最新规范后再继续
-- 已是最新 → 直接继续
+
+按 `git status` 输出处理：
+
+| 状态 | 处理 |
+|------|------|
+| `Your branch is behind` | 执行 `git pull`，拉取最新后继续 |
+| `Your branch is up to date` | 直接继续 |
+| `Your branch is ahead` | 本地有未推送 commit，直接继续（不拉，不覆盖本地） |
+| `Your branch has diverged` | 停止，告知用户："本地与远端有分叉，请人工处理后再继续" |
+
+两个仓都检查完才进入 Step 1。
 
 **Step 1：读取项目当前状态，推断当前任务类型**
 1. 读取 `project.md` 了解当前产品与技术状态

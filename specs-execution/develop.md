@@ -206,6 +206,10 @@ git commit -m "{type}({task-id}): {改动描述}"
 
 ### Step 7：推 PR
 
+```bash
+git push origin {task-id}
+```
+
 PR description 是本任务的唯一交付记录，需完整填写：
 
 ```markdown
