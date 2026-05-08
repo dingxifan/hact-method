@@ -114,6 +114,34 @@ Phase 3 接口契约核查：
 
 ---
 
+## 修复路径
+
+PIC 发现的问题不属于任何 queue 任务包，按以下规则处理：
+
+**快速通道**（同时满足）：
+- 改动 ≤15 行
+- 无业务逻辑改动（null 防护、缺失字段补全、类型修复、配置笔误、接口字段对齐等）
+- 原因显而易见，无需上下文讨论
+
+```bash
+git checkout -b fix/pic-{desc}
+# 修改代码
+git add {改动文件}
+git commit -m "fix(pic): {描述}"
+git push origin fix/pic-{desc}
+git checkout master && git merge fix/pic-{desc} && git push origin master
+git branch -d fix/pic-{desc}
+```
+
+**走 dispatch-new**（不满足快速通道任意一条）：
+- 写 develop 任务包（`source=integration`），写入 `queue/{task-id}.md`
+- task-id 命名：`{项目缩写}-pic-{三位序号}`，如 `hact-pic-001`
+- 正常走 PR 流程
+
+Phase 1–3 发现的问题通常满足快速通道条件，Phase 4 AI Review 发现的问题需逐条判断。
+
+---
+
 ## 最终输出
 
 ```
