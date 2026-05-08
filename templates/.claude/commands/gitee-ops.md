@@ -11,8 +11,8 @@ git remote get-url origin
 # 示例输出：https://gitee.com/your-name/hact-app.git
 # → owner = your-name，repo = hact-app
 
-# 从 .env 读取 token
-$GITEE_TOKEN = (Get-Content .env | Select-String "GITEE_ACCESS_TOKEN").ToString().Split("=")[1].Trim()
+# 从 backend/.env 读取 token
+$GITEE_TOKEN = (Get-Content backend/.env | Select-String "GITEE_ACCESS_TOKEN").ToString().Split("=")[1].Trim()
 ```
 
 ## 常用操作
