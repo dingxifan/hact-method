@@ -25,30 +25,18 @@ description: 联调前全面检查——在 generate-integration-tests 启动前
 
 > 确认前后端各自能构建、类型正确、lint 通过。有报错先修，不带错误进后续步骤。
 
-**后端：**
-```bash
-npm run build
-npm run type-check    # 或 npx tsc --noEmit
-npm run lint
-```
+调用 `verification-loop` skill（`E:\group-code\hact-method\skills\verification-loop\SKILL.md`），对**后端**和**前端**各执行一遍，分别输出 VERIFICATION REPORT。
 
-**前端：**
-```bash
-npm run build
-npm run type-check    # 或 npx tsc --noEmit
-npm run lint
-```
-
-项目无对应脚本的命令 → 跳过，不阻断。
+- 切换到后端目录执行一遍，再切换到前端目录执行一遍
+- Overall 为 NOT READY → 先修复，不进入 Phase 2
 
 ```
 Phase 1 小结：
-- 后端 build: ✅/❌  type-check: ✅/❌  lint: ✅/❌
-- 前端 build: ✅/❌  type-check: ✅/❌  lint: ✅/❌
-有 ❌ → 列出错误，先修复再继续
+- 后端：[READY / NOT READY]
+- 前端：[READY / NOT READY]
 ```
 
-🚫 Phase 1 有 ❌ 未修复，不进入 Phase 2
+🚫 Phase 1 有 NOT READY，不进入 Phase 2
 
 ---
 
