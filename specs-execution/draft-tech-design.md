@@ -179,10 +179,10 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 ## 上下文管理
 
 - Step 2（TRD 骨架确认后）做一次 compact，再开始写完整 TRD——骨架确认是探索讨论阶段的天然终点，写作阶段需要保持各段内部一致性
-- compact 前在 progress.md 记录：疑点清单各条答案摘要 + TRD 骨架（接口列表 / 模块划分 / 共享组件）
+- compact 前在 `_meta/sessions/draft-tech-design-progress.md` 记录：疑点清单各条答案摘要 + TRD 骨架（接口列表 / 模块划分 / 共享组件）
 
 **断点续做**：
-- 读 `trd.md` 判断写到哪一段（按 7 段结构对照）
-- 读 `standards-*.md` 判断哪几份已完成
-- 读 `gates.md` 判断 G2 是否已签
+- 读 `iterations/vN/trd.md` 判断写到哪一段（按 7 段结构对照）
+- 读 `iterations/vN/standards-*.md` 判断哪几份已完成
+- 读 `iterations/vN/gates.md` 判断 G2 是否已签
 - 从未完成的段落或文件继续

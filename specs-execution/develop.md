@@ -229,7 +229,7 @@ context-state:
 - 用户临时追加新需求
 
 重置流程：
-1. 在 `progress.md` 写 context-state 记录：
+1. 在 `_meta/sessions/develop-{task-id}-progress.md` 写 context-state 记录：
 ```yaml
 context-state:
   task-id: {task-id}

@@ -185,10 +185,10 @@ MVP 边界（不做什么）：
 ## 上下文管理
 
 - 骨架确认后（Step 3 结束、Step 4 开始前）做一次 compact——场景还原和讨论过程可压缩，功能契约写作阶段需要保持完整上下文以确保跨功能一致性
-- compact 前在 progress.md 记录：已确认的功能清单 + 各功能的骨架一句话描述 + MVP 排除项
+- compact 前在 `_meta/sessions/draft-prd-progress.md` 记录：已确认的功能清单 + 各功能的骨架一句话描述 + MVP 排除项
 
 **断点续做**：
 - 读 `iterations/vN/prd.md`（内容存在 → 已过 Step 4）
-- 读 `gates.md`（G1 已签 → 任务完成）
-- 读 progress.md 了解上次停在哪个功能
+- 读 `iterations/vN/gates.md`（G1 已签 → 任务完成）
+- 读 `_meta/sessions/draft-prd-progress.md` 了解上次停在哪个功能
 - 从未完成的功能继续，不重做已确认的内容

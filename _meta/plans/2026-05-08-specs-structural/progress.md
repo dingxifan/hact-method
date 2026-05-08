@@ -9,3 +9,15 @@
 **材料整理**：派两个 subagent 同步读取 human-ai-col 和 aicoder 工作区，结果待汇总。
 
 ---
+
+## 2026-05-08 会话（第三阶段启动）
+
+**本会话完成**：执行 `init-project`，创建 `E:\group-code\hact-app\` 项目仓。
+- 目录结构（iterations/ + queue/done/）✅
+- 7 份占位文件写入 ✅
+- CLAUDE.md 写入（引用 hact-method 执行规范）✅
+- git 初始化 + 初始 commit ✅
+
+**下一步**：在 hact-app 仓开新 CC 会话，执行 `draft-prd-vN`。
+
+---

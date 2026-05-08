@@ -33,6 +33,8 @@
 ```bash
 mkdir -p E:\group-code\{name}\iterations
 mkdir -p E:\group-code\{name}\queue\done
+mkdir -p E:\group-code\{name}\_meta\input
+mkdir -p E:\group-code\{name}\_meta\sessions
 touch E:\group-code\{name}\project.md
 touch E:\group-code\{name}\decisions.md
 touch E:\group-code\{name}\design.md
@@ -41,6 +43,10 @@ touch E:\group-code\{name}\backlog.md
 touch E:\group-code\{name}\feedback.md
 touch E:\group-code\{name}\b-tasks.md
 ```
+
+`_meta/` 目录说明：
+- `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）
+- `_meta/sessions/`：各任务的跨会话接续文件（`{task-type}-progress.md`）
 
 3. **写入占位文件初始结构**：各文件按下方"主要产物"中的初始内容填入，不留空文件
 4. **Git 初始化**：
@@ -67,6 +73,8 @@ git commit -m "feat: 初始化项目 {name}"
 | design.md | `{name}/design.md` | 空文件，待首期产品阶段填写 |
 | backlog.md | `{name}/backlog.md` | 空文件 |
 | feedback.md | `{name}/feedback.md` | 空文件 |
+| _meta/input/ | `{name}/_meta/input/` | 空目录，存放背景材料和上下文文档 |
+| _meta/sessions/ | `{name}/_meta/sessions/` | 空目录，存放跨会话接续文件 |
 
 **project.md 初始模板：**
 

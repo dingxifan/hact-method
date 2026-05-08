@@ -141,9 +141,9 @@
 ## 上下文管理
 
 - Step 2（任务骨架确认后）做一次 compact，再开始写任务包——骨架确认是探索讨论阶段的天然终点，任务包写作需要跨任务保持依赖关系和字段一致性
-- compact 前在 progress.md 记录：任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单各条答案摘要
+- compact 前在 `_meta/sessions/plan-sprint-progress.md` 记录：任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单各条答案摘要
 
 **断点续做**：
 - 读 `queue/` 目录，统计已写任务包数量
-- 读 progress.md 获取任务骨架表，对照找出未写的任务
+- 读 `_meta/sessions/plan-sprint-progress.md` 获取任务骨架表，对照找出未写的任务
 - 从未完成的任务包继续
