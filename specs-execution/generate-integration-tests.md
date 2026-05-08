@@ -177,7 +177,15 @@ G3 签署时已确认环境可达，此处快速复核：
 逐条处理 ❌ 条目：
 
 **`[阻断]`**（影响主流程，必须修复）：
-- 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `queue/{task-id}.md`
+
+先判断是否满足**快速通道**条件（同时满足）：
+- 改动 ≤15 行
+- 无业务逻辑改动（null 防护、缺失字段补全、类型修复、配置笔误等）
+- 原因显而易见，无需上下文讨论
+
+满足 → 直接修复，commit（格式：`fix(it): {描述}`），在结果表对应条目备注「已直修」，继续复测。
+
+不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `queue/{task-id}.md`
   - task-id 命名：`{项目缩写}-it-{三位序号}`，如 `hact-it-001`
 - 更新 `_meta/sessions/generate-integration-tests-progress.md`，记录已派修复的 task-id
 

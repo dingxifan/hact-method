@@ -129,18 +129,27 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 | 影响核心功能且用户无法绕过 | `hotfix` |
 | 其余 | `normal` |
 
-**④ 写 develop 任务包**：
+**④ 判断修复路径**：
+
+先判断是否满足**快速通道**条件（同时满足）：
+- 改动 ≤15 行
+- 无业务逻辑改动（null 防护、缺失字段补全、类型修复、配置笔误等）
+- 原因显而易见，无需上下文讨论
+
+**满足 → 快速通道**：直接修复，commit（格式：`fix(mt): {描述}`），在验收报告对应条目备注「已直修」，通知用户复测。
+
+**不满足 → 写 develop 任务包**：
 - `source=manual-test`
 - `task-id` 命名：`{项目缩写}-mt-{三位序号}`，如 `hact-mt-001`
 - 写入 `queue/{task-id}.md`，状态 `[可取]`
 
 **⑤ 通知用户并记录**：
 ```
-已派发修复：
-- {task-id}：{问题描述}（{urgency}）
-本轮修复合并后通知你复测。
+已处理修复：
+- {task-id 或「已直修」}：{问题描述}（{urgency}）
+本轮修复完成后通知你复测。
 ```
-追加 task-id 和问题描述到 `_meta/sessions/manual-test-progress.md`。
+追加处理记录到 `_meta/sessions/manual-test-progress.md`。
 
 ---
 
