@@ -21,6 +21,12 @@
 
 ## 会话启动
 
+**前置检查：G1 是否已签**
+
+读 `iterations/vN/gates.md`（路径不存在时读 `iterations/` 目录找最新版本）：
+- G1 未签 → 阻断：「⚠️ G1 未通过，PRD 尚未确认，请先完成 draft-prd-vN 再启动技术设计。」
+- G1 已签 → 继续
+
 **必读文件**（用 Explore subagent 并行读取，不占主线上下文）：
 - `iterations/vN/prd.md`
 - `project.md`（技术层已有决策）
@@ -138,6 +144,13 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 
 三份汇总后检查：无重复条目 / 无相互矛盾 / 覆盖 TRD 提到的所有关键约束。
 
+**Subagent 失败判定**：以下任一情况视为失败，主线接管该份 standards：
+- subagent 返回内容为空或格式完全不符合模板结构
+- subagent 返回内容包含大量与 TRD 无关的通用规则（未基于 TRD 提炼）
+- subagent 运行超时或报错
+
+主线接管时：直接基于 TRD 对应层（frontend/backend）的相关章节手动生成该份 standards，记录原因。
+
 ---
 
 ### Step 5：知识沉淀
@@ -163,7 +176,20 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 ```
 执行 `git add . && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]"`
 
+**feedback 检查**（签 G2 后）：
+- 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
+- standards 生成后发现与 TRD 有明显脱节（需要大量人工修正）→ 写入 `feedback.md`
+- 无发现 → 跳过
+
 移交：「TRD 完成，下一步 `plan-sprint`。」
+
+---
+
+## 红线
+
+- **禁止省略测试环境约定段**：TRD 中「测试环境约定」是必填段，无论项目大小
+- **禁止跳过疑点清单确认**：疑点清单未经用户逐条确认前不开始写 TRD
+- **禁止自行补全 PRD 遗漏**：PRD 有歧义或缺失时，列入疑点清单等用户确认，不自行假设填写
 
 ---
 
