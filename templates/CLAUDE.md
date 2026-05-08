@@ -29,7 +29,16 @@
 | 联调前全面检查 | `/pic` | 四阶段检查：机械验证 → 逐层 checklist → 接口契约对齐 → AI review |
 
 ## 跨会话接续规则
-每次打开本仓时：
+每次打开本仓时，按顺序执行：
+
+**Step 0：确认 hact-method 是最新版本**
+```bash
+cd E:\group-code\hact-method && git fetch && git status
+```
+- 显示「Your branch is behind」→ 执行 `git pull`，拉取最新规范后再继续
+- 已是最新 → 直接继续
+
+**Step 1：读取项目当前状态**
 1. 读取 `project.md` 了解当前产品与技术状态
 2. 读取 `iterations/` 最新迭代目录下的 `gates.md` 确认当前 Gate 状态
 3. 根据当前任务类型加载对应规范后开始工作
