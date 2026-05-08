@@ -183,9 +183,24 @@ G3 签署时已确认环境可达，此处快速复核：
 - 原因显而易见，无需上下文讨论
 
 满足 → 快速通道：
+
+**1. 修改代码**
+
+**2. 提交前自检**（有报错必须修复，不得跳过）
+```bash
+# 后端有改动时
+cd backend && npm run build 2>&1 | tail -5
+npx tsc --noEmit 2>&1 | head -10
+
+# 前端有改动时
+cd frontend && npm run build 2>&1 | tail -5
+npx vue-tsc --noEmit 2>&1 | head -10
+```
+有编译 / 类型错误 → 修复后重新自检，通过后才进入下一步。
+
+**3. 提交并合并**
 ```bash
 git checkout -b fix/it-{desc}
-# 修改代码
 git add {改动文件}
 git commit -m "fix(it): {描述}"
 git push origin fix/it-{desc}
