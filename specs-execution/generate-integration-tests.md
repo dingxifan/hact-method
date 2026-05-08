@@ -39,6 +39,25 @@
 请完成后重新开始。
 ```
 
+**选项列表**（前置已满足，确认要做什么）：
+
+```
+{项目名} · 所有 sprint 任务已 [merged]
+
+可做的任务：
+[1] generate-integration-tests — 设计测试场景，跑联调脚本 ← 主线
+
+其他可做（输入「展开」/ 自由描述）：
+- revise-doc(target=trd) — 若发现 TRD 接口定义有歧义，先修再联调
+
+请选 [1]，或输入「展开」，或直接说你要做什么。
+```
+
+🚫 等用户选择后再继续
+
+用户选 [1] → 继续下方（Explore subagent 并行读取文件）
+用户选其他 → 按用户描述判断，加载对应 exec spec 执行
+
 前置满足 → 用 Explore subagent 并行读取（不占主线上下文）：
 - `iterations/vN/prd.md`（acceptance criteria 段落）
 - `iterations/vN/trd.md`（接口定义段落 + 测试环境约定段落）

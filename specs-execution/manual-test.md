@@ -41,6 +41,25 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 请完成联调后重新开始。
 ```
 
+**选项列表**（前置已满足，确认要做什么）：
+
+```
+{项目名} · 联调三条件已满足
+
+可做的任务：
+[1] manual-test — 提供测试环境，开始人工验收 ← 主线
+
+其他可做（输入「展开」/ 自由描述）：
+- revise-doc(target=prd) — 若发现 PRD acceptance criteria 有模糊之处，先修再验收
+
+请选 [1]，或输入「展开」，或直接说你要做什么。
+```
+
+🚫 等用户选择后再继续
+
+用户选 [1] → 继续下方（精确读取 prd.md + standards-shared.md）
+用户选其他 → 按用户描述判断，加载对应 exec spec 执行
+
 三条件满足 → 精确读取：
 - `iterations/vN/prd.md`（acceptance criteria 段落）
 - `iterations/vN/standards-shared.md`（测试环境约定段落）
