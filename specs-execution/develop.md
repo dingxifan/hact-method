@@ -88,7 +88,11 @@
 🚫 等用户确认拆分计划
 
 **路径 C：urgency=hotfix**
-跳过评估，直接说「hotfix 模式：最小化修复路径，直接开始」，进入 Step 3。
+跳过规模评估和拆分计划，直接输出：
+```
+hotfix 模式：最小化修复路径，直接开始实现，不等用户确认拆分计划。
+```
+然后直接进入 Step 3（不经过 🚫 阻断）。
 
 ---
 
@@ -197,6 +201,15 @@ PR description 是本任务的唯一交付记录，需完整填写：
 ✅ develop 完成：task-{id}（{layer}）已 commit，PR 已推。
 → 下一步：等待 code-review
 ```
+
+---
+
+### Step 10：feedback 检查
+
+回顾本次实现：
+- 遇到 standards 未覆盖的决策（视觉/接口边界等）且反复出现 → 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 {standards-frontend/backend/shared} 哪节补充`）
+- 上下文重置协议被触发 → 写入 `feedback.md`，记录触发原因，供后续调整任务拆分粒度参考
+- 无发现 → 跳过
 
 ---
 

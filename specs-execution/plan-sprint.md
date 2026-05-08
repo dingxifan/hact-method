@@ -21,6 +21,12 @@
 
 ## 会话启动
 
+**前置检查：G2 是否已签**
+
+读 `iterations/vN/gates.md`：
+- G2 未签 → 阻断：「⚠️ G2 未通过，TRD 尚未确认，请先完成 draft-tech-design 再启动 Sprint 规划。」
+- G2 已签 → 继续
+
 **必读文件**（Explore subagent 并行读取）：
 - `iterations/vN/trd.md`
 - `iterations/vN/standards-shared.md`
@@ -122,6 +128,11 @@
 - [x] G3：开发包就绪 — {YYYY-MM-DD}
 ```
 执行 `git add . && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]"`
+
+**feedback 检查**（签 G3 后）：
+- 疑点清单超过 3 条且根因集中（如 TRD 某类接口描述普遍不完整）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-tech-design 的疑点确认步骤中加强 {哪类场景}`）
+- 任务拆分过程中发现 TRD 有多处遗漏，需要反复修订 → 写入 `feedback.md`
+- 无发现 → 跳过
 
 移交：「Sprint 已规划，开发者可开始从 queue 拾取任务，下一步 `develop`。」
 
