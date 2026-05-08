@@ -75,6 +75,8 @@ restart-command=
 git push origin master
 ```
 
+> hotfix 快速通道说明：Step 1（本地构建验证）对 hotfix 同样适用，不跳过。区别仅在于本步骤（Step 2）中只合并 hotfix 分支，不合并其他待部署分支。
+
 **hotfix 快速通道**：仅合并 hotfix 分支，不合并其他未验收的改动。
 
 ---
@@ -153,8 +155,10 @@ curl -f {health-check-url}
 - 健康验证改为访问页面确认可打开
 
 **多环境（staging 先于 prod）**：
-- 按 `target` 依次执行完整流程
-- 每个环境独立验证通过后再推进下一个
+`target` 字段为多个环境时（如 `staging → prod`），依次对每个环境完整执行 Step 1–7：
+1. 先对 `staging` 执行 Step 1–7，健康检查通过后记录部署日志
+2. 确认 staging 无异常后，再对 `prod` 执行 Step 3–7（本地构建 Step 1–2 无需重复）
+3. 每个环境独立验证，staging 失败不推进 prod
 
 **部署后发现功能异常**：
 - 立即走 `dispatch-new(target-source=bug, urgency=hotfix)` → develop → deploy 快速通道
