@@ -107,12 +107,40 @@ git push -u origin master
 
 推送失败（如仓库不存在或无权限）→ 提示用户先在 Gitee 创建仓库并确认权限，修复后重试。
 
+**4.4 添加团队成员：**
+
+```
+请提供需要加入此项目的团队成员 Gitee 用户名（逗号分隔，如：zhangsan,lisi）。
+无需添加成员则直接回车跳过。
+```
+
+🚫 等用户回应（可跳过）
+
+有成员需要添加时，还需要 Gitee Personal Access Token 以调用 API：
+```
+请提供你的 Gitee Personal Access Token（在 Gitee → 设置 → 私人令牌 中生成，需有 projects 权限）。
+Token 仅本次使用，不会写入任何文件。
+```
+
+从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，逐个添加成员（permission 默认 `push`）：
+
+```bash
+curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{username}" \
+  -d "access_token={token}&permission=push"
+```
+
+每个成员添加后确认响应状态，失败时报告原因（用户名不存在 / token 无权限等）。
+
+```
+✅ 成员添加完成：{zhangsan ✅ / lisi ✅ / ...}
+```
+
 ---
 
 ### Step 5：移交
 
 ```
-✅ init-project 完成：`E:\group-code\{name}\` 已创建，远端已绑定至 {gitee-url}。
+✅ init-project 完成：`E:\group-code\{name}\` 已创建，远端已绑定至 {gitee-url}，团队成员已添加。
 → 下一步：draft-prd-vN — A 类需求从产品阶段开始；B 类需求直接用 dispatch-new。
 ```
 
