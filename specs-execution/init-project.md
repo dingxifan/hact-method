@@ -69,7 +69,9 @@ mkdir -p "E:/group-code/{name}/_meta/sessions"
 - `feedback.md`
 - `b-tasks.md`
 
-同时写入 `CLAUDE.md`，内容复制自 `E:\group-code\hact-method\templates\CLAUDE.md`，将其中 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充。
+同时写入以下文件：
+- `CLAUDE.md`：内容复制自 `E:\group-code\hact-method\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
+- `.claude/commands/pic.md`：内容复制自 `E:\group-code\hact-method\templates\.claude\commands\pic.md`（slash command，输入 `/pic` 启动联调前全面检查）
 
 ---
 

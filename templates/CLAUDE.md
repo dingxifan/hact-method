@@ -26,7 +26,7 @@
 
 | 工具 | 调用方式 | 说明 |
 |------|---------|------|
-| 联调前全面检查 | 告诉 CC「pre-integration-check」 | 启动后 CC 读取并执行 `@../../hact-method/skills/pre-integration-check/SKILL.md` |
+| 联调前全面检查 | `/pic` | 四阶段检查：机械验证 → 逐层 checklist → 接口契约对齐 → AI review |
 
 ## 跨会话接续规则
 每次打开本仓时：
