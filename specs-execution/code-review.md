@@ -30,6 +30,8 @@
 
 ## 会话启动
 
+**批量时机**：优先等同一 sprint 的同层（frontend / backend）全部任务推 PR 后批量审查，减少 review 会话碎片。单任务紧急（urgency=hotfix）时可单独审查。
+
 读任务包，确认 `pr-links` 字段。
 
 按 PR 改动文件路径推断总体 layer（`frontend` / `backend` / 混合 / `null`），精确加载对应 standards 章节——不全量加载，只读与本批 PR **直接相关**的部分：

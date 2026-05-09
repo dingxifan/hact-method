@@ -197,6 +197,9 @@ git diff --stat
 
 ### Step 6：commit
 
+**分支规则**：分支必须从 `master` 切，禁止从其他任务分支切（禁止 stacked PR）。
+唯一例外：任务包 `depends-on` 字段明确标注了前置任务且该任务尚未合并到 master。
+
 ```bash
 git add {改动的文件列表}
 git commit -m "{type}({task-id}): {改动描述}"
@@ -242,9 +245,12 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 ### Step 9：移交
 
+在 `iterations/vN/sprint.md` 对应行追加 `PR#{N} 待审`，审查人以 sprint.md 变更为信号拾取 code-review 任务。
+若同一 sprint 内同层（frontend / backend）全部任务均已推 PR，devmgr 可开启 code-review 会话批量审查。
+
 ```
 ✅ develop 完成：task-{id}（{layer}）已 commit，PR 已推。
-→ 下一步：等待 code-review
+→ 下一步：sprint.md 已标记「PR#{N} 待审」，等待 code-review
 ```
 
 ---
