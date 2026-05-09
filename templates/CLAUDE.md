@@ -66,12 +66,15 @@ git -C "../hact-method" fetch origin && (git -C "../hact-method" pull 2>/dev/nul
 
 | queue/ 任务状态 | Gate 状态 | 推断任务类型 |
 |----------------|-----------|-------------|
+| 全部 `[可取]`（sprint 刚规划，无人认领） | G3 已签，G4 未签 | `develop` — 列出可认领任务，等待用户拾取 |
 | 有任意 `in-progress` | — | `develop` — 继续未完成任务包 |
 | 全部 `done`，G3 已签，G4 未签 | G4 未签 | `code-review` 或 `generate-integration-tests`（视是否有 PR 流程） |
 | 全部 `merged`，G4 未签 | G4 未签 | `generate-integration-tests` |
 | 全部 `merged`，联调报告已存在，G4 未签 | G4 未签 | `manual-test` |
 | G4 已签，G5 未签 | G5 未签 | `wrap-up-iteration` |
 | G5 已签 | — | 本迭代完结，等待下一指令 |
+
+🚫 **禁止给用户贴角色标签**（如"作为前端程序员"）——执行层（frontend/backend）由 develop spec 第零步在会话内确认，不在启动阶段推断。
 
 5. 加载对应规范，输出当前状态摘要：Gate 进度 + 任务状态分布 + 推断的下一步动作
 6. 若 Step 1 结束时处于等待状态（迭代完结、无 gates.md 等），收到用户任务指令后，**必须先加载对应 exec spec，再执行，不得跳过**。
