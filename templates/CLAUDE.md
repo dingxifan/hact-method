@@ -35,14 +35,14 @@
 
 **Step 0：代码同步（强制执行，不可跳过）**
 
-对项目仓和 hact-method 各执行一遍 `git pull`：
+对项目仓和 hact-method 各执行一遍同步：
 
 ```bash
 # 项目仓
-git pull
+git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
 
 # hact-method
-cd ../../hact-method && git pull && cd -
+cd ../../hact-method && git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步") && cd -
 ```
 
 完成后，**必须**向人类输出以下声明（格式固定，不可省略）：
