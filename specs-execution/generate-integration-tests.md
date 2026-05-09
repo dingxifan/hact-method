@@ -203,7 +203,7 @@ git branch -d fix/it-{desc}
 ```
 在结果表对应条目备注「已直修」，继续复测。
 
-不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `queue/{task-id}.md`
+不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `iterations/vN/queue/{task-id}.md`
   - task-id 命名：`{项目缩写}-it-{三位序号}`，如 `hact-it-001`
 - 更新 `_meta/sessions/generate-integration-tests-progress.md`，记录已派修复的 task-id
 

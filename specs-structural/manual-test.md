@@ -40,7 +40,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 验收报告 | `iterations/vN/acceptance-report.md` | 见下方格式 |
-| 修复任务包（如有） | `queue/{task-id}.md` | 见 develop.md §字段规范 |
+| 修复任务包（如有） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 
 **验收报告格式：**
 
@@ -83,7 +83,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `develop`（source=manual-test） | 验收问题修复任务包 | `queue/{task-id}.md` |
+| `develop`（source=manual-test） | 验收问题修复任务包 | `iterations/vN/queue/{task-id}.md` |
 | `deploy` | G4 已签，可部署 | `gates.md` |
 | `wrap-up-iteration` | G4 已签，可并行启动收尾 | `gates.md` |
 

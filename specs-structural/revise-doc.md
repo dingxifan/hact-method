@@ -75,7 +75,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `develop`（受影响的） | 更新后的任务包或 standards 变更说明 | `queue/{task-id}.md` 更新 |
+| `develop`（受影响的） | 更新后的任务包或 standards 变更说明 | `iterations/vN/queue/{task-id}.md` 更新 |
 | `revise-doc(target=trd)`（级联） | 当 PRD 修订影响接口/数据结构时创建 | 新 task |
 | `wrap-up-iteration` | backlog 的 `[修订]` 条目（收尾时对账用） | `backlog.md` |
 

@@ -1,9 +1,16 @@
 # exec: develop
 
-> CC 加载本文时，当前任务是从 queue 拾取一个任务包，实现代码，推 PR。
+> CC 加载本文时，当前任务是从 queue 拾取任务包，实现代码，推 PR。
 > 三层顺序：**骨架**（理解任务 + 拆分计划）→ **结构层**（逐模块实现）→ **执行层**（自检 + PR）
 
-**上下文密度**：高。会话边界 = 任务边界，一次会话只做一个任务包。
+**上下文密度**：高。本 spec 支持两种会话模式，由 sprint.md 的 `交付` 列决定：
+
+| 会话模式 | 触发条件 | 会话边界 | PR 粒度 |
+|---------|---------|---------|---------|
+| **单任务会话** | 拾取 `交付=独立` 的任务 | 一次会话 = 一个任务包 | 一个任务一个 PR |
+| **批量会话** | 拾取同 layer 所有 `交付=批量` 的任务 | 一次会话 = 同 layer 全部批量任务 | 同 layer 所有批量任务共用一个 PR |
+
+Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「批量会话步骤」章节，Steps 1–4 在批量会话中对每个任务依次执行。
 
 ---
 
@@ -27,13 +34,30 @@
 - `source=sprint` → 读 `iterations/vN/gates.md`，确认 G3 已签。未签则阻断：「⚠️ G3 未通过，Sprint 尚未规划，请先完成 plan-sprint。」
 - `source=integration` / `source=manual-test` / `source=bug` / `source=optimization` → 无 Gate 前置，直接继续
 
-**拾取任务**：
-1. 读 `queue/` 目录，找 [可取] 状态且 `layer` 匹配当前执行层的任务包
-2. 确认 `user.disciplines` 包含对应 discipline（dev-frontend 或 dev-backend）
-3. 将任务包状态改为 `[taken-by: {user}]`
+**拾取任务（source=sprint）**：
+
+读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按以下顺序决定会话模式：
+
+**第一优先：处理 `交付=独立` 的任务**
+
+若存在 `[可取]` 且 `交付=独立` 的任务 → 拾取 task-id 最小的那个，进入**单任务会话**。
+- 将该任务包状态改为 `[taken-by: {user}]`
+- Steps 1–10 正常执行，最终推独立 PR
+- ⚠️ 该 PR 合并到 master 之前，sprint.md 中 `依赖` 列引用该任务的所有 `批量` 任务均不可拾取
+
+**第二优先：批量会话（所有 `独立` 任务已 `[merged]` 或本 layer 无 `独立` 任务）**
+
+若本 layer 无 `[可取]` 的 `独立` 任务 → 拾取本 layer 全部 `[可取]` 且 `交付=批量` 的任务，进入**批量会话**。
+- 将所有拾取任务的状态改为 `[taken-by: {user}]`
+- Steps 1–4 对每个任务依次执行（按依赖顺序：被依赖的任务先实现）
+- Steps 5–9 执行「批量会话步骤」（见文末），一次自检、一个 PR 覆盖所有任务
+
+**阻断情形**：本 layer 有 `交付=独立` 任务且状态为 `[done]`（PR 已推但未合并），同时有 `批量` 任务依赖该 `独立` 任务 → 停止，输出：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 code-review 合并。」
+
+---
 
 **精确加载上下文**（不全量加载）：
-- 读任务包全文（`queue/{task-id}.md`）
+- 读拾取的所有任务包全文（`iterations/vN/queue/{task-id}.md`）
 - 只读 `relevant-standards` 字段指向的具体章节，不读整份 standards 文件
 - 只读 `reference` 字段列出的文件行号范围，不读全文
 
@@ -148,28 +172,18 @@ npm run lint           # lint 通过
 
 ---
 
-自检依次完成以下四个维度：
+自检依次完成以下两个维度：
 
 **① Checklist 核查**（layer 决定用哪份，以"挑刺"视角逐项过）：
 
-- `layer=backend` → 读 `templates/checklists/backend-checklist.md`，逐项标 ✅ / ❌
-- `layer=frontend` → 读 `templates/checklists/frontend-checklist.md`，逐项标 ✅ / ❌
+- `layer=backend` → 读 `templates/checklists/backend-checklist.md`
+- `layer=frontend` → 读 `templates/checklists/frontend-checklist.md`
 - `layer=shared` → 两份都过
 
+每条标 ✅ / ❌ / **N/A**（N/A = 本次改动不涉及该项，直接跳过）。
 ❌ 的必须修复后重新标，不带 ❌ 推 PR。
 
-**② 冗余检查**：调用 `simplify` skill，检查有无重复实现或可精简处 → 精简后继续。
-
-**③ AC 逐条验证**（功能层面，不是代码风格）：
-
-读任务包 `acceptance-criteria` 字段，逐条在代码中追溯确认：
-- 接口返回预期结果
-- 边界条件（空值、越权、并发）有处理
-- 前端状态覆盖完整
-
-每条标 ✅ 或 ❌（❌ 的修复后重标，无法实现的记入"遗留问题"）。
-
-**④ 偏离核查**：
+**② 偏离核查**：
 
 ```bash
 git diff --stat
@@ -180,7 +194,7 @@ git diff --stat
 - 有 AC 未能实现 → 记入 PR description「遗留问题」
 
 ```
-✅ 自检完成：checklist {X}/{Y} 通过，AC {M}/{N} 验证，[无偏离 / 偏离已记录]。
+✅ 自检完成：checklist {X}/{Y} 通过（{Z} 项 N/A），[无偏离 / 偏离已记录]。
 → 下一步：commit + PR
 继续？
 ```
@@ -230,15 +244,15 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 ### Step 8：更新状态
 
-- 将 `queue/{task-id}.md` 状态改为 [done]
-- 更新 `sprint.md` 对应行
+- 将 `iterations/vN/queue/{task-id}.md` 状态改为 `[done]`
+- 在 `iterations/vN/sprint.md` 对应行：状态列改为 `[done]`，**PR 列填入 `#N`**（N 为 Step 7 创建的 PR 编号）
 
 ---
 
 ### Step 9：移交
 
 按 `source` 更新对应追踪文件：
-- `source=sprint` → 在 `iterations/vN/sprint.md` 对应行追加 `PR#{N} 待审`；同层全部推完后 devmgr 可开启批量 code-review
+- `source=sprint` → 无需额外操作（PR 号已在 Step 8 写入 sprint.md）；同层全部推完后 devmgr 可开启批量 code-review
 - `source=bug / optimization` → 在 `b-tasks.md` 对应行追加 `PR#{N} 待审`
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"已推 PR#{N}，等待合并后复测"
 
@@ -257,6 +271,93 @@ PR description 是本任务的唯一交付记录，需完整填写：
 - 遇到 standards 未覆盖的决策（视觉/接口边界等）且反复出现 → 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 {standards-frontend/backend/shared} 哪节补充`）
 - 上下文重置协议被触发 → 写入 `feedback.md`，记录触发原因，供后续调整任务拆分粒度参考
 - 无发现 → 跳过
+
+---
+
+## 批量会话步骤（交付=批量 时使用，替代单任务会话的 Steps 5–9）
+
+> 前提：所有 `交付=独立` 的任务已 `[merged]`，当前 layer 的全部 `[可取]` 批量任务已拾取。
+
+### 批量 Step 5：自检
+
+与单任务 Step 5 相同，但一次自检覆盖本次所有改动文件：
+- 机械验证（build / type-check / lint）跑一次，报错全部修完再继续
+- Checklist 跑一次，涵盖本次所有新增/修改的模块（每条标 ✅ / ❌ / N/A）
+- 偏离核查：`git diff --stat`，对比所有任务包的 `files` 字段合集
+
+```
+✅ 批量自检完成：checklist {X}/{Y} 通过（{Z} 项 N/A），[无偏离 / 偏离已记录]。
+→ 下一步：批量 commit + PR
+继续？
+```
+
+---
+
+### 批量 Step 6：commit
+
+分支命名：`{layer}-batch-v{N}`（如 `backend-batch-v3`、`frontend-batch-v3`）
+
+```bash
+git add {所有改动文件列表}
+git commit -m "feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]"
+```
+
+---
+
+### 批量 Step 7：推 PR
+
+```bash
+git push origin {layer}-batch-v{N}
+```
+
+PR description 按任务分节，每节独立填写：
+
+```markdown
+## v{N} {layer}层批量实现
+
+包含任务：{task-id-1} / {task-id-2} / {task-id-3}
+
+---
+
+### {task-id-1}：{任务标题}
+**改动摘要**：{2–3 句}
+**AC 验证**：
+- [x] {AC 1}：{验证方式}
+- [x] {AC 2}：{验证方式}
+
+### {task-id-2}：{任务标题}
+**改动摘要**：{2–3 句}
+**AC 验证**：
+- [x] {AC 1}：{验证方式}
+
+---
+
+### 偏离说明
+{各任务分别列出偏离，或统一写"无"}
+
+### 遗留问题
+{各任务分别列出，或统一写"无"；有则确认已记入 backlog}
+```
+
+禁止在 PR description 中包含凭据。
+
+---
+
+### 批量 Step 8：更新状态
+
+- 将所有批量任务的 `iterations/vN/queue/{task-id}.md` 状态改为 `[done]`
+- 在 `iterations/vN/sprint.md` 所有对应行：状态列 → `[done]`，PR 列 → `#N`（所有行填同一个 PR 号）
+
+---
+
+### 批量 Step 9：移交
+
+```
+✅ develop 批量完成：{layer}层 {N} 个任务（{task-id-1}, {task-id-2}...）已 commit，PR #{N} 已推，等待 code-review。
+本会话到此结束。
+```
+
+🚫 **会话硬边界**：输出上述声明后立即停止，与单任务会话相同。
 
 ---
 

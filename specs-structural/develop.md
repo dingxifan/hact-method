@@ -87,11 +87,11 @@
 
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `plan-sprint`（source=sprint） | 任务包（含 files / AC / standards 引用） | queue/*.md |
-| `generate-integration-tests`（source=integration） | 失败联调场景 + 修复任务包 | queue/*.md |
-| `manual-test`（source=manual-test） | 验收问题 + 修复任务包 | queue/*.md |
-| `dispatch-new`（source=bug/optimization） | B 类任务包 | queue/*.md |
-| `revise-doc`（影响任务包时） | 更新后的任务包或 standards 变更说明 | queue/{task-id}.md 更新 |
+| `plan-sprint`（source=sprint） | 任务包（含 files / AC / standards 引用） | iterations/vN/queue/*.md |
+| `generate-integration-tests`（source=integration） | 失败联调场景 + 修复任务包 | iterations/vN/queue/*.md |
+| `manual-test`（source=manual-test） | 验收问题 + 修复任务包 | iterations/vN/queue/*.md |
+| `dispatch-new`（source=bug/optimization） | B 类任务包 | iterations/vN/queue/*.md |
+| `revise-doc`（影响任务包时） | 更新后的任务包或 standards 变更说明 | iterations/vN/queue/{task-id}.md 更新 |
 
 **输出给**
 

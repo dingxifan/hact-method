@@ -28,8 +28,8 @@
 
 1. **通读 TRD**：读 `trd.md` + `standards-*.md` + `reusables.md`，建立完整上下文
 2. **输出疑点清单**：列出 TRD 中任何实现边界不清晰的点（字段取值 / 接口行为 / 模块职责边界等）；等用户逐条确认——**无未解决疑点才继续**
-3. **拆分任务**：按 TRD 模块拆分本期所有 develop 任务；每个任务确定 layer / source=sprint / urgency=normal / 依赖关系
-4. **写任务包**：为每个 develop 任务写完整任务包（12 字段，见 `develop.md §字段规范`），写入 `queue/{task-id}.md`，初始状态设为 [可取]
+3. **拆分任务**：按 TRD 模块拆分本期所有 develop 任务；每个任务确定 layer / source=sprint / urgency=normal / 依赖关系 / 交付方式（`独立` 或 `批量`，判断标准见 exec spec §Step 2.5）
+4. **写任务包**：为每个 develop 任务写完整任务包（12 字段，见 `develop.md §字段规范`），写入 `iterations/vN/queue/{task-id}.md`，初始状态设为 [可取]
 5. **写 sprint.md**：汇总本期任务列表，标注依赖关系，初始状态全部 [可取]
 6. **询问签 G3**：「任务包已写完，要签 G3 吗？」——用户确认后 commit，G3 写入 `iterations/vN/gates.md`
 
@@ -39,7 +39,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 各 develop 任务包 | `queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范 |
+| 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范 |
 | sprint.md | `iterations/vN/sprint.md` | 见下方格式说明 |
 
 **sprint.md 格式：**
@@ -47,10 +47,10 @@
 ```markdown
 # Sprint vN · {项目名}
 
-| task-id | title | layer | 依赖 | 状态 |
-|---------|-------|-------|------|------|
-| task-001 | {标题} | frontend | — | [可取] |
-| task-002 | {标题} | backend | — | [可取] |
+| task-id | title | layer | 依赖 | 状态 | PR | 交付 |
+|---------|-------|-------|------|------|----|------|
+| task-001 | {标题} | backend | — | [可取] | — | 独立 |
+| task-002 | {标题} | backend | — | [可取] | — | 批量 |
 | task-003 | {标题} | frontend | task-001 | [可取] |
 
 ## 依赖说明
@@ -67,6 +67,7 @@
 - [ ] TRD 每个模块都有对应的 develop 任务包
 - [ ] 所有任务包 12 字段完整，无空字段
 - [ ] 依赖关系已标注（无依赖标 `—`，有依赖标被依赖的 task-id）
+- [ ] 每个任务的 `交付` 列已填（`独立` 或 `批量`），判断理由已向用户说明并确认
 - [ ] sprint.md 已写，任务列表与 queue/ 一致
 - [ ] 测试环境已确认可达（后端 / 前端 / 数据库）
 - [ ] G3 已签（`gates.md` 已记录 + commit）
@@ -85,7 +86,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `develop`（多个） | 任务包（[可取] 状态） | `queue/{task-id}.md` |
+| `develop`（多个） | 任务包（[可取] 状态） | `iterations/vN/queue/{task-id}.md` |
 | `code-review` | sprint.md（用于追踪 PR 状态） | `iterations/vN/sprint.md` |
 
 ---
@@ -97,8 +98,8 @@
 | 某个 TRD 模块无法拆成独立 develop 任务（耦合过深） | 先写一个大任务包，在 `known-risks` 中标注耦合点；不强行拆分 |
 | reusables.md 已有可复用组件，与本期某任务重叠 | 在对应任务包 `context` 字段标注复用来源，`files` 不列入已有文件（除非需要修改） |
 | 前后端任务无依赖关系 | 全部标 `—`，允许并行认领 |
-| 某前端任务依赖后端接口（接口未上线） | 在 `known-risks` 中标注，依赖关系写 blocked-by 对应后端 task-id |
-| TRD 有多个迭代版本在并行（vN 和 vN+1 同时有任务） | 各自建独立 sprint.md 和 queue 子目录（`queue/vN/` / `queue/vN+1/`） |
+| 某前端任务依赖后端接口（接口未上线） | 后端任务标 `交付=独立`，前端任务标 `交付=批量`，依赖列写后端 task-id；前端批量会话必须等后端 PR 合并后才能开始 |
+| TRD 有多个迭代版本在并行（vN 和 vN+1 同时有任务） | 各自建独立 sprint.md；queue 天然隔离于各自迭代目录（`iterations/vN/queue/` / `iterations/vN+1/queue/`） |
 
 ---
 

@@ -69,7 +69,9 @@ E:\group-code\{project-name}\
 │       ├── standards-shared.md
 │       ├── standards-frontend.md
 │       ├── standards-backend.md
-│       └── gates.md
+│       ├── gates.md
+│       └── queue/               ← 任务包（该迭代）
+│           └── done/
 ├── project.md               ← 跨迭代项目快照
 ├── decisions.md             ← 架构决策记录
 ├── design.md                ← 视觉规格
@@ -77,8 +79,6 @@ E:\group-code\{project-name}\
 ├── backlog.md               ← 积压与偏离
 ├── feedback.md              ← 各阶段反馈
 ├── b-tasks.md               ← B 类任务总账
-├── queue/                   ← 任务包
-│   └── done/
 ├── deployment.config        ← 首次部署时创建
 └── deploy-log.md            ← 部署记录
 ```

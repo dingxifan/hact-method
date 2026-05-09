@@ -48,7 +48,7 @@
 | 测试脚本（后端） | `integration-tests/backend/{场景名}.http` 或 `.sh` | HTTP 请求文件 / curl 脚本 |
 | 测试脚本（前端） | `integration-tests/frontend/{场景名}.pinchtab` | pinchtab 脚本 |
 | 测试结果记录 | `integration-tests/result-{日期}.md` | 见下方格式 |
-| 修复任务包（如有失败） | `queue/{task-id}.md` | 见 develop.md §字段规范 |
+| 修复任务包（如有失败） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 
 **测试结果记录格式：**
 
@@ -85,7 +85,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `develop`（source=integration） | 修复任务包 | `queue/{task-id}.md` |
+| `develop`（source=integration） | 修复任务包 | `iterations/vN/queue/{task-id}.md` |
 | `manual-test` | 三条件全部满足，可进入人工验收 | 测试结果记录 |
 
 ---

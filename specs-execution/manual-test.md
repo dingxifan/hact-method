@@ -157,7 +157,7 @@ git branch -d fix/mt-{desc}
 **不满足 → 写 develop 任务包**：
 - `source=manual-test`
 - `task-id` 命名：`{项目缩写}-mt-{三位序号}`，如 `hact-mt-001`
-- 写入 `queue/{task-id}.md`，状态 `[可取]`
+- 写入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`
 
 **⑤ 通知用户并记录**：
 ```

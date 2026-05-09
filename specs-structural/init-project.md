@@ -31,8 +31,7 @@
 2. **创建项目仓目录结构**：
 
 ```bash
-mkdir -p E:\group-code\{name}\iterations
-mkdir -p E:\group-code\{name}\queue\done
+mkdir -p E:\group-code\{name}\iterations\v1\queue\done
 mkdir -p E:\group-code\{name}\_meta\input
 mkdir -p E:\group-code\{name}\_meta\sessions
 touch E:\group-code\{name}\project.md

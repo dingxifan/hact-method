@@ -61,18 +61,19 @@ git -C "../hact-method" fetch origin && (git -C "../hact-method" pull 2>/dev/nul
 **Step 1：读取项目当前状态，推断当前任务类型**
 1. 读取 `project.md` 了解当前产品与技术状态
 2. 读取最新迭代目录下的 `gates.md` 确认 Gate 签署状态
-3. 读取 `queue/` 目录下所有任务文件，统计各 `status` 分布（todo / in-progress / done / merged）
+3. 读取 `iterations/vN/sprint.md`，从**状态列**和 **PR 列**得出各任务进度（一次读取即可得全貌，无需逐个读 queue 文件）
 4. 按下表推断当前任务类型并**明确声明**：
 
-| queue/ 任务状态 | Gate 状态 | 推断任务类型 |
-|----------------|-----------|-------------|
-| 全部 `[可取]`（sprint 刚规划，无人认领） | G3 已签，G4 未签 | `develop` — 列出可认领任务，等待用户拾取 |
-| 有任意 `in-progress` | — | `develop` — 继续未完成任务包 |
-| 全部 `done`，G3 已签，G4 未签 | G4 未签 | `code-review` 或 `generate-integration-tests`（视是否有 PR 流程） |
-| 全部 `merged`，G4 未签 | G4 未签 | `generate-integration-tests` |
-| 全部 `merged`，联调报告已存在，G4 未签 | G4 未签 | `manual-test` |
-| G4 已签，G5 未签 | G5 未签 | `wrap-up-iteration` |
-| G5 已签 | — | 本迭代完结，等待下一指令 |
+| sprint.md 状态分布 | PR 列 | Gate 状态 | 推断任务类型 |
+|-------------------|-------|-----------|-------------|
+| 有 `[可取]` | — | G3 已签，G4 未签 | `develop` — 列出可认领任务，等待用户拾取 |
+| 有任意 `[taken-by]` | — | — | `develop` — 继续未完成任务包 |
+| 全部 `[done]`，PR 列有 `—` | 部分未填 | G3 已签，G4 未签 | `develop` — 仍有任务尚未提 PR |
+| 全部 `[done]`，PR 列全部已填 | 全为 `#N` | G3 已签，G4 未签 | `code-review` — 输出任务↔PR 对照表 |
+| 全部 `[merged]` | — | G4 未签 | `generate-integration-tests` |
+| 全部 `[merged]`，联调报告已存在 | — | G4 未签 | `manual-test` |
+| G4 已签，G5 未签 | — | G5 未签 | `wrap-up-iteration` |
+| G5 已签 | — | — | 本迭代完结，等待下一指令 |
 
 🚫 **禁止给用户贴角色标签**（如"作为前端程序员"）——执行层（frontend/backend）由 develop spec 第零步在会话内确认，不在启动阶段推断。
 

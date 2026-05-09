@@ -65,8 +65,8 @@
 
 | 偏离影响范围 | 处理方式 |
 |---|---|
-| 影响接口或数据结构 | 创建 `revise-doc(target=trd)` 任务包，写入 `queue/{task-id}.md` |
-| 影响功能边界或用户行为 | 创建 `revise-doc(target=prd)` 任务包，写入 `queue/{task-id}.md` |
+| 影响接口或数据结构 | 创建 `revise-doc(target=trd)` 任务包，写入 `iterations/vN/queue/{task-id}.md` |
+| 影响功能边界或用户行为 | 创建 `revise-doc(target=prd)` 任务包，写入 `iterations/vN/queue/{task-id}.md` |
 | 仅影响实现细节 | 追加至 `decisions.md`（格式：`{日期} | {决策内容} | 原因：{偏离说明}`） |
 
 **同期 `[偏离]` 超过 5 条** → 在 feedback.md 追加一条「本期 TRD 覆盖质量问题，待方法论讨论」，纳入第二步分流，不在此步展开。

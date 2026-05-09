@@ -147,7 +147,7 @@ git branch -d fix/pic-{desc}
 ```
 
 **走 dispatch-new**（不满足快速通道任意一条）：
-- 写 develop 任务包（`source=integration`），写入 `queue/{task-id}.md`
+- 写 develop 任务包（`source=integration`），写入 `iterations/vN/queue/{task-id}.md`
 - task-id 命名：`{项目缩写}-pic-{三位序号}`，如 `hact-pic-001`
 - 正常走 PR 流程
 

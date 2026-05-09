@@ -215,5 +215,5 @@ git branch -d fix/cr-{task-id}-{desc}
 
 **`[阻断]` 问题根因在 TRD 或 standards 层**（不是实现问题）：
 1. 打回 PR，comment 中说明「根因在文档层，等 revise-doc 完成后重新实现」
-2. 同时创建 `revise-doc(target=trd/standards)` 任务包，写入 queue
+2. 同时创建 `revise-doc(target=trd/standards)` 任务包，写入 `iterations/vN/queue/`
 3. develop task 保持 [可取] 状态，等 revise-doc 完成后再拾取
