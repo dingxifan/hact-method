@@ -237,13 +237,17 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 ### Step 9：移交
 
-在 `iterations/vN/sprint.md` 对应行追加 `PR#{N} 待审`，审查人以 sprint.md 变更为信号拾取 code-review 任务。
-若同一 sprint 内同层（frontend / backend）全部任务均已推 PR，devmgr 可开启 code-review 会话批量审查。
+按 `source` 更新对应追踪文件：
+- `source=sprint` → 在 `iterations/vN/sprint.md` 对应行追加 `PR#{N} 待审`；同层全部推完后 devmgr 可开启批量 code-review
+- `source=bug / optimization` → 在 `b-tasks.md` 对应行追加 `PR#{N} 待审`
+- `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"已推 PR#{N}，等待合并后复测"
 
 ```
-✅ develop 完成：task-{id}（{layer}）已 commit，PR 已推。
-→ 下一步：sprint.md 已标记「PR#{N} 待审」，等待 code-review
+✅ develop 完成：task-{id}（{layer}）已 commit，PR 已推，等待 code-review。
+本会话到此结束。后续动作（复测 / 联调继续）在 PR 合并后由上游会话触发，不在此处建议。
 ```
+
+🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续 pinchtab / 复测 / 联调"等后续动作——develop 只负责到 PR 推出，PR 合并权在 code-review 手里，测试阶段的恢复取决于合并结果，不由 develop 会话判断。
 
 ---
 
