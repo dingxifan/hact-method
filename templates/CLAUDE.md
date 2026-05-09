@@ -33,25 +33,30 @@
 ## 跨会话接续规则
 每次打开本仓时，按顺序执行：
 
-**Step 0：确认本地代码与远端同步**
+**Step 0：代码同步（强制执行，不可跳过）**
 
-对项目仓和 hact-method 各执行一遍：
+对项目仓和 hact-method 各执行一遍 `git pull`：
 
 ```bash
-git fetch origin master
-git status
+# 项目仓
+git pull
+
+# hact-method
+cd ../../hact-method && git pull && cd -
 ```
 
-按 `git status` 输出处理：
+完成后，**必须**向人类输出以下声明（格式固定，不可省略）：
 
-| 状态 | 处理 |
-|------|------|
-| `Your branch is behind` | 执行 `git pull`，拉取最新后继续 |
-| `Your branch is up to date` | 直接继续 |
-| `Your branch is ahead` | 本地有未推送 commit，直接继续（不拉，不覆盖本地） |
-| `Your branch has diverged` | 停止，告知用户："本地与远端有分叉，请人工处理后再继续" |
+```
+📋 会话启动·代码同步
+- 项目仓（{当前分支}）：{已拉取 N 个 commit / 已是最新 / ⚠️ 有冲突——停止，请人工处理}
+- hact-method（master）：{已拉取 N 个 commit / 已是最新}
+同步完成，进入 Step 1。
+```
 
-两个仓都检查完才进入 Step 1。
+⚠️ 任意仓出现冲突或 diverged → 停止，不得进入 Step 1，等待人类解决后重新执行 Step 0。
+
+两个仓均同步完才进入 Step 1。
 
 **Step 1：读取项目当前状态，推断当前任务类型**
 1. 读取 `project.md` 了解当前产品与技术状态
