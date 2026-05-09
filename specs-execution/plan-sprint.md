@@ -148,7 +148,7 @@
 ```markdown
 - [x] G3：开发包就绪 — {YYYY-MM-DD}
 ```
-执行 `git add queue/ iterations/vN/sprint.md iterations/vN/gates.md && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]"`
+执行 `git add queue/ iterations/vN/sprint.md iterations/vN/gates.md && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
 
 **feedback 检查**（签 G3 后）：
 - 疑点清单超过 3 条且根因集中（如 TRD 某类接口描述普遍不完整）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-tech-design 的疑点确认步骤中加强 {哪类场景}`）

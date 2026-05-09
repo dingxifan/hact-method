@@ -225,7 +225,7 @@ MVP 边界（不做什么）：
 ```markdown
 - [x] G1：PRD 已确认 — {YYYY-MM-DD}
 ```
-执行 `git add iterations/vN/prd.md iterations/vN/gates.md && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]"`
+执行 `git add iterations/vN/prd.md iterations/vN/gates.md && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
 
 **feedback 检查**（签 G1 后）：
 - 场景还原需要超过 3 轮追问才确认 → 说明需求描述质量有提升空间，写入 `feedback.md`（格式：`{日期} | {发现} | 建议在下次 PRD 开始时要求提前准备场景描述`）

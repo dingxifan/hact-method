@@ -187,7 +187,7 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 ```markdown
 - [x] G2：TRD 已确认 — {YYYY-MM-DD}
 ```
-执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]"`
+执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`
 
 **feedback 检查**（签 G2 后）：
 - 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）

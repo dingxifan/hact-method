@@ -225,6 +225,7 @@ git branch -d fix/mt-{desc}
 ```bash
 git add iterations/vN/gates.md iterations/vN/acceptance-report.md
 git commit -m "chore: 验收通过，G4 签署 [{项目名}]"
+git push
 ```
 
 ---

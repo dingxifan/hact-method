@@ -150,6 +150,7 @@
 ```bash
 git add iterations/vN/gates.md project.md decisions.md backlog.md feedback.md
 git commit -m "chore: 迭代 {version} 收尾，G5 签署 [{项目名}]"
+git push
 ```
 
 ```
