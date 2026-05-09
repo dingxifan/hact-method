@@ -21,7 +21,7 @@
 - **templates/**：初始化完成（standards/backend.md + standards/frontend.md + design.md + reusables.md + feedback.md + retrospectives.md）
 - **重构**：hact-method 改为纯方法论仓（移除 projects/ 目录）；项目协调文件合并进各自项目仓
 - **CLAUDE.md 更新**：补充工作区使用指南（何时在 hact-method 开会话 / 何时在项目仓开会话）
-- **Gitee 推送**：https://gitee.com/dingxifan_admin/hact-method
+- **Gitee 推送**：https://gitee.com/dingxifan/hact-method
 
 ## 第三阶段当前进展（2026-05-08）
 
@@ -36,7 +36,7 @@
 
 | 仓库 | 路径 | 用途 | 远端 |
 |------|------|------|------|
-| hact-method | `E:\group-code\hact-method\` | 纯方法论（skeleton + specs + templates） | gitee.com/dingxifan_admin/hact-method |
+| hact-method | `E:\group-code\hact-method\` | 纯方法论（skeleton + specs + templates） | gitee.com/dingxifan/hact-method |
 | hact-app | `E:\group-code\hact-app\` | hact-app 代码 + 协调文件 | 用户自行推送 |
 | human-ai-col | `E:\group-code\human-ai-col\` | v1 方法论（冻结） | gitee.com/dingxifan/human-ai-col |
 
