@@ -74,3 +74,4 @@ git -C "../../hact-method" fetch origin && (git -C "../../hact-method" pull 2>/d
 | G5 已签 | — | 本迭代完结，等待下一指令 |
 
 5. 加载对应规范，输出当前状态摘要：Gate 进度 + 任务状态分布 + 推断的下一步动作
+6. 若 Step 1 结束时处于等待状态（迭代完结、无 gates.md 等），收到用户任务指令后，**必须先加载对应 exec spec，再执行，不得跳过**。
