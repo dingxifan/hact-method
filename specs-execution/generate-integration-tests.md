@@ -32,6 +32,8 @@
 
 **前置检查**：读 `iterations/vN/sprint.md`，确认所有 `source=sprint` 的 develop 任务状态全部为 [merged]。
 
+> `/pic` 在联调前建议执行，但**禁止 CC 自动触发**——流程上建议时只能提示人类，等人类明确发出 `/pic` 指令后方可调用 `Skill(pic)`。
+
 有未合并任务 → 阻断：
 ```
 以下 develop 任务尚未 [merged]，无法开始联调：
