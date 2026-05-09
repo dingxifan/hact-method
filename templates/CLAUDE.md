@@ -42,7 +42,7 @@
 git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
 
 # hact-method
-cd ../../hact-method && git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步") && cd -
+git -C "../../hact-method" fetch origin && (git -C "../../hact-method" pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
 ```
 
 完成后，**必须**向人类输出以下声明（格式固定，不可省略）：
