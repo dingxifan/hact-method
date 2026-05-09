@@ -87,7 +87,7 @@ E:\group-code\{project-name}\
 
 项目仓 CLAUDE.md 中用 `@` 引用 hact-method 的规范：
 ```
-@../../hact-method/specs-execution/{task-type}.md
+@../hact-method/specs-execution/{task-type}.md
 ```
 
 ---

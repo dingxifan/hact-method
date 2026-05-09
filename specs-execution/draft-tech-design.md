@@ -24,8 +24,8 @@
 - `project.md`（技术层已有决策）
 - `decisions.md`
 - `reusables.md`
-- `../../hact-method/templates/standards/backend.md`
-- `../../hact-method/templates/standards/frontend.md`
+- `../hact-method/templates/standards/backend.md`
+- `../hact-method/templates/standards/frontend.md`
 
 **技术偏好确认**：
 - 首期项目：询问用户技术栈偏好，确认后写入 `project.md` 技术层，后续迭代直接复用
@@ -145,11 +145,11 @@
 TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standards；主线同时生成 shared。
 
 **Standards 来源规则**：
-- 首期：从 `../../hact-method/templates/standards/{layer}.md` 挑选本期 TRD 相关项，不全量复制
+- 首期：从 `../hact-method/templates/standards/{layer}.md` 挑选本期 TRD 相关项，不全量复制
 - 迭代：以上期 `iterations/vN-1/standards-*.md` 为基础，按本期 TRD 增量追加或修订
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
-- 传入：TRD 完整内容 + 对应 `../../hact-method/templates/standards/{layer}.md` + 上期 standards（如有）
+- 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 上期 standards（如有）
 - 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型
 - 主线负责写文件，不让 subagent 直接写文件
 

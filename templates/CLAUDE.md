@@ -7,20 +7,20 @@
 本仓使用 hact-method 的执行规范，按当前任务类型引用对应文件：
 
 ### A 类主线
-- `init-project`              → `@../../hact-method/specs-execution/init-project.md`
-- `draft-prd-vN`              → `@../../hact-method/specs-execution/draft-prd-vN.md`
-- `draft-tech-design`         → `@../../hact-method/specs-execution/draft-tech-design.md`
-- `plan-sprint`               → `@../../hact-method/specs-execution/plan-sprint.md`
-- `develop`                   → `@../../hact-method/specs-execution/develop.md`
-- `code-review`               → `@../../hact-method/specs-execution/code-review.md`
-- `generate-integration-tests`→ `@../../hact-method/specs-execution/generate-integration-tests.md`
-- `manual-test`               → `@../../hact-method/specs-execution/manual-test.md`
-- `deploy`                    → `@../../hact-method/specs-execution/deploy.md`
-- `wrap-up-iteration`         → `@../../hact-method/specs-execution/wrap-up-iteration.md`
+- `init-project`              → `@../hact-method/specs-execution/init-project.md`
+- `draft-prd-vN`              → `@../hact-method/specs-execution/draft-prd-vN.md`
+- `draft-tech-design`         → `@../hact-method/specs-execution/draft-tech-design.md`
+- `plan-sprint`               → `@../hact-method/specs-execution/plan-sprint.md`
+- `develop`                   → `@../hact-method/specs-execution/develop.md`
+- `code-review`               → `@../hact-method/specs-execution/code-review.md`
+- `generate-integration-tests`→ `@../hact-method/specs-execution/generate-integration-tests.md`
+- `manual-test`               → `@../hact-method/specs-execution/manual-test.md`
+- `deploy`                    → `@../hact-method/specs-execution/deploy.md`
+- `wrap-up-iteration`         → `@../hact-method/specs-execution/wrap-up-iteration.md`
 
 ### B 类 / 辅助
-- `dispatch-new`              → `@../../hact-method/specs-execution/dispatch-new.md`
-- `revise-doc`                → `@../../hact-method/specs-execution/revise-doc.md`
+- `dispatch-new`              → `@../hact-method/specs-execution/dispatch-new.md`
+- `revise-doc`                → `@../hact-method/specs-execution/revise-doc.md`
 
 ## 个人工具（人工触发，不在主线流程）
 
@@ -42,7 +42,7 @@
 git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
 
 # hact-method
-git -C "../../hact-method" fetch origin && (git -C "../../hact-method" pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
+git -C "../hact-method" fetch origin && (git -C "../hact-method" pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
 ```
 
 完成后，**必须**向人类输出以下声明（格式固定，不可省略）：

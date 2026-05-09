@@ -71,7 +71,7 @@
 
 **同期 `[偏离]` 超过 5 条** → 在 feedback.md 追加一条「本期 TRD 覆盖质量问题，待方法论讨论」，纳入第二步分流，不在此步展开。
 
-> 此条 feedback 在第二步分流时按正常逻辑处理：归类为「角色工作流 / 规范结构有问题」→ 写入待议清单（`../../hact-method/_meta/plans/方法论待议.md`）。不会重复创建，也不影响第一步已创建的 revise-doc 任务。
+> 此条 feedback 在第二步分流时按正常逻辑处理：归类为「角色工作流 / 规范结构有问题」→ 写入待议清单（`../hact-method/_meta/plans/方法论待议.md`）。不会重复创建，也不影响第一步已创建的 revise-doc 任务。
 
 **无 `[偏离]` 条目** → 输出「无偏离，跳过第一步」，继续第二步。
 
@@ -100,7 +100,7 @@
 
 > **standards vs checklist 判断标准**：feedback 是"以后写代码要遵守某规则"→ standards；feedback 是"以后自检时要专门核查这一项，否则容易漏"→ checklist。
 
-**待议清单写入方式**：写入 **hact-method 仓**的 `_meta/plans/方法论待议.md`（路径：`../../hact-method/_meta/plans/方法论待议.md`；文件不存在则新建），不写入项目仓：
+**待议清单写入方式**：写入 **hact-method 仓**的 `_meta/plans/方法论待议.md`（路径：`../hact-method/_meta/plans/方法论待议.md`；文件不存在则新建），不写入项目仓：
 ```markdown
 - [ ] {日期} | {问题描述} | 来源：{项目名} {版本} feedback
 ```
