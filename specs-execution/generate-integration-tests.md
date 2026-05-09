@@ -274,7 +274,7 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本�
 | 触发点 | Subagent 任务 | Prompt 要点 | 失败处理 |
 |--------|-------------|------------|---------|
 | 会话启动 | Explore 并行读取 3 份输入文件 | 读 prd/trd/standards-shared 各自的目标段落；返回各文件的目标段落摘要，每段不超过 150 字 | 失败则主线单独读 |
-| Step 3（前端场景） | pinchtab skill 生成测试脚本 | 传入：测试环境前端地址 / 场景描述（谁 → 做什么 → 期望结果）/ 关键操作步骤；返回：完整可执行的 pinchtab 脚本文本，以及该脚本依赖的环境前提（需要登录态 / 需要特定初始数据等） | 失败则将该场景移至 manual-test，不重试 |
+| Step 3（前端场景） | pinchtab skill 生成测试脚本 | 传入：测试环境前端地址 / 场景描述（谁 → 做什么 → 期望结果）/ 关键操作步骤；返回：完整可执行的 pinchtab 脚本文本，以及该脚本依赖的环境前提（需要登录态 / 需要特定初始数据等）。**CC 调用时必须使用 `Skill(pinchtab)`，禁止猜测命名空间（如 `superpowers:pinchtab`）。** | 失败则将该场景移至 manual-test，不重试 |
 | Step 4（后端批量执行） | general-purpose subagent 执行 curl 脚本并汇总 | 传入：脚本列表和后端地址；返回：每条场景的结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要；部分场景失败时仍返回其他场景的结果，不中断 | 失败则主线逐条执行 |
 
 ---
