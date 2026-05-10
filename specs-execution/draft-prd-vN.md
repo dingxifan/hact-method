@@ -37,10 +37,30 @@ Glob: _meta/input/*
 |-------------|------|---------|
 | `iterations/` 为空 或 不存在 | 首期项目，v1 | 直接开始，version = v1 |
 | `iterations/v1/` 存在但无 `gates.md` | v1 进行中，未签 G1 | 读已有内容，从断点接续 |
-| `iterations/v1/gates.md` 含 `G1: ✓` | v1 PRD 已完成 | 告知用户，询问是否开始 v2 |
-| `iterations/vN/` 存在，G1 已签 | 迭代项目，version = vN+1 | 读 `project.md` 了解现状，再开始 |
+| `iterations/v1/gates.md` 含 `G1: ✓` | v1 PRD 已完成，version = v2 | 告知用户，进入第二步.5 确认并创建 v2 目录 |
+| `iterations/vN/` 存在，G1 已签 | 迭代项目，version = vN+1 | 进入第二步.5 确认并创建 vN+1 目录，再读 `project.md` |
 
 > ⚠️ `project.md` 内容为"未开始"是**首期正常状态**，不是"项目未初始化"的标志。判断是否初始化应看目录结构是否存在，不看 project.md 内容。
+
+**第二步.5：[v2+] 创建本期迭代目录**
+
+仅在 version = vN（N ≥ 2）时执行。检查 `iterations/vN/` 是否已存在：
+
+- **已存在**：跳过（断点续做场景，目录已由上次会话创建）
+- **不存在**：
+
+```
+即将开始 v{N}，将创建 iterations/v{N}/queue/done 目录结构。确认继续？
+```
+
+🚫 等用户确认
+
+用户确认 → 执行：
+```bash
+mkdir -p "iterations/v{N}/queue/done"
+```
+
+> 首期（v1）跳过此步：目录已由 `init-project` 预创建。
 
 **第三步：加载上下文**：
 - 首期项目 → 读 `_meta/input/background.md`（如存在）
