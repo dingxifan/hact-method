@@ -1,8 +1,8 @@
 # task: develop
 
-**discipline**: `dev-frontend`（layer=frontend）/ `dev-backend`（layer=backend）
+**discipline**: `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）
 **Gate**: —
-**属性**: `source` · `layer` · `urgency`
+**属性**: `source` · `layers` · `task_type` · `urgency`
 
 > 从任务包写代码到推 PR：覆盖 sprint 功能开发、联调修复、验收修复、bug 修复、优化。
 
@@ -24,8 +24,10 @@
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
 | `task-id` | string | ✅ | 唯一标识，对应 sprint.md 行或 B 类总账行 |
-| `layer` | enum | ✅ | `frontend` / `backend` / `shared` |
+| `sprint_id` | string | ✅ | 所属 Sprint 标识，如 `v4`；由 plan-sprint 填写 |
+| `layers` | string[] | ✅ | `[frontend]` / `[backend]` / `[shared]` |
 | `source` | enum | ✅ | `sprint` / `integration` / `manual-test` / `bug` / `optimization` |
+| `task_type` | enum | ✅ | `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）/ layers=[shared] 时由分配者在任务包中指定 |
 | `urgency` | enum | ✅ | `normal`（默认）/ `hotfix` |
 | `title` | string | ✅ | 简短描述，15字以内 |
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
@@ -112,6 +114,7 @@
 | 实现中发现 TRD 有歧义 | 记入 `deviations`，上报后等待 `revise-doc` 任务产出，不自行决定 |
 | 改动超出 `files` 清单 | 记入 `deviations`，在 `escalate-if` 条件触发时上报 |
 | `source=bug` 修复发现根因在接口/数据结构层 | 立即停止，上报，判断是否需要 `revise-doc` + 新 `develop` |
+| 发现非 sprint 范围的功能缺口（从未实现） | 先评估规模：≤3 文件且依赖层已就绪 → 建议 B 类快速通道；否则记 backlog。Sprint 排除项只约束 A 类 Gate 任务，不阻断 B 类 |
 
 ---
 

@@ -69,6 +69,32 @@ curl -s -X POST "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls" \
 
 ### 合并 PR
 
+**⚠️ 若 PR 设置了审查人（assignees）或测试人（testers），必须先调用两个专属接口，否则返回 "未通过设置的审查"。**
+
+#### 步骤 1：测试通过（tester accept）
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" -X POST \
+  "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/$PR_NUMBER/test" \
+  -H "Content-Type: application/json" \
+  -d "{\"access_token\": \"$GITEE_TOKEN\"}"
+# 返回 204 = 成功
+```
+
+#### 步骤 2：审查通过（reviewer accept）
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" -X POST \
+  "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/$PR_NUMBER/review" \
+  -H "Content-Type: application/json" \
+  -d "{\"access_token\": \"$GITEE_TOKEN\"}"
+# 返回 204 = 成功
+```
+
+> 注意：调用方的 token 账号必须是 PR 上被指定的审查人/测试人之一，否则返回 403。
+
+#### 步骤 3：合并
+
 ```bash
 GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
 REMOTE=$(git remote get-url origin)
@@ -81,7 +107,27 @@ curl -s -X PUT "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/$PR_NUMBER/mer
   -d "{
     \"access_token\": \"$GITEE_TOKEN\",
     \"merge_method\": \"merge\"
-  }" && echo "PR #$PR_NUMBER 已合并"
+  }" | python3 -c "import json,sys; r=json.load(sys.stdin); print('merged:', r.get('merged'))"
+```
+
+#### 批量合并脚本（多个 PR）
+
+```bash
+GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
+REMOTE=$(git remote get-url origin)
+OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
+REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
+
+for N in 10 11 12 13; do  # 替换为实际 PR 号列表
+  BASE="https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/$N"
+  s1=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/test"   -H "Content-Type: application/json" -d "{\"access_token\":\"$GITEE_TOKEN\"}")
+  s2=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/review" -H "Content-Type: application/json" -d "{\"access_token\":\"$GITEE_TOKEN\"}")
+  r=$(curl -s -X PUT "$BASE/merge" -H "Content-Type: application/json" \
+    -d "{\"access_token\":\"$GITEE_TOKEN\",\"merge_method\":\"merge\"}" \
+    | python3 -c "import json,sys; r=json.load(sys.stdin); print(r.get('merged','err'))" 2>/dev/null)
+  echo "PR #$N  test=$s1  review=$s2  merged=$r"
+  sleep 0.3
+done
 ```
 
 ### 查看单条 PR 详情
@@ -104,6 +150,23 @@ curl -s "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/{number}?access_token
 - API 根路径：`https://gitee.com/api/v5/`
 - merge_method 可选值：`merge`（保留提交历史）/ `squash`（合并为单提交）/ `rebase`
 
+## 合并冲突处理
+
+PR 推送后若其他分支先合并，会导致 `mergeable: false`（合并冲突）。**API 无法自动解决冲突，必须本地 rebase 后 force-push。**
+
+```bash
+# 以 hact-v3-008 为例
+git fetch origin
+git checkout hact-v3-008
+git rebase origin/master
+# 若有冲突：
+#   - 内容冲突：手动解决，git add <file>，git rebase --continue
+#   - add/add 冲突（两边都新增同一文件，master 版本已正确）：git rebase --skip
+git push origin hact-v3-008 --force-with-lease
+```
+
+rebase 完成后 PR 的 `mergeable` 会自动变回 `true`，再走 test→review→merge 流程。
+
 ## 常见错误
 
 | 错误 | 原因 | 处理 |
@@ -112,4 +175,7 @@ curl -s "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/{number}?access_token
 | 404 Not Found | owner/repo 路径错误 | 用 `git remote get-url origin` 重新确认 |
 | 422 Unprocessable | head 分支不存在或已合并 | 先 `git branch -a` 确认分支名 |
 | PR 已存在 | 重复创建 | 先查列表确认是否已有同 head 的开放 PR |
+| 未通过设置的审查 | PR 有审查人/测试人但未调用 /test 和 /review | 先 POST /test、POST /review（各返回 204），再 PUT /merge |
+| mergeable: false | 其他 PR 先合并导致冲突 | 本地 rebase origin/master + force-push，再重试合并 |
+| 403 on /test or /review | token 账号不是该 PR 的指定审查人/测试人 | 检查 PR 的 testers/assignees 字段确认账号 |
 | JSON parse error | curl 返回了 HTML 错误页 | 去掉 python3 管道，直接看原始 curl 输出排查 |
