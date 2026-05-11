@@ -129,10 +129,85 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 ---
 
-### Step 5：移交
+### Step 5：注册到 hact-app + 配置 Gitee Webhook
+
+**5.1 收集必要信息：**
 
 ```
-✅ init-project 完成：`E:\group-code\{name}\` 已创建，远端已绑定至 {gitee-url}，团队成员已添加。
+请提供以下信息（均为一次性配置，后续项目无需重复）：
+1. hact-app 部署地址（如 https://hact.example.com）
+2. CC Token（服务器 .env 中的 CC_TOKEN 值）
+```
+
+若上述信息已在本次会话中提供，直接复用，不再重复询问。
+
+🚫 等用户提供（可跳过整个 Step 5，跳过则在移交信息中注明"hact-app 注册待手动完成"）
+
+**5.2 生成 webhook_secret：**
+
+```bash
+# 生成 32 位随机十六进制串
+node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
+```
+
+记录生成的值为 `{webhook_secret}`。
+
+**5.3 在 hact-app 注册项目：**
+
+从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，构造标准化 URL（去掉 `.git` 后缀）：
+
+```bash
+curl -s -X POST "{hact-app-url}/api/cc/projects" \
+  -H "Authorization: Bearer {cc-token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "{name}",
+    "gitee_repo_url": "https://gitee.com/{owner}/{repo}",
+    "webhook_secret": "{webhook_secret}",
+    "local_path": "E:\\group-code\\{name}",
+    "cc_project_id": "{name}"
+  }'
+```
+
+- 返回 `201` / 含 `id` 字段 → 注册成功，记录返回的 `project_id`
+- 返回 `409`（`code: 3002`）→ 项目已存在，跳过，不报错
+- 其他错误 → 报告给用户，此步骤标记为待手动完成
+
+**5.4 在 Gitee 配置 Webhook：**
+
+复用 Step 4.4 的 Gitee token（若未收集则此处补收）：
+
+```bash
+curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "access_token": "{gitee-token}",
+    "url": "{hact-app-url}/api/webhooks/gitee",
+    "push_events": true,
+    "token": "{webhook_secret}"
+  }'
+```
+
+- 返回含 `id` 字段 → Webhook 配置成功
+- 失败 → 报告原因（token 无权限 / 仓库不存在等）
+
+```
+✅ hact-app 注册完成：project_id={project_id}，Webhook 已配置。
+→ 下一步：移交
+继续？
+```
+
+🚫 等用户确认
+
+---
+
+### Step 6：移交
+
+```
+✅ init-project 完成：
+- 本地仓库：E:\group-code\{name}\
+- 远端：{gitee-url}
+- hact-app：project_id={project_id}（或"待手动完成"）
 → 下一步：draft-prd-vN — A 类需求从产品阶段开始；B 类需求直接用 dispatch-new。
 ```
 
