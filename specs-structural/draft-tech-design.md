@@ -49,8 +49,10 @@
 | 共享规范 | `iterations/vN/standards-shared.md` | Markdown；v1 源于 `templates/standards/`，vN+1 源于上期同文件增量更新 |
 | 前端规范 | `iterations/vN/standards-frontend.md` | 同上 |
 | 后端规范 | `iterations/vN/standards-backend.md` | 同上 |
+| G2 签字 | `iterations/vN/gates.md` | `- [x] G2：TRD 已确认 — YYYY-MM-DD` |
 | decisions.md 更新 | `decisions.md` | 表格追加：决策 / 原因 / 日期 |
 | project.md 更新（技术层） | `project.md` | 追加或更新技术层内容 |
+| 进度断点（compact 时写入） | `_meta/sessions/draft-tech-design-progress.md` | 疑点清单答案摘要 + TRD 骨架（接口列表 / 模块划分 / 共享组件） |
 
 **TRD 必含段落：**
 

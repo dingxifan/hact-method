@@ -34,6 +34,7 @@
 mkdir -p E:\group-code\{name}\iterations\v1\queue\done
 mkdir -p E:\group-code\{name}\_meta\input
 mkdir -p E:\group-code\{name}\_meta\sessions
+mkdir -p E:\group-code\{name}\.claude\commands
 touch E:\group-code\{name}\project.md
 touch E:\group-code\{name}\decisions.md
 touch E:\group-code\{name}\design.md
@@ -47,7 +48,10 @@ touch E:\group-code\{name}\b-tasks.md
 - `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）
 - `_meta/sessions/`：各任务的跨会话接续文件（`{task-type}-progress.md`）
 
-3. **写入占位文件初始结构**：各文件按下方"主要产物"中的初始内容填入，不留空文件
+3. **写入占位文件初始结构**：各文件按下方"主要产物"中的初始内容填入，不留空文件；同时从 templates 复制以下文件：
+   - `CLAUDE.md`：复制自 `hact-method/templates/CLAUDE.md`，将 `{项目名}` 替换为实际项目名
+   - `.claude/commands/pic.md`：复制自 `hact-method/templates/.claude/commands/pic.md`
+   - `.claude/commands/gitee-ops.md`：复制自 `hact-method/templates/.claude/commands/gitee-ops.md`
 4. **Git 初始化**：
 
 ```bash

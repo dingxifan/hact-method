@@ -29,7 +29,7 @@
 1. **通读 TRD**：读 `trd.md` + `standards-*.md` + `reusables.md`，建立完整上下文
 2. **输出疑点清单**：列出 TRD 中任何实现边界不清晰的点（字段取值 / 接口行为 / 模块职责边界等）；等用户逐条确认——**无未解决疑点才继续**
 3. **拆分任务**：按 TRD 模块拆分本期所有 develop 任务；每个任务确定 layer / source=sprint / urgency=normal / 依赖关系 / 交付方式（`独立` 或 `批量`，判断标准见 exec spec §Step 2.5）
-4. **写任务包**：为每个 develop 任务写完整任务包（12 字段，见 `develop.md §字段规范`），写入 `iterations/vN/queue/{task-id}.md`，初始状态设为 [可取]
+4. **写任务包**：为每个 develop 任务写完整任务包（16 字段，见 `develop.md §字段规范`），写入 `iterations/vN/queue/{task-id}.md`，初始状态设为 [可取]
 5. **写 sprint.md**：汇总本期任务列表，标注依赖关系，初始状态全部 [可取]
 6. **询问签 G3**：「任务包已写完，要签 G3 吗？」——用户确认后 commit，G3 写入 `iterations/vN/gates.md`
 
@@ -39,8 +39,10 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范 |
+| 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范（16 字段） |
 | sprint.md | `iterations/vN/sprint.md` | 见下方格式说明 |
+| G3 签字 | `iterations/vN/gates.md` | `- [x] G3：开发包就绪 — YYYY-MM-DD` |
+| 进度断点（compact 时写入） | `_meta/sessions/plan-sprint-progress.md` | 任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单答案摘要 |
 
 **sprint.md 格式：**
 
@@ -65,7 +67,7 @@
 
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] TRD 每个模块都有对应的 develop 任务包
-- [ ] 所有任务包 12 字段完整，无空字段
+- [ ] 所有任务包 16 字段完整，无空字段
 - [ ] 依赖关系已标注（无依赖标 `—`，有依赖标被依赖的 task-id）
 - [ ] 每个任务的 `交付` 列已填（`独立` 或 `批量`），判断理由已向用户说明并确认
 - [ ] sprint.md 已写，任务列表与 queue/ 一致

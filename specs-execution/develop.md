@@ -409,7 +409,7 @@ context-state:
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 额外加载 | `design.md`（涉及视觉时）| 无 |
-| Checklist | responsive-checklist | backend-checklist |
+| Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md` |
 | 视觉决策暂停 | 有（🚫） | 无 |
 | Subagent 拆分粒度 | 按组件拆（每个组件一个 subagent） | 按模块拆（controller / service 分开）|
 

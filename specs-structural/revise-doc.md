@@ -32,7 +32,7 @@
 
 1. **读原文档**：读待修订文档的当前版本，定位需要修改的段落
 2. **修订内容**：按 `reason` 所述问题做最小化修订，不扩大范围
-3. **记入 backlog**：在 `backlog.md` 追加 `[修订]` 条目，说明改了什么 + 原因
+3. **记入 backlog**：在 `backlog.md` 追加 `[修订]` 条目，说明改了什么 + 原因；task-id 命名格式：`{项目缩写}-rd-{三位序号}`，如 `hact-rd-001`
 4. **判断下游影响**：
    - `target=prd`：是否影响 TRD 的接口 / 数据结构 → 若是，同时创建 `revise-doc(target=trd)`
    - `target=trd`：是否影响已派发的任务包 → 若是，更新 queue 中对应任务包，通知相关 develop task 重新拾取
@@ -46,7 +46,11 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 修订后的目标文档 | `iterations/vN/prd.md` / `trd.md` / `standards-*.md` | 原文件直接修改，commit 记录变更 |
-| backlog 修订条目 | `backlog.md` | `- [修订] {日期} \| {改了什么} \| {原因}` |
+| backlog 修订条目 | `backlog.md` | `- [修订] {日期} \| target={target} \| {改了什么} \| 原因：{reason}` |
+| 级联 revise-doc 任务包（PRD 修订影响 TRD 时） | `iterations/vN/queue/{task-id}.md` | revise-doc(target=trd) 任务包 |
+| 受影响的 develop 任务包更新（trd/standards 修订影响 queue 时） | `iterations/vN/queue/{task-id}.md` | 在任务包备注「已修订，请重新拾取」 |
+| 新 develop 任务包（修订影响已 [merged] PR 时） | `iterations/vN/queue/{task-id}.md` | source=sprint，说明需修正已合并代码 |
+| feedback.md 条目（同一文件被多次修订时） | `feedback.md` | `{日期} \| {发现} \| 建议在 {任务} 阶段加强 {环节}` |
 
 ---
 

@@ -20,14 +20,18 @@
 
 ## 字段规范
 
-本 task 无特有属性字段。测试场景数量上限为 **15 条**，聚焦本期新功能端到端路径和跨模块集成点，不测已有功能的回归（回归属于 B 类范畴）。
+本 task 无特有属性字段。测试场景数量限制如下，聚焦本期新功能端到端路径和跨模块集成点，不测已有功能的回归（回归属于 B 类范畴）：
+
+- 前端交互场景（pinchtab）：上限 **15 条**；超出时优先保留主流程 + 关键用户操作路径，边界场景降级为 `[不阻断]` 记入 backlog
+- 后端 API 场景（`.http` / `curl`）：不设硬性上限，覆盖所有接口主流程 + 鉴权边界 + 错误码 + 跨模块集成点
 
 ---
 
 ## 工作内容
 
 1. **核对测试环境**：读 `standards-shared.md` 的测试环境约定段落，确认后端可访问 / 前端可访问 / 数据库指向测试库；环境不就绪则阻断，等环境就绪后继续
-2. **设计测试场景**：从 PRD acceptance criteria 提取端到端场景，补充跨模块集成点，整理为 ≤15 条测试清单
+1.5. **处理 CR [建议] 清单**：读 `backlog.md`，找出所有标记 `[CR-建议]` 的条目；改动 ≤5 行且原因显而易见的直接修复；较复杂的评估是否走 B 类快速通道，否则降级为普通 backlog 条目
+2. **设计测试场景**：从 PRD acceptance criteria 提取端到端场景，补充跨模块集成点，按上方场景数量规则整理
 3. **写测试脚本**：
    - 后端接口：写 `.http` 文件或 `curl` 脚本，覆盖正常路径 + 关键边界（鉴权失败 / 非法参数 / 空值等）
    - 前端交互：用 pinchtab 脚本模拟用户操作流程
@@ -48,7 +52,10 @@
 | 测试脚本（后端） | `integration-tests/backend/{场景名}.http` 或 `.sh` | HTTP 请求文件 / curl 脚本 |
 | 测试脚本（前端） | `integration-tests/frontend/{场景名}.pinchtab` | pinchtab 脚本 |
 | 测试结果记录 | `integration-tests/result-{日期}.md` | 见下方格式 |
-| 修复任务包（如有失败） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
+| 修复任务包（[阻断] 失败时） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
+| backlog.md 条目（[不阻断] 失败时） | `backlog.md` | `- [ ] {日期} \| [不阻断] {描述} \| 联调发现` |
+| 进度断点（compact 时写入） | `_meta/sessions/generate-integration-tests-progress.md` | 场景清单 + 已跑场景结论 + 已派修复 task-id |
+| feedback.md 条目（发现共性问题时） | `feedback.md` | `{日期} \| {发现} \| 建议更新到 {standards/trd 哪节}` |
 
 **测试结果记录格式：**
 

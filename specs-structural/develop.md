@@ -62,7 +62,7 @@
    - 对照 layer 对应 checklist 逐项检查
    - 有冗余/重复实现 → 精简后再推
 7. **推 PR**：PR description 是本任务的唯一交付记录，必须包含：task-id / 改动摘要 / acceptance-criteria 逐条验证 / 偏离说明（含超出 files 清单的文件）/ 遗留问题（已记入 backlog 的问题）；不包含凭据
-8. **更新任务状态**：`code-review` 调 merge API 合并 PR 后，由 code-review 执行人将本 task 状态改为 [merged]
+8. **更新任务状态**：PR 推出后，develop 执行人将任务包状态改为 `[done]`，同时在 `sprint.md` 对应行填入 PR 编号（`#N`）；后续 `code-review` 合并 PR 后再将状态改为 `[merged]`
 
 ---
 
@@ -71,13 +71,15 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | PR | 代码仓库 | PR description 含 5 段：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 |
+| sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[done]`，PR 列 → `#N` |
+| 上下文重置记录（触发时写入） | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：已完成文件 / 阻塞点 / 关键决策 |
 
 ---
 
 ## 完成判据
 
 - [ ] 所有 `acceptance-criteria` 均已满足
-- [ ] layer 对应 checklist 自检通过
+- [ ] layer 对应 checklist 自检通过（`templates/checklists/backend-checklist.md` 或 `frontend-checklist.md`）
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
 - [ ] `code-review` 通过（PR 状态 [merged]）
 

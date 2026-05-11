@@ -47,10 +47,11 @@
 
 | feedback 内容 | 目的地 |
 |---|---|
-| 开发踩的坑、禁止事项 | `templates/standards/{backend\|frontend}.md` |
-| 角色工作流 / 规范有问题 | 记入 `_meta/plans/` 待议清单，在专门的方法论讨论会话中处理，不在收尾阶段直接改方法论文件 |
+| 开发踩的坑、禁止事项、编码规范（原则级） | `templates/standards/{backend\|frontend}.md` |
+| 自检容易漏的验证项（能写成 checkbox） | `templates/checklists/{backend\|frontend}-checklist.md` |
+| 角色工作流 / 规范有问题 | `../hact-method/_meta/plans/方法论待议.md`，在专门的方法论讨论会话中处理，不在收尾阶段直接改方法论文件 |
 | 项目架构决策有遗漏 | `decisions.md` |
-| 跨项目通用机制问题 | `_meta/plans/` 记录，待方法论讨论 |
+| 跨项目通用机制问题 | `../hact-method/_meta/plans/方法论待议.md`，待方法论讨论 |
 | 无价值 | 直接删除 |
 
 分流完成后**清空 `feedback.md`**。
@@ -74,10 +75,12 @@
 |------|------|------|
 | 反向更新的 PRD / TRD（如有偏离） | `iterations/vN/prd.md` / `trd.md` | 通过 `revise-doc` task 执行 |
 | 更新的 decisions.md | `decisions.md` | 实现细节偏离的沉淀 |
-| 更新的模板 / 规范 | `templates/standards/` | feedback 分流产物（仅模板层，方法论文件不在此改） |
-| 方法论待议清单 | `_meta/plans/` | 需专门讨论的规范 / 流程问题，留待方法论会话处理 |
+| 更新的模板规范 | `templates/standards/{backend\|frontend}.md` | feedback 分流：编码规范类 |
+| 更新的自检 checklist | `templates/checklists/{backend\|frontend}-checklist.md` | feedback 分流：自检验证项类 |
+| 方法论待议清单 | `../hact-method/_meta/plans/方法论待议.md` | 需专门讨论的规范 / 流程问题，留待方法论会话处理 |
 | 清空的 feedback.md | `feedback.md` | 分流完成后清空 |
 | 更新的 project.md | `project.md` | 本期最终状态快照 |
+| G5 签字 | `iterations/vN/gates.md` | `- [x] G5：迭代收尾完成 — YYYY-MM-DD` |
 
 ---
 
@@ -115,7 +118,7 @@
 | 场景 | 处理方式 |
 |------|---------|
 | `deploy` 失败，但收尾三步已完成 | G5 可独立签字；project.md 中标注"待部署"而非"已上线" |
-| feedback 条目归属有争议（模板？还是规范？） | 倾向 `templates/standards/`（项目级通用）；涉及方法论结构的才进 `specs-structural/` |
+| feedback 条目归属有争议（standards？checklist？） | 是"要遵守的规则"→ standards；是"容易漏、要专门核查"→ checklist；涉及方法论结构的才进待议清单 |
 | 同一期大量 `[偏离]`（>5 条） | 在 feedback.md 追加一条"本期 TRD 覆盖质量问题"，分流到 `_meta/plans/` 记录，下次方法论讨论时处理 |
 | 迭代未部署就收尾（纯文档迭代） | project.md 标注"本期无部署"，正常签 G5 |
 | B 类任务长期运行，项目根积累大量 feedback | 参照 skeleton 的"清理项目积累"机制，建独立 cleanup task 跑三步但不签 G5 |

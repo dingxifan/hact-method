@@ -46,7 +46,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 部署日志 | `deploy-log.md` | 见下方格式（追加，不覆盖） |
-| deployment.config（首次） | `deployment.config` | 键值对配置文件 |
+| deployment.config（首次） | `deployment.config` | 键值对配置文件，含四个字段：`server-address` / `build-command` / `health-check-url` / `restart-command` |
 
 **deploy-log.md 追加格式：**
 
@@ -106,4 +106,4 @@
 |------|---------|
 | 部署后发现功能异常（线上 bug） | 立即走 `dispatch-new(target-source=bug, urgency=hotfix)` → develop → deploy 快速通道 |
 | 回滚后仍有问题 | 上报；暂时下线功能或切流量，等根因分析完成后再重新部署 |
-| deployment.config 不存在（首次部署） | 先建 `deployment.config`，填入服务器地址 / 构建命令 / 健康检查端点，commit 后再继续 |
+| deployment.config 不存在（首次部署） | 先建 `deployment.config`，填入 `server-address` / `build-command` / `health-check-url` / `restart-command` 四个字段，commit 后再继续 |

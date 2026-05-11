@@ -81,7 +81,7 @@
 
 ## Step 4：写任务包
 
-按 `specs-structural/develop.md §字段规范` 写完整 12 字段任务包，写入 `iterations/vN/queue/{task-id}.md`（vN = 当前活跃迭代），状态 `[可取]`。
+按 `specs-structural/develop.md §字段规范` 写完整 16 字段任务包，写入 `iterations/vN/queue/{task-id}.md`（vN = 当前活跃迭代），状态 `[可取]`。
 
 关键字段确认（写完对照检查）：
 

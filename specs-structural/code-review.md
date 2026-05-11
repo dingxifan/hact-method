@@ -41,7 +41,7 @@
 3. **对照 standards**：核对 `standards-shared.md` + `standards-{layer}.md` 的相关章节，检查代码是否遵守
 4. **逐条过 checklist**：
    - `layer` 含 `backend` → 过 backend-checklist（DB Schema / API 错误码 / 权限校验 / 并发安全 / 静默失败防御）
-   - `layer` 含 `frontend` → 过 responsive-checklist（断点适配 / 触控尺寸 / 事件处理 / XSS 防护）
+   - `layer` 含 `frontend` → 过 `templates/checklists/frontend-checklist.md`（断点适配 / 触控尺寸 / 事件处理 / XSS 防护）
 5. **写反馈**：每个 PR 独立写 review comment，问题分两级：
    - `[阻断]`：必须修复才能合并
    - `[建议]`：可接受，建议下期处理
@@ -59,6 +59,8 @@
 |------|------|------|
 | 各 PR 的 review comment + 决定 | 代码仓库各 PR | Markdown，含 [阻断]/[建议] 标记 |
 | sprint.md CR 结论备注 | `iterations/vN/sprint.md` | 在对应行追加 `CR:通过` 或 `CR:打回(原因)` |
+| backlog.md [CR-建议]条目（有建议时写入） | `backlog.md` | `- [ ] {日期} \| [CR-建议] {描述} \| {文件路径}` |
+| feedback.md 条目（发现共性问题时写入） | `feedback.md` | `{日期} \| {发现的问题模式} \| 建议更新到 {standards 文件哪节}` |
 
 ---
 

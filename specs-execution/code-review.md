@@ -86,7 +86,7 @@
 ### Step 4：过 checklist
 
 - `layer` 含 `backend` → backend-checklist：DB Schema 核对 / API 错误码覆盖 / 权限校验 / 并发安全 / 静默失败防御
-- `layer` 含 `frontend` → responsive-checklist：断点适配 / 触控最小 44×44px / 事件兼容 / XSS 防护
+- `layer` 含 `frontend` → `templates/checklists/frontend-checklist.md`：断点适配 / 触控最小 44×44px / 事件兼容 / XSS 防护
 - `layer=null` → 跳过 checklist，只确认无凭据泄露
 
 每条标 ✅ 或 ❌，❌ 的记录具体问题描述。

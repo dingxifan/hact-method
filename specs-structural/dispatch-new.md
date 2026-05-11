@@ -35,7 +35,7 @@
    - `target-source=bug`：收集现象描述 / 复现步骤 / 已试方案 / 最可能修复方向
    - `target-source=optimization`：收集改进目标 / 基线指标（如有）/ 验收标准
 3. **判断 urgency**：影响核心功能且无法绕过 → `hotfix`；其余 → `normal`
-4. **写任务包**：按 develop.md §字段规范写完整任务包，写入 `iterations/vN/queue/{task-id}.md`，状态 [可取]
+4. **写任务包**：按 develop.md §字段规范写完整 16 字段任务包，写入 `iterations/vN/queue/{task-id}.md`，状态 [可取]；task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`
 5. **记入 b-tasks.md**：在 `b-tasks.md` 追加一行（见"主要产物"格式）
 
 ---
@@ -60,7 +60,7 @@
 ## 完成判据
 
 - [ ] B 类判定通过（或已升级 A 类并终止本 task）
-- [ ] 任务包 12 字段完整，无空字段
+- [ ] 任务包 16 字段完整，无空字段
 - [ ] `urgency` 已按影响程度判断填写
 - [ ] b-tasks.md 已追加条目
 
