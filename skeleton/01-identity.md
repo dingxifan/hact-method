@@ -19,9 +19,8 @@
 
 **跨工作区身份不变**：
 
-- 在 `group-code` 父级（管理员心态）做事的 X
-- 在 `projects/{项目}/` 下（编排心态）做事的 X
-- 在 dispatch（循环心态）拉任务的 X
+- 在 hact-method（方法论心态）做事的 X
+- 在项目根（项目心态）做事的 X
 
 是同一个 X。工作区切换的是**工作心态**，不是**身份**。
 
@@ -86,7 +85,7 @@ user 能拉 task 的条件：
 
 谁能拉这些任务由 `user_disciplines` 授权决定——跟其他任务一视同仁。"谁能签 G1"等于"哪个用户被授权了 product"，不靠管理员标签开后门。
 
-**例外**：方法论调整本身是发散性工作，没清晰 spec，**不预定义为 task type**——有 `management` 授权的 user 在父级工作区按需直接做（详见 `02-workspaces.md` §2）。
+**例外**：方法论调整本身是发散性工作，没清晰 spec，**不预定义为 task type**——有 `management` 授权的 user 在 hact-method 工作区按需直接做（详见 `02-workspaces.md` §2）。
 
 ---
 

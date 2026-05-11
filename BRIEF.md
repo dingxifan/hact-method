@@ -49,10 +49,10 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 ## 关键设计决策（继承自重构讨论，不要绕回）
 
 1. **摒弃角色身份模型，改用 discipline 知识聚类**：discipline 不是身份、不是路由，只是任务知识的聚类维度。具体 discipline 清单不预设，由 04 任务全谱自然涌现（详见 skeleton/03 + 04）
-2. **工作区 3 个**：group-code 父级 / 项目根 / dispatch
+2. **工作区 2 个**：hact-method / 项目根
 3. **任务驱动**：人无身份，CC 加载工作规范靠任务声明
 4. **B 类没 Gate**：只有任务流 + b-tasks.md 总账
-5. **B 类入口**：dispatch 工作区"派新 BUG / 派新优化"
+5. **B 类入口**：项目根"派新 BUG / 派新优化"
 6. **B 类恒定 2 会期**：BUG 处理 + 功能优化，不需要起/关
 7. **hotfix 不独立**：是任务包 urgency 属性，归 BUG 会期
 8. **部署默认合并**：master 上所有"已验过"commit 一次性部署
@@ -67,7 +67,7 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 17. **迭代是项目下一等公民**：目录结构 `projects/{项目}/iterations/vN/` 反映这一层级——跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks）留项目根，迭代内产物（prd / trd / iteration Gate 状态 / standards / sprint）入迭代目录。目录与未来 hact-app 数据模型 `projects → iterations → sprints/tasks` 同构。取消 v1 沿用的 product/ tech/ 角色风目录（与任务驱动模型冲突）
 18. **task → discipline 是 1:N；user → discipline 是 M:N**（路径 X）：每个 task 挂**单一**主 discipline（schema 上 `tasks.discipline` 是单值字段）；每个用户可被授权多个 discipline（schema 上 `user_disciplines` 是 junction 表）。跨学科辅助知识由 spec 文本跨引用相邻子规范来补，不在 schema 表达。理由：27 个 task 里真跨学科的极少（≤2），M:N 的 schema 复杂度对实际场景投资回报低；wrap-up-iteration 这种"看似跨学科"的任务实际是机械化分流，1 分钟内可完成，无需拆子任务
 19. **权限模型 = user-discipline 关联（废弃 user.role）**：新增 `user_disciplines (user_id, discipline_id)` junction 表达"用户被授权做哪类 discipline 的任务"。拉取准入 = `task.discipline ∈ user.disciplines`（task 侧 1:N，user 侧 M:N）；任务级写权限由 taken-by 决定。管理性操作不另开后门——立项是独立 task `init-project`(management)；Gate 签字合并入最近前置任务（G1 在 draft-prd-vN/product，G2 在 draft-tech-design/architecture，G3 在 plan-sprint/dispatch，G4 在 manual-test/product，G5 在 wrap-up-iteration/management），通过 user 授权决定谁能拉
-20. **复杂工作不强行预定义为 task type**：任务驱动模型不要求"所有动作都是任务"，只要求"被反复执行的、有清晰 spec 的动作是任务"。例：方法论调整本身是发散性工作，没清晰 spec——由有 `management` discipline 授权的 user 在父级工作区按需直接做，无固定任务包。本原则适用于所有低频+复杂+难标准化的活动
+20. **复杂工作不强行预定义为 task type**：任务驱动模型不要求"所有动作都是任务"，只要求"被反复执行的、有清晰 spec 的动作是任务"。例：方法论调整本身是发散性工作，没清晰 spec——由有 `management` discipline 授权的 user 在 hact-method 工作区按需直接做，无固定任务包。本原则适用于所有低频+复杂+难标准化的活动
 
 ## 工具依赖
 

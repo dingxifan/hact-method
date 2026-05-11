@@ -14,7 +14,7 @@
 
 | 段 | task | discipline | Gate |
 |---|---|---|---|
-| 父级 | `init-project` | management | — |
+| hact-method | `init-project` | management | — |
 | 准备 | `draft-prd-vN` | product | G1 |
 | 准备 | `draft-tech-design` | architecture | G2 |
 | 准备 | `plan-sprint` | dispatch | G3 |

@@ -7,7 +7,7 @@
 按层级递进：
 
 1. **[`01-identity.md`](01-identity.md)** — 身份模型：谁是谁？git author + web 登录映射同一 user；权限通过 user-discipline 关联表达
-2. **[`02-workspaces.md`](02-workspaces.md)** — 三个工作区按"心态"切割：父级（方法论）/ 项目根（编排）/ dispatch（循环）
+2. **[`02-workspaces.md`](02-workspaces.md)** — 两个工作区按"心态"切割：hact-method（方法论）/ 项目根（项目）
 3. **[`03-disciplines.md`](03-disciplines.md)** — 9 个 discipline = 任务知识的聚类（含 CC 上下文管理 heat map）
 4. **[`04-task-catalog.md`](04-task-catalog.md)** — 12 个 task type 完整字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）
 5. **[`05-state-machine.md`](05-state-machine.md)** — 4 个状态（可取 / taken-by / done / merged）+ 流转 + 软锁 + 异常转移
