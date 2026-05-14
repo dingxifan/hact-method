@@ -152,7 +152,9 @@ node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
 
 **5.3 在 hact-app 注册项目：**
 
-从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，构造标准化 URL（去掉 `.git` 后缀）。复用 Step 4.4 的 Gitee token（若未收集则此处补收）：
+从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，构造标准化 URL（去掉 `.git` 后缀）。复用 Step 4.4 的 Gitee token（若未收集则此处**必须**补收）：
+
+> ⚠️ `gitee_token` 为必填项。hact-app 需要用它在服务器端 clone 仓库，缺失则 `local_path` 永远为 null，cron 和 webhook 均无法同步，项目状态永远无法更新。
 
 ```bash
 curl -s -X POST "{hact-app-url}/api/cc/projects" \
@@ -191,6 +193,25 @@ curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
 
 **5.5 验证 Webhook 链路（必须执行）：**
 
+**5.5.1 等待服务器 clone 完成**
+
+注册后服务器在后台 clone，clone 耗时通常 10–120 秒。**必须**先确认 clone 完成再做 webhook 验证，否则 webhook 到达时 `local_path` 仍为 null，sync 会被跳过。
+
+轮询查询（最多重试 18 次，每次等 10 秒，共 3 分钟）：
+
+```bash
+curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
+  -H "Authorization: Bearer {cc-token}"
+```
+
+- 若返回记录且 `status=failed` 且 `error_message` 含 `clone failed` → clone 失败，检查 `gitee_token` 权限，联系管理员
+- 若暂无记录 → clone 仍在进行，继续等待
+- 直到能确认 `local_path` 已设置（可通过观察后续步骤的 sync 结果判断）
+
+> 实际判断方式：等待约 30 秒后直接进行 5.5.2 验证；若 sync_event 返回 `status=skipped` 且 `error_message` 含 `no local_path`，则 clone 未完成，再等 30 秒后重试。
+
+**5.5.2 推送空 commit 验证 Webhook**
+
 向仓库推送一个空 commit：
 
 ```bash
@@ -198,7 +219,7 @@ git commit --allow-empty -m "chore: 验证 webhook 链路"
 git push
 ```
 
-等待约 5 秒，查询 sync_event：
+等待约 10 秒，查询 sync_event：
 
 ```bash
 curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
