@@ -138,7 +138,6 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 - `{hact-app-url}`：hact-app 部署地址
 - `{cc-token}`：CC_TOKEN
-- `{ssh-server}`：SSH server alias
 
 🚫 等用户提供（可跳过整个 Step 5，跳过则在移交信息中注明"hact-app 注册待手动完成"）
 
@@ -151,27 +150,9 @@ node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
 
 记录生成的值为 `{webhook_secret}`。
 
-**5.3 在服务器克隆仓库：**
+**5.3 在 hact-app 注册项目：**
 
-复用 Step 4.4 的 Gitee token（若未收集则此处补收），SSH 到服务器执行 clone：
-
-```
-mcp__ssh__ssh_execute(server: "{ssh-server}", command: "git clone https://{gitee-token}@gitee.com/{owner}/{repo}.git /var/www/projects/{name} 2>&1")
-```
-
-- 成功 → 继续
-- 已存在（`already exists`）→ 执行 `git -C /var/www/projects/{name} pull` 更新到最新，继续
-- 失败（认证错误 / 网络错误）→ 报告给用户，此步骤标记为待手动完成，`local_path` 退回为 `""`
-
-clone 成功后立即清除 remote URL 中的 token（防止凭证残留在服务器）：
-
-```
-mcp__ssh__ssh_execute(server: "{ssh-server}", command: "git -C /var/www/projects/{name} remote set-url origin https://gitee.com/{owner}/{repo}.git 2>&1")
-```
-
-**5.4 在 hact-app 注册项目：**
-
-从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，构造标准化 URL（去掉 `.git` 后缀）：
+从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，构造标准化 URL（去掉 `.git` 后缀）。复用 Step 4.4 的 Gitee token（若未收集则此处补收）：
 
 ```bash
 curl -s -X POST "{hact-app-url}/api/cc/projects" \
@@ -181,16 +162,16 @@ curl -s -X POST "{hact-app-url}/api/cc/projects" \
     "name": "{name}",
     "gitee_repo_url": "https://gitee.com/{owner}/{repo}",
     "webhook_secret": "{webhook_secret}",
-    "local_path": "/var/www/projects/{name}",
+    "gitee_token": "{gitee-token}",
     "cc_project_id": "{name}"
   }'
 ```
 
-- 返回 `201` / 含 `id` 字段 → 注册成功，记录返回的 `project_id`
+- 返回 `201` / 含 `id` 字段 → 注册成功，记录 `project_id`；服务器后台开始 clone 仓库，`local_path` 将在 clone 完成后自动写入
 - 返回 `409`（`code: 3002`）→ 项目已存在，跳过，不报错
 - 其他错误 → 报告给用户，此步骤标记为待手动完成
 
-**5.5 在 Gitee 配置 Webhook：**
+**5.4 在 Gitee 配置 Webhook：**
 
 复用 Step 4.4 的 Gitee token（若未收集则此处补收）：
 
@@ -208,7 +189,7 @@ curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
 - 返回含 `id` 字段 → Webhook 配置成功
 - 失败 → 报告原因（token 无权限 / 仓库不存在等）
 
-**5.6 验证 Webhook 链路（必须执行）：**
+**5.5 验证 Webhook 链路（必须执行）：**
 
 向仓库推送一个空 commit：
 
