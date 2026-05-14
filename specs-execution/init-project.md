@@ -162,10 +162,12 @@ curl -s -X POST "{hact-app-url}/api/cc/projects" \
     "name": "{name}",
     "gitee_repo_url": "https://gitee.com/{owner}/{repo}",
     "webhook_secret": "{webhook_secret}",
-    "local_path": "E:\\group-code\\{name}",
+    "local_path": "",
     "cc_project_id": "{name}"
   }'
 ```
+
+> ⚠️ `local_path` 必须留空（`""`）。hact-app 部署在 Linux 服务器，注册时填开发机本地路径（如 `E:\group-code\{name}`）无效，sync 时会因路径不存在而静默跳过，数据不会同步。若后续需要完整 task/gate 同步，须由运维在服务器克隆仓库后手动更新此字段。
 
 - 返回 `201` / 含 `id` 字段 → 注册成功，记录返回的 `project_id`
 - 返回 `409`（`code: 3002`）→ 项目已存在，跳过，不报错
@@ -189,8 +191,30 @@ curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
 - 返回含 `id` 字段 → Webhook 配置成功
 - 失败 → 报告原因（token 无权限 / 仓库不存在等）
 
+**5.5 验证 Webhook 链路（必须执行）：**
+
+向仓库推送一个空 commit：
+
+```bash
+git commit --allow-empty -m "chore: 验证 webhook 链路"
+git push
 ```
-✅ hact-app 注册完成：project_id={project_id}，Webhook 已配置。
+
+等待约 5 秒，查询 sync_event：
+
+```bash
+curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
+  -H "Authorization: Bearer {cc-token}"
+```
+
+- 返回记录且 `status=success` 或 `status=skipped` → 链路正常（`skipped` 是因为 `local_path` 为空，属预期行为）
+- 返回记录且 `status=failed` → 报告 `error_message` 给用户
+- 无记录 → webhook token 未打通，检查 Gitee webhook 配置中 `password` 字段是否与 `{webhook_secret}` 一致
+
+> 此步是强制验证，不可跳过。token 不匹配会导致 webhook 永远被 401 拒绝，项目状态永远不同步，且没有任何明显报错。
+
+```
+✅ hact-app 注册完成：project_id={project_id}，Webhook 已配置并验证。
 → 下一步：移交
 继续？
 ```
