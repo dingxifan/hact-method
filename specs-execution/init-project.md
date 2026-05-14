@@ -138,6 +138,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 - `{hact-app-url}`：hact-app 部署地址
 - `{cc-token}`：CC_TOKEN
+- `{ssh-server}`：SSH server alias
 
 🚫 等用户提供（可跳过整个 Step 5，跳过则在移交信息中注明"hact-app 注册待手动完成"）
 
@@ -150,7 +151,25 @@ node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
 
 记录生成的值为 `{webhook_secret}`。
 
-**5.3 在 hact-app 注册项目：**
+**5.3 在服务器克隆仓库：**
+
+复用 Step 4.4 的 Gitee token（若未收集则此处补收），SSH 到服务器执行 clone：
+
+```
+mcp__ssh__ssh_execute(server: "{ssh-server}", command: "git clone https://{gitee-token}@gitee.com/{owner}/{repo}.git /var/www/projects/{name} 2>&1")
+```
+
+- 成功 → 继续
+- 已存在（`already exists`）→ 执行 `git -C /var/www/projects/{name} pull` 更新到最新，继续
+- 失败（认证错误 / 网络错误）→ 报告给用户，此步骤标记为待手动完成，`local_path` 退回为 `""`
+
+clone 成功后立即清除 remote URL 中的 token（防止凭证残留在服务器）：
+
+```
+mcp__ssh__ssh_execute(server: "{ssh-server}", command: "git -C /var/www/projects/{name} remote set-url origin https://gitee.com/{owner}/{repo}.git 2>&1")
+```
+
+**5.4 在 hact-app 注册项目：**
 
 从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，构造标准化 URL（去掉 `.git` 后缀）：
 
@@ -162,18 +181,16 @@ curl -s -X POST "{hact-app-url}/api/cc/projects" \
     "name": "{name}",
     "gitee_repo_url": "https://gitee.com/{owner}/{repo}",
     "webhook_secret": "{webhook_secret}",
-    "local_path": "",
+    "local_path": "/var/www/projects/{name}",
     "cc_project_id": "{name}"
   }'
 ```
-
-> ⚠️ `local_path` 必须留空（`""`）。hact-app 部署在 Linux 服务器，注册时填开发机本地路径（如 `E:\group-code\{name}`）无效，sync 时会因路径不存在而静默跳过，数据不会同步。若后续需要完整 task/gate 同步，须由运维在服务器克隆仓库后手动更新此字段。
 
 - 返回 `201` / 含 `id` 字段 → 注册成功，记录返回的 `project_id`
 - 返回 `409`（`code: 3002`）→ 项目已存在，跳过，不报错
 - 其他错误 → 报告给用户，此步骤标记为待手动完成
 
-**5.4 在 Gitee 配置 Webhook：**
+**5.5 在 Gitee 配置 Webhook：**
 
 复用 Step 4.4 的 Gitee token（若未收集则此处补收）：
 
@@ -191,7 +208,7 @@ curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
 - 返回含 `id` 字段 → Webhook 配置成功
 - 失败 → 报告原因（token 无权限 / 仓库不存在等）
 
-**5.5 验证 Webhook 链路（必须执行）：**
+**5.6 验证 Webhook 链路（必须执行）：**
 
 向仓库推送一个空 commit：
 
@@ -207,14 +224,14 @@ curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
   -H "Authorization: Bearer {cc-token}"
 ```
 
-- 返回记录且 `status=success` 或 `status=skipped` → 链路正常（`skipped` 是因为 `local_path` 为空，属预期行为）
+- 返回记录且 `status=success` → 链路正常，数据已同步
 - 返回记录且 `status=failed` → 报告 `error_message` 给用户
 - 无记录 → webhook token 未打通，检查 Gitee webhook 配置中 `password` 字段是否与 `{webhook_secret}` 一致
 
 > 此步是强制验证，不可跳过。token 不匹配会导致 webhook 永远被 401 拒绝，项目状态永远不同步，且没有任何明显报错。
 
 ```
-✅ hact-app 注册完成：project_id={project_id}，Webhook 已配置并验证。
+✅ hact-app 注册完成：project_id={project_id}，服务器已 clone，Webhook 已配置并验证。
 → 下一步：移交
 继续？
 ```

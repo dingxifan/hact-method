@@ -6,3 +6,4 @@
 |--------|-----|
 | hact-app 部署地址 | `http://47.110.94.114` |
 | CC_TOKEN | `dev-cc-token-for-testing` |
+| SSH server alias | `hact-app-server` |
