@@ -132,15 +132,12 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 ### Step 5：注册到 hact-app + 配置 Gitee Webhook
 
-**5.1 收集必要信息：**
+**5.1 读取配置：**
 
-```
-请提供以下信息（均为一次性配置，后续项目无需重复）：
-1. hact-app 部署地址（如 https://hact.example.com）
-2. CC Token（服务器 .env 中的 CC_TOKEN 值）
-```
+从 `E:\group-code\hact-method\_meta\hact-config.md` 读取以下值，**无需向用户询问**：
 
-若上述信息已在本次会话中提供，直接复用，不再重复询问。
+- `{hact-app-url}`：hact-app 部署地址
+- `{cc-token}`：CC_TOKEN
 
 🚫 等用户提供（可跳过整个 Step 5，跳过则在移交信息中注明"hact-app 注册待手动完成"）
 
