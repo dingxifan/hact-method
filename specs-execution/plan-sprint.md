@@ -120,7 +120,13 @@
 
 骨架确认后，按 `specs-structural/develop.md §字段规范` 为每个任务写完整 16 字段任务包。
 
-**字段完整性自检**（每包写完前对照 `specs-structural/develop.md §字段规范` 检查 16 字段，无空字段方可写入 queue）。
+**字段完整性自检**（每包写完前对照 `specs-structural/develop.md §字段规范` 检查 16 字段，无空字段方可写入 queue；`layers=[backend]` 且有前端消费时，还须检查 `api-contract` 已填写）。
+
+**api-contract 推导**（对每个 `layers=[backend]` 且被前端任务依赖的任务）：
+- **来源**：同时参考 `trd.md`（数据模型）+ `standards-frontend.md`（组件字段需求）+ 已写的前端任务包草稿（表格列 / 表单字段）
+- **request 侧**：从 TRD 接口描述中提取 query params 和 request body
+- **response 侧**：从前端 standards / 任务包的 UI 描述中提取实际消费字段，**必须平铺**，不要嵌套（嵌套须注明原因）
+- **确认节点**：所有后端任务包写完后，列出全部 api-contract 统一向用户确认：「以下接口的 api-contract 由前端消费需求推导，请确认字段结构是否符合预期」，等确认后再继续
 
 **任务包数量策略**：
 - ≤ 4 个任务 → 主线逐个写

@@ -39,6 +39,19 @@
 | `known-risks` | string[] | ✅ | 来自 TRD 或现有代码的实际陷阱，不是猜测 |
 | `do-not` | string[] | ✅ | 明确禁止边界，防止范围蔓延；必须包含通用凭据红线 |
 | `escalate-if` | string[] | ✅ | 触发上报的条件；必须包含"上下文不足以做实现决策" |
+| `api-contract` | object | 条件 | 仅 `layers=[backend]` 且该接口被前端消费时必填；由 plan-sprint 推导写入，develop 只读；见下方格式说明 |
+
+**api-contract 格式**：
+```yaml
+api-contract:
+  endpoint: GET /api/...
+  request:               # 可选，有 query params 或 body 时填
+    query: { field: type }
+    body: { field: type }
+  response:              # 字段平铺，不嵌套；嵌套须注明原因
+    field: type
+    # 前端直接按此结构声明 TypeScript 类型
+```
 
 **通用凭据红线**（所有任务包默认含此项）：禁止在代码、PR 描述、完成报告中明文出现 PAT / access token / 密码 / 私钥 / API key。
 
