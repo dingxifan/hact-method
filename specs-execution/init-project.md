@@ -41,10 +41,15 @@
 ### Step 2：创建目录结构
 
 ```bash
-mkdir -p "E:/group-code/{name}/iterations"
 mkdir -p "E:/group-code/{name}/iterations/v1/queue/done"
 mkdir -p "E:/group-code/{name}/_meta/input"
 mkdir -p "E:/group-code/{name}/_meta/sessions"
+```
+
+Git 不跟踪空目录，必须在 `done/` 里写入占位文件，否则首次 `git add .` 会把整个 `iterations/` 丢弃：
+
+```bash
+echo "" > "E:/group-code/{name}/iterations/v1/queue/done/.gitkeep"
 ```
 
 ---
