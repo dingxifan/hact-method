@@ -257,6 +257,12 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 - 将 `iterations/vN/queue/{task-id}.md` 状态改为 `[done]`
 - 在 `iterations/vN/sprint.md` 对应行：状态列改为 `[done]`，**PR 列填入 `#N`**（N 为 Step 7 创建的 PR 编号）
+- 执行 commit + push，将状态更新随 feature 分支推送（合并到已开的 PR）：
+  ```bash
+  git add iterations/vN/queue/{task-id}.md iterations/vN/sprint.md
+  git commit -m "chore(sprint): {task-id} 标记 [done]，PR #{N}"
+  git push origin {task-id}
+  ```
 
 ---
 
@@ -358,6 +364,12 @@ PR description 按任务分节，每节独立填写：
 
 - 将所有批量任务的 `iterations/vN/queue/{task-id}.md` 状态改为 `[done]`
 - 在 `iterations/vN/sprint.md` 所有对应行：状态列 → `[done]`，PR 列 → `#N`（所有行填同一个 PR 号）
+- 执行 commit + push，将状态更新随 feature 分支推送（合并到已开的 PR）：
+  ```bash
+  git add iterations/vN/queue/ iterations/vN/sprint.md
+  git commit -m "chore(sprint): 批量标记 [done]，PR #{N}"
+  git push origin {layer}-batch-v{N}
+  ```
 
 ---
 

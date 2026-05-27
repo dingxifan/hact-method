@@ -161,6 +161,12 @@ git branch -d fix/mt-{desc}
 - `source=manual-test`
 - `task-id` 命名：`{项目缩写}-mt-{三位序号}`，如 `hact-mt-001`
 - 写入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`
+- 执行 commit + push，任务包对开发者可见：
+  ```bash
+  git add iterations/vN/queue/{task-id}.md
+  git commit -m "chore(queue): 写入修复任务 {task-id}（manual-test）"
+  git push origin master
+  ```
 
 **⑤ 通知用户并记录**：
 ```

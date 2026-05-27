@@ -109,6 +109,13 @@
 
 ## Step 6：移交
 
+执行 commit + push，任务包对所有协作者可见：
+```bash
+git add iterations/vN/queue/{task-id}.md b-tasks.md
+git commit -m "chore(dispatch): 派发 {task-id}（{target-source}/{urgency}）"
+git push origin master
+```
+
 ```
 ✅ dispatch-new 完成：{task-id}（{target-source} / {urgency}）已写入 queue，等待 develop 拾取。
 ```
