@@ -41,14 +41,24 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 **第一优先：处理 `交付=独立` 的任务**
 
 若存在 `[可取]` 且 `交付=独立` 的任务 → 拾取 task-id 最小的那个，进入**单任务会话**。
-- 将该任务包状态改为 `[taken-by: {user}]`
+- 将该任务包状态改为 `[taken-by: {user}]`，并立即执行认领 commit：
+  ```bash
+  git add iterations/vN/sprint.md
+  git commit -m "chore(sprint): 认领 {task-id} [taken-by: {user}]"
+  ```
+  （push 随首次代码 commit 一起推送，无需单独 push）
 - Steps 1–10 正常执行，最终推独立 PR
 - ⚠️ 该 PR 合并到 master 之前，sprint.md 中 `依赖` 列引用该任务的所有 `批量` 任务均不可拾取
 
 **第二优先：批量会话（所有 `独立` 任务已 `[merged]` 或本 layer 无 `独立` 任务）**
 
 若本 layer 无 `[可取]` 的 `独立` 任务 → 拾取本 layer 全部 `[可取]` 且 `交付=批量` 的任务，进入**批量会话**。
-- 将所有拾取任务的状态改为 `[taken-by: {user}]`
+- 将所有拾取任务的状态改为 `[taken-by: {user}]`，并立即执行认领 commit：
+  ```bash
+  git add iterations/vN/sprint.md
+  git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
+  ```
+  （push 随首次代码 commit 一起推送，无需单独 push）
 - Steps 1–4 对每个任务依次执行（按依赖顺序：被依赖的任务先实现）
 - Steps 5–9 执行「批量会话步骤」（见文末），一次自检、一个 PR 覆盖所有任务
 
