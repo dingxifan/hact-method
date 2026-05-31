@@ -135,23 +135,26 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 **4.5 创建并登记成员个人积累仓（hact-notes）：**
 
-个人 notes 仓**跟人、跨项目**——每人一个，建在**团队 Gitee 组织**下，不随项目重复创建。
+个人 notes 仓**跟人、跨项目**——每人一个，建在**团队 Gitee 命名空间**下，不随项目重复创建。
 
-先确认组织名：从 `E:\group-code\hact-method\_meta\hact-config.md`「全局配置」读取 `notes-org`；缺失则向用户询问一次并补写入配置。
+先确认命名空间：从 `E:\group-code\hact-method\_meta\hact-config.md`「全局配置」读取 `notes-org`（当前值 `dingxifan`）；缺失则向用户询问一次并补写入配置。
+
+> ⚠️ **`dingxifan` 是 Gitee 企业版（enterprise）不是组织（org）**：建仓必须用 `POST /enterprises/{notes-org}/repos`，用 `/orgs/...` 会 404。
 
 对每个成员（含项目发起人自己）：
 
 1. 查 hact-config.md「成员个人积累仓登记表」是否已有该成员
    - 已登记 → 跳过（已有 notes 仓）
    - 未登记 → 继续
-2. 未登记成员，复用 Step4.4 的 Gitee token（需对 `{notes-org}` 有建仓权限），用 API 在组织下创建私有仓并只加本人为 push 协作者：
+2. 未登记成员，复用 Step4.4 的 Gitee token（需对企业 `{notes-org}` 有建仓权限），用 API 在企业下创建私有仓并只加本人为 push 协作者：
 
    ```bash
-   # 在组织下创建私有仓（auto_init 便于后续直接写 notes.md）
-   curl -X POST "https://gitee.com/api/v5/orgs/{notes-org}/repos" \
+   # 在企业下创建私有仓（auto_init 便于后续直接写 notes.md）
+   # 注意：企业版用 /enterprises/ 接口，不是 /orgs/
+   curl -X POST "https://gitee.com/api/v5/enterprises/{notes-org}/repos" \
      -d "access_token={token}&name=hact-notes-{username}&private=true&auto_init=true"
 
-   # 只加本人为 push 协作者：其他开发者不加 → 无读权限；管理者作为 org admin 天然只读
+   # 只加本人为 push 协作者：其他开发者不加 → 无读权限；管理者作为企业 admin 天然只读
    curl -X PUT "https://gitee.com/api/v5/repos/{notes-org}/hact-notes-{username}/collaborators/{username}" \
      -d "access_token={token}&permission=push"
    ```
@@ -159,7 +162,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
    建好后用 `templates/hact-notes/notes.md` 初始化该仓 `notes.md`（clone → 写入 → push），并提示成员 clone 到本地 `E:\group-code\hact-notes-{username}\`
 3. 把成员写入 hact-config.md「成员个人积累仓登记表」（仓地址 `gitee.com/{notes-org}/hact-notes-{username}`）+「收割游标」表（游标初始"尚未收割"）
 
-> 权限模型：仓私有；只本人是 push 协作者 → 其他开发者无权限；管理者作为组织 admin 对所有 notes 仓天然只读 → 正好用于 `harvest-notes` 收割。已存在的成员直接跳过创建，只确保已登记。
+> 权限模型：仓私有；只本人是 push 协作者 → 其他开发者无权限；管理者作为企业 admin 对所有 notes 仓天然只读 → 正好用于 `harvest-notes` 收割。已存在的成员直接跳过创建，只确保已登记。
 > 完整操作手册（含中途加人、初始化、验证、排错、成员离开）见 `guide/05-个人积累仓管理.md`。
 
 ```

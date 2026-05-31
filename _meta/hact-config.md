@@ -6,7 +6,7 @@
 |--------|-----|
 | hact-app 部署地址 | `http://47.110.94.114` |
 | CC_TOKEN | `dev-cc-token-for-testing` |
-| notes-org（个人积累仓所在 Gitee 组织） | _（待填，如 `your-team`；harvest-notes / init-project Step4.5 用）_ |
+| notes-org（个人积累仓所在 Gitee 命名空间） | `dingxifan`（**Gitee 企业版**，企业全名"苏州立刻电子商务有限公司"，id=16378871）。⚠️ 是企业（enterprise）不是组织（org）：建仓用 `POST /enterprises/dingxifan/repos`，**不要**用 `/orgs/...`（会 404）。仓库地址形如 `gitee.com/dingxifan/hact-notes-{姓名}`。 |
 
 ---
 
