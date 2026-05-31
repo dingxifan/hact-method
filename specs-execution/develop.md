@@ -249,7 +249,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 {无 / 已记入 backlog 的问题列表}
 ```
 
-禁止在 PR description 中包含凭据。
+禁止在 PR description 中包含凭据。若推 PR 前发现凭据（PAT / token / 密码 / 私钥 / API key）已被写入代码或 commit：立即从 commit 中移除、通知相关人撤销该凭据，在凭据清理干净前不推 PR。
 
 ---
 
@@ -304,39 +304,17 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 > 前提：所有 `交付=独立` 的任务已 `[merged]`，当前 layer 的全部 `[可取]` 批量任务已拾取。
 
-### 批量 Step 5：自检
+批量会话的 Steps 5–9 与单任务**逻辑一致，只是一次覆盖本 layer 全部批量任务、共用一个 PR**。差异如下，其余照单任务执行：
 
-与单任务 Step 5 相同，但一次自检覆盖本次所有改动文件：
-- 机械验证（build / type-check / lint）跑一次，报错全部修完再继续
-- Checklist 跑一次，涵盖本次所有新增/修改的模块（每条标 ✅ / ❌ / N/A）
-- 偏离核查：`git diff --stat`，对比所有任务包的 `files` 字段合集
+| 步骤 | 与单任务的差异 |
+|------|---------------|
+| 批量 Step 5 自检 | 机械验证 / checklist / 偏离核查各跑**一次**，覆盖本次所有改动文件；偏离对比所有任务包 `files` 字段的合集 |
+| 批量 Step 6 commit | 分支名 `{layer}-batch-v{N}`（如 `backend-batch-v3`）；message：`feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]` |
+| 批量 Step 7 推 PR | `git push origin {layer}-batch-v{N}`；PR description **按任务分节**（模板见下），偏离 / 遗留问题各任务分别列出或统一写"无"；同样禁止凭据 |
+| 批量 Step 8 更新状态 | 所有批量任务包 + sprint.md 对应行 → `[done]`，PR 列**全部填同一个 PR 号**；`chore(sprint): 批量标记 [done]，PR #{N}` 推 `{layer}-batch-v{N}` |
+| 批量 Step 9 移交 | `✅ develop 批量完成：{layer}层 {N} 个任务已 commit，PR #{N} 已推，等待 code-review。本会话到此结束。` 同样 🚫 会话硬边界，输出后立即停止 |
 
-```
-✅ 批量自检完成：checklist {X}/{Y} 通过（{Z} 项 N/A），[无偏离 / 偏离已记录]。
-→ 下一步：批量 commit + PR
-继续？
-```
-
----
-
-### 批量 Step 6：commit
-
-分支命名：`{layer}-batch-v{N}`（如 `backend-batch-v3`、`frontend-batch-v3`）
-
-```bash
-git add {所有改动文件列表}
-git commit -m "feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]"
-```
-
----
-
-### 批量 Step 7：推 PR
-
-```bash
-git push origin {layer}-batch-v{N}
-```
-
-PR description 按任务分节，每节独立填写：
+**批量 PR description 模板**（批量 Step 7）：
 
 ```markdown
 ## v{N} {layer}层批量实现
@@ -349,7 +327,6 @@ PR description 按任务分节，每节独立填写：
 **改动摘要**：{2–3 句}
 **AC 验证**：
 - [x] {AC 1}：{验证方式}
-- [x] {AC 2}：{验证方式}
 
 ### {task-id-2}：{任务标题}
 **改动摘要**：{2–3 句}
@@ -359,37 +336,11 @@ PR description 按任务分节，每节独立填写：
 ---
 
 ### 偏离说明
-{各任务分别列出偏离，或统一写"无"}
+{各任务分别列出，或统一写"无"}
 
 ### 遗留问题
 {各任务分别列出，或统一写"无"；有则确认已记入 backlog}
 ```
-
-禁止在 PR description 中包含凭据。
-
----
-
-### 批量 Step 8：更新状态
-
-- 将所有批量任务的 `iterations/vN/queue/{task-id}.md` 状态改为 `[done]`
-- 在 `iterations/vN/sprint.md` 所有对应行：状态列 → `[done]`，PR 列 → `#N`（所有行填同一个 PR 号）
-- 执行 commit + push，将状态更新随 feature 分支推送（合并到已开的 PR）：
-  ```bash
-  git add iterations/vN/queue/ iterations/vN/sprint.md
-  git commit -m "chore(sprint): 批量标记 [done]，PR #{N}"
-  git push origin {layer}-batch-v{N}
-  ```
-
----
-
-### 批量 Step 9：移交
-
-```
-✅ develop 批量完成：{layer}层 {N} 个任务（{task-id-1}, {task-id-2}...）已 commit，PR #{N} 已推，等待 code-review。
-本会话到此结束。
-```
-
-🚫 **会话硬边界**：输出上述声明后立即停止，与单任务会话相同。
 
 ---
 
@@ -453,3 +404,5 @@ context-state:
 2. 读 `git diff --stat` 确认已改动文件
 3. 读 `progress.md` 的 context-state 记录（如有）了解上次停在哪里
 4. 从断点继续，不重做已完成改动
+
+**阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 `progress.md` 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。

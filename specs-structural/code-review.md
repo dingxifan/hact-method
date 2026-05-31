@@ -2,7 +2,7 @@
 
 **discipline**: `review`
 **Gate**: —
-**属性**: `pr-links` · `layer`（从 PR 改动文件派生）
+**属性**: `pr-links` · `layers`（从 PR 改动文件派生）
 
 > 批量复核若干个 develop PR：对照 standards 和 checklist 给出反馈，决定通过或打回。
 
@@ -21,9 +21,9 @@
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
 | `pr-links` | URL[] | ✅ | 本次批量审查的所有 PR 链接，≥1 个 |
-| `layer` | enum[] | ✅ | 从各 PR 改动文件路径推断：`.vue/.tsx/.css` 等 → `frontend`；controller/service/module 等 → `backend`；混合 → `[frontend, backend]` |
+| `layers` | enum[] | ✅ | 从各 PR 改动文件路径推断：`.vue/.tsx/.css` 等 → `frontend`；controller/service/module 等 → `backend`；混合 → `[frontend, backend]` |
 
-**layer 推断规则**：
+**layers 推断规则**：
 
 | 改动文件特征 | layer |
 |---|---|
@@ -31,25 +31,6 @@
 | 仅后端文件（`controller`、`service`、`module`、`entity`、`.dto.ts` 等） | `backend` |
 | 前后端文件混合 | `[frontend, backend]`，两份 checklist 都用 |
 | 仅配置/文档文件 | `null`，跳过 checklist，只核对 PR description 完整性 |
-
----
-
-## 工作内容
-
-1. **读 PR diff + PR description**：逐个读取 `pr-links` 中的 PR；确认 description 包含完整 5 段（task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题）；重点核查「偏离说明」——有改动超出 `files` 清单的文件需额外审查；核查「遗留问题」——已知缺陷是否已记入 backlog
-2. **确定 layer**：按推断规则确定本次需要加载哪份 checklist
-3. **对照 standards**：核对 `standards-shared.md` + `standards-{layer}.md` 的相关章节，检查代码是否遵守
-4. **逐条过 checklist**：
-   - `layer` 含 `backend` → 过 backend-checklist（DB Schema / API 错误码 / 权限校验 / 并发安全 / 静默失败防御）
-   - `layer` 含 `frontend` → 过 `templates/checklists/frontend-checklist.md`（断点适配 / 触控尺寸 / 事件处理 / XSS 防护）
-5. **写反馈**：每个 PR 独立写 review comment，问题分两级：
-   - `[阻断]`：必须修复才能合并
-   - `[建议]`：可接受，建议下期处理
-6. **给出决定**：每个 PR 独立决定——
-   - **通过**：调平台 merge API 直接合并，develop task 状态推 [merged]
-   - **打回**：在 PR comment 中列出所有 `[阻断]` 问题，develop task 回 [可取]
-7. **简单 bug 直修**（满足全部条件时可选）：见"边界场景"
-8. **更新 sprint.md**：在对应 develop 任务行备注 CR 结论（通过已合并 / 打回原因）
 
 ---
 
@@ -92,24 +73,4 @@
 
 ---
 
-## 边界场景
-
-| 场景 | 处理方式 |
-|------|---------|
-| 多个 PR 的 layer 混合（部分 frontend、部分 backend） | 按各 PR 各自的 layer 加载对应 checklist，不混用 |
-| PR description 缺失任意必填段落（task-id / AC 验证 / 偏离说明 / 遗留问题） | 视为 `[阻断]`，要求补充后重新提交 |
-| **简单 bug 直修**：改动 ≤5 行 + 原因显而易见 + 非业务逻辑（配置笔误、空指针防御等） | CR 人直接修改并合并，原 PR comment 注明「已直修」。无需新 PR，无需他人 review |
-| `layer=null`（仅配置/文档改动） | 跳过 checklist，只核对 PR description 完整性 + 无凭据泄露 |
-| 同一批次有 PR 需要打回、有 PR 可以通过 | 各自独立决定，不因为有打回就阻塞可通过的 PR |
-| sprint 全部 PR 已通过但某个有 `[建议]` 未处理 | 不阻断合并，将 `[建议]` 写入 backlog.md 并标记 `[CR-建议]`，联调阶段统一处理 |
-
----
-
-## 异常处理
-
-| 情况 | 处理方式 |
-|------|---------|
-| 同一 PR 被打回 3 次仍有相同 `[阻断]` 问题 | 停止反复 review，上报，判断是否需要 `revise-doc` 或重新设计 |
-| CR 发现问题根因在 TRD/standards 层（不是实现问题） | 打回 PR，同时创建 `revise-doc` 任务；等 revise-doc 完成后 develop 重做 |
-| 发现凭据出现在代码或 PR description 中 | 立即要求 develop 执行人撤销凭据 + 重写 commit history，合并前必须清理 |
-| PR 涉及安全敏感改动（权限/认证/数据隔离）但 review 人无相关 discipline | 上报，等待有 `architecture` discipline 的人介入后再决定 |
+> **工作内容 / 边界场景 / 异常处理见 `specs-execution/code-review.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。

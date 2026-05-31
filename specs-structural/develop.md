@@ -57,28 +57,6 @@ api-contract:
 
 ---
 
-## 工作内容
-
-1. **拾取任务包**：读 queue 中 [可取] 任务包，将状态改为 [taken-by: {user}]；确认 `acceptance-criteria` 理解无误
-2. **规模评估**：
-   - `files` ≤ 3 且逻辑简单 → 直接开始
-   - `files` > 3 或跨模块 → 输出拆分计划，等确认后再动手
-   - `urgency=hotfix` → 跳过拆分评估，走最小化修复路径
-3. **复用检查**：读 `reusables.md`；有可用资产必须复用，不重新实现
-4. **加载规范上下文**：按 `relevant-standards` 精确加载对应章节；source 决定额外上下文：
-   - `sprint` → 读 sprint.md 对应行 + PRD 相关段落
-   - `integration` → 读失败的联调脚本场景
-   - `manual-test` → 读验收报告对应条目
-   - `bug` / `optimization` → 读任务包中的复现步骤 / 改进目标
-5. **实现**：按 standards 写代码；遇到 `do-not` 边界立即停，不自行绕过；前端遇到 standards 未覆盖的视觉决策，暂停问用户
-6. **自检**：
-   - 对照 layer 对应 checklist 逐项检查
-   - 有冗余/重复实现 → 精简后再推
-7. **推 PR**：PR description 是本任务的唯一交付记录，必须包含：task-id / 改动摘要 / acceptance-criteria 逐条验证 / 偏离说明（含超出 files 清单的文件）/ 遗留问题（已记入 backlog 的问题）；不包含凭据
-8. **更新任务状态**：PR 推出后，develop 执行人将任务包状态改为 `[done]`，同时在 `sprint.md` 对应行填入 PR 编号（`#N`）；后续 `code-review` 合并 PR 后再将状态改为 `[merged]`
-
----
-
 ## 主要产物
 
 | 产物 | 路径 | 格式 |
@@ -118,27 +96,4 @@ api-contract:
 
 ---
 
-## 边界场景
-
-| 场景 | 处理方式 |
-|------|---------|
-| `files` > 3 或跨模块 | 输出拆分计划，等用户确认后再动手 |
-| `urgency=hotfix` | 跳过拆分评估，走最小化修复路径，PR 标题加 `[hotfix]` |
-| `reusables.md` 有可用资产 | 必须复用，不重新实现；在完成报告 `files-changed` 中标注复用来源 |
-| 前端遇到 standards 未覆盖的视觉决策 | 暂停，输出选项问用户，等确认再继续 |
-| 实现中发现 TRD 有歧义 | 记入 `deviations`，上报后等待 `revise-doc` 任务产出，不自行决定 |
-| 改动超出 `files` 清单 | 记入 `deviations`，在 `escalate-if` 条件触发时上报 |
-| `source=bug` 修复发现根因在接口/数据结构层 | 立即停止，上报，判断是否需要 `revise-doc` + 新 `develop` |
-| 发现非 sprint 范围的功能缺口（从未实现） | 先评估规模：≤3 文件且依赖层已就绪 → 建议 B 类快速通道；否则记 backlog。Sprint 排除项只约束 A 类 Gate 任务，不阻断 B 类 |
-
----
-
-## 异常处理
-
-| 情况 | 处理方式 |
-|------|---------|
-| 同一问题三种方案均失败 | 触发上下文重置：写失败报告（含已试方案 + 失败原因），上报，任务回 [可取] |
-| `acceptance-criteria` 技术上无法实现 | 立即上报，说明原因，等待任务包修订，不死磕 |
-| PR 被 `code-review` 打回 | 按 CR 反馈修改，重新推 PR，更新完成报告（追加 commit） |
-| 依赖的 `revise-doc` 结论未下 | 任务保持 [taken-by] + 写阻塞理由，等 revise-doc 完成后继续 |
-| 发现凭据被写入代码 | 立即从 commit 中移除，通知相关人撤销凭据，不推 PR |
+> **工作内容 / 边界场景 / 异常处理见 `specs-execution/develop.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。

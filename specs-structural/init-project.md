@@ -25,46 +25,6 @@
 
 ---
 
-## 工作内容
-
-1. **确认项目名**：与用户确认 `project-name`，说明命名规则；名称确认后不再更改
-2. **创建项目仓目录结构**：
-
-```bash
-mkdir -p E:\group-code\{name}\iterations\v1\queue\done
-mkdir -p E:\group-code\{name}\_meta\input
-mkdir -p E:\group-code\{name}\_meta\sessions
-mkdir -p E:\group-code\{name}\.claude\commands
-touch E:\group-code\{name}\project.md
-touch E:\group-code\{name}\decisions.md
-touch E:\group-code\{name}\design.md
-touch E:\group-code\{name}\reusables.md
-touch E:\group-code\{name}\backlog.md
-touch E:\group-code\{name}\feedback.md
-touch E:\group-code\{name}\b-tasks.md
-```
-
-`_meta/` 目录说明：
-- `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）
-- `_meta/sessions/`：各任务的跨会话接续文件（`{task-type}-progress.md`）
-
-3. **写入占位文件初始结构**：各文件按下方"主要产物"中的初始内容填入，不留空文件；同时从 templates 复制以下文件：
-   - `CLAUDE.md`：复制自 `hact-method/templates/CLAUDE.md`，将 `{项目名}` 替换为实际项目名
-   - `.claude/commands/pic.md`：复制自 `hact-method/templates/.claude/commands/pic.md`
-   - `.claude/commands/gitee-ops.md`：复制自 `hact-method/templates/.claude/commands/gitee-ops.md`
-4. **Git 初始化**：
-
-```bash
-cd E:\group-code\{name}
-git init
-git add .
-git commit -m "feat: 初始化项目 {name}"
-```
-
-5. **告知下一步**：「项目 {name} 仓已创建于 `E:\group-code\{name}\`，A 类任务从 `draft-prd-vN` 开始；B 类任务直接用 `dispatch-new`。」
-
----
-
 ## 主要产物
 
 | 产物 | 路径 | 初始内容 |
@@ -78,6 +38,8 @@ git commit -m "feat: 初始化项目 {name}"
 | feedback.md | `{name}/feedback.md` | 空文件 |
 | _meta/input/ | `{name}/_meta/input/` | 空目录，存放背景材料和上下文文档 |
 | _meta/sessions/ | `{name}/_meta/sessions/` | 空目录，存放跨会话接续文件 |
+| hact-notes 仓（每成员） | `gitee.com/{notes-org}/hact-notes-{姓名}` | 私有仓 + 登记入 `_meta/hact-config.md`（决策#21） |
+| hact-app 注册 | project_id + Gitee Webhook | 注册并验证 webhook 链路 |
 
 **project.md 初始模板：**
 
@@ -140,6 +102,9 @@ git commit -m "feat: 初始化项目 {name}"
 - [ ] `E:\group-code\{name}\` 目录及全部子文件已创建
 - [ ] 各占位文件含初始结构（无空文件）
 - [ ] git 已初始化，初始 commit 已完成
+- [ ] Gitee 远端已绑定并推送，团队成员已添加为协作者
+- [ ] 每个成员的 `hact-notes-{姓名}` 仓已创建并登记入 `_meta/hact-config.md`（已登记者跳过）
+- [ ] 已注册到 hact-app 且 Gitee Webhook 链路验证通过
 
 ---
 
@@ -160,20 +125,4 @@ git commit -m "feat: 初始化项目 {name}"
 
 ---
 
-## 边界场景
-
-| 场景 | 处理方式 |
-|------|---------|
-| 项目名与已有目录重名 | 告知用户冲突，要求重新命名；不覆盖已有目录 |
-| 用户只有 B 类需求（无 A 类计划） | 照常初始化，`iterations/` 目录保留但为空；B 类直接用 `dispatch-new` |
-| 需要同时创建远端仓库 | 本 task 只建本地仓；推远端属于执行层，可在 git init 后手动执行 `git remote add` |
-| 项目仓已存在部分文件（历史遗留）| 不覆盖已有文件；仅创建缺失的文件和目录 |
-
----
-
-## 异常处理
-
-| 情况 | 处理方式 |
-|------|---------|
-| 项目名中途要改 | 需手动 rename 目录，代价较高；强烈建议确认后再创建 |
-| git init 失败 | 检查目录权限，修复后重新执行；不跳过 git 初始化 |
+> **工作内容 / 边界场景 / 异常处理见 `specs-execution/init-project.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。

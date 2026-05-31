@@ -46,6 +46,8 @@ mkdir -p "E:/group-code/{name}/_meta/input"
 mkdir -p "E:/group-code/{name}/_meta/sessions"
 ```
 
+> `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）；`_meta/sessions/`：各任务跨会话接续文件（`{task-type}-progress.md`）。
+
 Git 不跟踪空目录，必须在 `done/` 里写入占位文件，否则首次 `git add .` 会把整个 `iterations/` 丢弃：
 
 ```bash
@@ -236,20 +238,17 @@ curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
 
 **5.5.1 等待服务器 clone 完成**
 
-注册后服务器在后台 clone，clone 耗时通常 10–120 秒。**必须**先确认 clone 完成再做 webhook 验证，否则 webhook 到达时 `local_path` 仍为 null，sync 会被跳过。
+注册后服务器在后台 clone（通常 10–120 秒）。**必须**先确认 clone 完成再验证 webhook，否则 webhook 到达时 `local_path` 仍为 null、sync 被跳过。
 
-轮询查询（最多重试 18 次，每次等 10 秒，共 3 分钟）：
+判断方式：等约 30 秒后直接做 5.5.2；用以下查询看 sync_event——
 
 ```bash
 curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
   -H "Authorization: Bearer {cc-token}"
 ```
 
-- 若返回记录且 `status=failed` 且 `error_message` 含 `clone failed` → clone 失败，检查 `gitee_token` 权限，联系管理员
-- 若暂无记录 → clone 仍在进行，继续等待
-- 直到能确认 `local_path` 已设置（可通过观察后续步骤的 sync 结果判断）
-
-> 实际判断方式：等待约 30 秒后直接进行 5.5.2 验证；若 sync_event 返回 `status=skipped` 且 `error_message` 含 `no local_path`，则 clone 未完成，再等 30 秒后重试。
+- `status=skipped` 且 `error_message` 含 `no local_path` → clone 未完成，再等 30 秒重试
+- `status=failed` 且含 `clone failed` → clone 失败，检查 `gitee_token` 权限后联系管理员
 
 **5.5.2 推送空 commit 验证 Webhook**
 
@@ -292,6 +291,17 @@ curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
 - hact-app：project_id={project_id}（或"待手动完成"）
 → 下一步：draft-prd-vN — A 类需求从产品阶段开始；B 类需求直接用 dispatch-new。
 ```
+
+---
+
+## 边界与异常
+
+| 场景 | 处理 |
+|------|------|
+| 用户只有 B 类需求（无 A 类计划） | 照常初始化，`iterations/` 保留但为空；B 类直接用 `dispatch-new` |
+| 项目仓已存在部分文件（历史遗留） | 不覆盖已有文件，仅补缺失的文件和目录 |
+| 项目名中途要改 | 需手动 rename 目录，代价较高；务必在 Step 1 确认后再创建，确认后不更改 |
+| git init 失败（Step 4.1） | 检查目录权限，修复后重新执行，不跳过 git 初始化 |
 
 ---
 

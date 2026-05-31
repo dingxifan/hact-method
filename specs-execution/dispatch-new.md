@@ -91,9 +91,9 @@
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
 | `urgency` | Step 3 判断结果 |
 | `acceptance-criteria` | bug → 现象消失 + 复现步骤无法复现；optimization → 用户提供的可观测验收标准 |
-| `known-risks` | bug 复现步骤不明确时在此标注 |
+| `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序 |
 
-**12 字段无空字段方可写入 queue**。
+**16 字段无空字段方可写入 queue**。
 
 ---
 

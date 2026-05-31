@@ -153,8 +153,14 @@ curl -f {health-check-url}
 2. 确认 staging 无异常后，再对 `prod` 执行 Step 3–7（本地构建 Step 1–2 无需重复）
 3. 每个环境独立验证，staging 失败不推进 prod
 
+**hotfix 与当前未部署的 A 类改动代码冲突**：
+- 解决冲突后再部署；不拆分部署（除非冲突短期无法解决）
+
 **部署后发现功能异常**：
 - 立即走 `dispatch-new(target-source=bug, urgency=hotfix)` → develop → deploy 快速通道
+
+**回滚后仍有问题**：
+- 上报；暂时下线功能或切流量，等根因分析完成后再重新部署
 
 ---
 

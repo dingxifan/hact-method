@@ -88,7 +88,7 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 
 | 来源标签 | 目的地 | 操作 |
 |---|---|---|
-| `[规范]` | `templates/standards/{backend\|frontend}.md`（按内容归层；跨层归 shared 段） | 追加条目 |
+| `[规范]` | `templates/standards/{backend\|frontend\|shared}.md`（按内容归层；跨层条目写入独立的 `shared.md`） | 追加条目 |
 | `[checklist]` | `templates/checklists/{backend\|frontend}-checklist.md` | 追加至对应分类 `[ ]` |
 | `[方法论]` | `_meta/plans/方法论待议.md` | 追加 `- [ ] {日期} \| {问题} \| 来源：{成员} notes harvest` |
 

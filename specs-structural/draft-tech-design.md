@@ -24,24 +24,6 @@
 
 ---
 
-## 工作内容
-
-1. **读 PRD + 已有上下文**：读 `prd.md` + `project.md` 技术层 + `reusables.md`；理解业务约束和已有技术决策
-2. **输出疑点清单**：列出 PRD 中技术边界不清晰的点（字段约束 / 接口语义 / 数据结构 / 并发场景 / 第三方依赖等）；等用户逐条确认——**禁止带假设输出 TRD**
-3. **输出 TRD**：包含 7 个固定段落（见"主要产物"）；迭代项目只写本期增量
-4. **输出三份 standards**：
-   - 来源规则（双源：公共模板 + 执行人个人 notes）：
-     - **v1（首期）**：从 `templates/standards/{layer}.md` 中挑选本期 TRD 相关项，不全量复制
-     - **vN+1（迭代）**：以上一期 `iterations/vN/standards-*.md` 为基础，按本期 TRD 增量追加或修订
-     - **双源补充**：并入执行人个人 notes（`../hact-notes-{name}/notes.md`）中本 layer 相关的 `[规范]` 条目，让本人尚未上提的规范当期即生效；并入前对照公共模板 + 上期 standards 去重，已收录的不重复并入（设计甲，见执行规范）
-   - `standards-shared.md`：跨层共同约束（命名规范 / 错误码 / API 响应格式 / 权限模型）
-   - `standards-frontend.md`：前端实现约束，来源于模板或上期 standards + 本期 TRD 新要求 + 执行人 notes `[规范]`
-   - `standards-backend.md`：后端实现约束，同上
-5. **知识沉淀**：将本期关键架构决策写入 `decisions.md`；更新 `project.md` 技术层
-6. **询问签 G2**：「TRD 和 standards 已完成，要签 G2 吗？」——用户确认后 commit，G2 签字写入 `iterations/vN/gates.md`
-
----
-
 ## 主要产物
 
 | 产物 | 路径 | 格式 |
@@ -99,24 +81,4 @@
 
 ---
 
-## 边界场景
-
-| 场景 | 处理方式 |
-|------|---------|
-| PRD 存在歧义或遗漏 | 写入疑点清单，等用户确认；不自行补全假设 |
-| 迭代项目（已有 TRD） | 只写本期增量，引用已有 project.md；不重写全量 TRD |
-| reusables.md 已有可复用组件 | 在"共享组件建议"中标注"已有，见 reusables.md"，不重复建议新建 |
-| 技术选型有重大变更（替换已有依赖） | 写入 decisions.md 并说明原因；不静默替换 |
-| PRD 中某功能技术可行性存疑（三角 F 风险） | 写入疑点清单，明确风险；等用户决策是否调整 PRD 范围，不自行删减 |
-| standards 某条与已有 `templates/standards/` 模板有冲突 | 以本期 TRD 决策为准，在 decisions.md 说明冲突和理由 |
-
----
-
-## 异常处理
-
-| 情况 | 处理方式 |
-|------|---------|
-| TRD 定稿后 PRD 被修订（`revise-doc(target=prd)`） | 判断 PRD 变动是否影响接口 / 数据结构；若影响，创建 `revise-doc(target=trd)` task |
-| TRD 定稿后开发阶段发现接口设计有误 | 通过 `revise-doc(target=trd)` 修订，不直接改已签 G2 的文件 |
-| 疑点清单确认超过 3 轮仍有未解决项 | 上报，记录未决点，等待用户决策后再继续；不跳过未决疑点 |
-| standards 生成时发现前后端团队对某规范有分歧 | 记录分歧点，由用户裁定后写入 standards，不自行选边 |
+> **工作内容 / 边界场景 / 异常处理见 `specs-execution/draft-tech-design.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。
