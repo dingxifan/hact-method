@@ -87,6 +87,15 @@ user 能拉 task 的条件：
 
 **例外**：方法论调整本身是发散性工作，没清晰 spec，**不预定义为 task type**——有 `management` 授权的 user 在 hact-method 工作区按需直接做（详见 `02-workspaces.md` §2）。
 
+### 个人积累（hact-notes）的特殊权限模型
+
+个人积累仓 `hact-notes-{姓名}` 的写权限**不走 discipline 准入**——notes 是个人资产，权限直接绑定 user 身份，而非 `user_disciplines` 授权：
+
+- **写**：只有本人（组织仓下本人是唯一 push 协作者）。无需任何 discipline 授权。
+- **读**：本人完全可读写；管理者经 `harvest-notes` 对 `[规范]`/`[checklist]`/`[方法论]` 条目**只读**收割；其他用户无权限（私有仓）。
+
+这是对"拉取准入 = discipline"规则的**有限例外**：内容是纯个人原始沉淀时，权限绑身份。一旦经 `harvest-notes` 上提进公共层（hact-method），该公共产物的后续修改回归常规模型（`management` discipline）。物理形态与心态见 `02-workspaces.md` §4。
+
 ---
 
 ## 4. 跨会话身份连续性

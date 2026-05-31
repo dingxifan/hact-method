@@ -11,7 +11,7 @@
 
 - **偏离对账创建的 revise-doc 未完成不签 G5**：文档与实现不一致时不可关闭迭代
 - **feedback 分流后必须清空 feedback.md**：分流不代表处理完，清空是确认所有条目已有去处
-- **方法论文件不在收尾阶段改**：feedback 中涉及角色工作流 / 规范结构的问题，只记录待议，不在本会话改 hact-method 文件
+- **不在收尾阶段改方法论 / 公共模板**：feedback 中涉及编码规范 / checklist / 方法论的条目，誊进执行人个人 notes（打标签），由 harvest-notes 后续上提；本会话不直接改 hact-method 的 templates / skeleton / specs / 待议清单
 
 ---
 
@@ -71,7 +71,7 @@
 
 **同期 `[偏离]` 超过 5 条** → 在 feedback.md 追加一条「本期 TRD 覆盖质量问题，待方法论讨论」，纳入第二步分流，不在此步展开。
 
-> 此条 feedback 在第二步分流时按正常逻辑处理：归类为「角色工作流 / 规范结构有问题」→ 写入待议清单（`../hact-method/_meta/plans/方法论待议.md`）。不会重复创建，也不影响第一步已创建的 revise-doc 任务。
+> 此条 feedback 在第二步分流时按正常逻辑处理：归类为「方法论有问题」→ 誊入执行人个人 notes（标签 `[方法论]`），由 harvest-notes 后续进待议清单。不会重复创建，也不影响第一步已创建的 revise-doc 任务。
 
 **无 `[偏离]` 条目** → 输出「无偏离，跳过第一步」，继续第二步。
 
@@ -91,24 +91,27 @@
 
 | feedback 内容 | 目的地 | 操作 |
 |---|---|---|
-| 开发踩的坑、禁止事项、项目编码规范（原则级） | `templates/standards/{backend\|frontend}.md` | 直接追加至对应文件 |
-| 某个验证动作被漏掉，code review 才发现（能写成 `[ ]` checkbox） | `templates/checklists/{backend\|frontend}-checklist.md` | 追加至对应分类下 |
-| 项目架构决策有遗漏 | `decisions.md` | 追加条目 |
-| 角色工作流 / 规范结构 / 方法论有问题 | 待议清单（见下方） | 记录，不在此处修改方法论文件 |
-| 跨项目通用机制问题 | 待议清单（见下方） | 记录 |
+| 开发踩的坑、禁止事项、项目编码规范（原则级） | 执行人 hact-notes（标签 `[规范]`） | 誊入个人 notes，由 harvest-notes 后续上提公共层 |
+| 某个验证动作被漏掉，code review 才发现（能写成 `[ ]` checkbox） | 执行人 hact-notes（标签 `[checklist]`） | 誊入个人 notes，由 harvest-notes 后续上提 |
+| 角色工作流 / 规范结构 / 方法论有问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes，由 harvest-notes 后续进待议清单 |
+| 跨项目通用机制问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes |
+| 项目架构决策有遗漏 | `decisions.md`（项目仓，不变） | 追加条目 |
 | 无价值 | 直接删除 | — |
 
-> **standards vs checklist 判断标准**：feedback 是"以后写代码要遵守某规则"→ standards；feedback 是"以后自检时要专门核查这一项，否则容易漏"→ checklist。
+> **`[规范]` vs `[checklist]` 判断标准**：feedback 是"以后写代码要遵守某规则"→ `[规范]`；feedback 是"以后自检时要专门核查这一项，否则容易漏"→ `[checklist]`。
 
-**待议清单写入方式**：写入 **hact-method 仓**的 `_meta/plans/方法论待议.md`（路径：`../hact-method/_meta/plans/方法论待议.md`；文件不存在则新建），不写入项目仓：
-```markdown
-- [ ] {日期} | {问题描述} | 来源：{项目名} {版本} feedback
+**誊入个人 notes 的方式**：写入执行人自己的 notes 仓 `../hact-notes-{name}/notes.md`，打对应标签，条目格式示例：
 ```
+[规范] {日期} | {内容} | 源：{项目名} {版本}
+```
+誊入后在 **notes 仓**（非 hact-method）commit + push——执行人对自己 notes 有写权限，全程不碰 hact-method。
+
+> **归属**：誊入"产生该反馈的成员"的 notes。当前架构 / 开发 / 管理高度重叠场景下，即收尾执行人本人的 notes 仓（见边界场景"feedback 来自他人"）。
 
 分流完成后**清空 `feedback.md`**（保留文件头，清空内容）。
 
 ```
-✅ feedback 分流完成：模板更新 {N} 条 / decisions.md {M} 条 / 待议 {K} 条 / 删除 {X} 条。feedback.md 已清空。
+✅ feedback 分流完成：誊入 notes {N} 条（[规范]{a}/[checklist]{b}/[方法论]{c}）/ decisions.md {M} 条 / 删除 {X} 条。feedback.md 已清空。
 → 下一步：project.md 合并
 继续？
 ```

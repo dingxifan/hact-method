@@ -35,9 +35,10 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 - 不包含产品需求判断（→ `product`）
 - 不包含技术决策（→ `architecture`）
 - 不包含任务派发（→ `dispatch`）
+- **包含**跨项目个人积累的汇聚与上提（`harvest-notes`）——属治理层（收割 + 提炼 + 更新公共层），非任务派发
 - 只覆盖"如何让方法论本身运转"层面的事
 
-**典型工作**：改 hact-method 自身（skeleton / specs / templates / BRIEF / STATUS 等）、起新项目、按需调整流程规则。
+**典型工作**：改 hact-method 自身（skeleton / specs / templates / BRIEF / STATUS 等）、起新项目、按需调整流程规则、收割成员个人积累上提公共层（`harvest-notes`）。
 
 ---
 

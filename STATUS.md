@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发 hact-app**（进行中）
-- 上次更新：2026-05-08
+- 上次更新：2026-05-31
 
 ## 各阶段完成情况
 
@@ -48,6 +48,13 @@
 | exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 12/12 全部完成，已通过评审和一致性检查 |
 
 ## 历史里程碑
+
+### 2026-05-31 方法论调整：个人积累与 pull 上提
+- 引入"个人积累仓" `hact-notes-{姓名}`（每人独立私有仓）+ `harvest-notes` 上提 task（pull、只读、游标）
+- wrap-up 第二步分流改向个人 notes；B 类 develop 就地分流（补 B 类无 wrap-up 盲点）
+- draft-tech-design 双源（公共 + 本人 notes `[规范]`）+ vN+1 去重
+- 骨架（01 权限例外 / 02 三工作区 / 03 management 边界 / 04 注册 harvest-notes）+ init-project Step4.5 成员 notes 登记 + CLAUDE.md Step0 同步 notes 仓 + 删除空模板 retrospectives.md
+- 计划与发现：`_meta/plans/2026-05-31-personal-notes-accumulation/`
 
 ### 2026-05-08 第二阶段完成 + 第三阶段启动
 - specs-structural/ 12 份 + specs-execution/ 5 份（主线）完成并推送

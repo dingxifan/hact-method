@@ -32,7 +32,10 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 |------|------|
 | 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `E:\group-code\{project-name}\` |
 | 方法论调整（修改 skeleton / specs / templates） | 在本仓执行，直接编辑方法论文件。信息来源见下方「方法论调整信息来源」 |
+| 收割个人积累上提（`harvest-notes`） | 在本仓执行，遍历成员 notes 仓只读收割，去重择优写入公共层（templates/standards、templates/checklists、方法论待议） |
 | 跨项目浏览 / 对比 | 在本仓执行 |
+
+> 第三个工作区「个人积累（hact-notes）」是开发者私有仓，不在本仓、也不在项目仓——见 `skeleton/02-workspaces.md` §4。
 
 ### 方法论调整信息来源
 
@@ -40,10 +43,10 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 
 | 来源 | 路径 | 说明 |
 |------|------|------|
-| 待议清单 | `_meta/plans/方法论待议.md` | 各项目 wrap-up 分流后汇聚的待议条目，是主要输入 |
+| 待议清单 | `_meta/plans/方法论待议.md` | 经 `harvest-notes` 从成员个人 notes 收割上提的方法论条目，是主要输入 |
 | 用户当场描述 | 对话内容 | 用户直接说明要改什么、为什么 |
 
-不主动读各项目仓的 `feedback.md`——项目 feedback 应已在 wrap-up 阶段分流到待议清单，若用户认为有遗漏可手动指向。
+不主动读各项目仓的 `feedback.md` 或成员个人 notes——方法论类问题应已经 wrap-up 分流（A 类）/ develop 就地分流（B 类）写入成员 notes，再由 `harvest-notes` 上提到待议清单。若用户认为有遗漏可手动指向。**推荐顺序：先跑 `harvest-notes` 收割，再开方法论调整会话。**
 
 ### 何时在项目仓开 CC 会话
 

@@ -47,11 +47,11 @@
 
 | feedback 内容 | 目的地 |
 |---|---|
-| 开发踩的坑、禁止事项、编码规范（原则级） | `templates/standards/{backend\|frontend}.md` |
-| 自检容易漏的验证项（能写成 checkbox） | `templates/checklists/{backend\|frontend}-checklist.md` |
-| 角色工作流 / 规范有问题 | `../hact-method/_meta/plans/方法论待议.md`，在专门的方法论讨论会话中处理，不在收尾阶段直接改方法论文件 |
-| 项目架构决策有遗漏 | `decisions.md` |
-| 跨项目通用机制问题 | `../hact-method/_meta/plans/方法论待议.md`，待方法论讨论 |
+| 开发踩的坑、禁止事项、编码规范（原则级） | 执行人 hact-notes（标签 `[规范]`） |
+| 自检容易漏的验证项（能写成 checkbox） | 执行人 hact-notes（标签 `[checklist]`） |
+| 角色工作流 / 规范有问题 | 执行人 hact-notes（标签 `[方法论]`），由 harvest-notes 后续进待议清单，不在收尾阶段直接改方法论文件 |
+| 项目架构决策有遗漏 | `decisions.md`（项目仓） |
+| 跨项目通用机制问题 | 执行人 hact-notes（标签 `[方法论]`） |
 | 无价值 | 直接删除 |
 
 分流完成后**清空 `feedback.md`**。
@@ -75,9 +75,7 @@
 |------|------|------|
 | 反向更新的 PRD / TRD（如有偏离） | `iterations/vN/prd.md` / `trd.md` | 通过 `revise-doc` task 执行 |
 | 更新的 decisions.md | `decisions.md` | 实现细节偏离的沉淀 |
-| 更新的模板规范 | `templates/standards/{backend\|frontend}.md` | feedback 分流：编码规范类 |
-| 更新的自检 checklist | `templates/checklists/{backend\|frontend}-checklist.md` | feedback 分流：自检验证项类 |
-| 方法论待议清单 | `../hact-method/_meta/plans/方法论待议.md` | 需专门讨论的规范 / 流程问题，留待方法论会话处理 |
+| 誊入个人 notes 的反馈条目 | `../hact-notes-{name}/notes.md` | feedback 分流：`[规范]`/`[checklist]`/`[方法论]`，由 harvest-notes 后续上提 |
 | 清空的 feedback.md | `feedback.md` | 分流完成后清空 |
 | 更新的 project.md | `project.md` | 本期最终状态快照 |
 | G5 签字 | `iterations/vN/gates.md` | `- [x] G5：迭代收尾完成 — YYYY-MM-DD` |
@@ -107,8 +105,8 @@
 | 下游 task / 目的地 | 交接内容 | 格式 |
 |---|---------|------|
 | `revise-doc`（如有偏离） | 偏离需反向更新的文档 | 新建 task |
-| `templates/standards/` | feedback 分流的新规范条目 | 直接更新文件 |
-| `_meta/plans/` 待议清单 | feedback 分流的方法论问题 | 记录待议，专门会话处理 |
+| 执行人 hact-notes | feedback 分流的规范 / checklist / 方法论条目 | 誊入个人 notes 打标签 |
+| `harvest-notes`（下游） | 个人 notes 的可上提条目 | 由管理者收割上提公共层 |
 | 下一期 `draft-prd-vN` | 迭代正式闭环，可启动下一期 | G5 已签 |
 
 ---

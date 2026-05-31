@@ -7,9 +7,9 @@
 按层级递进：
 
 1. **[`01-identity.md`](01-identity.md)** — 身份模型：谁是谁？git author + web 登录映射同一 user；权限通过 user-discipline 关联表达
-2. **[`02-workspaces.md`](02-workspaces.md)** — 两个工作区按"心态"切割：hact-method（方法论）/ 项目根（项目）
+2. **[`02-workspaces.md`](02-workspaces.md)** — 三个工作区按"心态"切割：hact-method（方法论）/ 项目根（项目）/ hact-notes（个人积累）
 3. **[`03-disciplines.md`](03-disciplines.md)** — 9 个 discipline = 任务知识的聚类（含 CC 上下文管理 heat map）
-4. **[`04-task-catalog.md`](04-task-catalog.md)** — 12 个 task type 完整字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）
+4. **[`04-task-catalog.md`](04-task-catalog.md)** — 13 个 task type 完整字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）
 5. **[`05-state-machine.md`](05-state-machine.md)** — 4 个状态（可取 / taken-by / done / merged）+ 流转 + 软锁 + 异常转移
 6. **[`06-gates.md`](06-gates.md)** — 5 个 Gate + 子状态聚合 + A 类 vs B 类 + 多迭代展示
 
@@ -22,7 +22,7 @@
 - **复杂工作不预定义**——方法论调整等发散性工作不强行做 task type
 - **签字归属内容**——Gate 签字合并到最近前置任务，不另立 sign-gate task
 
-完整 20 条决策见 [`../BRIEF.md`](../BRIEF.md) "关键设计决策" 段。
+完整 23 条决策见 [`../BRIEF.md`](../BRIEF.md) "关键设计决策" 段。
 
 ## 跟其他文档的关系
 

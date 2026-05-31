@@ -30,11 +30,12 @@
 2. **输出疑点清单**：列出 PRD 中技术边界不清晰的点（字段约束 / 接口语义 / 数据结构 / 并发场景 / 第三方依赖等）；等用户逐条确认——**禁止带假设输出 TRD**
 3. **输出 TRD**：包含 7 个固定段落（见"主要产物"）；迭代项目只写本期增量
 4. **输出三份 standards**：
-   - 来源规则：
+   - 来源规则（双源：公共模板 + 执行人个人 notes）：
      - **v1（首期）**：从 `templates/standards/{layer}.md` 中挑选本期 TRD 相关项，不全量复制
      - **vN+1（迭代）**：以上一期 `iterations/vN/standards-*.md` 为基础，按本期 TRD 增量追加或修订
+     - **双源补充**：并入执行人个人 notes（`../hact-notes-{name}/notes.md`）中本 layer 相关的 `[规范]` 条目，让本人尚未上提的规范当期即生效；并入前对照公共模板 + 上期 standards 去重，已收录的不重复并入（设计甲，见执行规范）
    - `standards-shared.md`：跨层共同约束（命名规范 / 错误码 / API 响应格式 / 权限模型）
-   - `standards-frontend.md`：前端实现约束，来源于模板或上期 standards + 本期 TRD 新要求
+   - `standards-frontend.md`：前端实现约束，来源于模板或上期 standards + 本期 TRD 新要求 + 执行人 notes `[规范]`
    - `standards-backend.md`：后端实现约束，同上
 5. **知识沉淀**：将本期关键架构决策写入 `decisions.md`；更新 `project.md` 技术层
 6. **询问签 G2**：「TRD 和 standards 已完成，要签 G2 吗？」——用户确认后 commit，G2 签字写入 `iterations/vN/gates.md`

@@ -144,13 +144,19 @@
 
 TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standards；主线同时生成 shared。
 
-**Standards 来源规则**：
+**Standards 来源规则**（双源：公共模板 + 执行人个人 notes）：
 - 首期：从 `../hact-method/templates/standards/{layer}.md` 挑选本期 TRD 相关项，不全量复制
 - 迭代：以上期 `iterations/vN-1/standards-*.md` 为基础，按本期 TRD 增量追加或修订
+- **双源补充**：再取执行人个人 notes（`../hact-notes-{name}/notes.md`）中 `[规范]` 标签、与本 layer 相关的条目并入本期 standards——让本人已积累、尚未经 harvest-notes 上提的规范当期即生效
+  - **去重**：并入前对照公共模板 + 上期 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
+  - notes 不存在 / 无 `[规范]` 条目 → 仅用公共模板 + 上期 standards
+  - 与上期 standards 同项但建议不同 → 保留上期版本，把不同建议记入 `feedback.md` 走分流，不当场覆盖
+
+> **适用前提（设计甲）**：当前架构 / 开发高度重叠，draft-tech-design 执行人 ≈ 本期真实开发者，故在生成端注入本人 notes 即覆盖实际写代码的人。团队分化后是否扩展到 develop / code-review 加载端（设计乙），见 `../hact-method/_meta/plans/方法论待议.md`。
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
-- 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 上期 standards（如有）
-- 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型
+- 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 上期 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
+- 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型；并入 notes 条目前先对照公共模板 / 上期 standards 去重
 - 主线负责写文件，不让 subagent 直接写文件
 
 主线生成 `standards-shared.md`（命名规范 / 错误码 / API 响应格式 / 权限模型）。

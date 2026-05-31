@@ -35,7 +35,7 @@
 
 **Step 0：代码同步（强制执行，不可跳过）**
 
-对项目仓和 hact-method 各执行一遍同步：
+对项目仓、hact-method、个人 notes 仓各执行一遍同步：
 
 ```bash
 # 项目仓
@@ -43,6 +43,10 @@ git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪�
 
 # hact-method
 git -C "../hact-method" fetch origin && (git -C "../hact-method" pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
+
+# 个人 notes 仓（约定路径 ../hact-notes-{你的用户名}；不存在则跳过，不阻断）
+git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{username}" pull 2>/dev/null || echo "notes 仓无远端跟踪，已 fetch") \
+  || echo "未检测到个人 notes 仓，如需积累请先创建并登记（见 init-project Step 4.5）"
 ```
 
 完成后，**必须**向人类输出以下声明（格式固定，不可省略）：
@@ -51,12 +55,13 @@ git -C "../hact-method" fetch origin && (git -C "../hact-method" pull 2>/dev/nul
 📋 会话启动·代码同步
 - 项目仓（{当前分支}）：{已拉取 N 个 commit / 已是最新 / ⚠️ 有冲突——停止，请人工处理}
 - hact-method（master）：{已拉取 N 个 commit / 已是最新}
+- 个人 notes（hact-notes-{username}）：{已拉取 N 个 commit / 已是最新 / 未配置}
 同步完成，进入 Step 1。
 ```
 
-⚠️ 任意仓出现冲突或 diverged → 停止，不得进入 Step 1，等待人类解决后重新执行 Step 0。
+⚠️ **项目仓或 hact-method** 出现冲突或 diverged → 停止，不得进入 Step 1，等待人类解决后重新执行 Step 0。个人 notes 仓冲突不阻断（私有，提示后可继续）。
 
-两个仓均同步完才进入 Step 1。
+项目仓与 hact-method 同步完即可进入 Step 1（个人 notes 仓未配置不阻断）。
 
 **Step 1：读取项目当前状态，推断当前任务类型**
 1. 读取 `project.md` 了解当前产品与技术状态

@@ -10,11 +10,12 @@
 
 ## 总览
 
-**12 个 task type**，按生命周期段分布：
+**13 个 task type**，按生命周期段分布：
 
 | 段 | task | discipline | Gate |
 |---|---|---|---|
 | hact-method | `init-project` | management | — |
+| hact-method | `harvest-notes` | management | — |
 | 准备 | `draft-prd-vN` | product | G1 |
 | 准备 | `draft-tech-design` | architecture | G2 |
 | 准备 | `plan-sprint` | dispatch | G3 |
@@ -47,7 +48,7 @@
 
 ---
 
-## 12 task 完整定义
+## 13 task 完整定义
 
 ### 1. `init-project`
 
@@ -220,8 +221,7 @@
 - **完成判据**: 三步全部完成 + 在任务尾部询问"要不要签 G5"
 - **主要产物**:
   - 反向更新的 PRD/TRD/standards/decisions（来自偏离对账）
-  - 反向更新的方法论文件（来自 feedback 流向 specs/skeleton 的部分）
-  - 反向更新的 standards 模板（来自 feedback 流向 templates/standards/ 的部分）
+  - 分流进执行人个人 notes 的反馈条目（`[规范]`/`[checklist]`/`[方法论]`），由 harvest-notes 后续上提
   - 清空的 `feedback.md`
   - 更新的 `project.md`（去除"开发中"标注）
 - **关联 Gate**: **G5**（可选签于任务尾部）
@@ -243,6 +243,26 @@
 - **属性**: `target-source`（bug / optimization）
 
 详见 `specs-structural/dispatch-new.md`。
+
+---
+
+### 13. `harvest-notes`
+
+> 收割成员个人积累，把验证有效的规范 / checklist / 方法论建议上提到公共层。
+
+- **discipline**: `management`
+- **完成判据**: 遍历 `_meta/hact-config.md` 登记的成员 notes 仓完成 + 优秀条目去重择优写入公共层 + 收割游标推进
+- **主要产物**:
+  - `templates/standards/{backend|frontend}.md` 新增条目（来自成员 `[规范]`）
+  - `templates/checklists/{backend|frontend}-checklist.md` 新增项（来自成员 `[checklist]`）
+  - `_meta/plans/方法论待议.md` 新增条目（来自成员 `[方法论]`）
+  - `_meta/hact-config.md` 收割游标更新
+- **关联 Gate**: —
+- **前置条件**: 无强前置（可与任何迭代并行）；依赖 `_meta/hact-config.md` 成员仓登记
+- **执行约束**: 对成员 notes 仓**只读**；写权限仅限公共层（hact-method）。收割不回写成员仓——靠游标记录"上次收割点"避免重复
+- **属性**: 无
+
+详见 `specs-structural/harvest-notes.md`。
 
 ---
 

@@ -282,12 +282,21 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 ---
 
-### Step 10：feedback 检查
+### Step 10：feedback 检查 / 就地分流
 
-回顾本次实现：
-- 遇到 standards 未覆盖的决策（视觉/接口边界等）且反复出现 → 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 {standards-frontend/backend/shared} 哪节补充`）
-- 上下文重置协议被触发 → 写入 `feedback.md`，记录触发原因，供后续调整任务拆分粒度参考
+回顾本次实现，识别值得沉淀的发现：
+- 遇到 standards 未覆盖的决策（视觉/接口边界等）且反复出现
+- 上下文重置协议被触发（记录触发原因，供后续调整任务拆分粒度参考）
 - 无发现 → 跳过
+
+**反馈去向按 `source` 分**：
+
+| source | 去向 |
+|---|---|
+| `sprint` / `integration` / `manual-test`（A 类） | 写入 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`），由本迭代 `wrap-up-iteration` 第二步统一分流 |
+| `bug` / `optimization`（B 类） | **就地分流**——B 类无 wrap-up，不能堆 `feedback.md` 干等。当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
+
+> B 类就地分流后，个人 notes 的可上提条目同样由管理者的 `harvest-notes` 收割上提，与 A 类殊途同归。
 
 ---
 
