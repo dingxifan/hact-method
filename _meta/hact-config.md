@@ -19,12 +19,12 @@
 | dingxifan_admin（dingxifan·管理员） | gitee.com/dingxifan/hact-notes-dingxifan_admin | E:\group-code\hact-notes-dingxifan_admin |
 | winniemw（Winnie） | gitee.com/dingxifan/hact-notes-winniemw | E:\group-code\hact-notes-winniemw |
 | WayneLu（陆伟平） | gitee.com/dingxifan/hact-notes-WayneLu | E:\group-code\hact-notes-WayneLu |
-| colin_zheng | gitee.com/dingxifan/hact-notes-colin_zheng | E:\group-code\hact-notes-colin_zheng |
+| colin_zheng（郑磊） | gitee.com/dingxifan/hact-notes-colin_zheng | E:\group-code\hact-notes-colin_zheng |
 | xiaobainote（XL） | gitee.com/dingxifan/hact-notes-xiaobainote | E:\group-code\hact-notes-xiaobainote |
 | zhang_cheng_1377（张程） | gitee.com/dingxifan/hact-notes-zhang_cheng_1377 | E:\group-code\hact-notes-zhang_cheng_1377 |
 | lu-ailu（陆爱露） | gitee.com/dingxifan/hact-notes-lu-ailu | E:\group-code\hact-notes-lu-ailu |
 | ba-xiansheng（Jason） | gitee.com/dingxifan/hact-notes-ba-xiansheng | E:\group-code\hact-notes-ba-xiansheng |
-| axiaoke | gitee.com/dingxifan/hact-notes-axiaoke | E:\group-code\hact-notes-axiaoke |
+| axiaoke（葛春林） | gitee.com/dingxifan/hact-notes-axiaoke | E:\group-code\hact-notes-axiaoke |
 
 ---
 
