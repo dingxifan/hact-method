@@ -167,6 +167,16 @@
 
 ---
 
+### Step 4.5：填充 status.yml 的 tasks[]
+
+把本期全部任务追加进项目根 `status.yml` 的 `tasks[]`（机器侧状态契约，项目级单文件，字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
+
+每个任务一条，`source: sprint`、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / type / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
+
+> 这是「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是 hact-app 取数的唯一来源；任务包正文（16 字段）不进 YAML，由 hact-app 用到时走 API 现拉。
+
+---
+
 ### Step 5：G3
 
 ```
@@ -180,7 +190,10 @@
 ```markdown
 - [x] G3：开发包就绪 — {YYYY-MM-DD}
 ```
-执行 `git add iterations/vN/queue/ iterations/vN/sprint.md iterations/vN/gates.md && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
+
+**更新项目根 `status.yml`**：将 `iterations.vN.gates.G3` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（tasks[] 已在 Step 4.5 填好）。
+
+执行 `git add iterations/vN/queue/ iterations/vN/sprint.md iterations/vN/gates.md status.yml && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
 
 **feedback 检查**（签 G3 后）：
 - 疑点清单超过 3 条且根因集中（如 TRD 某类接口描述普遍不完整）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-tech-design 的疑点确认步骤中加强 {哪类场景}`）

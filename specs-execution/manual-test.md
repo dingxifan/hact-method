@@ -161,9 +161,10 @@ git branch -d fix/mt-{desc}
 - `source=manual-test`
 - `task-id` 命名：`{项目缩写}-mt-{三位序号}`，如 `hact-mt-001`
 - 写入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`
+- **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: manual-test`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`）
 - 执行 commit + push，任务包对开发者可见：
   ```bash
-  git add iterations/vN/queue/{task-id}.md
+  git add iterations/vN/queue/{task-id}.md status.yml
   git commit -m "chore(queue): 写入修复任务 {task-id}（manual-test）"
   git push origin master
   ```
@@ -232,9 +233,9 @@ git branch -d fix/mt-{desc}
 
 🚫 等用户确认
 
-用户确认后，写入 `iterations/vN/gates.md`，执行：
+用户确认后，写入 `iterations/vN/gates.md`；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G4` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。执行：
 ```bash
-git add iterations/vN/gates.md iterations/vN/acceptance-report.md
+git add iterations/vN/gates.md iterations/vN/acceptance-report.md status.yml
 git commit -m "chore: 验收通过，G4 签署 [{项目名}]"
 git push
 ```

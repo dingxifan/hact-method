@@ -1,0 +1,51 @@
+# status.yml · 机器侧状态契约（项目根，由 init-project 创建一次）
+# 字段定义见 ../hact-method/skeleton/07-status-contract.md。hact-app 直接 YAML.parse 取数。
+# 写入纪律：每次只改对应字段，其余不动；显式写 null，不省略键。
+# 总规则：凡往 iterations/vN/queue/ 写任务包处，同步往 tasks[] 追加一条；状态流转按 task-id 改。
+
+project: {项目名}
+schema: 1
+generated_by: cc
+
+iterations:
+  v1:
+    gates:
+      G1: { signed: false, date: null }
+      G2: { signed: false, date: null }
+      G3: { signed: false, date: null }
+      G4: { signed: false, date: null }
+      G5: { signed: false, date: null }
+# 后续迭代由 draft-prd-vN 签 G1 时按需新增 vN 块（结构同 v1）
+
+tasks: []
+# 每条（写 queue 任务包处同步追加）：
+#  - id: {缩写}-v{N}-001     # B 类为 {缩写}-b-001
+#    iteration: v1           # 属哪期；B 类(bug/optimization)为 null
+#    sprint: 1               # B 类 / 修复任务为 null
+#    source: sprint          # sprint / integration / manual-test / bug / optimization
+#    title: ...
+#    type: develop           # 12 种 task type
+#    discipline: dev-backend # 9 种 discipline
+#    layer: backend          # frontend / backend / shared / null
+#    status: 可取            # 可取 / taken-by / done / merged
+#    assigned_to: null
+#    pr: null
+#    parent_id: null
+#    depends_on: []
+#    delivery: 批量          # 独立 / 批量 / null
+#    urgency: null           # hotfix / null
+
+integration_tests: []
+# 每条（generate-integration-tests 创建/更新）：
+#  - { iteration: v1, index: 1, description: ..., status: 待执行, failure_reason: null }
+#    # status: 待执行 / 执行中 / 通过 / 失败
+
+code_reviews: []
+# 每条（code-review 追加）：
+#  - iteration: v1
+#    task_id: {被审 develop 任务 id}
+#    conclusion: 需修订       # 通过 / 需修订
+#    comment: null
+#    issues:
+#      - { severity: 严重, description: ..., location: src/x.ts:40 }
+#        # severity: 严重 / 一般 / 建议

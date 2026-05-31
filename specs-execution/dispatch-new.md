@@ -95,6 +95,10 @@
 
 **16 字段无空字段方可写入 queue**。
 
+**同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
+
+> B 类放 `iteration: null` 而非某迭代——两个迭代之间无活跃迭代时 B 类照样有家，与 `b-tasks.md` 同为项目级。
+
 ---
 
 ## Step 5：记入 b-tasks.md
@@ -111,7 +115,7 @@
 
 执行 commit + push，任务包对所有协作者可见：
 ```bash
-git add iterations/vN/queue/{task-id}.md b-tasks.md
+git add iterations/vN/queue/{task-id}.md b-tasks.md status.yml
 git commit -m "chore(dispatch): 派发 {task-id}（{target-source}/{urgency}）"
 git push origin master
 ```

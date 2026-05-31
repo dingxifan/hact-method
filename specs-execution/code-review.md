@@ -121,12 +121,12 @@
 
 **通过**：
 1. 调平台 merge API 合并 PR
-2. 对应 develop task 状态推 [merged]
+2. 对应 develop task 状态推 [merged]；同步把 `status.yml` 中该 task 的 `status` 改为 `merged`
 3. 有 `[建议]` → 写入 `backlog.md`，格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径} | 待联调阶段处理`
 
 **打回**：
 1. PR comment 中列出全部 `[阻断]` 问题（已在 Step 5 写好）
-2. develop task 状态回 [可取]
+2. develop task 状态回 [可取]；同步把 `status.yml` 中该 task 的 `status` 改回 `可取`
 
 **快速通道（直修）**（同时满足以下全部条件时可选）：
 - 无业务逻辑改动（允许：null 防护、缺失字段补全、类型修复、配置笔误、错误拦截格式、接口字段对齐；不允许：条件判断逻辑、数据处理算法、权限规则、接口行为）
@@ -165,11 +165,24 @@ git branch -d fix/cr-{task-id}-{desc}
 
 ## 全部 PR 审完后
 
-### Step 7：更新 sprint.md
+### Step 7：更新 sprint.md + status.yml
 
 在 `iterations/vN/sprint.md` 对应 develop 任务行追加 CR 结论：
 - 通过已合并：`CR:通过`
 - 打回：`CR:打回（{原因一句话}）`
+
+**写项目根 `status.yml` 的 `code_reviews[]`**（机器侧契约，字段见 `../hact-method/skeleton/07-status-contract.md`；CR 结论与 issue 全内联，hact-app 直接取数，前端 CRDrawer 即用）：每个被审 develop 任务追加一条
+```yaml
+- iteration: {被审任务所属迭代版本，如 v2}
+  task_id: {被审 develop 任务 id}
+  conclusion: 通过 / 需修订
+  comment: {综合评语，可 null}
+  issues:                       # 取自 Step 5 写进 PR comment 的发现，逐条结构化
+    - { severity: {严重/一般/建议}, description: {问题描述}, location: {文件:行号 或 null} }
+```
+> **severity 映射**：Step 5 内部用两级 `[阻断]/[建议]` → 写 YAML 时 `[阻断]→严重`、`[建议]→建议`。无 issue 则 `issues: []`。
+
+> status.yml 的 task 状态改动（merged / 可取，见 Step 6）与本步的 code_reviews[] 一并随 review 收尾提交。
 
 ---
 

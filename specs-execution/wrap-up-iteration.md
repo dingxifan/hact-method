@@ -149,9 +149,9 @@
 
 🚫 等用户确认
 
-用户确认后，在 `iterations/vN/gates.md` 写入 G5，执行：
+用户确认后，在 `iterations/vN/gates.md` 写入 G5；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G5` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）。执行：
 ```bash
-git add iterations/vN/gates.md project.md decisions.md backlog.md feedback.md
+git add iterations/vN/gates.md status.yml project.md decisions.md backlog.md feedback.md
 git commit -m "chore: 迭代 {version} 收尾，G5 签署 [{项目名}]"
 git push
 ```

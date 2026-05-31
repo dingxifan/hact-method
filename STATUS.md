@@ -49,6 +49,15 @@
 
 ## 历史里程碑
 
+### 2026-05-31 方法论调整：status.yml 状态契约（hact-app 取数稳定化）
+- 背景：hact-app 靠解析 queue/sprint.md/gates.md 等叙述性 markdown 取状态，格式漂移导致持续取错数
+- 方案：新增**项目根 `status.yml`**（机器侧唯一数据源、项目级单文件、YAML 锁死 schema），现有 markdown 降级为「人看的视图」一字不动；状态进 YAML、文档正文走 API
+- 项目级而非迭代级：B 类（bug/optimization）跨迭代、`iteration: null`，两迭代之间无活跃迭代时照样有家；多迭代并行靠 `iterations` 按版本分块 + task 带 `iteration` 字段
+- 落地：新增 `skeleton/07-status-contract.md` 契约 + `templates/status.yml` 模板；10 份 exec spec 插入「做一个填一个」更新步骤（init-project 建文件；draft-prd-vN/draft-tech-design/plan-sprint/manual-test/wrap-up-iteration 签 Gate；develop 认领+done；code-review merged+CR；generate-integration-tests/manual-test/dispatch-new 各自派任务追加 tasks[]）
+- 总规则：凡往 queue/ 写任务包处同步追加 tasks[]（带 source/iteration），状态流转按 task-id 改
+- 本轮只改 hact-method，不动 hact-app（其 sync 改读 YAML + 文档走 API 留待 hact-app 自身迭代）；CC 启动接续逻辑暂不改
+- 计划与设计：`_meta/plans/2026-05-31-status-contract/design.md`
+
 ### 2026-05-31 方法论调整：个人积累与 pull 上提
 - 引入"个人积累仓" `hact-notes-{姓名}`（每人独立私有仓）+ `harvest-notes` 上提 task（pull、只读、游标）
 - wrap-up 第二步分流改向个人 notes；B 类 develop 就地分流（补 B 类无 wrap-up 盲点）

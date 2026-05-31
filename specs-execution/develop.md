@@ -41,9 +41,9 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 **第一优先：处理 `交付=独立` 的任务**
 
 若存在 `[可取]` 且 `交付=独立` 的任务 → 拾取 task-id 最小的那个，进入**单任务会话**。
-- 将该任务包状态改为 `[taken-by: {user}]`，并立即执行认领 commit：
+- 将该任务包状态改为 `[taken-by: {user}]`；同步在项目根 `status.yml` 将该 task 的 `status` 改为 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）。立即执行认领 commit：
   ```bash
-  git add iterations/vN/sprint.md
+  git add iterations/vN/sprint.md status.yml
   git commit -m "chore(sprint): 认领 {task-id} [taken-by: {user}]"
   ```
   （push 随首次代码 commit 一起推送，无需单独 push）
@@ -53,9 +53,9 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 **第二优先：批量会话（所有 `独立` 任务已 `[merged]` 或本 layer 无 `独立` 任务）**
 
 若本 layer 无 `[可取]` 的 `独立` 任务 → 拾取本 layer 全部 `[可取]` 且 `交付=批量` 的任务，进入**批量会话**。
-- 将所有拾取任务的状态改为 `[taken-by: {user}]`，并立即执行认领 commit：
+- 将所有拾取任务的状态改为 `[taken-by: {user}]`；同步在项目根 `status.yml` 把每个拾取 task 的 `status` 改为 `taken-by`、`assigned_to` 填 `{user}`。立即执行认领 commit：
   ```bash
-  git add iterations/vN/sprint.md
+  git add iterations/vN/sprint.md status.yml
   git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
   ```
   （push 随首次代码 commit 一起推送，无需单独 push）
@@ -257,9 +257,10 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 - 将 `iterations/vN/queue/{task-id}.md` 状态改为 `[done]`
 - 在 `iterations/vN/sprint.md` 对应行：状态列改为 `[done]`，**PR 列填入 `#N`**（N 为 Step 7 创建的 PR 编号）
+- 在项目根 `status.yml` 将该 task 的 `status` 改为 `done`、`pr` 填入 `{N}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）
 - 执行 commit + push，将状态更新随 feature 分支推送（合并到已开的 PR）：
   ```bash
-  git add iterations/vN/queue/{task-id}.md iterations/vN/sprint.md
+  git add iterations/vN/queue/{task-id}.md iterations/vN/sprint.md status.yml
   git commit -m "chore(sprint): {task-id} 标记 [done]，PR #{N}"
   git push origin {task-id}
   ```
@@ -311,7 +312,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 | 批量 Step 5 自检 | 机械验证 / checklist / 偏离核查各跑**一次**，覆盖本次所有改动文件；偏离对比所有任务包 `files` 字段的合集 |
 | 批量 Step 6 commit | 分支名 `{layer}-batch-v{N}`（如 `backend-batch-v3`）；message：`feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]` |
 | 批量 Step 7 推 PR | `git push origin {layer}-batch-v{N}`；PR description **按任务分节**（模板见下），偏离 / 遗留问题各任务分别列出或统一写"无"；同样禁止凭据 |
-| 批量 Step 8 更新状态 | 所有批量任务包 + sprint.md 对应行 → `[done]`，PR 列**全部填同一个 PR 号**；`chore(sprint): 批量标记 [done]，PR #{N}` 推 `{layer}-batch-v{N}` |
+| 批量 Step 8 更新状态 | 所有批量任务包 + sprint.md 对应行 → `[done]`，PR 列**全部填同一个 PR 号**；同步在项目根 `status.yml` 把这批 task 的 `status` 全改 `done`、`pr` 全填同一个 `{N}`；git add 含 `status.yml`；`chore(sprint): 批量标记 [done]，PR #{N}` 推 `{layer}-batch-v{N}` |
 | 批量 Step 9 移交 | `✅ develop 批量完成：{layer}层 {N} 个任务已 commit，PR #{N} 已推，等待 code-review。本会话到此结束。` 同样 🚫 会话硬边界，输出后立即停止 |
 
 **批量 PR description 模板**（批量 Step 7）：

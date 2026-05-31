@@ -251,7 +251,12 @@ MVP 边界（不做什么）：
 ```markdown
 - [x] G1：PRD 已确认 — {YYYY-MM-DD}
 ```
-执行 `git add iterations/vN/prd.md iterations/vN/gates.md && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
+
+**更新项目根 `status.yml`**（机器侧状态契约，项目级单文件，由 init-project 创建；字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）：
+- 确保 `iterations.vN.gates` 块存在（v1 已由 init-project 建好；v2+ 在此新增该期 gates 块，G1–G5 全未签）
+- 将 `iterations.vN.gates.G1` 改为 `{ signed: true, date: {YYYY-MM-DD} }`
+
+执行 `git add iterations/vN/prd.md iterations/vN/gates.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
 
 > **异常**：PRD 定稿后发现遗漏关键功能 → 创建 `revise-doc(target=prd)` task，不直接修改已签 G1 的 PRD。
 

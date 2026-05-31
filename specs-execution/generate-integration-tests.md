@@ -164,6 +164,12 @@ G3 签署时已确认环境可达，此处快速复核：
 
 结果写入 `integration-tests/result-{日期}.md`。
 
+**同步写项目根 `status.yml` 的 `integration_tests[]`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`；hact-app 直接取数驱动 F6 联调清单）：每条场景一项
+```yaml
+- { iteration: vN, index: {序号}, description: {场景描述}, status: {待执行/执行中/通过/失败}, failure_reason: {失败现象 或 null} }
+```
+结果表的 ✅ → `通过`，❌ → `失败`（failure_reason 填现象），未跑 → `待执行`。result-{日期}.md 是人看的视图，status.yml 是机器取数源；现象/复现步骤等正文留在 result md，不进 YAML。
+
 ---
 
 ### Step 5：处理失败
@@ -205,6 +211,7 @@ git branch -d fix/it-{desc}
 
 不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `iterations/vN/queue/{task-id}.md`
   - task-id 命名：`{项目缩写}-it-{三位序号}`，如 `hact-it-001`
+  - **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: integration`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`），git add 含 `status.yml`
 - 更新 `_meta/sessions/generate-integration-tests-progress.md`，记录已派修复的 task-id
 
 **`[不阻断]`**（边界或视觉问题）：
@@ -232,7 +239,7 @@ git branch -d fix/it-{desc}
 
 develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本（不只跑修复相关场景）。
 
-更新 `integration-tests/result-{日期}.md`，在原条目后追加复测结论。
+更新 `integration-tests/result-{日期}.md`，在原条目后追加复测结论。**同步更新 `status.yml` 的 `integration_tests[]`**：按复测结果改各项 `status`（通过项 failure_reason 置 null）。
 
 ---
 

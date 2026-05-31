@@ -75,6 +75,7 @@ E:\group-code\{project-name}\
 │       ├── gates.md
 │       └── queue/               ← 任务包（该迭代）
 │           └── done/
+├── status.yml               ← 机器侧状态契约（项目级单文件，hact-app 取数源，init-project 建，见 skeleton/07）
 ├── project.md               ← 跨迭代项目快照
 ├── decisions.md             ← 架构决策记录
 ├── design.md                ← 视觉规格
