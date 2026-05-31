@@ -150,9 +150,9 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
    ```bash
    # 在企业下创建私有仓（auto_init 便于后续直接写 notes.md）
-   # 注意：企业版用 /enterprises/ 接口，不是 /orgs/
+   # 注意：企业版用 /enterprises/ 接口（不是 /orgs/），且私有用 public=0（不认 private=true）
    curl -X POST "https://gitee.com/api/v5/enterprises/{notes-org}/repos" \
-     -d "access_token={token}&name=hact-notes-{username}&private=true&auto_init=true"
+     -d "access_token={token}&name=hact-notes-{username}&path=hact-notes-{username}&public=0&auto_init=true"
 
    # 只加本人为 push 协作者：其他开发者不加 → 无读权限；管理者作为企业 admin 天然只读
    curl -X PUT "https://gitee.com/api/v5/repos/{notes-org}/hact-notes-{username}/collaborators/{username}" \

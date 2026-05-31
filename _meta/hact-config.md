@@ -14,9 +14,17 @@
 
 > 由 `init-project`（或成员上线时）登记；`harvest-notes` 遍历此表收割。管理者对这些仓只读。
 
-| 成员（git user.name） | notes 仓地址 | 本地路径 |
+| 成员（login / 显示名） | notes 仓地址 | 本地路径 |
 |---|---|---|
-| _（示例）dingxifan_ | _gitee.com/dingxifan/hact-notes-dingxifan_ | _E:\group-code\hact-notes-dingxifan_ |
+| dingxifan_admin（dingxifan·管理员） | gitee.com/dingxifan/hact-notes-dingxifan_admin | E:\group-code\hact-notes-dingxifan_admin |
+| winniemw（Winnie） | gitee.com/dingxifan/hact-notes-winniemw | E:\group-code\hact-notes-winniemw |
+| WayneLu（陆伟平） | gitee.com/dingxifan/hact-notes-WayneLu | E:\group-code\hact-notes-WayneLu |
+| colin_zheng | gitee.com/dingxifan/hact-notes-colin_zheng | E:\group-code\hact-notes-colin_zheng |
+| xiaobainote（XL） | gitee.com/dingxifan/hact-notes-xiaobainote | E:\group-code\hact-notes-xiaobainote |
+| zhang_cheng_1377（张程） | gitee.com/dingxifan/hact-notes-zhang_cheng_1377 | E:\group-code\hact-notes-zhang_cheng_1377 |
+| lu-ailu（陆爱露） | gitee.com/dingxifan/hact-notes-lu-ailu | E:\group-code\hact-notes-lu-ailu |
+| ba-xiansheng（Jason） | gitee.com/dingxifan/hact-notes-ba-xiansheng | E:\group-code\hact-notes-ba-xiansheng |
+| axiaoke | gitee.com/dingxifan/hact-notes-axiaoke | E:\group-code\hact-notes-axiaoke |
 
 ---
 
@@ -26,4 +34,12 @@
 
 | 成员 | 上次收割点（commit / 时间戳） | 上次收割条目数 |
 |---|---|---|
-| _（示例）dingxifan_ | _—（尚未收割）_ | _0_ |
+| dingxifan_admin | —（尚未收割） | 0 |
+| winniemw | —（尚未收割） | 0 |
+| WayneLu | —（尚未收割） | 0 |
+| colin_zheng | —（尚未收割） | 0 |
+| xiaobainote | —（尚未收割） | 0 |
+| zhang_cheng_1377 | —（尚未收割） | 0 |
+| lu-ailu | —（尚未收割） | 0 |
+| ba-xiansheng | —（尚未收割） | 0 |
+| axiaoke | —（尚未收割） | 0 |
