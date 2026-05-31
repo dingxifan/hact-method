@@ -16,8 +16,8 @@
 
 ## 本阶段进展（第二阶段，2026-05-08 完成）
 
-- **specs-structural/**：12 份任务契约全部完成（develop / code-review / draft-prd-vN / draft-tech-design / plan-sprint / revise-doc / dispatch-new / generate-integration-tests / manual-test / deploy / wrap-up-iteration / init-project）
-- **specs-execution/**：12 份执行规范全部完成（init-project / draft-prd-vN / draft-tech-design / plan-sprint / develop / code-review / manual-test / deploy / wrap-up-iteration / dispatch-new / generate-integration-tests / revise-doc）；经评审修复 + 业务流程一致性检查
+- **specs-structural/**：13 份任务契约全部完成（develop / code-review / draft-prd-vN / draft-tech-design / plan-sprint / revise-doc / dispatch-new / generate-integration-tests / manual-test / deploy / wrap-up-iteration / init-project / harvest-notes）
+- **specs-execution/**：13 份执行规范全部完成（init-project / draft-prd-vN / draft-tech-design / plan-sprint / develop / code-review / manual-test / deploy / wrap-up-iteration / dispatch-new / generate-integration-tests / revise-doc / harvest-notes）；经评审修复 + 业务流程一致性检查
 - **templates/**：初始化完成（standards/backend.md + standards/frontend.md + design.md + reusables.md + feedback.md + retrospectives.md）
 - **重构**：hact-method 改为纯方法论仓（移除 projects/ 目录）；项目协调文件合并进各自项目仓
 - **CLAUDE.md 更新**：补充工作区使用指南（何时在 hact-method 开会话 / 何时在项目仓开会话）
@@ -45,7 +45,7 @@
 | 风险 | 可能性 | 影响 | 应对 |
 |------|--------|------|------|
 | hact-app 开发中发现骨架/规范有结构性缺陷 | 中 | 高 | hact-app 即压力测试，发现问题即修规范 |
-| exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 12/12 全部完成，已通过评审和一致性检查 |
+| exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 13/13 全部完成，已通过评审和一致性检查 |
 
 ## 历史里程碑
 

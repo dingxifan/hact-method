@@ -20,7 +20,7 @@
 | 准备 | `draft-tech-design` | architecture | G2 |
 | 准备 | `plan-sprint` | dispatch | G3 |
 | 跨段 | `revise-doc` | product / architecture（按 target 派生） | — |
-| 开发循环 | `develop` | dev-frontend / dev-backend（按 layer 派生） | — |
+| 开发循环 | `develop` | dev-frontend / dev-backend（按 layers 派生） | — |
 | 开发循环 | `code-review` | review | — |
 | 开发循环 | `generate-integration-tests` | integration-testing | — |
 | 开发循环 | `manual-test` | product | G4 |
@@ -37,14 +37,15 @@
 | 属性 | 取值 | 出现于 |
 |---|---|---|
 | `urgency` | `normal` (默认) / `hotfix`（紧急） | `develop` |
-| `layer` | `frontend` / `backend` / `shared` / `null` | `develop`, `code-review`（从 PR 派生） |
+| `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop`, `code-review`（从 PR 派生） |
+| `task_type` | `dev-frontend` / `dev-backend`（单值路由键；layers 跨层时由分配者指定主） | `develop` |
 | `source` | `sprint` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
 | `target` | `prd` / `trd` / `standards` | `revise-doc` |
 | `target-source` | `bug` / `optimization` | `dispatch-new` |
 | `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-tech-design`, `wrap-up-iteration` |
-| `pr-link` | URL | `code-review` |
+| `pr-links` | URL[] | `code-review` |
 
-`layer` 和 `source` 的组合决定 `develop` 任务加载哪份 standards 和如何理解任务上下文（详见 §6 develop 条目）。
+`layers` 和 `source` 的组合决定 `develop` 任务加载哪份 standards 和如何理解任务上下文（详见 §6 develop 条目）。
 
 ---
 
@@ -55,8 +56,8 @@
 > 立项：新建项目目录结构和初始配置文件。
 
 - **discipline**: `management`
-- **完成判据**: `projects/{项目}/` 子结构创建完成；初始 PRD/TRD 占位文件就位；项目记入 registry
-- **主要产物**: `projects/{项目}/` 完整目录树（含 `iterations/`）
+- **完成判据**: `E:\group-code\{项目}\` 仓目录结构创建完成；占位文件就位；git 初始化完成（详见 `specs-structural/init-project.md`）
+- **主要产物**: `E:\group-code\{项目}\` 完整目录树（含 `iterations/`）
 - **关联 Gate**: —
 - **属性**: `project-name`（字符串）
 
@@ -70,7 +71,7 @@
 
 - **discipline**: `product`
 - **完成判据**: PRD 文档完整 + 用户确认 + 在任务尾部询问"要不要签 G1"——签了即合并 G1
-- **主要产物**: `projects/{项目}/iterations/vN/prd.md`
+- **主要产物**: `iterations/vN/prd.md`
 - **关联 Gate**: **G1**（可选签于任务尾部）
 - **属性**: `version`（vN）
 
@@ -85,10 +86,10 @@
 - **discipline**: `architecture`
 - **完成判据**: TRD 完整 + 3 份 standards 完整 + 在任务尾部询问"要不要签 G2"
 - **主要产物**: 4 份文件——
-  - `projects/{项目}/iterations/vN/trd.md`
-  - `projects/{项目}/iterations/vN/standards-shared.md`
-  - `projects/{项目}/iterations/vN/standards-frontend.md`
-  - `projects/{项目}/iterations/vN/standards-backend.md`
+  - `iterations/vN/trd.md`
+  - `iterations/vN/standards-shared.md`
+  - `iterations/vN/standards-frontend.md`
+  - `iterations/vN/standards-backend.md`
 - **关联 Gate**: **G2**（可选签于任务尾部）
 - **前置条件**: G1 已签
 - **属性**: `version`（vN）
@@ -103,7 +104,7 @@
 
 - **discipline**: `dispatch`
 - **完成判据**: queue 写满本期 develop 任务包 + sprint.md 反映当前拆解 + 在任务尾部询问"要不要签 G3"
-- **主要产物**: 多个 develop 任务包（在 queue/）+ `projects/{项目}/iterations/vN/sprint.md`
+- **主要产物**: 多个 develop 任务包（在 queue/）+ `iterations/vN/sprint.md`
 - **关联 Gate**: **G3**（可选签于任务尾部）
 - **前置条件**: G2 已签（TRD + standards 就位）
 - **属性**: 无
@@ -120,7 +121,7 @@
   - `target=prd` → `product`
   - `target=trd` → `architecture`
   - `target=standards` → `architecture`
-- **完成判据**: 修订内容 commit + 在 backlog 记录修订原因 + 触发原 Gate 的复议（如需要）
+- **完成判据**: 修订内容 commit + 在 backlog 记录修订原因 + 判断下游影响（已签 Gate 不撤销，只记录变更）
 - **主要产物**: 更新对应文档 + `backlog.md` 加 `[修订]` 条目
 - **关联 Gate**: 不签新 Gate（已签的不撤销，只记录变更）
 - **属性**: `target`（prd / trd / standards）+ `reason`（字符串）
@@ -133,15 +134,17 @@
 
 > 拿任务包写代码 + 推 PR。涵盖原 feature / fix / fix-integration / fix-acceptance / fix-bug / optimization。
 
-- **discipline**: 派生——
-  - `layer=frontend` → `dev-frontend`
-  - `layer=backend` → `dev-backend`
+- **discipline**: 由 `task_type` 决定（task_type 由 layers 派生）——
+  - `layers=[frontend]` → `dev-frontend`
+  - `layers=[backend]` → `dev-backend`
+  - `layers=[shared]` → 由分配者在任务包中指定 task_type
 - **完成判据**: 代码完成 + 通过 code-review + PR `[merged]`
 - **主要产物**: PR + 代码改动 + （可选）新增/更新单元测试
 - **关联 Gate**: —
 - **属性**:
   - `source`：sprint / integration / manual-test / bug / optimization（决定上下文加载）
-  - `layer`：frontend / backend / shared
+  - `layers`：[frontend] / [backend] / [shared]（数组，可多值）
+  - `task_type`：dev-frontend / dev-backend（单值路由键；layers=[shared] 或跨层时由分配者指定）
   - `urgency`：normal / hotfix
 - **加载规范分支**:
   - source=sprint → 引用 PRD + sprint.md
@@ -162,7 +165,7 @@
 - **完成判据**: CR 反馈写完 + 决定（通过 / 打回）记录在 PR
 - **主要产物**: CR 反馈 + 决定（通过 / 打回）
 - **关联 Gate**: —
-- **属性**: `pr-link`（URL）+ `layer`（从 PR 改动文件派生，决定加载哪份 standards）
+- **属性**: `pr-links`（URL[]）+ `layers`（从 PR 改动文件派生，决定加载哪份 standards）
 
 详见 `specs-structural/code-review.md`。
 

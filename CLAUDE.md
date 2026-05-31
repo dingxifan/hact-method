@@ -109,7 +109,7 @@ E:\group-code\{project-name}\
 ## 当前阶段：第三阶段·开发 hact-app
 
 - 第一阶段（搭骨架）✅：skeleton/ 下 6 份骨架文档
-- 第二阶段（结构层规范）✅：specs-structural/ 下 12 份任务契约 + specs-execution/ 下 5 份主线执行规范
+- 第二阶段（结构层规范）✅：specs-structural/ 下 13 份任务契约 + specs-execution/ 下 13 份执行规范
 - 第三阶段（开发 hact-app）进行中：用本方法论走完 PRD→TRD→sprint→develop 完整流程，开发 hact-app 看板应用
 
 ## 与 human-ai-col 的关系

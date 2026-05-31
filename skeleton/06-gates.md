@@ -32,9 +32,11 @@ Gate 不是独立的实体——它是**一组 task 的状态聚合**。
 | **G2** | 本期 `draft-tech-design` [merged] + 任意 `revise-doc(target=trd\|standards)` [merged]（如有） |
 | **G3** | 本期 `plan-sprint` [merged] |
 | **G4** | 本期所有 `develop(source=sprint)` [merged] + `generate-integration-tests` [merged] + 所有 `develop(source=integration)` [merged] + `manual-test` [merged] + 所有 `develop(source=manual-test)` [merged] |
-| **G5** | 本期 `deploy` [merged] + `wrap-up-iteration` [merged] |
+| **G5** | 本期 `wrap-up-iteration` [merged] + 本期 `deploy` [merged]（部署失败 / 纯文档迭代不阻断 G5 签字，见下注） |
 
 注：`revise-doc` 在 G1/G2 关联里以"任意"出现——意思是 G1/G2 已签后再发生的 revise-doc 不撤销 Gate（详见 §6），但 revise-doc 自身仍要走 `[merged]` 才结束。
+
+注：`deploy` 在 G5 关联里**不阻断签字**——deploy 与 `wrap-up-iteration` 并行、无强依赖，部署失败或纯文档迭代（无需部署）时，只要收尾三步完成即可签 G5（详见 `specs-execution/wrap-up-iteration.md` 第三步「project.md 合并」状态标注 + 顶部说明）。
 
 ---
 
@@ -62,7 +64,7 @@ Gate 不是独立的实体——它是**一组 task 的状态聚合**。
 | 入口 task | `init-project`（首次）/ `draft-prd-vN`（vN > v1） | `dispatch-new` |
 | 流程 | 线性段（G1→G2→G3）+ 开发循环（G4 期）+ 收尾（G5）| 单任务流：dispatch-new → develop → merged → 部署 |
 | 部署时机 | G4 已签后（默认合并部署）| hotfix 立即 / normal 等下次合并部署 |
-| 总账文件 | `iteration_vN.md`（Gate 状态 + 主任务清单）| `b-tasks.md`（项目内所有 B 类任务总账，恒定 2 会期）|
+| 总账文件 | `iterations/vN/gates.md`（Gate 签字状态）| `b-tasks.md`（项目内所有 B 类任务总账，恒定 2 会期）|
 | 多迭代并行 | A 类一次只能一个迭代在 dispatch（vN+1 不早于 vN G4）| 不受 A 类约束，常态运行 |
 
 **B 类没有 Gate 的原因**：
