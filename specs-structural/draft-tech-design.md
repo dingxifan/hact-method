@@ -12,6 +12,7 @@
 
 - **触发**：G1 已签，`iterations/vN/prd.md` 已存在
 - **Gate**：G1 未签则阻断
+- **draft-ux 前置**：PRD 中有任何功能标记 `draft-ux: 需要`，且 `iterations/vN/prototype.html` 不存在 → 阻断，提示先完成 `draft-ux`
 - **文件**：`project.md`（了解技术约束和已有决策）；`reusables.md`（了解已有共享组件，避免重复建议）
 
 ---
@@ -71,6 +72,7 @@
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
 | `draft-prd-vN` | 定稿 PRD，G1 已签 | `iterations/vN/prd.md` |
+| `draft-ux`（条件性） | 交互流程图 + HTML 原型；PRD 有 `draft-ux: 需要` 时必须存在 | `iterations/vN/ux-flows.md` + `iterations/vN/prototype.html` |
 
 **输出给**
 

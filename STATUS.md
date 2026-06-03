@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发 hact-app**（进行中）
-- 上次更新：2026-05-31
+- 上次更新：2026-06-03
 
 ## 各阶段完成情况
 
@@ -64,6 +64,15 @@
 - draft-tech-design 双源（公共 + 本人 notes `[规范]`）+ vN+1 去重
 - 骨架（01 权限例外 / 02 三工作区 / 03 management 边界 / 04 注册 harvest-notes）+ init-project Step4.5 成员 notes 登记 + CLAUDE.md Step0 同步 notes 仓 + 删除空模板 retrospectives.md
 - 计划与发现：`_meta/plans/2026-05-31-personal-notes-accumulation/`
+
+### 2026-06-03 方法论调整：新增 draft-ux 交互原型任务
+- 痛点：开发完成后频繁出现交互设计缺陷（仅有 happy path、路径分支遗漏、入口不明确），根因是 PRD→TRD 之间缺乏对业务流的显式确认环节
+- 方案：新增可选 task type `draft-ux`，插入 G1（PRD）与 G2（TRD）之间，产出场景列表 + mermaid 流程图 + 自包含 HTML 原型；三层递进：场景枚举（用户视角业务流） → 流程图（分支可视化） → 原型（路径可走通）
+- PRD 联动：每个功能模板新增 `**入口**` 字段（触发来源）和 `**draft-ux**` 字段（需要/不需要）；完成判据补两条；G1 签署前明确触发决策
+- TRD 联动：会话启动新增 draft-ux 就绪前置检查；必读文件加 `ux-flows.md`；接口设计段每个 API 注明服务于哪条流程路径（`# 服务流程：{场景名}`）
+- 跳过条件：PRD 中全部功能标记 `draft-ux: 不需要` 时，TRD 前置检查自动通过，无需运行本 task
+- 落地文件：`specs-structural/draft-ux.md` + `specs-execution/draft-ux.md`（新增）；`specs-structural/draft-prd-vN.md` + `specs-execution/draft-prd-vN.md` + `specs-structural/draft-tech-design.md` + `specs-execution/draft-tech-design.md`（修改）
+- 方法论验证：以 hact-app v1 F3 Sprint 任务看板为对象跑通全流程，7 条场景 → mermaid 流程图 → HTML 原型，原型存 `hact-app/iterations/v1/prototype.html`
 
 ### 2026-05-08 第二阶段完成 + 第三阶段启动
 - specs-structural/ 12 份 + specs-execution/ 5 份（主线）完成并推送
