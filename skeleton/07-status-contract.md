@@ -122,13 +122,13 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `code_reviews[].conclusion` | 通过 / 需修订 |
 | `code_reviews[].issues[].severity` | 严重 / 一般 / 建议 |
 
-> CR severity 映射：code-review 流程内部用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`。
+> CR severity 映射：pr-review 流程内部用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`。
 
 ### 不进 YAML（hact-app 走 API 现拉）
 任务包 16 字段正文、`description`、`completion_report`、`output`、PRD/TRD/sprint/联调报告正文。
 
 ### CR issue 内联（已查证定案）
-CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API。依据：hact-method `code-review.md` 流程把逐条 issue 写进 Gitee PR comment，仓库内无含结构化 issue 的文件可供 API 拉取；hact-app 前端 `CRDrawer.vue` 已就绪、期望 `{ conclusion, issues[], comment }`，内联后即可用。
+CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API。依据：hact-method `pr-review.md` 流程把逐条 issue 写进 Gitee PR comment，仓库内无含结构化 issue 的文件可供 API 拉取；hact-app 前端 `CRDrawer.vue` 已就绪、期望 `{ conclusion, issues[], comment }`，内联后即可用。
 
 ---
 
@@ -145,8 +145,8 @@ CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API
 | 签 G3 + 灌 sprint 任务 | `plan-sprint` | 批量追加 sprint 任务（`source=sprint`, `iteration=vN`）+ `gates.G3` |
 | 认领任务 | `develop` | 对应 task `status: taken-by` + `assigned_to` |
 | 任务完成 / 提 PR | `develop` | 对应 task `status: done` + `pr` |
-| 合并 | `code-review` | 对应 task `status: merged` |
-| CR 结论 | `code-review` | `code_reviews[]` 追加一条 |
+| 合并 | `pr-review` | 对应 task `status: merged` |
+| CR 结论 | `pr-review` | `code_reviews[]` 追加一条 |
 | 联调修复任务派发 | `generate-integration-tests` | 追加 task（`source=integration`, `iteration=vN`） |
 | 联调项创建 / 跑通 / 失败 / 复测 | `generate-integration-tests` | `integration_tests[]` |
 | 验收修复任务派发 | `manual-test` | 追加 task（`source=manual-test`, `iteration=vN`） |

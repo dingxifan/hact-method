@@ -21,7 +21,7 @@
 | 准备 | `plan-sprint` | dispatch | G3 |
 | 跨段 | `revise-doc` | product / architecture（按 target 派生） | — |
 | 开发循环 | `develop` | dev-frontend / dev-backend（按 layers 派生） | — |
-| 开发循环 | `code-review` | review | — |
+| 开发循环 | `pr-review` | review | — |
 | 开发循环 | `generate-integration-tests` | integration-testing | — |
 | 开发循环 | `manual-test` | product | G4 |
 | 收尾 | `deploy` | deploy | — |
@@ -37,13 +37,13 @@
 | 属性 | 取值 | 出现于 |
 |---|---|---|
 | `urgency` | `normal` (默认) / `hotfix`（紧急） | `develop` |
-| `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop`, `code-review`（从 PR 派生） |
+| `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop`, `pr-review`（从 PR 派生） |
 | `task_type` | `dev-frontend` / `dev-backend`（单值路由键；layers 跨层时由分配者指定主） | `develop` |
 | `source` | `sprint` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
 | `target` | `prd` / `trd` / `standards` | `revise-doc` |
 | `target-source` | `bug` / `optimization` | `dispatch-new` |
 | `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-tech-design`, `wrap-up-iteration` |
-| `pr-links` | URL[] | `code-review` |
+| `pr-links` | URL[] | `pr-review` |
 
 `layers` 和 `source` 的组合决定 `develop` 任务加载哪份 standards 和如何理解任务上下文（详见 §6 develop 条目）。
 
@@ -138,7 +138,7 @@
   - `layers=[frontend]` → `dev-frontend`
   - `layers=[backend]` → `dev-backend`
   - `layers=[shared]` → 由分配者在任务包中指定 task_type
-- **完成判据**: 代码完成 + 通过 code-review + PR `[merged]`
+- **完成判据**: 代码完成 + 通过 pr-review + PR `[merged]`
 - **主要产物**: PR + 代码改动 + （可选）新增/更新单元测试
 - **关联 Gate**: —
 - **属性**:
@@ -157,7 +157,7 @@
 
 ---
 
-### 7. `code-review`
+### 7. `pr-review`
 
 > 复核 PR：按 standards 评判代码质量，给反馈或批准。
 
@@ -167,7 +167,7 @@
 - **关联 Gate**: —
 - **属性**: `pr-links`（URL[]）+ `layers`（从 PR 改动文件派生，决定加载哪份 standards）
 
-详见 `specs-structural/code-review.md`。
+详见 `specs-structural/pr-review.md`。
 
 ---
 

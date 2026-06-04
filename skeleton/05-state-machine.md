@@ -107,9 +107,9 @@ v2 早期阶段——团队小，沟通成本低——所有"非主流"情况用
 
 | 触发 | 影响 |
 |---|---|
-| `develop` 推 PR（→ `done`）| 系统创建 `code-review` 任务（status=`可取`，target-pr 指向该 PR）|
-| `code-review → merged`（CR 通过） | 关联的 `develop` task → `merged`；PR 实际合并 |
-| `code-review` 打回（CR 评论 / 不通过）| 关联的 `develop` 仍 `status=done`；持有者根据 CR 评论继续提 commit；CR 重审；严重时走异常转移（§4） |
+| `develop` 推 PR（→ `done`）| 系统创建 `pr-review` 任务（status=`可取`，target-pr 指向该 PR）|
+| `pr-review → merged`（CR 通过） | 关联的 `develop` task → `merged`；PR 实际合并 |
+| `pr-review` 打回（CR 评论 / 不通过）| 关联的 `develop` 仍 `status=done`；持有者根据 CR 评论继续提 commit；CR 重审；严重时走异常转移（§4） |
 | 任意 `develop(source=X)` → `merged` | 检查是否触发下游 task 的前置条件（详见 04 §"任务前置检查"） |
 
 具体**任务前置检查表**见 `04-task-catalog.md`。

@@ -96,7 +96,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 - 不包含设计审查（PRD / TRD 的审查在 draft 时即时发生，不另开 review 任务）
 - 只是审视和判断（不动笔写新代码）
 
-**典型工作**：拉 code-review 任务，读 PR，对照 standards 写 CR 反馈或批准合并。
+**典型工作**：拉 pr-review 任务，读 PR，对照 standards 写 CR 反馈或批准合并。
 
 ---
 

@@ -62,7 +62,7 @@ v2 是**任务驱动模型**：用户登录就是自己，系统根据 `task.typ
 **数据层级**：`projects → iterations → tasks`（sprint 作为 iteration 的派生视图，不是独立实体）
 
 **task 核心字段**：
-- `type`：12 种（develop / code-review / draft-prd-vN / draft-tech-design / plan-sprint / revise-doc / dispatch-new / generate-integration-tests / manual-test / deploy / wrap-up-iteration / init-project）
+- `type`：12 种（develop / pr-review / draft-prd-vN / draft-tech-design / plan-sprint / revise-doc / dispatch-new / generate-integration-tests / manual-test / deploy / wrap-up-iteration / init-project）
 - `discipline`：9 种（management / product / architecture / dispatch / review / integration-testing / dev-frontend / dev-backend / deploy）
 - `status`：4 种（可取 / taken-by / done / merged）
 - `layer`：frontend / backend / shared / null

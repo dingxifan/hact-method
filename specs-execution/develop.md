@@ -62,7 +62,7 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 - Steps 1–4 对每个任务依次执行（按依赖顺序：被依赖的任务先实现）
 - Steps 5–9 执行「批量会话步骤」（见文末），一次自检、一个 PR 覆盖所有任务
 
-**阻断情形**：本 layer 有 `交付=独立` 任务且状态为 `[done]`（PR 已推但未合并），同时有 `批量` 任务依赖该 `独立` 任务 → 停止，输出：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 code-review 合并。」
+**阻断情形**：本 layer 有 `交付=独立` 任务且状态为 `[done]`（PR 已推但未合并），同时有 `批量` 任务依赖该 `独立` 任务 → 停止，输出：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 pr-review 合并。」
 
 ---
 
@@ -271,16 +271,16 @@ PR description 是本任务的唯一交付记录，需完整填写：
 ### Step 9：移交
 
 按 `source` 更新对应追踪文件：
-- `source=sprint` → 无需额外操作（PR 号已在 Step 8 写入 sprint.md）；同层全部推完后 devmgr 可开启批量 code-review
+- `source=sprint` → 无需额外操作（PR 号已在 Step 8 写入 sprint.md）；同层全部推完后 devmgr 可开启批量 pr-review
 - `source=bug / optimization` → 在 `b-tasks.md` 对应行追加 `PR#{N} 待审`
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"已推 PR#{N}，等待合并后复测"
 
 ```
-✅ develop 完成：task-{id}（{layer}）已 commit，PR 已推，等待 code-review。
+✅ develop 完成：task-{id}（{layer}）已 commit，PR 已推，等待 pr-review。
 本会话到此结束。后续动作（复测 / 联调继续）在 PR 合并后由上游会话触发，不在此处建议。
 ```
 
-🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续 pinchtab / 复测 / 联调"等后续动作——develop 只负责到 PR 推出，PR 合并权在 code-review 手里，测试阶段的恢复取决于合并结果，不由 develop 会话判断。
+🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续 pinchtab / 复测 / 联调"等后续动作——develop 只负责到 PR 推出，PR 合并权在 pr-review 手里，测试阶段的恢复取决于合并结果，不由 develop 会话判断。
 
 ---
 
@@ -314,7 +314,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 | 批量 Step 6 commit | 分支名 `{layer}-batch-v{N}`（如 `backend-batch-v3`）；message：`feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]` |
 | 批量 Step 7 推 PR | `git push origin {layer}-batch-v{N}`；PR description **按任务分节**（模板见下），偏离 / 遗留问题各任务分别列出或统一写"无"；同样禁止凭据 |
 | 批量 Step 8 更新状态 | 所有批量任务包 + sprint.md 对应行 → `[done]`，PR 列**全部填同一个 PR 号**；同步在项目根 `status.yml` 把这批 task 的 `status` 全改 `done`、`pr` 全填同一个 `{N}`；git add 含 `status.yml`；`chore(sprint): 批量标记 [done]，PR #{N}` 推 `{layer}-batch-v{N}` |
-| 批量 Step 9 移交 | `✅ develop 批量完成：{layer}层 {N} 个任务已 commit，PR #{N} 已推，等待 code-review。本会话到此结束。` 同样 🚫 会话硬边界，输出后立即停止 |
+| 批量 Step 9 移交 | `✅ develop 批量完成：{layer}层 {N} 个任务已 commit，PR #{N} 已推，等待 pr-review。本会话到此结束。` 同样 🚫 会话硬边界，输出后立即停止 |
 
 **批量 PR description 模板**（批量 Step 7）：
 

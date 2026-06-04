@@ -77,7 +77,7 @@
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
 | `develop`（多个） | 任务包（[可取] 状态） | `iterations/vN/queue/{task-id}.md` |
-| `code-review` | sprint.md（用于追踪 PR 状态） | `iterations/vN/sprint.md` |
+| `pr-review` | sprint.md（用于追踪 PR 状态） | `iterations/vN/sprint.md` |
 
 ---
 

@@ -162,7 +162,7 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
   - 与上期 standards 同项但建议不同 → 保留上期版本，把不同建议记入 `feedback.md` 走分流，不当场覆盖
   - 与公共模板 `templates/standards/` 某条冲突（区别于上期 standards 冲突）→ 以本期 TRD 决策为准，在 `decisions.md` 说明冲突和理由
 
-> **适用前提（设计甲）**：当前架构 / 开发高度重叠，draft-tech-design 执行人 ≈ 本期真实开发者，故在生成端注入本人 notes 即覆盖实际写代码的人。团队分化后是否扩展到 develop / code-review 加载端（设计乙），见 `../hact-method/_meta/plans/方法论待议.md`。
+> **适用前提（设计甲）**：当前架构 / 开发高度重叠，draft-tech-design 执行人 ≈ 本期真实开发者，故在生成端注入本人 notes 即覆盖实际写代码的人。团队分化后是否扩展到 develop / pr-review 加载端（设计乙），见 `../hact-method/_meta/plans/方法论待议.md`。
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
 - 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 上期 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目

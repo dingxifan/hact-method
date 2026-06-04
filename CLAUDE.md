@@ -56,7 +56,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 |------|------|
 | `draft-prd-vN` / `draft-tech-design` / `plan-sprint` | 写 PRD、TRD、规划 sprint，产物存入项目仓 |
 | Gate 签署（G1–G5） | 在项目仓的 `iterations/vN/gates.md` 写入 |
-| `develop` / `code-review` | 写代码、审查，在项目仓操作 |
+| `develop` / `pr-review` | 写代码、审查，在项目仓操作 |
 | `dispatch-new` / `generate-integration-tests` / `manual-test` / `deploy` | 全部在项目仓执行 |
 | `wrap-up-iteration` / `revise-doc` | 迭代收尾和文档修订，在项目仓执行 |
 

@@ -1,4 +1,4 @@
-# task: code-review
+# task: pr-review
 
 **discipline**: `review`
 **Gate**: —
@@ -11,8 +11,8 @@
 ## 前置条件
 
 - **触发**：一个或多个 develop PR 处于待审状态（develop task 状态为 [done]，PR 未合并）
-- **无 Gate 前置**：code-review 可随时创建，不等 sprint 全部完成
-- **最晚触发点**：所有 source=sprint 的 develop 任务完成后，在创建 `generate-integration-tests` 之前，确保所有 PR 已经过 code-review
+- **无 Gate 前置**：pr-review 可随时创建，不等 sprint 全部完成
+- **最晚触发点**：所有 source=sprint 的 develop 任务完成后，在创建 `generate-integration-tests` 之前，确保所有 PR 已经过 pr-review
 
 ---
 
@@ -52,7 +52,7 @@
 - [ ] sprint.md 已更新各 PR 的 CR 结论
 - [ ] 通过的 PR 已通过平台 merge API 合并，对应 develop task 状态已推 [merged]
 
-> **注意**：code-review task 的 [done] = 结论写入 PR。PR 合并是 develop task 进入 [merged] 的触发点，两者独立。
+> **注意**：pr-review task 的 [done] = 结论写入 PR。PR 合并是 develop task 进入 [merged] 的触发点，两者独立。
 
 ---
 
@@ -73,4 +73,4 @@
 
 ---
 
-> **工作内容 / 边界场景 / 异常处理见 `specs-execution/code-review.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。
+> **工作内容 / 边界场景 / 异常处理见 `specs-execution/pr-review.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。

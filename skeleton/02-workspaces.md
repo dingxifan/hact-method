@@ -46,7 +46,7 @@
 - `revise-doc`（修订归项目根）
 - `plan-sprint`（含 G3 签字）
 - `develop`（写代码 + 推 PR）
-- `code-review`（PR 复核）
+- `pr-review`（PR 复核）
 - `generate-integration-tests`（联调脚本）
 - `manual-test`（含 G4 签字）
 - `deploy`（部署归项目根）

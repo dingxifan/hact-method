@@ -72,7 +72,7 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 21. **个人积累跟人、私有（pull 上提）**：新增"个人积累仓" `hact-notes-{姓名}`（每人一个私有仓，建在团队 Gitee 组织下、由 init-project 自动创建、只加本人为 push 协作者——本人 push、别人无读权限、管理者作为 org admin 只读收割）。开发者随手记 `[规范]`/`[checklist]`/`[方法论]`/`[心得]` 四类标签条目。可上提的三类由管理者跑 `harvest-notes`(management) 只读收割、去重择优、上提到公共层（templates/standards、templates/checklists、方法论待议）；`[心得]` 永不上提。收割用游标避免重复、不回写成员仓。开发者全程不需要、也无权 push hact-method——积累从"推送"改为"拉取"，与 dispatch 拉取池哲学一致。这是兼得"保持 hact-method 干净（锁开发者写权限）"与"人人能积累"两个目标的方案。
    > 落地说明（2026-05-31）：上文"团队 Gitee 组织 / org admin"在实际落地中为 **Gitee 企业版（enterprise）**，命名空间 `dingxifan`（"苏州立刻电子商务有限公司"），非普通组织。建仓接口用 `/enterprises/{notes-org}/repos`，管理者为企业 admin 天然只读。配置见 `_meta/hact-config.md`，操作见 `guide/05-个人积累仓管理.md`。
 22. **个人 notes 写入是权限模型的有限例外**：notes 写入不走"拉取准入 = task.discipline ∈ user.disciplines"——它是个人资产，权限绑 user 身份（本人写、管理者只读）。一旦经 harvest-notes 上提进公共层，后续修改回归常规 `management` 模型。harvest-notes 本身是固定 task（机械化收割），与决策#20"方法论调整是发散性工作、无固定 task"边界分清：harvest 只搬运/提炼，方法论的实质改动仍在发散性会话里做
-23. **双源规范（设计甲）**：`draft-tech-design` 生成迭代 standards 时，除公共 `templates/standards` 外，再并入执行人本人 hact-notes 的 `[规范]`（对照公共模板/上期 standards 去重），让本人尚未上提的规范当期即生效。理由：当前架构与开发高度重叠，生成端执行人≈真实开发者。团队分化后是否扩展到 develop/code-review 加载端（设计乙）+ checklist 对称（O1），留方法论待议
+23. **双源规范（设计甲）**：`draft-tech-design` 生成迭代 standards 时，除公共 `templates/standards` 外，再并入执行人本人 hact-notes 的 `[规范]`（对照公共模板/上期 standards 去重），让本人尚未上提的规范当期即生效。理由：当前架构与开发高度重叠，生成端执行人≈真实开发者。团队分化后是否扩展到 develop/pr-review 加载端（设计乙）+ checklist 对称（O1），留方法论待议
 
 ## 工具依赖
 

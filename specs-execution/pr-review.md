@@ -1,4 +1,4 @@
-# exec: code-review
+# exec: pr-review
 
 > CC 加载本文时，当前任务是批量审查若干 develop PR：对照 standards 和 checklist 给出反馈，决定通过或打回。
 > 每个 PR 独立决定——有打回不阻塞其他可通过的 PR。
@@ -100,7 +100,7 @@
 将所有发现整理为两级，写入 PR comment：
 
 ```markdown
-## code-review · {task-id}
+## pr-review · {task-id}
 
 ### [阻断]（必须修复才能合并）
 - {问题描述}（`{文件路径}` L{行号}）
@@ -196,7 +196,7 @@ git branch -d fix/cr-{task-id}-{desc}
 - 无发现 → 跳过此步
 
 ```
-✅ code-review 完成：{N} 个 PR，通过 {X} 个，打回 {Y} 个。[有 feedback / 无 feedback]
+✅ pr-review 完成：{N} 个 PR，通过 {X} 个，打回 {Y} 个。[有 feedback / 无 feedback]
 → 下一步：等待打回 PR 修复后重新提交 / 进入 generate-integration-tests（若全部通过）
 ```
 

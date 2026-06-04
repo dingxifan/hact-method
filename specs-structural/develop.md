@@ -72,7 +72,7 @@ api-contract:
 - [ ] 所有 `acceptance-criteria` 均已满足
 - [ ] layer 对应 checklist 自检通过（`templates/checklists/backend-checklist.md` 或 `frontend-checklist.md`）
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
-- [ ] `code-review` 通过（PR 状态 [merged]）
+- [ ] `pr-review` 通过（PR 状态 [merged]）
 
 ---
 
@@ -92,7 +92,7 @@ api-contract:
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `code-review` | PR（代码改动 + description） | 代码仓库 PR |
+| `pr-review` | PR（代码改动 + description） | 代码仓库 PR |
 
 ---
 

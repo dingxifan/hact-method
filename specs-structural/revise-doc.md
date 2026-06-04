@@ -12,7 +12,7 @@
 
 - **触发场景**（任一即可创建本 task）：
   - `develop` 执行中发现实现与 TRD / standards 有实质偏离，无法自行决策
-  - `code-review` 发现问题根因在 TRD / standards 层，不是实现问题
+  - `pr-review` 发现问题根因在 TRD / standards 层，不是实现问题
   - `manual-test` 发现验收失败根因在 PRD 定义有歧义
   - 用户主动要求修订某文档
 - **原则**：已签 Gate 不撤销，只记录变更；修订不影响 Gate 签字状态
@@ -57,7 +57,7 @@
 | 上游 task | 触发场景 | 格式 |
 |-----------|---------|------|
 | `develop` | 发现 TRD / standards 有歧义，偏离记录触发修订 | backlog `[偏离]` 条目 |
-| `code-review` | 发现问题根因在文档层 | PR comment 中的 `[阻断]` 反馈 |
+| `pr-review` | 发现问题根因在文档层 | PR comment 中的 `[阻断]` 反馈 |
 | `manual-test` | 验收失败根因在 PRD 定义 | 验收报告条目 |
 | 用户 | 主动要求修订 | 对话 |
 | `wrap-up-iteration` | 偏离对账时发现 backlog `[偏离]` 需反向更新文档 | backlog.md `[偏离]` 条目 |

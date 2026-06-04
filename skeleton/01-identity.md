@@ -35,7 +35,7 @@
 ```
 上午：拉 draft-prd-vN 任务  → CC 加载 PRD 起草规范
 下午：拉 develop 任务        → CC 加载 dev-{layer} 开发规范
-晚上：拉 code-review 任务    → CC 加载 code review 规范
+晚上：拉 pr-review 任务    → CC 加载 code review 规范
 ```
 
 三次会话都是同一个 user，加载的规范完全不同——驱动它的是"手上是哪类任务"，不是"扮演什么角色"。
