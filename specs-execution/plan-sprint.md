@@ -26,6 +26,7 @@
 - `iterations/vN/standards-backend.md`
 - `reusables.md`
 - `decisions.md`
+- `iterations/vN/ux-flows.md`（若存在，用于写前端任务包的 `reference` 字段）
 
 **选项列表**（G2 已满足，确认要做什么）：
 
@@ -123,6 +124,8 @@
 骨架确认后，按 `specs-structural/develop.md §字段规范` 为每个任务写完整 16 字段任务包。
 
 **字段完整性自检**（每包写完前对照 `specs-structural/develop.md §字段规范` 检查 16 字段，无空字段方可写入 queue；`layers=[backend]` 且有前端消费时，还须检查 `api-contract` 已填写）。
+
+**前端任务 reference 字段补充**：对 `layers` 含 `frontend` 的任务包，若 `ux-flows.md` 存在，`reference` 字段须补入 `ux-flows.md` 对应功能段的行号范围（格式与其他 reference 条目一致），使 develop 执行时可精确定位交互路径，不遗漏替代路径实现。
 
 **api-contract 推导**（对每个 `layers=[backend]` 且被前端任务依赖的任务）：
 - **来源**：同时参考 `trd.md`（数据模型）+ `standards-frontend.md`（组件字段需求）+ 已写的前端任务包草稿（表格列 / 表单字段）

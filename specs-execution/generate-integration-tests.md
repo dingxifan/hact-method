@@ -56,6 +56,7 @@
 - `iterations/vN/prd.md`（acceptance criteria 段落）
 - `iterations/vN/trd.md`（接口定义段落 + 测试环境约定段落）
 - `iterations/vN/standards-shared.md`（测试环境约定段落）
+- `iterations/vN/ux-flows.md`（若存在，场景列表 + 流程图）
 
 ---
 
@@ -104,6 +105,7 @@ G3 签署时已确认环境可达，此处快速复核：
 - 边界场景也纳入，不因数量多而删减
 
 **前端交互场景**（`pinchtab`，上限 15 条）：
+- 若 `ux-flows.md` 存在，优先从其场景列表逐条提取（主路径 + 替代路径全覆盖），再用 PRD AC 补充 `ux-flows.md` 未覆盖的条目；若不存在，直接从 PRD AC 提取
 - 超出时优先保留主流程 + 关键用户操作路径，边界场景降级为 `[不阻断]` 记入 backlog
 
 ```markdown

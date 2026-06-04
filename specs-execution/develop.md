@@ -70,6 +70,7 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 - 读拾取的所有任务包全文（`iterations/vN/queue/{task-id}.md`）
 - 只读 `relevant-standards` 字段指向的具体章节，不读整份 standards 文件
 - 只读 `reference` 字段列出的文件行号范围，不读全文
+- frontend 任务：若 `reference` 字段已含 `ux-flows.md` 相关段落则直接读；若未含但 `ux-flows.md` 存在，则按任务包 title 匹配功能名补读对应段落
 
 ---
 
@@ -391,7 +392,7 @@ context-state:
 
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
-| 额外加载 | `design.md`（涉及视觉时）| 无 |
+| 额外加载 | `design.md`（涉及视觉时）；`ux-flows.md` 对应功能段（若存在）| 无 |
 | Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md` |
 | 视觉决策暂停 | 有（🚫） | 无 |
 | Subagent 拆分粒度 | 按组件拆（每个组件一个 subagent） | 按模块拆（controller / service 分开）|
