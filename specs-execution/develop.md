@@ -67,7 +67,7 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 ---
 
 **精确加载上下文**（不全量加载）：
-- 读拾取的所有任务包全文（`iterations/vN/queue/{task-id}.md`）
+- 读拾取的所有任务包全文（`source=sprint/integration/manual-test` → `iterations/vN/queue/{task-id}.md`；`source=bug/optimization` → `b-queue/{task-id}.md`）
 - 只读 `relevant-standards` 字段指向的具体章节，不读整份 standards 文件
 - 只读 `reference` 字段列出的文件行号范围，不读全文
 - frontend 任务：若 `reference` 字段已含 `ux-flows.md` 相关段落则直接读；若未含但 `ux-flows.md` 存在，则按任务包 title 匹配功能名补读对应段落
@@ -256,7 +256,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 ### Step 8：更新状态
 
-- 将 `iterations/vN/queue/{task-id}.md` 状态改为 `[done]`
+- 将任务包状态改为 `[done]`（A 类：`iterations/vN/queue/{task-id}.md`；B 类：`b-queue/{task-id}.md`）
 - 在 `iterations/vN/sprint.md` 对应行：状态列改为 `[done]`，**PR 列填入 `#N`**（N 为 Step 7 创建的 PR 编号）
 - 在项目根 `status.yml` 将该 task 的 `status` 改为 `done`、`pr` 填入 `{N}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）
 - 执行 commit + push，将状态更新随 feature 分支推送（合并到已开的 PR）：

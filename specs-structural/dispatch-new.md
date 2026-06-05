@@ -12,7 +12,7 @@
 
 - **触发**：收到 bug 报告或优化需求（来自用户 / 测试 / 外部反馈）
 - **无 Gate 前置**：B 类任务随时可进入，不依赖当前迭代状态
-- **B 类判定**：需求不涉及新用户场景 / 接口 schema 变更 / 跨多模块重构 → 属于 B 类，走本 task；否则升级 A 类（见边界场景）
+- **B 类判定**：以下三条任意命中即升级 A 类——①修改或删除已有接口/字段（breaking change）；②跨模块核心逻辑；③需要产品决策。纯加法 schema 变更（新增可选字段/参数）按业务逻辑复杂度 + 风险可控性二次判定，详见 `specs-execution/dispatch-new.md §Step 1`
 
 ---
 
@@ -32,7 +32,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| develop 任务包 | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
+| develop 任务包 | `b-queue/{task-id}.md` | 见 develop.md §字段规范 |
 | b-tasks.md 条目 | `b-tasks.md` | 见下方格式 |
 
 **b-tasks.md 行格式：**
@@ -66,7 +66,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `develop`（source=bug / optimization） | 任务包（[可取] 状态） | `iterations/vN/queue/{task-id}.md` |
+| `develop`（source=bug / optimization） | 任务包（[可取] 状态） | `b-queue/{task-id}.md` |
 
 ---
 

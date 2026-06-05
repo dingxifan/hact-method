@@ -42,16 +42,18 @@
 
 ```bash
 mkdir -p "E:/group-code/{name}/iterations/v1/queue/done"
+mkdir -p "E:/group-code/{name}/b-queue"
 mkdir -p "E:/group-code/{name}/_meta/input"
 mkdir -p "E:/group-code/{name}/_meta/sessions"
 ```
 
-> `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）；`_meta/sessions/`：各任务跨会话接续文件（`{task-type}-progress.md`）。
+> `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）；`_meta/sessions/`：各任务跨会话接续文件（`{task-type}-progress.md`）；`b-queue/`：B 类任务包（项目级，跨迭代，不依赖活跃迭代）。
 
-Git 不跟踪空目录，必须在 `done/` 里写入占位文件，否则首次 `git add .` 会把整个 `iterations/` 丢弃：
+Git 不跟踪空目录，必须写入占位文件：
 
 ```bash
 echo "" > "E:/group-code/{name}/iterations/v1/queue/done/.gitkeep"
+echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 ```
 
 ---

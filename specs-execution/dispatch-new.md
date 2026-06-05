@@ -28,22 +28,30 @@
 
 ## Step 1：B 类判定
 
-满足以下**任意一条**即升级 A 类，终止本 task：
+**硬升 A 类（无条件，满足任意一条即升级）**：
 
 | 条件 | 说明 |
 |------|------|
-| 需要新增或修改接口路径 / 参数 | 涉及 TRD 接口 schema 变更 |
-| 需要新增或修改数据库表结构或字段 | 涉及数据结构变更 |
 | 影响两个及以上模块的核心逻辑 | 跨模块重构 |
 | 需要产品决策（新用户场景 / 新功能边界） | 超出已有 PRD 范围 |
+| 修改或删除已有接口路径 / 参数 / 字段 | breaking change，可能影响已有客户端或数据 |
+
+**涉及接口或数据结构纯加法时，逐条判定**（新增可选字段 / 参数，不修改 / 删除已有项）：
+
+| 判定项 | 升 A 类条件 | 可走 B 类条件 |
+|--------|------------|--------------|
+| 业务逻辑复杂度 | 涉及条件分支、约束变更、或影响既有行为 | 改动影响范围在任务包内可完整描述，不依赖其他模块的隐含假设 |
+| 风险可控性 | 无法说清最坏情况 / 如何发现 / 如何回滚 | 能在 `known-risks` 里完整写出 |
+
+三条判定项**全部满足 B 类条件**才可走 B 类；任意一条无法满足 → 升 A 类。
 
 **升级 A 类时输出**：
 ```
-此需求涉及 {接口变更 / 数据结构修改 / 跨模块核心逻辑 / 产品决策}，需走 A 类流程。
+此需求涉及 {跨模块核心逻辑 / 产品决策 / breaking change / 业务逻辑复杂 / 风险不可控}，需走 A 类流程。
 本 dispatch-new task 终止，请在项目仓开 draft-prd-vN 会话。
 ```
 
-**全部不满足** → 继续 Step 2。
+**全部不满足升 A 条件** → 继续 Step 2。
 
 ---
 
@@ -81,7 +89,7 @@
 
 ## Step 4：写任务包
 
-按 `specs-structural/develop.md §字段规范` 写完整 16 字段任务包，写入 `iterations/vN/queue/{task-id}.md`（vN = 当前活跃迭代），状态 `[可取]`。
+按 `specs-structural/develop.md §字段规范` 写完整 16 字段任务包，写入 `b-queue/{task-id}.md`，状态 `[可取]`。
 
 关键字段确认（写完对照检查）：
 
@@ -90,8 +98,9 @@
 | `task-id` | `{项目缩写}-b-{三位序号}`，如 `hact-b-001` |
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
 | `urgency` | Step 3 判断结果 |
-| `acceptance-criteria` | bug → 现象消失 + 复现步骤无法复现；optimization → 用户提供的可观测验收标准 |
-| `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序 |
+| `schema-change` | `true`（本任务含接口或数据结构纯加法变更）/ `false`（默认） |
+| `acceptance-criteria` | bug → 现象消失 + 复现步骤无法复现；optimization → 用户提供的可观测验收标准；`schema-change=true` 时额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
+| `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；`schema-change=true` 时必须写明：最坏情况 / 如何发现 / 如何回滚 |
 
 **16 字段无空字段方可写入 queue**。
 
@@ -115,7 +124,7 @@
 
 执行 commit + push，任务包对所有协作者可见：
 ```bash
-git add iterations/vN/queue/{task-id}.md b-tasks.md status.yml
+git add b-queue/{task-id}.md b-tasks.md status.yml
 git commit -m "chore(dispatch): 派发 {task-id}（{target-source}/{urgency}）"
 git push origin master
 ```

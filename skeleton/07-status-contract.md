@@ -25,7 +25,8 @@ hact-app 原先靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.
 - **B 类是项目级的**：B 类任务（bug / optimization）跨迭代、不归任何一期 Gate 流，其总账 `b-tasks.md` 本就在项目根。两个迭代之间（vN 已签 G5、vN+1 未起）没有「活跃迭代」，迭代级文件无处安放 B 类——项目级文件永远在。
 - **创建只一次**：随 `init-project` 建一次，此后永远存在，不必每期重建。
 - **多迭代并行天然支持**：`iterations` 按版本分块，`tasks[]` 带 `iteration` 字段区分归属。
-- queue 任务包仍按 `iterations/vN/queue/` 物理隔离——只是**状态投影集中到一个文件**，投影 ≠ 源文件。
+- A 类任务包按 `iterations/vN/queue/` 物理隔离，B 类任务包在项目根 `b-queue/`——只是**状态投影集中到一个文件**，投影 ≠ 源文件。
+- **任务包路径派生规则**：`iteration: null`（B 类）→ `b-queue/{task-id}.md`；`iteration: vN`（A 类）→ `iterations/vN/queue/{task-id}.md`。
 
 ---
 
@@ -135,7 +136,7 @@ CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API
 ## 五、写入协议：做一个填一个
 
 **总规则**：
-> 凡是往 `iterations/vN/queue/` 写一个任务包的地方，就同步往 `tasks[]` 追加一条（带 `source` / `iteration`）；状态流转（认领 / done / merged）按 `task-id` 改，对所有 `source` 一视同仁。
+> 凡是写一个任务包的地方（A 类写 `iterations/vN/queue/`，B 类写 `b-queue/`），就同步往 `tasks[]` 追加一条（带 `source` / `iteration`）；状态流转（认领 / done / merged）按 `task-id` 改，对所有 `source` 一视同仁。
 
 | 事件 | 归属 spec | 更新内容 |
 |---|---|---|
