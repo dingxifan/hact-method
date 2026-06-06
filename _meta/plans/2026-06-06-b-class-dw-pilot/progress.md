@@ -63,3 +63,46 @@ D2-D8 全部过完，结论见 findings.md「设计决策」表。
 ### 下次会话起点
 
 阶段 4：接口打通。在 hact-app 创建一个测试用 B 类任务包，核对 b-queue 格式和 b-tasks.md 格式，按需微调脚本中的 agent prompt；然后进入阶段 5 试跑验证。
+
+## 会话 4（2026-06-06）：脚本全面审查 + 修复
+
+### 外部 review 发现的问题与修复
+
+收到一轮完整 review，按严重程度处理：
+
+**与 exec spec 对齐（必须修，7项）** → 全部修复（commit cf34ef8）：
+- TASK_SCHEMA 扩展至 16 字段
+- schema-change=true 在 Phase 1 立即升级
+- Phase 1 补 b-tasks.md 认领状态更新
+- Fix Loop 前补 reusables.md 复用检查（Explore agent）
+- 机械验证后补偏离核查（extra_files / unimplemented_acs）
+- agent-fix 传入 do-not / escalate-if，违反时回滚并升级
+- agent-fix 传入完整上下文（context / standards / reference / known_risks / api_contract）
+
+**质量改进（应该补，2项）** → 修复（同次提交）：
+- PR description AC 验证段补具体验证方式；unimplemented_acs 标 [ ]
+- 凭据检查补 git diff --cached
+
+**可靠性 review（外部深度分析）**：
+- 平台约束澄清：Workflow JS 脚本无 exec()，agent 是唯一出口
+- 问题 2（分支/push 一致性）→ 修复：Phase 1 + escalateTask 补 push，提取 rollbackCode() helper（commit 0ea9cb7）
+- 问题 3（假勾选）→ 修复：completed=false 触发升级，AC 按 unimplemented_acs 区分 [x]/[ ]
+- 问题 4（最小测试）→ 修复：FIX_SCHEMA 加 test_files，agent-fix 写最小单元测试
+- 问题 5（脏工作树）→ 修复：Phase 4 commit 前 git checkout -- extra_files
+- 零碎（escalate_reason 判断 / 文件名引号 / 凭据漏扫）→ 全部修复
+
+**技术一·闭环验证** → 实现（commit 62e0f8e）：
+- rollbackCode()：执行后返回 git status --porcelain 原文，JS 判断是否干净
+- verifyPush() helper：agent 只跑读命令返回 sha 原文，JS 做 === 比较
+- Phase 1 / escalateTask / Phase 4 / Phase 5 所有 push 均加验证
+- 不信 agent 自评，由 JS 通过可观测状态独立判断
+
+**技术二（独立执行/验证 agent）、技术三（幂等 + 进度检查点）**：
+- 方向已明确，留待后续会话实现
+
+### 下次会话起点
+
+视用户安排：
+- 技术二 + 技术三（脚本可靠性继续提升）
+- 阶段 4 接口打通（hact-app 真实任务包格式核对）
+- 阶段 5 试跑验证

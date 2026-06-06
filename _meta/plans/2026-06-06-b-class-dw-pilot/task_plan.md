@@ -20,7 +20,7 @@
 | 1 | 设计讨论 | ✅ 完成 | D1-D8 全部定稿，见 findings.md |
 | 2 | 方法论落地 | ✅ 完成 | workflows/ 目录 + README.md + templates/CLAUDE.md 已更新 |
 | 3 | 脚本模板编写 | ✅ 完成 | workflows/b-class-develop.js 已写入，5 阶段 + schema 定义 |
-| 4 | 接口打通 | ⏸️ 待确认 | b-queue 任务包格式 + b-tasks.md 行格式需在实际项目中核对 |
+| 4 | 接口打通 | ⏸️ 待安排 | b-queue 任务包格式 + b-tasks.md 行格式需在实际项目中核对 |
 | 5 | 试跑验证 | ⏸️ 未开始 | 在 hact-app 项目中用一个真实 B 类 bug 跑通 |
 
 ## 待决设计问题（阶段 1 需要逐一过）
