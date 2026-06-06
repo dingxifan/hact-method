@@ -10,9 +10,10 @@ export const meta = {
   ],
 }
 
-// args = { taskId: string, projectPath: string }
-// 示例：{ taskId: 'happ-b-001', projectPath: 'E:/group-code/hact-app' }
-const { taskId, projectPath } = args
+// args = { taskId: string }
+// 脚本从项目仓 CC 会话中触发，CWD 即为项目根目录，无需传 projectPath。
+// 示例：{ taskId: 'happ-b-001' }
+const { taskId } = args
 
 // ── Schemas ───────────────────────────────────────────────────────
 
@@ -69,29 +70,26 @@ const PR_SCHEMA = {
 phase('认领任务')
 
 const taskInfo = await agent(
-  `你是一个任务认领 agent。
-
-**目标**：读取 B 类任务包，解析内容，更新认领状态。
+  `你是一个任务认领 agent，当前工作目录是项目根目录。
 
 **步骤（按序执行，不可跳过）**：
 
-1. 读取文件 ${projectPath}/b-queue/${taskId}.md 的完整内容
+1. 读取 b-queue/${taskId}.md 的完整内容
 
-2. 从内容中解析：
+2. 解析：
    - title：任务标题
    - acceptance_criteria：验收标准数组（每条一个元素）
    - files：需改动的文件路径数组（相对于项目根目录）
    - urgency：紧急程度（hotfix / null）
    - known_risks：已知风险描述（可为空字符串）
 
-3. 将 ${projectPath}/b-queue/${taskId}.md 中的状态标记（格式为 \`status: [可取]\` 或类似）改为 \`status: [taken-by: dw-bot]\`
+3. 将 b-queue/${taskId}.md 中的状态标记改为 \`status: [taken-by: dw-bot]\`
 
-4. 读取 ${projectPath}/status.yml，找到 id 为 ${taskId} 的 task 条目，将其：
+4. 读取 status.yml，找到 id 为 ${taskId} 的 task 条目：
    - status 改为 \`taken-by\`
    - assigned_to 改为 \`dw-bot\`
 
-5. 执行 git 操作（在 ${projectPath} 目录下）：
-   git add b-queue/${taskId}.md status.yml
+5. git add b-queue/${taskId}.md status.yml
    git commit -m "chore(b-queue): 认领 ${taskId} [taken-by: dw-bot]"
 
 **返回**：解析出的任务信息`,
@@ -112,37 +110,34 @@ for (let round = 1; round <= 3; round++) {
 
   // agent-fix：只修代码，不写状态文件
   await agent(
-    `你是一个代码修复 agent。只修改代码文件，不写任何状态文件（b-queue/、status.yml、b-tasks.md）。
+    `你是一个代码修复 agent，当前工作目录是项目根目录。只修改代码文件，不写任何状态文件（b-queue/、status.yml、b-tasks.md）。
 
 **任务信息**：
 - 标题：${taskInfo.title}
 - 验收标准（AC）：
 ${taskInfo.acceptance_criteria.map((ac, i) => `  ${i + 1}. ${ac}`).join('\n')}
 - 需改动的文件（**只改这些文件，不新增、不改其他文件**）：
-${taskInfo.files.map(f => `  - ${projectPath}/${f}`).join('\n')}
+${taskInfo.files.map(f => `  - ${f}`).join('\n')}
 ${round > 1 ? `
 **上一轮机械验证失败，错误信息**：
 ${lastErrors}
 
 根据上述错误，针对性修复。不要扩大改动范围。` : ''}
 
-**实现修复**。完成后不需要返回任何结果。`,
+实现修复。完成后不需要返回任何结果。`,
     { label: `Fix 第${round}轮`, phase: 'Fix-Test Loop' }
   )
 
-  // 机械验证 agent：跑构建/类型/lint/测试
+  // 机械验证 agent
   const verifyResult = await agent(
-    `你是一个机械验证 agent。在项目目录 ${projectPath} 依次运行以下命令，逐条记录结果：
+    `你是一个机械验证 agent，当前工作目录是项目根目录。依次运行以下命令，逐条记录结果：
 
 1. npm run build（检查 package.json 是否有该 script，有则运行）
 2. npm run type-check（如无则尝试 npx tsc --noEmit）
 3. npm run lint（检查 package.json 是否有该 script，有则运行）
 4. npm test（如有，只跑单元测试）
 
-**规则**：
-- 项目无对应命令时跳过，不算失败
-- 如果是 monorepo，在有 package.json 的子目录分别运行
-- 遇到报错立即记录，不中断后续命令
+规则：项目无对应命令时跳过，不算失败；遇到报错立即记录，不中断后续命令。
 
 **返回**：
 - passed：所有存在的命令是否全部通过（true / false）
@@ -161,13 +156,11 @@ ${lastErrors}
 }
 
 if (!fixPassed) {
-  // 三轮机械验证均未过 → 升级给人，任务回 [可取]
   await agent(
-    `将 ${projectPath}/b-queue/${taskId}.md 中的状态改回 \`status: [可取]\`。
-在 ${projectPath}/status.yml 中找到 id=${taskId} 的 task，将 status 改回 \`可取\`，assigned_to 改为 null。
-在 ${projectPath} 目录执行：
-  git add b-queue/${taskId}.md status.yml
-  git commit -m "chore(b-queue): ${taskId} 三轮机械验证失败，回退 [可取]"`,
+    `将 b-queue/${taskId}.md 中的状态改回 \`status: [可取]\`。
+在 status.yml 中找到 id=${taskId} 的 task，将 status 改回 \`可取\`，assigned_to 改为 null。
+git add b-queue/${taskId}.md status.yml
+git commit -m "chore(b-queue): ${taskId} 三轮机械验证失败，回退 [可取]"`,
     { label: '升级·三轮机械验证失败', phase: 'Fix-Test Loop' }
   )
   log('⚠️ 升级给人工：三轮机械验证均未通过')
@@ -184,8 +177,8 @@ if (!fixPassed) {
 phase('对抗审查')
 
 const diffResult = await agent(
-  `在 ${projectPath} 目录运行 git diff（获取未暂存改动）和 git diff --cached（获取已暂存改动），合并返回完整 diff 内容。
-如果两者都为空则运行 git diff HEAD~1 HEAD 获取最近一次 commit 的 diff。
+  `运行 git diff 和 git diff --cached，合并返回完整 diff 内容。
+如果两者都为空则运行 git diff HEAD~1 HEAD。
 返回：diff 的完整文本内容。`,
   { label: '获取 diff', phase: '对抗审查', schema: DIFF_SCHEMA }
 )
@@ -227,21 +220,19 @@ const reviewResult = await agent(
 if (reviewResult.has_blocker) {
   log(`对抗审查发现 ${reviewResult.blockers.length} 个阻断，进行修复...`)
 
-  // 修复阻断（只改代码，不改状态文件）
   await agent(
-    `你是一个代码修复 agent。只修改代码文件，不写任何状态文件。
+    `你是一个代码修复 agent，当前工作目录是项目根目录。只修改代码文件，不写任何状态文件。
 
 需要修复以下对抗审查阻断（严格只修复这些问题，不扩大改动范围）：
 ${reviewResult.blockers.map((b, i) => `${i + 1}. ${b}`).join('\n')}
 
 涉及文件：
-${taskInfo.files.map(f => `- ${projectPath}/${f}`).join('\n')}`,
+${taskInfo.files.map(f => `- ${f}`).join('\n')}`,
     { label: '修复阻断', phase: '对抗审查' }
   )
 
-  // 获取新 diff，进行二次审查
   const diffResult2 = await agent(
-    `在 ${projectPath} 目录运行 git diff 和 git diff --cached，合并返回完整 diff 内容。`,
+    `运行 git diff 和 git diff --cached，合并返回完整 diff 内容。`,
     { label: '获取 diff-2', phase: '对抗审查', schema: DIFF_SCHEMA }
   )
 
@@ -251,13 +242,11 @@ ${taskInfo.files.map(f => `- ${projectPath}/${f}`).join('\n')}`,
   )
 
   if (reviewResult2.has_blocker) {
-    // 二次阻断 → 升级给人
     await agent(
-      `将 ${projectPath}/b-queue/${taskId}.md 状态改回 \`status: [可取]\`。
-在 ${projectPath}/status.yml 找到 id=${taskId} 的 task，status 改回 \`可取\`，assigned_to 改为 null。
-在 ${projectPath} 执行：
-  git add b-queue/${taskId}.md status.yml
-  git commit -m "chore(b-queue): ${taskId} 二次对抗审查阻断，回退 [可取]"`,
+      `将 b-queue/${taskId}.md 状态改回 \`status: [可取]\`。
+在 status.yml 找到 id=${taskId} 的 task，status 改回 \`可取\`，assigned_to 改为 null。
+git add b-queue/${taskId}.md status.yml
+git commit -m "chore(b-queue): ${taskId} 二次对抗审查阻断，回退 [可取]"`,
       { label: '升级·二次审查阻断', phase: '对抗审查' }
     )
     log('⚠️ 升级给人工：二次对抗审查仍有阻断')
@@ -269,19 +258,17 @@ ${taskInfo.files.map(f => `- ${projectPath}/${f}`).join('\n')}`,
     }
   }
 
-  // 二次审查通过，合并两轮建议
   const allSuggestions = [...reviewResult.suggestions, ...reviewResult2.suggestions]
   if (allSuggestions.length > 0) {
     await agent(
-      `在 ${projectPath}/backlog.md 末尾追加以下内容（使用今天的日期，格式 YYYY-MM-DD）：
+      `在 backlog.md 末尾追加以下内容（每条一行，日期用今天的 YYYY-MM-DD）：
 ${allSuggestions.map(s => `- [ ] {今天日期} | [CR-建议] ${s} | 来源：${taskId}`).join('\n')}`,
       { label: '记录建议到 backlog', phase: '对抗审查' }
     )
   }
 } else if (reviewResult.suggestions.length > 0) {
-  // 只有建议，无阻断
   await agent(
-    `在 ${projectPath}/backlog.md 末尾追加以下内容（使用今天的日期，格式 YYYY-MM-DD）：
+    `在 backlog.md 末尾追加以下内容（每条一行，日期用今天的 YYYY-MM-DD）：
 ${reviewResult.suggestions.map(s => `- [ ] {今天日期} | [CR-建议] ${s} | 来源：${taskId}`).join('\n')}`,
     { label: '记录建议到 backlog', phase: '对抗审查' }
   )
@@ -298,18 +285,16 @@ const acChecklist = taskInfo.acceptance_criteria
   .join('\n     ')
 
 const prResult = await agent(
-  `在项目 ${projectPath} 执行以下操作（按序，不可跳过）：
+  `当前工作目录是项目根目录。执行以下操作（按序，不可跳过）：
 
-1. 确认当前在分支 ${taskId}。如不在，执行：
-   git -C ${projectPath} checkout -b ${taskId}
-   如分支已存在：git -C ${projectPath} checkout ${taskId}
+1. 确认当前在分支 ${taskId}。如不在则：
+   git checkout -b ${taskId}（新建）或 git checkout ${taskId}（已存在）
 
-2. 暂存并提交改动：
-   git -C ${projectPath} add ${taskInfo.files.join(' ')}
-   git -C ${projectPath} commit -m "fix(${taskId}): ${taskInfo.title}"
+2. git add ${taskInfo.files.join(' ')}
+   git commit -m "fix(${taskId}): ${taskInfo.title}"
 
-3. 推送分支（**注意：触发本 workflow 即为对此 push 的授权**）：
-   git -C ${projectPath} push origin ${taskId}
+3. git push origin ${taskId}
+   （触发本 workflow 即为对此 push 的授权）
 
 4. 创建 PR（使用 /gitee-ops 或 gh pr create，根据项目远端类型选择）：
    标题：${taskId}：${taskInfo.title}
@@ -330,7 +315,7 @@ const prResult = await agent(
      ### 遗留问题
      见 backlog.md（如有 CR 建议已自动记入）
 
-**返回**：{ pr_number: N, pr_url: '创建的 PR 链接' }`,
+**返回**：{ pr_number: N, pr_url: '...' }`,
   { label: 'Commit + PR', phase: 'Commit + PR', schema: PR_SCHEMA }
 )
 
@@ -341,21 +326,20 @@ log(`PR #${prResult.pr_number} 已创建`)
 phase('状态更新')
 
 await agent(
-  `在 ${projectPath} 执行以下状态更新（按序）：
+  `当前工作目录是项目根目录。执行以下状态更新（按序）：
 
-1. 将 b-queue/${taskId}.md 中的状态标记改为 \`status: [done]\`
+1. 将 b-queue/${taskId}.md 中的状态改为 \`status: [done]\`
 
-2. 在 status.yml 中找到 id=${taskId} 的 task 条目：
+2. 在 status.yml 中找到 id=${taskId} 的 task：
    - status 改为 \`done\`
    - pr 改为 ${prResult.pr_number}
 
 3. 在 b-tasks.md 中找到 task-id 为 ${taskId} 的行，在行末追加 \`PR#${prResult.pr_number} 待审\`
    （如 b-tasks.md 不存在，创建并写入一行：\`${taskId} | ${taskInfo.title} | PR#${prResult.pr_number} 待审\`）
 
-4. 提交并推送状态更新：
-   git -C ${projectPath} add b-queue/${taskId}.md status.yml b-tasks.md
-   git -C ${projectPath} commit -m "chore(b-queue): ${taskId} 标记 [done]，PR #${prResult.pr_number}"
-   git -C ${projectPath} push origin ${taskId}`,
+4. git add b-queue/${taskId}.md status.yml b-tasks.md
+   git commit -m "chore(b-queue): ${taskId} 标记 [done]，PR #${prResult.pr_number}"
+   git push origin ${taskId}`,
   { label: '状态更新', phase: '状态更新' }
 )
 

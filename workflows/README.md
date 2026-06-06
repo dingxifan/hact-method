@@ -25,16 +25,15 @@ DW 是 Claude Code 的多 agent 编排能力：一个 JS 脚本用 `agent()` / `
 
 ```
 用 workflow 运行 B 类任务修复，脚本 ../hact-method/workflows/b-class-develop.js，
-任务 ID 是 {task-id}，项目路径是 {本仓绝对路径}
+任务 ID 是 {task-id}
 ```
 
 Claude 会调用 Workflow 工具，传入：
 ```json
-{
-  "taskId": "{task-id}",
-  "projectPath": "{本仓绝对路径}"
-}
+{ "taskId": "{task-id}" }
 ```
+
+脚本以**项目仓 CC 会话的 CWD（项目根目录）**为工作目录，所有文件路径均为相对路径，无需传项目路径。
 
 前提：`dispatch-new` 已完成，任务包已写入 `b-queue/{task-id}.md`，状态为 `[可取]`。
 

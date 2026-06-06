@@ -30,7 +30,7 @@
 ```
 用 workflow 运行 B 类任务修复，
 脚本路径 ../hact-method/workflows/b-class-develop.js，
-任务 ID 是 {task-id}，项目路径是 {本仓绝对路径}
+任务 ID 是 {task-id}
 ```
 
 详见 `../hact-method/workflows/README.md`。
