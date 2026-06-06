@@ -40,38 +40,49 @@ Claude 会调用 Workflow 工具，传入：
 ## 执行流程概览
 
 ```
-人工触发（传 taskId + projectPath）
+人工触发（传 taskId）
   │
   ├── Phase 1：认领任务
-  │     读 b-queue/{task-id}.md → 改状态 [taken-by: dw-bot] → 更新 status.yml → commit
+  │     读全字段任务包（16字段）→ schema-change 检查（true 则立即升级）
+  │     → b-queue/b-tasks.md/status.yml 全部改为 [taken-by: dw-bot] → commit
   │
   ├── Phase 2：Fix-Test Loop（最多 3 轮）
-  │     ┌── agent-fix：读任务包 + 代码，实现修复
-  │     └── 机械验证 agent：build + type-check + lint + test
-  │           通过 → 退出 loop
-  │           失败 → 下一轮（第 3 轮仍失败 → 升级给人）
+  │     ┌── 复用检查：Explore agent 读 reusables.md
+  │     ├── agent-fix：完整上下文（context/standards/reference/known_risks）
+  │     │     do-not 违反 → 回滚代码 → 升级给人
+  │     │     escalate-if 触发 → 回滚代码 → 升级给人
+  │     ├── 机械验证 agent：build + type-check + lint + test
+  │     │     通过 → 退出 loop
+  │     │     失败 → 下一轮（第 3 轮仍失败 → 升级给人）
+  │     └── 偏离核查：实际改动 vs files 清单
+  │           hotfix 超范围 → 升级给人
   │
   ├── Phase 3：对抗审查
-  │     独立 agent（只传 AC + diff，无实现上下文）审查 5 类问题
+  │     独立 agent（只传 AC + diff，无实现上下文）审查 6 类问题
+  │     （第 6 类「接口契约对齐」条件触发：diff 含 api/controller/DTO 文件时）
   │           无阻断 → 继续
   │           有阻断 → 修复 → 二次审查（再有阻断 → 升级给人）
   │           建议 → 写入 backlog.md
   │
   ├── Phase 4：Commit + PR
-  │     commit → push → 创建 PR → 返回 PR 号
+  │     凭据检查（发现则停止 → 升级给人）
+  │     → commit → push → 创建 PR（AC 验证段含具体验证方式）
   │
   └── Phase 5：状态更新
-        b-queue 状态 [done] → status.yml → b-tasks.md → commit + push
+        b-queue [done] → status.yml pr 填入 → b-tasks.md 追加「PR#N 待审」→ commit + push
 ```
 
-## 升级给人的四种情形
+## 升级给人的情形
 
 | 情形 | 触发条件 | 脚本行为 |
 |------|---------|---------|
-| 机械验证失败 | 同一任务 3 轮 build/lint/test 未过 | 任务回 `[可取]`，返回错误信息 |
-| 审查二次阻断 | 对抗审查第 2 轮仍有 `[阻断]` | 任务回 `[可取]`，返回阻断详情 |
-| 根因在设计层 | agent-fix 判断需修改 TRD/接口定义 | 脚本中止，提示人工走 `revise-doc` |
-| hotfix 超范围 | 改动文件超出任务包 `files` 字段 | 脚本中止，提示人工确认范围 |
+| schema-change | 任务包 `schema-change: true` | Phase 1 立即升级，不继续执行 |
+| do-not 违反 | agent-fix 触碰任务包禁止边界 | 回滚代码，任务回 `[可取]` |
+| escalate-if 触发 | agent-fix 满足上报条件（含前端视觉决策、上下文不足等） | 回滚代码，任务回 `[可取]` |
+| 机械验证失败 | 同一任务 3 轮 build/lint/test 未过 | 回滚代码，任务回 `[可取]` |
+| hotfix 超范围 | 改动文件超出任务包 `files` 字段 | 任务回 `[可取]`（代码不回滚，人工决定） |
+| 审查二次阻断 | 对抗审查第 2 轮仍有 `[阻断]` | 任务回 `[可取]` |
+| 凭据发现 | push 前发现疑似凭据 | 停止推送，任务回 `[可取]` |
 
 > 升级时任务状态回到 `[可取]`，人工可接手或重新触发 DW。
 
@@ -83,3 +94,11 @@ DW 执行完毕，仅需：
 3. 合并后流程结束（B 类无后续 Gate）
 
 **脚本会自动 push 代码和状态提交**。触发 DW 即视为对本次 push 的授权。
+
+## 已知局限
+
+| 局限 | 说明 | 人工如何补 |
+|------|------|-----------|
+| Step 10 feedback 就地分流 | exec spec 要求 B 类完成后即写入个人 notes（`hact-notes-{name}`）；DW 无用户身份，无法确定写入哪个 notes 仓 | PR review 完成后，执行人自行将本次发现写入个人 notes |
+| 前端视觉决策 | exec spec 要求前端遇到 standards 未覆盖的视觉决策时暂停等人；DW 全自动无法暂停 | 任务包 `escalate-if` 字段中写明"遇到视觉决策上报"，agent-fix 会触发升级；或事前在任务包 `do-not` 中约定默认视觉方案 |
+| checklist 自检 | 结构层规范要求 layer 对应 checklist 通过（`templates/checklists/{layer}-checklist.md`）；当前 DW 机械验证未包含此步 | pr-review 阶段人工核查 checklist；或后续为 DW 增加 checklist agent |
