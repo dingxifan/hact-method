@@ -206,34 +206,60 @@ const rollbackCode = async (label) => {
 
 phase('认领任务')
 
-// 拆为两步：① git 操作（无 schema，上下文轻）② 单独解析（专注 StructuredOutput）
-await agent(
+// Phase 1 策略：单 agent 做 git 操作并返回文件原文（单字段 schema 可靠），JS 解析字段
+// 避免 TASK_SCHEMA（8+字段）导致 StructuredOutput input:{} 失效 + taskId 插值在 resume 时可能丢失
+const CLAIM_SCHEMA = {
+  type: 'object',
+  properties: { task_content: { type: 'string' } },
+  required: ['task_content'],
+}
+
+const claimResult = await agent(
   `你是一个任务认领 agent，当前工作目录是项目根目录。
 
 **步骤（按序，不可跳过）**：
 
-1. 将 b-queue/${taskId}.md 中的状态行改为 \`status: [taken-by: dw-bot]\`
+1. 读取 b-queue/${taskId}.md 的完整内容（记录备用）
 
-2. 在 status.yml 找到 id=${taskId} 的 task：
+2. 将 b-queue/${taskId}.md 中的状态行改为 \`status: [taken-by: dw-bot]\`
+
+3. 在 status.yml 找到 id=${taskId} 的 task：
    status 改为 \`taken-by\`，assigned_to 改为 \`dw-bot\`
 
-3. 在 b-tasks.md 找到 task-id 为 ${taskId} 的行，将状态列从 \`[可取]\` 改为 \`[taken-by: dw-bot]\`
+4. 在 b-tasks.md 找到 task-id 为 ${taskId} 的行，将状态列从 \`[可取]\` 改为 \`[taken-by: dw-bot]\`
 
-4. git add b-queue/${taskId}.md status.yml b-tasks.md
+5. git add b-queue/${taskId}.md status.yml b-tasks.md
    git commit -m "chore(b-queue): 认领 ${taskId} [taken-by: dw-bot]"
    git push origin HEAD
 
-完成后输出 "认领完成"。`,
-  { label: '认领·git操作', phase: '认领任务' }
+**返回**：task_content 字段填入步骤1读取的 b-queue/${taskId}.md 完整原文（含所有 ## 章节）。`,
+  { label: '认领·读取任务包', phase: '认领任务', schema: CLAIM_SCHEMA }
 )
 
-const taskInfo = await agent(
-  `读取 b-queue/${taskId}.md 的完整内容，解析并返回以下字段（字段不存在时返回 null / [] / false）：
-title, description, task_type, layers, source, urgency, schema_change,
-files, acceptance_criteria, relevant_standards, reference,
-context, known_risks, do_not, escalate_if, api_contract`,
-  { label: '解析任务包', phase: '认领任务', schema: TASK_SCHEMA }
-)
+// JS 解析任务包字段（不依赖 LLM 结构化输出，确定性强）
+const md = claimResult.task_content || ''
+const _get = (key) => { const m = md.match(new RegExp(`^${key}:\\s*(.+)$`, 'm')); return m ? m[1].trim() : null }
+const _section = (key) => { const m = md.match(new RegExp(`## ${key}\\n([\\s\\S]*?)(?=\\n## |$)`, 'i')); return m ? m[1].trim() : '' }
+const _list = (key) => _section(key).split('\n').filter(l => /^[\-\*\d]/.test(l.trim())).map(l => l.replace(/^[\-\*\d\.\s]+/, '').trim()).filter(Boolean)
+const _layers = (s) => (s||'').replace(/[\[\]\s]/g,'').split(',').filter(Boolean)
+
+const taskInfo = {
+  title:                _get('title'),
+  task_type:            _get('task_type'),
+  layers:               _layers(_get('layers')),
+  source:               _get('source'),
+  urgency:              _get('urgency'),
+  schema_change:        _get('schema_change') === 'true',
+  files:                _list('files'),
+  acceptance_criteria:  _list('acceptance_criteria'),
+  relevant_standards:   _list('relevant_standards'),
+  reference:            _list('reference'),
+  context:              _section('context'),
+  known_risks:          _list('known_risks'),
+  do_not:               _list('do_not'),
+  escalate_if:          _list('escalate_if'),
+  api_contract:         _get('api_contract'),
+}
 
 // 技术一：验证 Phase 1 认领 push 是否到达远端
 const phase1PushOk = await verifyPush('HEAD', '认领push验证')
