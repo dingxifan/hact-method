@@ -10,13 +10,9 @@ export const meta = {
   ],
 }
 
-// args = { taskId: string }
-// 从项目仓 CC 会话触发，CWD = 项目根目录
-log(`[DEBUG] args=${JSON.stringify(args)}`)
-const taskId = (args && typeof args === 'object' && args.taskId)
-  ? String(args.taskId)
-  : (typeof args === 'string' ? args : undefined)
-log(`[DEBUG] taskId=${taskId}`)
+// args 可能是 JS 对象或 JSON 字符串（workflow harness 行为），统一 parse
+const _parsedArgs = typeof args === 'string' ? JSON.parse(args) : (args || {})
+const taskId = String(_parsedArgs.taskId || '')
 
 // ── Schemas ───────────────────────────────────────────────────────
 
