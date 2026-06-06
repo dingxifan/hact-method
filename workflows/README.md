@@ -37,6 +37,28 @@ Claude 会调用 Workflow 工具，传入：
 
 前提：`dispatch-new` 已完成，任务包已写入 `b-queue/{task-id}.md`，状态为 `[可取]`。
 
+### ⚠️ args 格式说明
+
+harness 将 `args` 以 **JSON 字符串**传入脚本（不是 JS 对象）。脚本内部已处理 `JSON.parse`，调用侧无需特殊处理，直接传对象即可：
+
+```js
+Workflow({ scriptPath: '...', args: { taskId: 'krm-b-005' } })
+```
+
+### ⚠️ Resume 时必须重传 args
+
+使用 `resumeFromRunId` 时，**必须同时传入 args**，否则脚本内 `taskId` 为 undefined：
+
+```js
+// ✅ 正确
+Workflow({ scriptPath, resumeFromRunId: 'wf_xxx', args: { taskId: 'krm-b-005' } })
+
+// ❌ 错误——taskId 会变成 undefined
+Workflow({ scriptPath, resumeFromRunId: 'wf_xxx' })
+```
+
+修改脚本后建议 fresh run（不传 resumeFromRunId），避免旧缓存与新脚本行为不一致。
+
 ## 执行流程概览
 
 ```
@@ -94,6 +116,17 @@ DW 执行完毕，仅需：
 3. 合并后流程结束（B 类无后续 Gate）
 
 **脚本会自动 push 代码和状态提交**。触发 DW 即视为对本次 push 的授权。
+
+## 何时用 / 何时不用
+
+| 适合 | 不适合 |
+|------|--------|
+| 后端 B 类（AC 可 build/lint/test 验证） | 视觉/样式类前端（无法截图验收） |
+| 纯逻辑前端（无需看浏览器） | 改动 ≤ 3 行的简单 fix（手动 30 秒 vs workflow 5 分钟） |
+| 任务包 context/files 完整清晰 | 需要交互式调试或探索的任务 |
+| | 工作树有大量 untracked 临时文件 |
+
+**原则**：估算"手动实现时间" ≤ 10 分钟 → 手动；否则 → workflow。
 
 ## 已知局限
 

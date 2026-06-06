@@ -10,7 +10,9 @@ export const meta = {
   ],
 }
 
-// args 可能是 JS 对象或 JSON 字符串（workflow harness 行为），统一 parse
+// ⚠️ harness 将 args 以 JSON 字符串传入，不是 JS 对象——必须 JSON.parse
+// 调用示例：Workflow({ scriptPath: '...', args: { taskId: 'krm-b-005' } })
+// resume 时同样必须重新传 args：Workflow({ scriptPath, resumeFromRunId, args: { taskId } })
 const _parsedArgs = typeof args === 'string' ? JSON.parse(args) : (args || {})
 const taskId = String(_parsedArgs.taskId || '')
 
@@ -384,11 +386,15 @@ ${lastErrors}
   }
 
   // do-not 越界 → 回滚并升级
-  if (fixResult.do_not_violated) {
+  // violated_rule 必须非空才视为真违反，空字符串视为误报（agent 填错字段），不触发回退
+  if (fixResult.do_not_violated && fixResult.violated_rule.trim() !== '') {
     await rollbackCode('回滚·do-not违反')
     await escalateTask('do-not违反', fixResult.violated_rule)
     log(`⚠️ 升级给人工：触碰禁止边界——${fixResult.violated_rule}`)
     return { escalated: true, reason: 'do_not_violated', task_id: taskId, rule: fixResult.violated_rule }
+  }
+  if (fixResult.do_not_violated && fixResult.violated_rule.trim() === '') {
+    log('⚠️ do_not_violated=true 但 violated_rule 为空，视为误报，继续执行')
   }
 
   // escalate-if 触发（严格判断：空字符串才放行）
@@ -578,9 +584,14 @@ ${deviationInfo.extra_files.map(f => `git checkout -- "${f}"`).join('\n')}
 }
 
 // 凭据检查（推 PR 前，exec spec Step 7 红线）
+// 只扫 git diff（已跟踪文件的变更），不扫 git status 里的 untracked 文件
+// untracked 文件不会被 commit，无需检查，避免临时 token 文件误触发
 const credentialResult = await agent(
-  `在当前目录运行 git diff 和 git diff --cached，扫描所有代码改动中是否存在以下凭据：
+  `在当前目录运行 git diff 和 git diff --cached，扫描这两条命令的输出中是否存在以下凭据：
 PAT / access token / 密码 / 私钥 / API key / secret
+
+重要：只扫描 git diff 和 git diff --cached 的输出，
+不要检查 git status 列出的 untracked 文件（未跟踪文件不会进入提交，无需检查）。
 
 判断标准：
 - 明文字符串看起来像真实凭据（非占位符如 YOUR_TOKEN、xxx）
