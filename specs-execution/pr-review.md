@@ -1,9 +1,13 @@
 # exec: pr-review
 
-> CC 加载本文时，当前任务是批量审查若干 develop PR：对照 standards 和 checklist 给出反馈，决定通过或打回。
+> CC 加载本文时，当前任务是批量审查若干 develop PR：核查 PR description 完整性、对照 standards 给出反馈，决定通过或打回。
 > 每个 PR 独立决定——有打回不阻塞其他可通过的 PR。
 
 **上下文密度**：中。逐 PR 精确加载，只读改动文件相关的 standards 章节，不全量加载。
+
+**结构说明**：本规范分两层。
+- **外壳（程序式）**：会话启动 / 输出契约（merge + commit）/ 整批收尾 / 上下文管理——涉及副作用、人工确认门、多方协调，顺序和动作不可省略
+- **内核（声明式）**：完成判据 / 通过条件 / 打回条件 / 升级条件 / 评估方法——AI 自主评估直到判据满足，路径可自适应
 
 ---
 
@@ -12,15 +16,11 @@
 - **不跳过有 `[阻断]` 问题的 PR**：无论其他 PR 如何，有 `[阻断]` 的必须打回，不得因"问题不大"而放行
 - **发现凭据立即处理**：代码或 PR description 中出现凭据，不等 review 结束——立即要求撤销 + 清理 commit history，合并前必须解决
 - **反馈必须书面化**：不口头转达，review comment 必须写进 PR，develop 执行人以 PR comment 为准
-- **不替 develop 执行人写修复代码**：给问题描述和方向，不直接提交修复（简单 bug 直修除外，见 Step 6）
+- **不替 develop 执行人写修复代码**：给问题描述和方向，不直接提交修复（快速通道直修除外，见下方）
 
 ---
 
-> **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
-
----
-
-## 会话启动
+## 会话启动 〔外壳〕
 
 **批量时机**：优先等同一 sprint 的同层（frontend / backend）全部任务推 PR 后批量审查，减少 review 会话碎片。单任务紧急（urgency=hotfix）时可单独审查。
 
@@ -42,101 +42,119 @@
 
 ---
 
-## 审查步骤（每个 PR 执行一遍）
+## 完成判据 〔内核〕
 
-### Step 1：读 PR description，核查五段完整性
+**单个 PR 审查完成** = 以下全部满足：
+- 已作出通过或打回决定
+- PR comment 已写入（含分级发现 + 最终决定）
+- 通过时：已调平台 merge API 实际合并 PR
+- status.yml / sprint.md / backlog.md 已更新并 commit
 
-确认 description 包含五段：
-
-| 段落 | 说明 |
-|------|------|
-| task-id | 对应 queue 中的任务 ID |
-| 改动摘要 | 2–3 句说明做了什么 |
-| Acceptance Criteria 验证 | 逐条 AC 附验证方式（`[x]` 格式） |
-| 偏离说明 | 无则写"无" |
-| 遗留问题 | 无则写"无"，有则确认已记入 backlog |
-
-**任意段落缺失** → 直接记为 `[阻断]`，跳过后续步骤，打回。
-
-重点核查：
-- **偏离说明**不为"无"时：超出 `files` 清单的文件需额外审查
-- **遗留问题**不为"无"时：确认已写入 `backlog.md`，否则记为 `[阻断]`
+**整批审查完成** = 所有 PR 有明确决定，sprint.md + status.yml 已收尾，feedback 检查已做。
 
 ---
 
-### Step 2：确定 layer
+## 通过条件 〔内核〕
 
-| 改动文件特征 | layer |
-|---|---|
-| 仅 `.vue` / `.tsx` / `.css` / `components/` / `pages/` 等 | `frontend` |
-| 仅 `controller` / `service` / `module` / `entity` / `.dto.ts` 等 | `backend` |
-| 前后端文件混合 | `[frontend, backend]`，两份 checklist 都用 |
-| 仅配置 / 文档文件 | `null` |
+PR 通过 = 以下全部满足：
 
----
-
-### Step 3：对照 standards
-
-只读与本 PR 改动模块**直接相关**的 standards 章节（按改动文件定位），不全量加载。
-
-记录每条违反或有疑问的条目，标注文件路径和行号。
+1. **description 完整**：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 五段齐全，内容有实质性内容（不是空占位）；AC 验证段需逐条列出每条 AC、附验证方式、使用 `[x]` 格式——笼统一句话不满足
+2. **偏离 / 遗留已正确处理**：偏离不为"无"时，超出 `files` 清单的文件已纳入审查；遗留不为"无"时，已写入 `backlog.md`
+3. **无 standards [阻断] 违反**：对照改动文件相关 standards 章节，无 [阻断] 级别违反（[建议] 不阻断合并）
 
 ---
 
-### Step 4：过 checklist
+## 打回条件 〔内核〕
 
-- `layer` 含 `backend` → backend-checklist：DB Schema 核对 / API 错误码覆盖 / 权限校验 / 并发安全 / 静默失败防御
-- `layer` 含 `frontend` → `templates/checklists/frontend-checklist.md`：断点适配 / 触控最小 44×44px / 事件兼容 / XSS 防护
-- `layer=null` → 跳过 checklist，只确认无凭据泄露
-
-每条标 ✅ 或 ❌，❌ 的记录具体问题描述。
-
-**安全敏感改动**（权限 / 认证 / 数据隔离相关）且 review 人无 `architecture` discipline → 上报，等有 `architecture` discipline 的人介入后再决定，不单独放行。
+满足以下任一即打回：
+- description 任意段落缺失或为空占位
+- 遗留问题不为"无"但未写入 backlog.md
+- 存在任意 [阻断] standards 违反
 
 ---
 
-### Step 5：写 review comment
+## 升级条件（停止，等人介入）〔外壳/内核边界〕
 
-将所有发现整理为两级，写入 PR comment：
+- **安全敏感改动**（权限 / 认证 / 数据隔离相关）且 reviewer 无 `architecture` discipline → 上报，等有 `architecture` discipline 的人介入后再决定，不单独放行
+- **同一 [阻断] 反复打回 3 次**仍未解决 → 上报；判断根因是否在 TRD/standards 层，若是则创建 `revise-doc` 任务，再决定如何继续
 
+---
+
+## 输出契约 〔外壳〕
+
+每个 PR 审查完成后必须输出：
+
+**0. 通过时：调平台 merge API 合并 PR**
+
+写完 PR comment 后：
+
+🚫 等用户确认决定（通过 / 打回）再执行
+
+通过 → 调平台 merge API 实际合并 PR；打回 → 在 PR comment 中列出全部 [阻断] 问题（已在 comment 写好），不合并。
+
+**1. PR comment**
 ```markdown
 ## pr-review · {task-id}
 
 ### [阻断]（必须修复才能合并）
 - {问题描述}（`{文件路径}` L{行号}）
-- ...
 
 ### [建议]（可接受，建议下期处理）
 - {问题描述}
-- ...
 
 ### 决定：通过 ✅ / 打回 ❌
 ```
+无 [阻断] 时省略该段；无 [建议] 时省略该段。
 
-无 `[阻断]` = 通过；有 `[建议]` 不阻断合并。
+**2. status.yml 更新**（字段见 `../hact-method/skeleton/07-status-contract.md`）
+- task 状态：通过 → `merged`；打回 → `可取`
+- code_reviews[] 追加一条：
+```yaml
+- iteration: {被审任务所属迭代版本，如 v2；review 发生在 v3 审 v2 遗留任务时填 v2}
+  task_id: {task-id}
+  conclusion: 通过 / 需修订
+  comment: {综合评语 或 null}
+  issues:
+    - { severity: 严重/一般/建议, description: {描述}, location: {文件:行号 或 null} }
+```
+severity 映射：[阻断] → 严重，酌情 → 一般，[建议] → 建议；无发现则 `issues: []`。
+
+**3. sprint.md 追加**：`CR:通过` 或 `CR:打回（{原因一句话}）`
+
+**4. backlog.md 条目**（有 [建议] 时）：`- [ ] {日期} | [CR-建议] {描述} | {文件路径} | 待联调阶段处理`
+
+**commit 时机**：以上 2–4 项文档改动在 PR 合并后一并 commit（`git add status.yml sprint.md backlog.md && git commit -m "chore(cr): {task-id} review 收尾"`），不分散提交。
 
 ---
 
-### Step 6：执行决定
+## 评估方法 〔内核〕
 
-**通过**：
-1. 调平台 merge API 合并 PR
-2. 对应 develop task 状态推 [merged]；同步把 `status.yml` 中该 task 的 `status` 改为 `merged`
-3. 有 `[建议]` → 写入 `backlog.md`，格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径} | 待联调阶段处理`
+**第一步：description 完整性核查（强制 early-exit）**
 
-**打回**：
-1. PR comment 中列出全部 `[阻断]` 问题（已在 Step 5 写好）
-2. develop task 状态回 [可取]；同步把 `status.yml` 中该 task 的 `status` 改回 `可取`
+任意段落缺失或为空占位 → 立即标 [阻断]，跳过 standards 核查，直接打回；不浪费精力对 standards 做无效审查。
 
-**快速通道（直修）**（同时满足以下全部条件时可选）：
+**第二步：确定 layer**（按改动文件路径判断）
+
+| 改动文件特征 | layer |
+|---|---|
+| 仅 `.vue` / `.tsx` / `.css` / `components/` / `pages/` 等 | `frontend` |
+| 仅 `controller` / `service` / `module` / `entity` / `.dto.ts` 等 | `backend` |
+| 前后端文件混合 | `[frontend, backend]`，两份 standards 都用 |
+| 仅配置 / 文档文件 | `null` |
+
+**第三步：standards 核查**（不全量加载，只读与本 PR 改动模块直接相关的章节）
+
+记录每条违反或有疑问（存疑但未必违反）的条目，标注文件路径和行号，区分 [阻断] / [建议]。
+
+**后续顺序（非强制）**：写 comment → 🚫 等确认 → 执行决定。
+
+**快速通道（直修）**：同时满足以下全部时，可跳过打回流程直接修复：
 - 无业务逻辑改动（允许：null 防护、缺失字段补全、类型修复、配置笔误、错误拦截格式、接口字段对齐；不允许：条件判断逻辑、数据处理算法、权限规则、接口行为）
 - 原因显而易见，无需上下文讨论
 
-→ 操作步骤：
-
-**1. 修改代码**
-
-**2. 提交前自检**（有报错必须修复，不得跳过）
+直修步骤：
+1. 修改代码
+2. 提交前自检（有报错必须修复，不得跳过）
 ```bash
 # 后端有改动时
 cd backend && npm run build 2>&1 | tail -5
@@ -146,9 +164,7 @@ npx tsc --noEmit 2>&1 | head -10
 cd frontend && npm run build 2>&1 | tail -5
 npx vue-tsc --noEmit 2>&1 | head -10
 ```
-有编译 / 类型错误 → 修复后重新自检，通过后才进入下一步。
-
-**3. 提交并合并**
+3. 提交并合并
 ```bash
 git checkout -b fix/cr-{task-id}-{desc}
 git add {改动文件}
@@ -157,43 +173,18 @@ git push origin fix/cr-{task-id}-{desc}
 git checkout master && git merge fix/cr-{task-id}-{desc} && git push origin master
 git branch -d fix/cr-{task-id}-{desc}
 ```
-原 PR comment 注明「已直修」。无需 PR review，直接 merge。
-
-**同一 PR 打回 3 次仍有同一 `[阻断]` 问题** → 停止反复 review，上报；判断根因是否在 TRD/standards 层，若是则创建 `revise-doc` 任务，再决定如何继续。
+PR comment 注明「已直修」；无需重新 review，直接 merge。
 
 ---
 
-## 全部 PR 审完后
+## 整批收尾 〔外壳〕
 
-### Step 7：更新 sprint.md + status.yml
+所有 PR 决定完成后：
 
-在 `iterations/vN/sprint.md` 对应 develop 任务行追加 CR 结论：
-- 通过已合并：`CR:通过`
-- 打回：`CR:打回（{原因一句话}）`
-
-**写项目根 `status.yml` 的 `code_reviews[]`**（机器侧契约，字段见 `../hact-method/skeleton/07-status-contract.md`；CR 结论与 issue 全内联，hact-app 直接取数，前端 CRDrawer 即用）：每个被审 develop 任务追加一条
-```yaml
-- iteration: {被审任务所属迭代版本，如 v2}
-  task_id: {被审 develop 任务 id}
-  conclusion: 通过 / 需修订
-  comment: {综合评语，可 null}
-  issues:                       # 取自 Step 5 写进 PR comment 的发现，逐条结构化
-    - { severity: {严重/一般/建议}, description: {问题描述}, location: {文件:行号 或 null} }
-```
-> **severity 映射**：Step 5 内部用两级 `[阻断]/[建议]` → 写 YAML 时 `[阻断]→严重`、`[建议]→建议`。无 issue 则 `issues: []`。
-
-> status.yml 的 task 状态改动（merged / 可取，见 Step 6）与本步的 code_reviews[] 一并随 review 收尾提交。
-
----
-
-### Step 8：feedback 检查
-
-回顾本次 review：
-
-- 同一类问题在多个 PR 中反复出现 → standards 有缺口，写入 `feedback.md`
-  格式：`{日期} | {发现的问题模式} | 建议更新到 {standards 文件哪节}`
-- PR description 缺失段落是共性 → feedback 记录，建议在 develop exec spec 中加强提示
-- 无发现 → 跳过此步
+**feedback 检查**：
+- 同一类问题在多个 PR 中反复出现 → standards 有缺口，写入 `feedback.md`（格式：`{日期} | {问题模式} | 建议更新到 {standards 文件哪节}`）
+- PR description 缺失段落是共性 → 写入 feedback.md，建议在 develop exec spec 中加强提示
+- 无发现 → 跳过
 
 ```
 ✅ pr-review 完成：{N} 个 PR，通过 {X} 个，打回 {Y} 个。[有 feedback / 无 feedback]
@@ -202,7 +193,7 @@ git branch -d fix/cr-{task-id}-{desc}
 
 ---
 
-## 上下文管理
+## 上下文管理 〔外壳〕
 
 **断点续做**（多 PR 中断后接续）：
 1. 读 `iterations/vN/sprint.md`，找已有 `CR:通过` 或 `CR:打回` 结论的行（已审完）
@@ -213,12 +204,12 @@ git branch -d fix/cr-{task-id}-{desc}
 - compact 前确认：已审 PR 的 CR 结论已写入 sprint.md（写入即持久化，compact 不丢失进度）
 
 **多 PR 并行审查**（PR 数量 ≥5 且各 PR layer 独立时）：
-- 可派 2 个 Explore subagent 并行读取不同 PR 的 diff + description，各自返回"五段完整性结论 + 改动文件列表 + 疑点摘要"
-- 主线汇总后逐 PR 执行 Step 3–6（standards 核查和决策仍由主线完成，不委托 subagent）
+- 可派 2 个 Explore subagent 并行读取不同 PR 的 diff + description，各自返回「五段完整性结论 + 改动文件列表 + 疑点摘要」
+- 主线汇总后逐 PR 完成 standards 核查和决策（不委托 subagent）
 - subagent 失败 → 主线直接读该 PR，不阻断其他 PR 的审查
 
 **打回 PR 二次 review**（同一 PR 修复后重新提交）：
-1. 读上次 review comment 中的 `[阻断]` 清单
+1. 读上次 PR comment 中的 `[阻断]` 清单
 2. 只核查 `[阻断]` 是否已修复 + 有无新引入问题
 3. 不重跑完整流程
 

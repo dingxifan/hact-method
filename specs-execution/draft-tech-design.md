@@ -210,6 +210,24 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 
 执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`
 
+**集成测试脚本预生成**（G2 签完后立即触发）
+
+spawn subagent，根据已确认的 TRD + PRD 预生成集成测试脚本，供联调阶段直接执行：
+
+传入内容：
+- TRD 接口设计段全文（含鉴权要求 / 请求响应字段 / 错误码）
+- TRD 测试环境约定段（后端地址 / 前端访问方式）
+- PRD 各功能 AC 全文
+- `ux-flows.md` 全文（若存在）
+
+subagent 任务：
+1. 后端场景：按接口逐条写 `.http` 脚本，覆盖正常路径 + 鉴权边界 + 错误码 + 跨模块集成点；保存到 `integration-tests/backend/{接口描述}.http`
+2. 前端场景：调用 `Skill(pinchtab)` 生成交互脚本（上限 15 条，优先从 `ux-flows.md` 场景列表提取；无 `ux-flows.md` 则从 PRD AC 提取）；保存到 `integration-tests/frontend/{场景名}.pinchtab`
+3. 写脚本索引 `integration-tests/scripts-v{N}.md`：按功能模块分段（`## {模块名}`），每段一张表（字段：序号 / 场景描述 / 覆盖 AC / 脚本路径 / 脚本形式）；模块划分与 TRD 接口分组一致
+4. `git add integration-tests/ && git commit -m "test(it): v{N} 集成测试脚本预生成" && git push`
+
+subagent 失败 → 记录失败原因至 `_meta/sessions/generate-integration-tests-progress.md`；不阻断当前会话，generate-integration-tests Step 2 会检测并补写。
+
 **feedback 检查**（签 G2 后）：
 - 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
 - standards 生成后发现与 TRD 有明显脱节（需要大量人工修正）→ 写入 `feedback.md`
@@ -233,6 +251,7 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 |--------|-------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件 | 读取失败则主线单独读，不阻断 |
 | Step 4 standards 生成 | 2 个并行 subagent 各生成一份 | 失败则主线接管该份，记录原因 |
+| Step 6（G2 签完后） | 预生成集成测试脚本（后端 .http + 前端 pinchtab + scripts-vN.md 索引） | 失败记录到 progress.md，联调 Step 2 补写 |
 
 ---
 

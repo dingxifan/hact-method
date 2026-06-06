@@ -12,13 +12,15 @@
 
 Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「批量会话步骤」章节，Steps 1–4 在批量会话中对每个任务依次执行。
 
+> **source=bug 或 source=optimization（B 类任务）**：不走上述两种模式，跳至文末「B 类快速修复 loop」章节。
+
 ---
 
 > **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
 
 ---
 
-## 会话启动
+## 会话启动（source=sprint / integration / manual-test 适用；source=bug/optimization 跳至文末「B 类快速修复 loop」）
 
 **第零步：确认执行层**
 
@@ -171,7 +173,7 @@ hotfix 模式：最小化修复路径，直接开始实现，不等用户确认�
 
 ### Step 5：自检
 
-**【前置：机械验证】**（先跑命令，有报错先修，再进入后续维度）
+**【机械验证】**（先跑命令，有报错先修，再进入偏离核查）
 
 ```bash
 npm run build          # 构建通过
@@ -179,23 +181,10 @@ npm run type-check     # 类型检查（或 npx tsc --noEmit）
 npm run lint           # lint 通过
 ```
 
-三条命令任意一条报错 → 先修复，不进入后续维度。
+三条命令任意一条报错 → 先修复，不进入偏离核查。
 项目无对应命令（如无 type-check script）→ 跳过该条，不阻断。
 
----
-
-自检依次完成以下两个维度：
-
-**① Checklist 核查**（layer 决定用哪份，以"挑刺"视角逐项过）：
-
-- `layer=backend` → 读 `templates/checklists/backend-checklist.md`
-- `layer=frontend` → 读 `templates/checklists/frontend-checklist.md`
-- `layer=shared` → 两份都过
-
-每条标 ✅ / ❌ / **N/A**（N/A = 本次改动不涉及该项，直接跳过）。
-❌ 的必须修复后重新标，不带 ❌ 推 PR。
-
-**② 偏离核查**：
+**【偏离核查】**：
 
 ```bash
 git diff --stat
@@ -206,7 +195,74 @@ git diff --stat
 - 有 AC 未能实现 → 记入 PR description「遗留问题」
 
 ```
-✅ 自检完成：checklist {X}/{Y} 通过（{Z} 项 N/A），[无偏离 / 偏离已记录]。
+✅ 自检完成：机械验证通过，[无偏离 / 偏离已记录]。
+→ 下一步：对抗审查
+继续？
+```
+
+---
+
+### Step 5.5：对抗审查
+
+推 PR 前，派独立 sub-agent 对代码进行对抗性审查。
+
+**【构建 prompt — 严格限制传入内容】**
+
+只传递：
+- 任务包的 `acceptance-criteria` 字段（逐条列出）
+- `git diff` 全文
+- **（条件）** diff 涉及 `api/*.ts`（前端接口调用层）或后端 controller / DTO 文件时 → 额外传入 TRD 中与改动接口直接相关的接口定义段落（仅相关段，不全量加载）
+
+禁止传递：Step 2 拆分计划、模块完成报告、自检结论、任何关于实现意图的描述。
+
+**【sub-agent mandate】**
+
+```
+你是一名独立审查员，从未见过这段代码的开发过程和实现思路。
+
+【输入】
+需求（Acceptance Criteria）：
+{task 的 acceptance-criteria 字段，逐条列出}
+
+代码改动：
+{git diff 全文}
+
+【默认假设】
+代码存在问题。你的任务是找出所有失败方式，不是确认代码是否正确。
+
+【逐类检查】（每类必须有明确结论，不允许跳过，不允许合并）
+
+1. AC 覆盖：每条 AC 是否有对应实现？逐条核对，找出遗漏或实现偏差。
+2. 边界情况：输入为 null / 空值 / 极值 / 并发时代码会怎样？找出未处理的情况。
+3. 错误处理：失败路径是否正确处理？有没有吞异常、错误状态码、静默失败？
+4. 安全性：是否存在权限绕过、注入风险、数据隔离漏洞、未校验的用户输入？
+5. 逻辑正确性：业务逻辑是否与 AC 描述的行为一致？条件判断、状态转换有没有错误？
+6. 接口契约对齐（仅当输入包含 TRD 接口定义时执行）：前端 api/*.ts 的字段名 / 类型 / Auth header / 枚举值是否与 TRD 完全一致？后端 controller 路由 / DTO 字段 / 响应结构是否与 TRD 完全一致？不一致逐项列出。
+
+【输出格式】（严格遵守，不得偏离）
+
+每条 finding 格式：
+- 类别：{AC覆盖 / 边界情况 / 错误处理 / 安全性 / 逻辑正确性 / 接口契约对齐}
+- 位置：{文件名:行号}
+- 问题：{具体描述，一句话}
+- 严重程度：{阻断 / 建议}
+
+某类无发现时，必须明确写：「{类别}：无发现」
+全部无发现时，输出：findings: []
+禁止输出「整体看起来不错」「代码质量良好」等任何总结性语言。
+```
+
+**【loop 逻辑】**
+
+| sub-agent 输出 | 动作 |
+|---|---|
+| `findings: []` | 退出 loop，进入 Step 6 |
+| 只有 `[建议]`，无 `[阻断]` | 写入 `backlog.md`（格式：`- [ ] {日期} \| [CR-建议] {描述} \| {文件:行号}`）；PR description「遗留问题」填引用；退出 loop，进入 Step 6 |
+| 有 `[阻断]` | 修复所有 `[阻断]` 问题，重跑 sub-agent |
+| 同一 `[阻断]` 修了 3 次仍出现 | 停止 loop，上报用户；判断根因是否在 AC / TRD 设计层——若是则创建 `revise-doc` 任务，不再继续实现 |
+
+```
+✅ 对抗审查完成：[findings: [] / [建议] {N} 条已记入 backlog]，无阻断。
 → 下一步：commit + PR
 继续？
 ```
@@ -310,7 +366,8 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 | 步骤 | 与单任务的差异 |
 |------|---------------|
-| 批量 Step 5 自检 | 机械验证 / checklist / 偏离核查各跑**一次**，覆盖本次所有改动文件；偏离对比所有任务包 `files` 字段的合集 |
+| 批量 Step 5 自检 | 机械验证 / 偏离核查各跑**一次**，覆盖本次所有改动文件；偏离对比所有任务包 `files` 字段的合集 |
+| 批量 Step 5.5 对抗审查 | sub-agent 传入**所有任务包的 AC 合集** + diff 全文；loop 逻辑同单任务会话 Step 5.5 |
 | 批量 Step 6 commit | 分支名 `{layer}-batch-v{N}`（如 `backend-batch-v3`）；message：`feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]` |
 | 批量 Step 7 推 PR | `git push origin {layer}-batch-v{N}`；PR description **按任务分节**（模板见下），偏离 / 遗留问题各任务分别列出或统一写"无"；同样禁止凭据 |
 | 批量 Step 8 更新状态 | 所有批量任务包 + sprint.md 对应行 → `[done]`，PR 列**全部填同一个 PR 号**；同步在项目根 `status.yml` 把这批 task 的 `status` 全改 `done`、`pr` 全填同一个 `{N}`；git add 含 `status.yml`；`chore(sprint): 批量标记 [done]，PR #{N}` 推 `{layer}-batch-v{N}` |
@@ -353,6 +410,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 | Step 3 复用检查 | Explore 读 reusables.md | 失败则主线直接读 |
 | Step 4 代码探索（reference 不足时）| Explore 扫描周边文件（返回 ≤20 行摘要）| 失败则主线读文件 |
 | Step 4（> 5 文件跨模块）| general-purpose subagent 实现单个模块 | 见下方失败协议 |
+| Step 5.5 / B 类对抗审查 | 独立 sub-agent，只传 AC + diff，不传实现思路；6 类逐项审查（A 类 Step 5.5 / B 类 loop 均适用） | 同一 `[阻断]` 三次失败 → 停止 loop，上报用户 |
 
 **Subagent 失败协议**：
 1. 同一问题同一 subagent 三次失败 → subagent 返回失败结构：
@@ -408,3 +466,102 @@ context-state:
 4. 从断点继续，不重做已完成改动
 
 **阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 `progress.md` 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。
+
+---
+
+## B 类快速修复 loop（source=bug / source=optimization）
+
+> B 类无人工确认门，AI 全自动执行，人只看最终 PR（或升级报告）。A 类标准流程（Steps 1–10）不适用此类 source。
+
+### 任务拾取
+
+读 `b-queue/{task-id}.md`，理解：
+- `description`（当前状态 → 期望状态）
+- `acceptance-criteria`（修复后的验证标准）
+- `files`（已知改动范围）
+- `layers`（决定执行层，从此字段自动判断，无需用户确认）
+
+认领 commit：
+```bash
+git add b-queue/{task-id}.md
+git commit -m "chore(b-queue): 认领 {task-id} [taken-by: {user}]"
+```
+
+### 修复 loop
+
+循环执行以下步骤，直到退出条件满足：
+
+**1. 实现修复**
+
+按 `files` 字段范围实现，`urgency=hotfix` 保持最小路径。超出 `files` 范围的改动记录「偏离」，待写入 PR description。
+
+**2. 机械验证**
+
+```bash
+npm run build && npm run type-check && npm run lint
+```
+
+项目有单元测试时追加：`npm test`
+
+任意失败 → 修复，重新从步骤 1 开始。
+
+**3. 对抗审查**（规则完全同 Step 5.5；传 AC + diff，禁止传实现思路）
+
+| 审查结果 | 动作 |
+|---------|------|
+| `findings: []` | 退出 loop → 进入 commit + PR |
+| 只有 `[建议]`，无 `[阻断]` | 写入 `backlog.md`（格式：`- [ ] {日期} \| [CR-建议] {描述} \| {文件:行号}`）；退出 loop → 进入 commit + PR |
+| 有 `[阻断]` | 修复所有 `[阻断]`，重新从步骤 1 开始 |
+| 同一 `[阻断]` 连续出现 3 次 | 触发升级协议，停止 loop |
+
+**升级协议**（任一条件满足 → 停止 loop，不推 PR，输出报告后 🚫 等用户指示）：
+
+| 触发条件 | 输出 |
+|---------|------|
+| 同一 `[阻断]` 修了 3 轮仍存在 | `⚠️ B 类升级：{task-id} ─ [{阻断描述}] 修复 3 轮未解，根因可能在设计层，建议创建 revise-doc 任务` |
+| 修复路径需改动 TRD/PRD 或 standards | `⚠️ B 类升级：{task-id} ─ 根因在设计层（{说明}），建议创建 revise-doc 任务` |
+| urgency=hotfix 且修复超出 `files` 范围 | `⚠️ B 类升级：{task-id} ─ hotfix 超出约定范围（{说明}），需人工确认是否扩大修复边界` |
+
+### commit + PR
+
+验证通过后执行：
+
+```bash
+git add {改动文件}
+git commit -m "fix({task-id}): {修复描述}"
+git push origin {task-id}
+```
+
+PR description（B 类简化版）：
+
+```markdown
+## {task-id}：{bug/优化标题}
+
+### 根因 / 背景
+{一句话}
+
+### 修复 / 改动
+{一句话}
+
+### AC 验证
+- [x] {AC 1}：{验证方式}
+- [x] {AC 2}：{验证方式}
+
+### 偏离说明
+{无 / 超出 files 范围的改动}
+
+### 遗留问题
+{无 / 已记入 backlog 的建议}
+```
+
+### 状态更新 + 分流
+
+- `b-queue/{task-id}.md` → 状态改 `[done]`
+- `b-tasks.md` 对应行 → 追加 `PR#{N} 待审`
+- **就地分流**（同 Step 10 B 类分支）：值得沉淀的发现当场誊入个人 notes，不写 feedback.md
+
+```
+✅ B 类修复完成：{task-id} PR#{N} 已推，等待 pr-review。
+```
+
+🚫 **会话硬边界**：输出后立即停止。禁止建议复测、联调等后续动作。

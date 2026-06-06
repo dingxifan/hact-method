@@ -1,15 +1,15 @@
 # exec: generate-integration-tests
 
-> CC 加载本文时，当前任务是在所有 sprint develop 任务合并后，设计端到端测试场景，写自动化脚本，跑测试，失败转修复任务，三条件满足后移交 manual-test。
-> 三层顺序：**骨架**（场景设计）→ **结构层**（写脚本 + 跑测试 + 处理失败）→ **收尾**（复测 + 三条件确认）
+> CC 加载本文时，当前任务是在所有 sprint develop 任务合并后，核查脚本对齐，跑测试，失败转修复任务，三条件满足后移交 manual-test。（测试脚本已由 draft-tech-design G2 阶段的 subagent 预生成。）
+> 三层顺序：**准备**（脚本就绪 + 环境核查）→ **执行**（跑测试 + 处理失败）→ **收尾**（复测 + 三条件确认）
 
-**上下文密度**：高。需读 PRD + TRD + standards，并执行测试脚本。场景确认后做一次 compact 再进入脚本编写。
+**上下文密度**：中。脚本已预生成，只需读脚本索引 + 执行测试，无需全量加载 PRD/TRD。
 
 ---
 
 ## 红线
 
-- **跑测试前必须环境可达**：Step 4 执行脚本前确认后端 / 前端 / 数据库全部就绪；场景设计（Step 2）和写脚本（Step 3）不依赖环境，可提前进行
+- **跑测试前必须环境可达**：Step 3 执行脚本前确认后端 / 前端 / 数据库全部就绪；脚本对齐（Step 2）不依赖环境，可提前进行
 - **不测已有功能的回归**：只测本期新功能端到端路径和跨模块集成点，回归属于 B 类范畴
 - **前端 pinchtab 场景上限 15 条**：超出时优先保留主流程 + 跨模块集成点，边界场景降级为 `[不阻断]` 记入 backlog；后端 `.http` / `curl` 场景不设硬性上限
 - **[阻断] 失败必须走 develop 修复**：不在联调会话中直接改代码，不口头转达，走 dispatch
@@ -24,8 +24,6 @@
 
 **前置检查**：读 `iterations/vN/sprint.md`，确认所有 `source=sprint` 的 develop 任务状态全部为 [merged]。
 
-> `/pic` 在联调前建议执行，但**禁止 CC 自动触发**——流程上建议时只能提示人类，等人类明确发出 `/pic` 指令后方可调用 `Skill(pic)`。
-
 有未合并任务 → 阻断：
 ```
 以下 develop 任务尚未 [merged]，无法开始联调：
@@ -33,13 +31,16 @@
 请完成后重新开始。
 ```
 
+读 `integration-tests/scripts-v{N}.md`，确认预生成脚本已就绪。
+
 **选项列表**（前置已满足，确认要做什么）：
 
 ```
 {项目名} · 所有 sprint 任务已 [merged]
+已找到 integration-tests/scripts-v{N}.md：{N} 条后端场景，{M} 条前端场景
 
 可做的任务：
-[1] generate-integration-tests — 设计测试场景，跑联调脚本 ← 主线
+[1] generate-integration-tests — 跑联调脚本 ← 主线
 
 其他可做（输入「展开」/ 自由描述）：
 - revise-doc(target=trd) — 若发现 TRD 接口定义有歧义，先修再联调
@@ -49,18 +50,12 @@
 
 🚫 等用户选择后再继续
 
-用户选 [1] → 继续下方（Explore subagent 并行读取文件）
+用户选 [1] → 继续下方步骤
 用户选其他 → 按用户描述判断，加载对应 exec spec 执行
-
-前置满足 → 用 Explore subagent 并行读取（不占主线上下文）：
-- `iterations/vN/prd.md`（acceptance criteria 段落）
-- `iterations/vN/trd.md`（接口定义段落 + 测试环境约定段落）
-- `iterations/vN/standards-shared.md`（测试环境约定段落）
-- `iterations/vN/ux-flows.md`（若存在，场景列表 + 流程图）
 
 ---
 
-## 第一层：骨架（场景设计）
+## 第一层：准备（脚本就绪 + 环境核查）
 
 ### Step 1：核对测试环境
 
@@ -69,11 +64,11 @@ G3 签署时已确认环境可达，此处快速复核：
 - [ ] 数据库指向测试库（非生产库）
 - [ ] 前端页面可打开
 
-**任一未就绪** → 提示用户重启对应服务，就绪后继续；不影响场景设计（Step 2）同步进行。
+**任一未就绪** → 提示用户重启对应服务，就绪后继续；不影响脚本对齐（Step 2）同步进行。
 
 ```
 ✅ 测试环境核对完成：后端 {地址}，数据库为测试库，前端 {地址} 可访问。
-→ 下一步：设计测试场景
+→ 下一步：处理 CR [建议]
 继续？
 ```
 
@@ -90,78 +85,51 @@ G3 签署时已确认环境可达，此处快速复核：
 
 ```
 ✅ CR [建议] 处理完成：直接修复 {N} 条，降级为普通 backlog {M} 条。
-→ 下一步：设计测试场景
+→ 下一步：脚本对齐核查
 继续？
 ```
 
 ---
 
-### Step 2：设计测试场景
+### Step 2：脚本对齐核查
 
-从 PRD acceptance criteria 提取端到端场景，补充跨模块集成点，分两类整理：
+读 `integration-tests/scripts-v{N}.md` 确认脚本索引已就绪。
 
-**后端 API 场景**（`.http` / `curl`，不设上限）：
-- 覆盖所有接口主流程 + 鉴权边界 + 错误码 + 跨模块集成点
-- 边界场景也纳入，不因数量多而删减
+**脚本缺失**（draft-tech-design subagent 未跑或失败）→ 派 Explore subagent 读取 PRD AC + TRD 接口设计，重新生成后端 `.http` 脚本 + 前端 pinchtab 脚本（调用 `Skill(pinchtab)`），写入 `integration-tests/`，补写 `scripts-v{N}.md` 索引，继续后续步骤。
 
-**前端交互场景**（`pinchtab`，上限 15 条）：
-- 若 `ux-flows.md` 存在，优先从其场景列表逐条提取（主路径 + 替代路径全覆盖），再用 PRD AC 补充 `ux-flows.md` 未覆盖的条目；若不存在，直接从 PRD AC 提取
-- 超出时优先保留主流程 + 关键用户操作路径，边界场景降级为 `[不阻断]` 记入 backlog
+**脚本存在** → 读所有已合并 PR description 的「偏离说明」段落：
+- 无偏离 → 脚本直接可用，跳过校准
+- 有接口偏离（字段名 / 路径 / 格式变化）→ 定向修正对应 `.http` 或 pinchtab 脚本，不重写整条场景
 
-```markdown
-## 测试场景清单 · vN · {日期}
-
-### 后端 API 场景（共 {N} 条）
-| # | 场景描述 | 覆盖 AC | 脚本形式 |
-|---|---------|---------|---------|
-| 1 | {接口路径 + 预期结果} | AC-{N} | .http / curl |
-...
-
-### 前端交互场景（共 {M} 条，≤15）
-| # | 场景描述 | 覆盖 AC | 脚本形式 |
-|---|---------|---------|---------|
-| 1 | {用户操作流程描述} | AC-{N} | pinchtab |
-...
+```
+✅ 脚本对齐完成：{N} 条后端场景，{M} 条前端场景，校准 {K} 条（或：无需校准）。
+→ 下一步：跑测试
+继续？
 ```
 
-- 无前端（纯后端 API）→ 跳过前端场景表，只写后端 API 场景
-
-🚫 等用户确认场景清单（数量 / 优先级 / 遗漏 / 覆盖范围）
-
-> **compact 时机**：场景清单确认后，Step 3 开始前，做一次 compact。compact 前将确认后的场景清单写入 `_meta/sessions/generate-integration-tests-progress.md`，以备续做。
-
 ---
 
-## 第二层：结构层（写脚本 + 跑测试 + 处理失败）
+## 第二层：执行（跑测试 + 处理失败）
 
-### Step 3：写测试脚本
+### Step 3：跑测试
 
-按清单逐条写脚本：
+读 `integration-tests/scripts-v{N}.md`，提取模块列表（每个 `## {模块名}` 段为一个模块）。
 
-**后端脚本**（`.http` 文件或 `curl` 脚本）：
-- 路径：`integration-tests/backend/{场景名}.http`
-- 覆盖：正常路径 + 关键边界（鉴权失败 / 非法参数 / 空值 / 权限越界）
+**按模块并行派 subagent**，每个 subagent 负责该模块的端到端执行：
+- 后端：执行该模块下所有 `.http` / `curl` 脚本
+- 前端：调用 `Skill(pinchtab)` 执行该模块的 pinchtab 场景
+- 返回：每条场景的结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要 + 失败现象及复现步骤
 
-**前端脚本**（pinchtab）：
-- 路径：`integration-tests/frontend/{场景名}.pinchtab`
-- 用 pinchtab skill 生成，Subagent prompt 见"Subagent 使用"
-
-**pinchtab 无法覆盖的前端场景**：改为人工验收场景，在场景清单备注「移至 manual-test」，不强行用脚本覆盖。
-
----
-
-### Step 4：跑测试
-
-逐条执行脚本，实时记录结果：
+全部 subagent 返回后，汇总写入 `integration-tests/result-{日期}.md`：
 
 ```markdown
 # 联调测试结果 · vN · {日期}
 
-| # | 场景描述 | 结果 | 现象（失败时填写） | 级别 |
-|---|---------|------|-----------------|------|
-| 1 | {场景描述} | ✅ | — | — |
-| 2 | {场景描述} | ❌ | {具体现象 + 复现步骤} | [阻断] |
-| 3 | {场景描述} | ❌ | {现象} | [不阻断] |
+| # | 模块 | 场景描述 | 结果 | 现象（失败时填写） | 级别 |
+|---|------|---------|------|-----------------|------|
+| 1 | {模块名} | {场景描述} | ✅ | — | — |
+| 2 | {模块名} | {场景描述} | ❌ | {具体现象 + 复现步骤} | [阻断] |
+| 3 | {模块名} | {场景描述} | ❌ | {现象} | [不阻断] |
 ```
 
 结果写入 `integration-tests/result-{日期}.md`。
@@ -174,7 +142,7 @@ G3 签署时已确认环境可达，此处快速复核：
 
 ---
 
-### Step 5：处理失败
+### Step 4：处理失败
 
 逐条处理 ❌ 条目：
 
@@ -214,7 +182,7 @@ git branch -d fix/it-{desc}
 不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `iterations/vN/queue/{task-id}.md`
   - task-id 命名：`{项目缩写}-it-{三位序号}`，如 `hact-it-001`
   - **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: integration`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`），git add 含 `status.yml`
-- 更新 `_meta/sessions/generate-integration-tests-progress.md`，记录已派修复的 task-id
+  - 更新 `_meta/sessions/generate-integration-tests-progress.md`，记录已派修复的 task-id
 
 **`[不阻断]`**（边界或视觉问题）：
 - 评估规模：≤3 文件且原因明确 → 建议走 B 类快速通道（`dispatch-new`）；否则写入 `backlog.md`，格式：`- [ ] {日期} | [不阻断] {描述} | 联调发现`
@@ -231,13 +199,13 @@ git branch -d fix/it-{desc}
 **[阻断] 修复超 2 轮仍失败且已创建 revise-doc 任务时**：
 - 暂停该场景的复测，在 `_meta/sessions/generate-integration-tests-progress.md` 标注「等待 revise-doc 完成」
 - 继续其他可测场景的复测
-- revise-doc 完成后，从暂停的场景重新开始 Step 4（跑测试）
+- revise-doc 完成后，从暂停的场景重新开始 Step 3（跑测试）
 
 ---
 
 ## 第三层：收尾（复测 + 三条件确认）
 
-### Step 6：复测
+### Step 5：复测
 
 develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本（不只跑修复相关场景）。
 
@@ -245,7 +213,7 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本�
 
 ---
 
-### Step 7：三条件确认
+### Step 6：三条件确认
 
 逐条核查：
 
@@ -259,15 +227,15 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本�
 → 下一步：manual-test（人工验收）
 ```
 
-未全满足 → 回到 Step 5 继续处理。
+未全满足 → 回到 Step 4 继续处理。
 
 ---
 
-### Step 8：feedback 检查
+### Step 7：feedback 检查
 
 回顾本次联调：
 - 多个 `[阻断]` 根因相同（如同一接口错误码未覆盖）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议更新到 {standards/trd 哪节}`）
-- pinchtab 无法覆盖的场景比预期多 → 记录，供下次调整场景设计策略
+- pinchtab 无法覆盖的场景比预期多 → 记录，供 draft-tech-design 下期调整脚本预生成策略
 - 无发现 → 跳过
 
 ---
@@ -276,16 +244,15 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本�
 
 | 触发点 | Subagent 任务 | Prompt 要点 | 失败处理 |
 |--------|-------------|------------|---------|
-| 会话启动 | Explore 并行读取 3 份输入文件 | 读 prd/trd/standards-shared 各自的目标段落；返回各文件的目标段落摘要，每段不超过 150 字 | 失败则主线单独读 |
-| Step 3（前端场景） | pinchtab skill 生成测试脚本 | 传入：测试环境前端地址 / 场景描述（谁 → 做什么 → 期望结果）/ 关键操作步骤；返回：完整可执行的 pinchtab 脚本文本，以及该脚本依赖的环境前提（需要登录态 / 需要特定初始数据等）。**CC 调用时必须使用 `Skill(pinchtab)`，禁止猜测命名空间（如 `superpowers:pinchtab`）。** | 失败则将该场景移至 manual-test，不重试 |
-| Step 4（后端批量执行） | general-purpose subagent 执行 curl 脚本并汇总 | 传入：脚本列表和后端地址；返回：每条场景的结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要；部分场景失败时仍返回其他场景的结果，不中断 | 失败则主线逐条执行 |
+| Step 2（脚本缺失时） | Explore 读取 PRD AC + TRD 接口，重新生成脚本 | 读 prd/trd 目标段落；生成 .http 脚本 + 调用 `Skill(pinchtab)` 生成前端脚本；写入 integration-tests/；返回生成文件列表 | 失败则主线手动生成 |
+| Step 3（按模块并行） | 每模块一个 subagent，端到端执行该模块后端 curl + 前端 pinchtab | 传入：模块名、该模块 .http 脚本列表、pinchtab 场景列表、后端地址、前端地址；执行后端 curl 脚本 + 调用 `Skill(pinchtab)` 执行前端场景；返回：每条场景的结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要 + 失败现象；部分场景失败时仍返回其余场景结果，不中断 | 失败则降级：该模块主线逐条执行 |
 
 ---
 
 ## 上下文管理
 
 **断点续做**：
-1. 读 `_meta/sessions/generate-integration-tests-progress.md`：确认场景清单 + 已跑场景 + 已派修复 task-id
+1. 读 `_meta/sessions/generate-integration-tests-progress.md`：确认已跑场景 + 已派修复 task-id
 2. 读 `integration-tests/result-{最新日期}.md`：确认已有测试结论
 3. 读 `queue/`：找 source=integration 任务包，确认修复状态
 4. 从第一个无结论的场景继续，或等修复 [merged] 后复测
@@ -294,12 +261,10 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本�
 ```markdown
 ## generate-integration-tests 进度 · vN
 
-### 场景清单（{N} 条，用户已确认）
-| # | 场景描述 | 脚本形式 |
-|---|---------|---------|
-| 1 | {场景} | .http |
-...
-
 ### 修复任务
 - {task-id}：{场景#N} {问题描述}（当前状态：[可取]/[merged]）
 ```
+
+**上下文过重时**（场景数 ≥20）：
+- 每完成 10 个场景后考虑一次 compact
+- compact 前确认：已跑场景的结论已写入 result-{日期}.md（写入即持久化，compact 不丢失进度）
