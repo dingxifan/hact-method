@@ -31,9 +31,35 @@
 
 D2-D8 全部过完，结论见 findings.md「设计决策」表。
 
+## 会话 3（2026-06-06）：阶段 2+3 完成（方法论落地 + 脚本编写）
+
+### 完成内容
+
+1. **`workflows/` 目录**（hact-method 根目录，与 templates/ 平级）
+   - `workflows/README.md`：DW 模式说明 + 触发方式 + 升级情形 + 人工后续动作
+   - `workflows/b-class-develop.js`：完整 DW 脚本（5 阶段）
+
+2. **脚本结构**：
+   - Phase 1 认领任务：读任务包 → 改 b-queue 状态 → 更新 status.yml → commit
+   - Phase 2 Fix-Test Loop：agent-fix + 机械验证 agent，最多 3 轮，失败升级
+   - Phase 3 对抗审查：独立 agent，有阻断 → 修复 → 二次审查，二次阻断升级
+   - Phase 4 Commit + PR：commit → push → 创建 PR（支持 gitee-ops/gh）
+   - Phase 5 状态更新：b-queue [done] + status.yml + b-tasks.md + commit + push
+
+3. **`templates/CLAUDE.md`**：新增「B 类自动修复（Dynamic Workflow）」触发说明
+
+### 关键设计落地
+
+- **D7（只有主脚本写状态文件）**实现方式：主脚本通过专门的 state-update agent（Phase 1 / Phase 5）统一写状态，agent-fix 和 agent-review 只操作代码文件
+- **schema**：TASK / VERIFY / REVIEW / DIFF / PR 五个结构化输出 schema
+- **升级路径**：机械验证 3 轮失败 / 审查二次阻断 → 任务回 [可取] + return 明确原因
+
+### 待办（阶段 4：接口打通）
+
+- `b-queue/{task-id}.md` 任务包的具体字段格式（status 字段写法）
+- `b-tasks.md` 行格式（脚本假设了"task-id 列"能定位到行）
+- 上述两点需在 hact-app 有真实 B 类任务时核对，可能需微调 agent prompt
+
 ### 下次会话起点
 
-阶段 1 完成，进入阶段 2：方法论落地。
-- 在 hact-method 中新建 `workflows/` 目录
-- 确定 B 类 DW 的 exec spec 形态（如何描述"触发和监控 DW"而非步骤指令）
-- 编写 `workflows/b-class-develop.js` 脚本模板
+阶段 4：接口打通。在 hact-app 创建一个测试用 B 类任务包，核对 b-queue 格式和 b-tasks.md 格式，按需微调脚本中的 agent prompt；然后进入阶段 5 试跑验证。

@@ -22,6 +22,22 @@
 - `dispatch-new`              → `@../hact-method/specs-execution/dispatch-new.md`
 - `revise-doc`                → `@../hact-method/specs-execution/revise-doc.md`
 
+### B 类自动修复（Dynamic Workflow，可选）
+
+`dispatch-new` 完成后，B 类任务可通过 DW 脚本自动执行修复流程（fix-test loop + 对抗审查 + commit + PR）。
+
+触发方式——告诉 CC：
+```
+用 workflow 运行 B 类任务修复，
+脚本路径 ../hact-method/workflows/b-class-develop.js，
+任务 ID 是 {task-id}，项目路径是 {本仓绝对路径}
+```
+
+详见 `../hact-method/workflows/README.md`。
+
+> 触发后无需逐步确认，DW 自动执行到 PR 创建为止；
+> 人工只需在完成后跑 `pr-review` 审查 PR。
+
 ## 个人工具（人工触发，不在主线流程）
 
 | 工具 | 调用方式 | 说明 |
