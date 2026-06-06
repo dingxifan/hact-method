@@ -49,6 +49,39 @@ B 类 loop 对应的是**模式 6：Loop until done**：
 2. 新的 **exec spec 类型**（描述如何触发和监控 DW，而非步骤指令）
 3. 与现有 **状态追踪文件**（b-queue/、b-tasks.md、status.yml）的读写契约
 
-## 待确认设计问题
+## 设计决策（全部定稿）
 
-见 task_plan.md D2-D8。
+| # | 决策 |
+|---|------|
+| D1 | DW 范围：仅 develop 阶段（fix-test loop）；pr-review 保持人工 |
+| D2 | 触发方式：人工手动，传 task-id 运行脚本 |
+| D3 | loop 内只跑机械验证（build + lint + type + 单元测试）；机械全过后退出 loop，最后跑一次对抗审查 |
+| D4 | 升级给人的四条：a. 同一问题 3 轮机械验证未过；b1. 对抗审查有阻断则再修一轮再复审，二次阻断升级；c. 根因在设计层；d. hotfix 超出 files 范围 |
+| D5 | 脚本存放：新建 `workflows/` 目录（hact-method 根目录，与 templates/ 平级） |
+| D6 | pr-review 保持人工（已含于 D1） |
+| D7 | 只有主脚本写状态文件（b-queue/、b-tasks.md、status.yml）；子 agent 只负责代码修复 |
+| D8 | 脚本失败自动重试一次；二次失败则任务回 `[可取]` + 上报 |
+
+## DW 整体流程（设计定稿后）
+
+```
+人工触发：claude --workflow workflows/b-class-develop.js --task {task-id}
+
+主脚本：
+  1. 读 b-queue/{task-id}.md，认领任务（写 status.yml + b-queue 状态）
+  2. loop（最多 3 轮）：
+       agent-fix：读任务包 + 当前代码，实现修复
+       主脚本：运行机械验证（build/lint/type/单元测试）
+       通过 → 退出 loop
+       失败 → 继续下一轮
+     3 轮未过 → 升级给人，任务回 [可取]
+  3. agent-review：对抗审查（AC + diff，6 类检查）
+       findings:[] 或只有 [建议] → 继续
+       有 [阻断] → agent-fix 再修一轮 → 再跑 agent-review
+         二次阻断 → 升级给人
+  4. 主脚本：commit + push PR
+  5. 主脚本：更新 b-queue 状态 [done]、b-tasks.md 追加 PR 号、status.yml
+
+异常处理：
+  脚本报错 → 自动重试一次 → 二次失败则任务回 [可取] + 上报
+```

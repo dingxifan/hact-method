@@ -28,13 +28,13 @@
 | # | 问题 | 状态 |
 |---|------|------|
 | D1 | DW 的范围：仅 develop 阶段，还是涵盖 pr-review 自动合并？ | ✅ 仅 develop 阶段 |
-| D2 | DW 的触发方式：人工手动运行，还是 b-queue 有新任务自动触发？ | ⏸️ 待讨论 |
-| D3 | loop 的停止条件：build+lint+type 通过？还是加单元测试？还是对抗审查 findings:[]？ | ⏸️ 待讨论 |
-| D4 | 升级给人的条件（同一问题修 N 轮 / 根因在设计层 / hotfix 超范围）？ | ⏸️ 待讨论 |
-| D5 | DW 脚本存放位置：templates/workflows/？还是新建 workflows/ 目录？ | ⏸️ 待讨论 |
+| D2 | DW 的触发方式：人工手动运行，还是 b-queue 有新任务自动触发？ | ✅ 人工手动触发（传 task-id） |
+| D3 | loop 的停止条件：build+lint+type 通过？还是加单元测试？还是对抗审查 findings:[]？ | ✅ loop 内只跑机械验证（build+lint+type+单元测试）；机械全过后退出 loop，最后跑一次对抗审查 |
+| D4 | 升级给人的条件（同一问题修 N 轮 / 根因在设计层 / hotfix 超范围）？ | ✅ 四条：a.3 轮机械验证未过升级、b1.对抗审查阻断则再修一轮再复审（失败则升级）、c.根因在设计层、d.hotfix 超范围 |
+| D5 | DW 脚本存放位置：templates/workflows/？还是新建 workflows/ 目录？ | ✅ 新建 `workflows/` 目录（hact-method 根目录下，与 templates/ 平级） |
 | D6 | pr-review 阶段是否也 DW 化，还是保持人工？ | ✅ 保持人工 |
-| D7 | DW 与现有 status.yml / b-tasks.md 的写入契约如何对接？ | ⏸️ 待讨论 |
-| D8 | DW 失败（脚本报错/agent 崩溃）时的回退机制？ | ⏸️ 待讨论 |
+| D7 | DW 与现有 status.yml / b-tasks.md 的写入契约如何对接？ | ✅ 只有主脚本写状态文件；子 agent 只负责代码修复，返回结果给主脚本 |
+| D8 | DW 失败（脚本报错/agent 崩溃）时的回退机制？ | ✅ 自动重试一次；二次失败则任务回 `[可取]` + 上报错误原因 |
 
 ## 关键约束
 

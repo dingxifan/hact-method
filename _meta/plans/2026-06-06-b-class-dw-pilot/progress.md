@@ -26,3 +26,14 @@
 ### 下次会话起点
 
 继续阶段 1 设计讨论，逐一过 task_plan.md 中 D2-D8 待决问题。
+
+## 会话 2（2026-06-06）：阶段 1 设计定稿
+
+D2-D8 全部过完，结论见 findings.md「设计决策」表。
+
+### 下次会话起点
+
+阶段 1 完成，进入阶段 2：方法论落地。
+- 在 hact-method 中新建 `workflows/` 目录
+- 确定 B 类 DW 的 exec spec 形态（如何描述"触发和监控 DW"而非步骤指令）
+- 编写 `workflows/b-class-develop.js` 脚本模板
