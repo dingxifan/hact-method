@@ -106,16 +106,61 @@ const CREDENTIAL_SCHEMA = {
   required: ['found', 'locations'],
 }
 
+// push_local / push_remote：git push 之后由 agent 读回，JS 判断是否一致
 const PR_SCHEMA = {
   type: 'object',
   properties: {
-    pr_number: { type: 'number' },
-    pr_url:    { type: 'string' },
+    pr_number:   { type: 'number' },
+    pr_url:      { type: 'string' },
+    push_local:  { type: 'string' },
+    push_remote: { type: 'string' },
   },
-  required: ['pr_number'],
+  required: ['pr_number', 'push_local', 'push_remote'],
 }
 
-// ── Helper：升级给人，任务回 [可取]，push 到远端 ──────────────────
+// 回滚后工作树状态：JS 判断 stdout.trim() === '' 才算干净
+const ROLLBACK_SCHEMA = {
+  type: 'object',
+  properties: {
+    status_porcelain: { type: 'string' },
+  },
+  required: ['status_porcelain'],
+}
+
+// push 验证：由 JS 比较两个 sha，不交给 agent 判断
+const PUSH_VERIFY_SCHEMA = {
+  type: 'object',
+  properties: {
+    local_sha:  { type: 'string' },
+    remote_sha: { type: 'string' },
+  },
+  required: ['local_sha', 'remote_sha'],
+}
+
+// Phase 5 状态更新 push 验证
+const STATE_SCHEMA = {
+  type: 'object',
+  properties: {
+    local_sha:  { type: 'string' },
+    remote_sha: { type: 'string' },
+  },
+  required: ['local_sha', 'remote_sha'],
+}
+
+// ── Helper：验证 push 是否到达远端，返回 boolean ─────────────────
+// JS 做判断：不信 agent 自评，只信 sha 是否相等
+const verifyPush = async (branch, label) => {
+  const result = await agent(
+    `运行以下两条命令，将输出原样返回，不做任何判断：
+1. git rev-parse HEAD（返回本地当前 commit 的完整 sha）
+2. git ls-remote origin ${branch} | awk '{print $1}'
+   （返回远端该分支的 sha；如果输出为空说明远端没有该分支，返回字符串 "not_found"）`,
+    { label: label || `push验证·${branch}`, schema: PUSH_VERIFY_SCHEMA }
+  )
+  return result.local_sha === result.remote_sha && result.remote_sha !== 'not_found'
+}
+
+// ── Helper：升级给人，任务回 [可取]，push 并验证 ─────────────────
 const escalateTask = async (reason, detail) => {
   await agent(
     `将 b-queue/${taskId}.md 中状态行改回 \`status: [可取]\`，追加回退原因一行：
@@ -129,16 +174,32 @@ git commit -m "chore(b-queue): ${taskId} 升级回退 [可取]——${reason}"
 git push origin HEAD`,
     { label: '升级·任务回可取' }
   )
+  // 技术一：JS 验证 push 是否到达远端，不信 agent 自评
+  const pushOk = await verifyPush('HEAD', '升级push验证')
+  if (!pushOk) {
+    log(`⚠️ 升级状态未推到远端，请手动执行: git push origin HEAD（本地已有提交）`)
+  }
 }
 
-// ── Helper：回滚工作树代码改动 ────────────────────────────────────
+// ── Helper：回滚工作树代码改动，返回是否回滚干净 ─────────────────
+// 技术一：agent 执行 reset/checkout，再读 git status --porcelain 原文返回
+// JS 判断 stdout.trim() === '' 才算真正干净，不信 agent 自评
 const rollbackCode = async (label) => {
-  await agent(
-    `撤销所有未提交的代码改动（暂存区 + 工作树）：
-git reset HEAD .
-git checkout -- .`,
-    { label: label || '回滚代码改动' }
+  const result = await agent(
+    `按序执行：
+1. git reset HEAD .
+2. git checkout -- .
+3. 运行 git status --porcelain，将输出原样返回（不做任何判断或解释）
+
+返回：status_porcelain 字段填 git status --porcelain 的完整 stdout。
+工作树干净时该命令无输出，此时返回空字符串 ""。`,
+    { label: label || '回滚代码改动', schema: ROLLBACK_SCHEMA }
   )
+  const clean = result.status_porcelain.trim() === ''
+  if (!clean) {
+    log(`⚠️ 回滚验证失败：工作树仍有改动，请人工检查：\n${result.status_porcelain}`)
+  }
+  return clean
 }
 
 // ── Phase 1：认领任务 ─────────────────────────────────────────────
@@ -171,6 +232,12 @@ const taskInfo = await agent(
 **返回**：解析出的全部字段`,
   { label: '读取并认领任务', phase: '认领任务', schema: TASK_SCHEMA }
 )
+
+// 技术一：验证 Phase 1 认领 push 是否到达远端
+const phase1PushOk = await verifyPush('HEAD', '认领push验证')
+if (!phase1PushOk) {
+  log('⚠️ 认领状态未推到远端，请手动执行: git push origin HEAD（本地已有提交）')
+}
 
 // schema-change=true：AC 含「TRD已更新」条件，需人工决策，DW 不处理
 if (taskInfo.schema_change) {
@@ -556,9 +623,19 @@ ${deviationNote}
 ### 遗留问题
 ${pendingNote}
 
-**返回**：{ pr_number: N, pr_url: '...' }`,
+5. 运行以下两条命令，将输出原样填入返回值（不做判断）：
+   git rev-parse HEAD → push_local
+   git ls-remote origin ${taskId} | awk '{print $1}' → push_remote
+   （push_remote 为空则填 "not_found"）
+
+**返回**：{ pr_number: N, pr_url: '...', push_local: '...', push_remote: '...' }`,
   { label: 'Commit + PR', phase: 'Commit + PR', schema: PR_SCHEMA }
 )
+
+// 技术一：JS 验证 Phase 4 push 是否到达远端
+if (prResult.push_local !== prResult.push_remote || prResult.push_remote === 'not_found') {
+  log(`⚠️ Phase 4 push 未到达远端。本地 SHA: ${prResult.push_local}，请手动: git push origin ${taskId}`)
+}
 
 log(`PR #${prResult.pr_number} 已创建`)
 
@@ -566,7 +643,7 @@ log(`PR #${prResult.pr_number} 已创建`)
 
 phase('状态更新')
 
-await agent(
+const stateResult = await agent(
   `当前工作目录是项目根目录。按序执行：
 
 1. 将 b-queue/${taskId}.md 中状态行改为 \`status: [done]\`
@@ -578,9 +655,21 @@ await agent(
 
 4. git add b-queue/${taskId}.md status.yml b-tasks.md
    git commit -m "chore(b-queue): ${taskId} 标记 [done]，PR #${prResult.pr_number}"
-   git push origin ${taskId}`,
-  { label: '状态更新', phase: '状态更新' }
+   git push origin ${taskId}
+
+5. 运行以下两条命令，将输出原样填入返回值（不做判断）：
+   git rev-parse HEAD → local_sha
+   git ls-remote origin ${taskId} | awk '{print $1}' → remote_sha
+   （remote_sha 为空则填 "not_found"）
+
+**返回**：{ local_sha: '...', remote_sha: '...' }`,
+  { label: '状态更新', phase: '状态更新', schema: STATE_SCHEMA }
 )
+
+// 技术一：JS 验证 Phase 5 push 是否到达远端
+if (stateResult.local_sha !== stateResult.remote_sha || stateResult.remote_sha === 'not_found') {
+  log(`⚠️ Phase 5 push 未到达远端。本地 SHA: ${stateResult.local_sha}，请手动: git push origin ${taskId}`)
+}
 
 // ── 已知局限（不阻断流程）────────────────────────────────────────
 // exec spec Step 10：B 类就地分流写入个人 notes（hact-notes-{name}）。
