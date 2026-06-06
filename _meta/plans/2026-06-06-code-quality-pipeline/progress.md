@@ -37,23 +37,21 @@
 
 ---
 
----
-
-## 第三次会话（2026-06-06）
-
-### 缺口 1：B 类 loop 化 ✅
-
-在 `specs-execution/develop.md` 末尾新增「B 类快速修复 loop」独立章节：
-- 任务拾取：从 `b-queue/` 读任务，`layers` 字段自动判断执行层，无需用户确认
-- 修复 loop：实现修复 → 机械验证（build/lint/type + 可选 unit test）→ 对抗审查（同 Step 5.5，6 类）→ 退出或循环
-- 退出条件：`findings: []` 或只有 `[建议]`
-- 升级协议：同一 `[阻断]` 3 轮、根因在设计层、hotfix 超范围 → 停止 loop 上报用户
-- commit + PR（B 类简化版 PR description）+ 状态更新 + 就地分流
-- 同步修复 Subagent 表中「5 类」→「6 类」错误
-- 在文件头部 + 会话启动节头各加一条路由提醒，防止 CC 顺序读进 A 类流程
-
 ## 下次会话起点
+
+**缺口 1：B 类 loop 化**（未动手）
+
+目标：发现 bug → loop { AI修 → AI跑测试 → 全过? → 结束 } → 人只看结果
+
+需要读的文件：
+- `specs-execution/develop.md`（B 类 develop 会期部分）
+- `specs-structural/` 中 B 类相关契约
+
+设计问题：
+- loop 的停止条件是什么？（测试全过 + build 无报错）
+- 升级给人的条件是什么？（同一 bug 修复超 N 轮 / 根因在 TRD 设计）
+- B 类 exec spec 改哪部分？是在现有 develop.md 加 B 类 loop 段，还是拆成独立文件？
 
 **缺口 3：harvest-notes pipeline 化**（未动手）
 
-**git commit**：本轮所有改动（develop/pr-review/draft-tech-design/generate-integration-tests/init-project/guide/templates + B 类 loop）均未提交，下次会话前或会话中提交。
+**git commit**：本轮所有改动（develop/pr-review/draft-tech-design/generate-integration-tests/init-project/guide/templates 等）仍未提交，下次会话前或会话中提交。

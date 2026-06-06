@@ -12,15 +12,13 @@
 
 Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「批量会话步骤」章节，Steps 1–4 在批量会话中对每个任务依次执行。
 
-> **source=bug 或 source=optimization（B 类任务）**：不走上述两种模式，跳至文末「B 类快速修复 loop」章节。
-
 ---
 
 > **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
 
 ---
 
-## 会话启动（source=sprint / integration / manual-test 适用；source=bug/optimization 跳至文末「B 类快速修复 loop」）
+## 会话启动
 
 **第零步：确认执行层**
 
@@ -410,7 +408,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 | Step 3 复用检查 | Explore 读 reusables.md | 失败则主线直接读 |
 | Step 4 代码探索（reference 不足时）| Explore 扫描周边文件（返回 ≤20 行摘要）| 失败则主线读文件 |
 | Step 4（> 5 文件跨模块）| general-purpose subagent 实现单个模块 | 见下方失败协议 |
-| Step 5.5 / B 类对抗审查 | 独立 sub-agent，只传 AC + diff，不传实现思路；6 类逐项审查（A 类 Step 5.5 / B 类 loop 均适用） | 同一 `[阻断]` 三次失败 → 停止 loop，上报用户 |
+| Step 5.5 对抗审查 | 独立 sub-agent，只传 AC + diff，不传实现思路；5 类逐项审查 | 同一 `[阻断]` 三次失败 → 停止 loop，上报用户 |
 
 **Subagent 失败协议**：
 1. 同一问题同一 subagent 三次失败 → subagent 返回失败结构：
@@ -466,102 +464,3 @@ context-state:
 4. 从断点继续，不重做已完成改动
 
 **阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 `progress.md` 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。
-
----
-
-## B 类快速修复 loop（source=bug / source=optimization）
-
-> B 类无人工确认门，AI 全自动执行，人只看最终 PR（或升级报告）。A 类标准流程（Steps 1–10）不适用此类 source。
-
-### 任务拾取
-
-读 `b-queue/{task-id}.md`，理解：
-- `description`（当前状态 → 期望状态）
-- `acceptance-criteria`（修复后的验证标准）
-- `files`（已知改动范围）
-- `layers`（决定执行层，从此字段自动判断，无需用户确认）
-
-认领 commit：
-```bash
-git add b-queue/{task-id}.md
-git commit -m "chore(b-queue): 认领 {task-id} [taken-by: {user}]"
-```
-
-### 修复 loop
-
-循环执行以下步骤，直到退出条件满足：
-
-**1. 实现修复**
-
-按 `files` 字段范围实现，`urgency=hotfix` 保持最小路径。超出 `files` 范围的改动记录「偏离」，待写入 PR description。
-
-**2. 机械验证**
-
-```bash
-npm run build && npm run type-check && npm run lint
-```
-
-项目有单元测试时追加：`npm test`
-
-任意失败 → 修复，重新从步骤 1 开始。
-
-**3. 对抗审查**（规则完全同 Step 5.5；传 AC + diff，禁止传实现思路）
-
-| 审查结果 | 动作 |
-|---------|------|
-| `findings: []` | 退出 loop → 进入 commit + PR |
-| 只有 `[建议]`，无 `[阻断]` | 写入 `backlog.md`（格式：`- [ ] {日期} \| [CR-建议] {描述} \| {文件:行号}`）；退出 loop → 进入 commit + PR |
-| 有 `[阻断]` | 修复所有 `[阻断]`，重新从步骤 1 开始 |
-| 同一 `[阻断]` 连续出现 3 次 | 触发升级协议，停止 loop |
-
-**升级协议**（任一条件满足 → 停止 loop，不推 PR，输出报告后 🚫 等用户指示）：
-
-| 触发条件 | 输出 |
-|---------|------|
-| 同一 `[阻断]` 修了 3 轮仍存在 | `⚠️ B 类升级：{task-id} ─ [{阻断描述}] 修复 3 轮未解，根因可能在设计层，建议创建 revise-doc 任务` |
-| 修复路径需改动 TRD/PRD 或 standards | `⚠️ B 类升级：{task-id} ─ 根因在设计层（{说明}），建议创建 revise-doc 任务` |
-| urgency=hotfix 且修复超出 `files` 范围 | `⚠️ B 类升级：{task-id} ─ hotfix 超出约定范围（{说明}），需人工确认是否扩大修复边界` |
-
-### commit + PR
-
-验证通过后执行：
-
-```bash
-git add {改动文件}
-git commit -m "fix({task-id}): {修复描述}"
-git push origin {task-id}
-```
-
-PR description（B 类简化版）：
-
-```markdown
-## {task-id}：{bug/优化标题}
-
-### 根因 / 背景
-{一句话}
-
-### 修复 / 改动
-{一句话}
-
-### AC 验证
-- [x] {AC 1}：{验证方式}
-- [x] {AC 2}：{验证方式}
-
-### 偏离说明
-{无 / 超出 files 范围的改动}
-
-### 遗留问题
-{无 / 已记入 backlog 的建议}
-```
-
-### 状态更新 + 分流
-
-- `b-queue/{task-id}.md` → 状态改 `[done]`
-- `b-tasks.md` 对应行 → 追加 `PR#{N} 待审`
-- **就地分流**（同 Step 10 B 类分支）：值得沉淀的发现当场誊入个人 notes，不写 feedback.md
-
-```
-✅ B 类修复完成：{task-id} PR#{N} 已推，等待 pr-review。
-```
-
-🚫 **会话硬边界**：输出后立即停止。禁止建议复测、联调等后续动作。
