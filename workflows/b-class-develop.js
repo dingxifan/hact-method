@@ -2,10 +2,10 @@ export const meta = {
   name: 'b-class-develop',
   description: 'B类任务自动修复：认领→前置检查→fix-test loop→对抗审查→commit+PR',
   phases: [
-    { title: '认领任务', detail: '读全字段任务包；schema-change检查；认领 b-queue/b-tasks.md/status.yml' },
-    { title: 'Fix-Test Loop', detail: '复用检查 → agent-fix（含do-not/escalate-if）→ 机械验证 → 偏离核查，最多3轮' },
+    { title: '认领任务', detail: '读全字段任务包；schema-change检查；认领 b-queue/b-tasks.md/status.yml；push 到远端' },
+    { title: 'Fix-Test Loop', detail: '复用检查 → agent-fix（含最小测试/do-not/escalate-if）→ 机械验证 → 偏离核查，最多3轮' },
     { title: '对抗审查', detail: '独立 agent 审查 AC+diff（含接口契约）；有阻断则修复后复审' },
-    { title: 'Commit + PR', detail: '凭据检查 → commit → push → 创建PR（AC含验证方式）' },
+    { title: 'Commit + PR', detail: '清理范围外文件 → 凭据检查 → commit → push → 创建PR' },
     { title: '状态更新', detail: '更新 b-queue/b-tasks.md/status.yml，commit + push' },
   ],
 }
@@ -48,6 +48,7 @@ const REUSABLES_SCHEMA = {
   required: ['applicable', 'none'],
 }
 
+// test_files：agent-fix 新建或修改的测试文件路径，供 Phase 4 一并 git add
 const FIX_SCHEMA = {
   type: 'object',
   properties: {
@@ -55,8 +56,9 @@ const FIX_SCHEMA = {
     do_not_violated: { type: 'boolean' },
     violated_rule:   { type: 'string' },
     escalate_reason: { type: 'string' },
+    test_files:      { type: 'array', items: { type: 'string' } },
   },
-  required: ['completed', 'do_not_violated', 'violated_rule', 'escalate_reason'],
+  required: ['completed', 'do_not_violated', 'violated_rule', 'escalate_reason', 'test_files'],
 }
 
 const VERIFY_SCHEMA = {
@@ -113,20 +115,29 @@ const PR_SCHEMA = {
   required: ['pr_number'],
 }
 
-// ── Helper：升级给人，任务回 [可取] ───────────────────────────────
-// 在任意 phase 中调用，agent 归属当前活跃 phase
-
+// ── Helper：升级给人，任务回 [可取]，push 到远端 ──────────────────
 const escalateTask = async (reason, detail) => {
   await agent(
-    `将 b-queue/${taskId}.md 中状态行改回 \`status: [可取]\`，并追加一行回退原因：
+    `将 b-queue/${taskId}.md 中状态行改回 \`status: [可取]\`，追加回退原因一行：
 「DW升级回退——${reason}：${detail.slice(0, 120)}」
 
 在 status.yml 找到 id=${taskId} 的 task：status 改回 \`可取\`，assigned_to 改为 null。
 在 b-tasks.md 找到 task-id 为 ${taskId} 的行，将状态列改回 \`[可取]\`。
 
 git add b-queue/${taskId}.md status.yml b-tasks.md
-git commit -m "chore(b-queue): ${taskId} 升级回退 [可取]——${reason}"`,
+git commit -m "chore(b-queue): ${taskId} 升级回退 [可取]——${reason}"
+git push origin HEAD`,
     { label: '升级·任务回可取' }
+  )
+}
+
+// ── Helper：回滚工作树代码改动 ────────────────────────────────────
+const rollbackCode = async (label) => {
+  await agent(
+    `撤销所有未提交的代码改动（暂存区 + 工作树）：
+git reset HEAD .
+git checkout -- .`,
+    { label: label || '回滚代码改动' }
   )
 }
 
@@ -155,25 +166,26 @@ const taskInfo = await agent(
 
 6. git add b-queue/${taskId}.md status.yml b-tasks.md
    git commit -m "chore(b-queue): 认领 ${taskId} [taken-by: dw-bot]"
+   git push origin HEAD
 
 **返回**：解析出的全部字段`,
   { label: '读取并认领任务', phase: '认领任务', schema: TASK_SCHEMA }
 )
 
-// schema-change 检查：涉及接口/数据结构变更，TRD 需人工更新，DW 不处理
+// schema-change=true：AC 含「TRD已更新」条件，需人工决策，DW 不处理
 if (taskInfo.schema_change) {
-  await escalateTask('schema-change=true', '任务包含接口或数据结构纯加法变更，AC 中含「TRD已更新」条件，需人工更新 TRD 后重新派发')
-  log('⚠️ 升级给人工：schema-change=true，请人工处理 TRD 更新后重新触发')
+  await escalateTask('schema-change=true', '任务含接口或数据结构变更，TRD 需人工更新后重新派发')
+  log('⚠️ 升级给人工：schema-change=true')
   return { escalated: true, reason: 'schema_change', task_id: taskId }
 }
 
-log(`认领成功：${taskInfo.title}（${taskInfo.task_type}，${taskInfo.layers.join('/')} 层，涉及 ${taskInfo.files.length} 个文件）`)
+log(`认领成功：${taskInfo.title}（${taskInfo.task_type}，${taskInfo.layers.join('/')}层，${taskInfo.files.length} 个文件）`)
 
 // ── Phase 2：Fix-Test Loop ────────────────────────────────────────
 
 phase('Fix-Test Loop')
 
-// 复用检查（exec spec Step 3）
+// Step 3：复用检查
 const reusablesInfo = await agent(
   `你是一个 Explore agent，当前工作目录是项目根目录。
 
@@ -182,7 +194,7 @@ const reusablesInfo = await agent(
 - 需改动的文件：${taskInfo.files.join(', ')}
 
 返回：
-- applicable：相关资产列表，每条格式「资产名（路径）→ 用于：{任务哪个部分}」
+- applicable：相关资产列表（每条格式：「资产名（路径）→ 用于：任务哪个部分」）
 - none：无相关资产则为 true
 
 reusables.md 不存在时返回 { applicable: [], none: true }`,
@@ -196,18 +208,21 @@ if (!reusablesInfo.none) {
 let lastErrors = ''
 let fixPassed = false
 let deviationInfo = null
+let testFiles = []
 
 for (let round = 1; round <= 3; round++) {
   log(`第 ${round} 轮 Fix-Test`)
 
+  const quotedFiles = taskInfo.files.map(f => '"' + f + '"').join('\n')
+
   const fixResult = await agent(
     `你是一个代码修复 agent，当前工作目录是项目根目录。
-只修改代码文件，不写任何状态文件（b-queue/、status.yml、b-tasks.md）。
+只修改代码/测试文件，不写任何状态文件（b-queue/、status.yml、b-tasks.md）。
 
-━━━ 禁止事项（违反任意一条 → 立即停止，do_not_violated=true，不继续实现）━━━
+━━━ 禁止事项（违反任意一条 → 立即停止，do_not_violated=true）━━━
 ${taskInfo.do_not.map((d, i) => `${i + 1}. ${d}`).join('\n')}
 
-━━━ 升级条件（满足任意一条 → 立即停止，escalate_reason 填原因，不继续实现）━━━
+━━━ 升级条件（满足任意一条 → 立即停止，escalate_reason 填原因）━━━
 ${taskInfo.escalate_if.map((e, i) => `${i + 1}. ${e}`).join('\n')}
 
 ━━━ 任务信息 ━━━
@@ -219,13 +234,13 @@ ${taskInfo.escalate_if.map((e, i) => `${i + 1}. ${e}`).join('\n')}
 ━━━ 验收标准（AC）━━━
 ${taskInfo.acceptance_criteria.map((ac, i) => `${i + 1}. ${ac}`).join('\n')}
 
-━━━ 需改动的文件（只改这些，不新增、不改其他文件）━━━
-${taskInfo.files.map(f => `- ${f}`).join('\n')}
+━━━ 需改动的文件（只改这些，不新增、不改其他代码文件）━━━
+${quotedFiles}
 
 ━━━ 必须优先复用（不得重新实现）━━━
 ${reusablesInfo.none ? '无' : reusablesInfo.applicable.map(a => `- ${a}`).join('\n')}
 
-━━━ 需遵守的规范章节（先读对应内容再实现）━━━
+━━━ 需遵守的规范章节（先读再实现）━━━
 ${taskInfo.relevant_standards && taskInfo.relevant_standards.length > 0
     ? taskInfo.relevant_standards.map(s => `- ${s}`).join('\n')
     : '无'}
@@ -243,44 +258,58 @@ ${taskInfo.known_risks && taskInfo.known_risks.length > 0
 ${taskInfo.api_contract ? `━━━ 接口契约（严格遵守，不得偏离）━━━\n${taskInfo.api_contract}` : ''}
 
 ${taskInfo.layers.includes('frontend') ? `━━━ 前端特别说明 ━━━
-遇到 standards 未覆盖的视觉决策（颜色/布局/交互细节等）→ 不自行决定，将该场景写入 escalate_reason 上报。` : ''}
+遇到 standards 未覆盖的视觉决策 → 不自行决定，将场景写入 escalate_reason 上报。` : ''}
 
-${round > 1 ? `━━━ 上一轮机械验证失败，错误信息 ━━━
+━━━ 最小测试要求 ━━━
+检查项目是否有测试框架（package.json 中有 jest/vitest/mocha 等，或存在 jest.config/vitest.config）：
+- 有测试框架：为每条 AC 编写至少一个最小单元测试，只覆盖核心路径；
+  测试文件放在与被测文件同目录的 __tests__/ 下，或与项目已有测试目录保持一致；
+  将新建或修改的测试文件路径列入 test_files。
+- 无测试框架：跳过测试编写，test_files 返回 []。
+
+${round > 1 ? `━━━ 上一轮机械验证失败 ━━━
 ${lastErrors}
-根据上述错误针对性修复，不扩大改动范围。` : ''}
+针对以上错误修复，不扩大改动范围。` : ''}
 
-━━━ 返回格式 ━━━
-- completed：是否完成实现（boolean）
+━━━ 返回字段说明 ━━━
+- completed：实现是否完成（boolean）
 - do_not_violated：是否触碰禁止事项（boolean）
-- violated_rule：触碰了哪条禁止事项（无则为空字符串）
-- escalate_reason：需要升级的原因（无则为空字符串）`,
+- violated_rule：触碰了哪条（无则返回空字符串 ''，不要返回"无"/"N/A"等文字）
+- escalate_reason：升级原因（无需升级时必须返回空字符串 ''，不要返回"无"/"N/A"等文字）
+- test_files：新建或修改的测试文件路径列表（无则 []）`,
     { label: `Fix 第${round}轮`, phase: 'Fix-Test Loop', schema: FIX_SCHEMA }
   )
 
+  // 累积测试文件（跨轮去重）
+  if (fixResult.test_files && fixResult.test_files.length > 0) {
+    const seen = new Set(testFiles)
+    for (const f of fixResult.test_files) {
+      if (!seen.has(f)) { seen.add(f); testFiles.push(f) }
+    }
+  }
+
   // do-not 越界 → 回滚并升级
   if (fixResult.do_not_violated) {
-    await agent(
-      `在当前目录执行以下命令，撤销 agent-fix 的所有代码改动：
-git reset HEAD .
-git checkout -- .`,
-      { label: '回滚·do-not违反', phase: 'Fix-Test Loop' }
-    )
+    await rollbackCode('回滚·do-not违反')
     await escalateTask('do-not违反', fixResult.violated_rule)
     log(`⚠️ 升级给人工：触碰禁止边界——${fixResult.violated_rule}`)
     return { escalated: true, reason: 'do_not_violated', task_id: taskId, rule: fixResult.violated_rule }
   }
 
-  // escalate-if 触发 → 回滚并升级
-  if (fixResult.escalate_reason) {
-    await agent(
-      `在当前目录执行以下命令，撤销 agent-fix 的所有代码改动：
-git reset HEAD .
-git checkout -- .`,
-      { label: '回滚·escalate触发', phase: 'Fix-Test Loop' }
-    )
+  // escalate-if 触发（严格判断：空字符串才放行）
+  if (fixResult.escalate_reason.trim() !== '') {
+    await rollbackCode('回滚·escalate触发')
     await escalateTask('escalate-if触发', fixResult.escalate_reason)
     log(`⚠️ 升级给人工：${fixResult.escalate_reason}`)
     return { escalated: true, reason: 'escalate_if_triggered', task_id: taskId, detail: fixResult.escalate_reason }
+  }
+
+  // 实现未完成（completed=false 且无明确原因）
+  if (!fixResult.completed) {
+    await rollbackCode('回滚·实现未完成')
+    await escalateTask('实现未完成', `第 ${round} 轮 agent-fix 未完成实现，且未给出明确原因`)
+    log('⚠️ 升级给人工：agent-fix 未完成实现')
+    return { escalated: true, reason: 'fix_incomplete', task_id: taskId, round }
   }
 
   // 机械验证
@@ -311,37 +340,32 @@ git checkout -- .`,
 }
 
 if (!fixPassed) {
-  await agent(
-    `在当前目录执行以下命令，撤销所有未提交的代码改动：
-git reset HEAD .
-git checkout -- .`,
-    { label: '回滚·三轮验证失败', phase: 'Fix-Test Loop' }
-  )
+  await rollbackCode('回滚·三轮验证失败')
   await escalateTask('三轮机械验证均未通过', lastErrors.slice(0, 200))
   log('⚠️ 升级给人工：三轮机械验证均未通过')
   return { escalated: true, reason: 'mechanical_fail_3_rounds', task_id: taskId, errors: lastErrors }
 }
 
-// 偏离核查（exec spec Step 5 第二部分）
+// 偏离核查
 deviationInfo = await agent(
   `在当前目录运行 git diff --stat，列出所有被修改的文件。
 
-对比以下计划改动文件清单，找出差异：
-计划改动文件：${taskInfo.files.join(', ')}
+对比以下计划改动文件清单：
+${taskInfo.files.map(f => `- "${f}"`).join('\n')}
 
-另外，对照以下 AC 列表，根据 diff 内容判断哪些 AC 尚未实现：
+另外，对照以下 AC 列表，根据 diff 判断哪些 AC 尚未实现：
 ${taskInfo.acceptance_criteria.map((ac, i) => `AC${i + 1}: ${ac}`).join('\n')}
 
 返回：
-- extra_files：实际修改但不在计划清单中的文件（空则 []）
-- unimplemented_acs：判断为尚未实现的 AC 编号（如 ["AC2", "AC3"]；空则 []）`,
+- extra_files：实际修改但不在计划清单中的文件（不含测试文件，空则 []）
+- unimplemented_acs：判断为尚未实现的 AC 编号，格式 ["AC2", "AC3"]（空则 []）`,
   { label: '偏离核查', phase: 'Fix-Test Loop', schema: DEVIATION_SCHEMA }
 )
 
-// hotfix 超范围 → D4 升级条件（代码已改但不回滚，升级给人决定）
+// hotfix 超范围 → D4 升级条件
 if (taskInfo.urgency === 'hotfix' && deviationInfo.extra_files.length > 0) {
   await escalateTask('hotfix超出files范围', `多改了：${deviationInfo.extra_files.join(', ')}`)
-  log(`⚠️ 升级给人工：hotfix 超出 files 范围，多改了 ${deviationInfo.extra_files.join(', ')}`)
+  log(`⚠️ 升级给人工：hotfix 超出 files 范围`)
   return { escalated: true, reason: 'hotfix_overscope', task_id: taskId, extra_files: deviationInfo.extra_files }
 }
 
@@ -402,7 +426,7 @@ if (reviewResult.has_blocker) {
 需要修复以下对抗审查阻断（严格只修复这些问题，不扩大改动范围）：
 ${reviewResult.blockers.map((b, i) => `${i + 1}. ${b}`).join('\n')}
 
-涉及文件：${taskInfo.files.map(f => `- ${f}`).join(', ')}
+涉及文件：${taskInfo.files.map(f => '"' + f + '"').join(', ')}
 
 禁止事项（同样适用）：
 ${taskInfo.do_not.map((d, i) => `${i + 1}. ${d}`).join('\n')}`,
@@ -447,9 +471,20 @@ log('对抗审查完成，无阻断')
 
 phase('Commit + PR')
 
+// 清理范围外文件（extra_files 不提交，撤销其改动保持工作树干净）
+if (deviationInfo.extra_files.length > 0) {
+  await agent(
+    `以下文件不在本次任务范围内，撤销它们的改动以保持工作树干净：
+${deviationInfo.extra_files.map(f => `git checkout -- "${f}"`).join('\n')}
+
+执行完后运行 git status 确认这些文件已恢复。`,
+    { label: '清理范围外文件', phase: 'Commit + PR' }
+  )
+}
+
 // 凭据检查（推 PR 前，exec spec Step 7 红线）
 const credentialResult = await agent(
-  `在当前目录运行 git diff，扫描所有代码改动中是否存在以下凭据类型：
+  `在当前目录运行 git diff 和 git diff --cached，扫描所有代码改动中是否存在以下凭据：
 PAT / access token / 密码 / 私钥 / API key / secret
 
 判断标准：
@@ -464,17 +499,31 @@ PAT / access token / 密码 / 私钥 / API key / secret
 
 if (credentialResult.found) {
   await escalateTask('发现凭据', credentialResult.locations.join('；'))
-  log(`⚠️ 停止推送：发现疑似凭据，位置：${credentialResult.locations.join(', ')}，请清理后重新触发`)
+  log(`⚠️ 停止推送：发现疑似凭据——${credentialResult.locations.join(', ')}`)
   return { escalated: true, reason: 'credential_found', task_id: taskId, locations: credentialResult.locations }
 }
 
-// 偏离说明和遗留问题文本
+// 构建 AC 验证段：unimplemented_acs 标 [ ]，其余标 [x]
+const acLines = taskInfo.acceptance_criteria.map((ac, i) => {
+  const acId = 'AC' + (i + 1)
+  const unimplemented = deviationInfo.unimplemented_acs.some(u => u === acId)
+  if (unimplemented) {
+    return `- [ ] ${acId}：${ac}（未实现，见遗留问题）`
+  }
+  return `- [x] ${acId}：${ac}（验证方式：{根据 diff 内容填写具体验证方式}）`
+}).join('\n')
+
+// 偏离和遗留说明
 const deviationNote = deviationInfo.extra_files.length > 0
-  ? `改动超出 files 清单：${deviationInfo.extra_files.join(', ')}`
+  ? `改动超出 files 清单：${deviationInfo.extra_files.join(', ')}（已在提交前撤销）`
   : '无'
 const pendingNote = deviationInfo.unimplemented_acs.length > 0
   ? `${deviationInfo.unimplemented_acs.join(', ')} 未能实现，已记入 backlog`
   : '无'
+
+// git add 包含任务文件 + 测试文件，所有路径加引号防空格裂开
+const allFilesToAdd = [...taskInfo.files, ...testFiles]
+const quotedAllFiles = allFilesToAdd.map(f => '"' + f + '"').join(' ')
 
 const prResult = await agent(
   `当前工作目录是项目根目录。按序执行：
@@ -482,24 +531,24 @@ const prResult = await agent(
 1. 确认当前在分支 ${taskId}：
    git checkout -b ${taskId}（新建）或 git checkout ${taskId}（已存在）
 
-2. git add ${taskInfo.files.join(' ')}
+2. git add ${quotedAllFiles}
    git commit -m "fix(${taskId}): ${taskInfo.title}"
 
 3. git push origin ${taskId}
    （触发本 workflow 即为对此 push 的授权）
 
 4. 创建 PR（/gitee-ops 或 gh pr create，按项目远端类型选择）。
-   PR body 格式如下，**AC验证段必须根据 diff 内容为每条 AC 填写具体验证方式**：
+   PR body（**AC验证段：已实现的条目根据 diff 填写验证方式，[x]/[ ] 严格按模板**）：
 
 ## ${taskId}：${taskInfo.title}
 
 > 由 B 类 Dynamic Workflow 自动执行
 
 ### 改动摘要
-{根据 diff 用 2-3 句话说明：修复了什么问题、改动了哪些文件、核心手段是什么}
+{根据 diff 用 2-3 句话说明：修复了什么、改动了哪些文件、核心手段}
 
 ### Acceptance Criteria 验证
-${taskInfo.acceptance_criteria.map((ac, i) => `- [x] AC${i + 1}：${ac}（验证方式：{根据 diff 推断对应的具体验证方式}）`).join('\n')}
+${acLines}
 
 ### 偏离说明
 ${deviationNote}
@@ -533,15 +582,18 @@ await agent(
   { label: '状态更新', phase: '状态更新' }
 )
 
-// ── 已知局限说明（不阻断流程）────────────────────────────────────
-// exec spec Step 10 要求 B 类就地分流：把发现写入个人 notes（hact-notes-{name}）。
-// DW 无用户身份，无法确定写入哪个 notes 仓，此步骤需人工在 PR review 后自行执行。
+// ── 已知局限（不阻断流程）────────────────────────────────────────
+// exec spec Step 10：B 类就地分流写入个人 notes（hact-notes-{name}）。
+// DW 无用户身份，无法确定写入哪个 notes 仓，需人工在 PR review 后执行。
+// checklist 自检（templates/checklists/{layer}-checklist.md）：
+// 当前未包含在机械验证中，由 pr-review 阶段人工核查。
 
 log(`✅ B 类任务完成：${taskId}，PR #${prResult.pr_number} 等待人工 pr-review`)
-log('📌 提醒：Step 10 feedback 就地分流（写个人 notes）需人工完成，DW 无法执行。')
+log('📌 提醒：Step 10 feedback 就地分流（写个人 notes）需人工完成。')
 return {
   success:    true,
   task_id:    taskId,
   pr_number:  prResult.pr_number,
   pr_url:     prResult.pr_url,
+  test_files: testFiles,
 }
