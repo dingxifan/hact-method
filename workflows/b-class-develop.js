@@ -12,7 +12,11 @@ export const meta = {
 
 // args = { taskId: string }
 // 从项目仓 CC 会话触发，CWD = 项目根目录
-const { taskId } = args
+log(`[DEBUG] args=${JSON.stringify(args)}`)
+const taskId = (args && typeof args === 'object' && args.taskId)
+  ? String(args.taskId)
+  : (typeof args === 'string' ? args : undefined)
+log(`[DEBUG] taskId=${taskId}`)
 
 // ── Schemas ───────────────────────────────────────────────────────
 
