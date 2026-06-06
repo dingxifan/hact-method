@@ -206,31 +206,33 @@ const rollbackCode = async (label) => {
 
 phase('认领任务')
 
-const taskInfo = await agent(
+// 拆为两步：① git 操作（无 schema，上下文轻）② 单独解析（专注 StructuredOutput）
+await agent(
   `你是一个任务认领 agent，当前工作目录是项目根目录。
 
 **步骤（按序，不可跳过）**：
 
-1. 读取 b-queue/${taskId}.md 的完整内容
+1. 将 b-queue/${taskId}.md 中的状态行改为 \`status: [taken-by: dw-bot]\`
 
-2. 解析以下所有字段（字段不存在时返回 null / [] / false）：
-   title, description, task_type, layers, source, urgency, schema_change,
-   files, acceptance_criteria, relevant_standards, reference,
-   context, known_risks, do_not, escalate_if, api_contract
-
-3. 将 b-queue/${taskId}.md 中的状态行改为 \`status: [taken-by: dw-bot]\`
-
-4. 在 status.yml 找到 id=${taskId} 的 task：
+2. 在 status.yml 找到 id=${taskId} 的 task：
    status 改为 \`taken-by\`，assigned_to 改为 \`dw-bot\`
 
-5. 在 b-tasks.md 找到 task-id 为 ${taskId} 的行，将状态列从 \`[可取]\` 改为 \`[taken-by: dw-bot]\`
+3. 在 b-tasks.md 找到 task-id 为 ${taskId} 的行，将状态列从 \`[可取]\` 改为 \`[taken-by: dw-bot]\`
 
-6. git add b-queue/${taskId}.md status.yml b-tasks.md
+4. git add b-queue/${taskId}.md status.yml b-tasks.md
    git commit -m "chore(b-queue): 认领 ${taskId} [taken-by: dw-bot]"
    git push origin HEAD
 
-**返回**：解析出的全部字段`,
-  { label: '读取并认领任务', phase: '认领任务', schema: TASK_SCHEMA }
+完成后输出 "认领完成"。`,
+  { label: '认领·git操作', phase: '认领任务' }
+)
+
+const taskInfo = await agent(
+  `读取 b-queue/${taskId}.md 的完整内容，解析并返回以下字段（字段不存在时返回 null / [] / false）：
+title, description, task_type, layers, source, urgency, schema_change,
+files, acceptance_criteria, relevant_standards, reference,
+context, known_risks, do_not, escalate_if, api_contract`,
+  { label: '解析任务包', phase: '认领任务', schema: TASK_SCHEMA }
 )
 
 // 技术一：验证 Phase 1 认领 push 是否到达远端
