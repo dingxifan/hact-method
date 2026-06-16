@@ -49,6 +49,24 @@
 
 ## 历史里程碑
 
+### 2026-06-16 方法论调整：集成测试脚本移至 generate-integration-tests 阶段生成
+
+- **背景**：org-krm v5 联调阶段，前端 pinchtab 脚本（预生成于 draft-tech-design G2 后）在实际执行时暴露出系统性假设错误，导致 15 条场景全部失败、脚本修正反复经历 8 轮迭代才稳定。主要问题：
+  1. **路由假设错误**：脚本导航 `/org/$DEPT_ID`，但应用无此路由参数，必须点击树节点
+  2. **pinchtab 工具行为未知**：`$PT url` 命令实际无输出；`"用户名 input"` role 不匹配（应为 `textbox`）；`<div @click>` 无 ARIA role 不可被 `find` 识别
+  3. **数据假设错误**：`detail_md` 字段在 DB 中为 null，与 AC 描述的"渲染区块"形成缺口
+  4. **认证注入不完整**：仅注入 token 不够，还需注入含 `review_scope` 的 user 数据
+  - 后端脚本（curl）相对稳定，主要问题是一处字段名（`deptId` vs `dept_id`），1 轮修正即通过
+  - 根本原因：TRD 阶段只有接口契约，没有实际运行的前端，**无法验证**路由、组件可访问性、工具行为、数据状态——脚本是"空中建筑"，只能在 develop 完成后才能写出稳定的脚本
+
+- **决策**：废除 draft-tech-design 阶段的集成测试脚本预生成步骤；改在 generate-integration-tests 阶段（develop 全部合并后）主动生成脚本并立即执行
+
+- **修改文件**：
+  - `specs-execution/draft-tech-design.md`：删除 Step 6 中"集成测试脚本预生成"子任务（spawn subagent 预生成 + commit）；subagent 表格对应行同步删除
+  - `specs-execution/generate-integration-tests.md`：将"脚本缺失时 Explore subagent 补写"从 fallback 升级为**主线**；删除"脚本已预生成"的前提假设；调整 Step 2 开头说明和上下文密度描述
+
+- **不变**：draft-tech-design 仍输出 `scripts-vN.md` 索引格式约定（供 generate-integration-tests 参考场景覆盖范围），但不再预生成可执行脚本本体
+
 ### 2026-06-08 方法论清理：移除全部 Dynamic Workflow（计费口径对齐）
 - 背景：Anthropic 2026-06-15 起将 Agent SDK / `claude -p` headless / GitHub Actions 等程序化 agentic 用量从订阅额度池剥离，改走独立 Agent Credit Pool 按 API 价计费。DW（`Workflow` 工具）是全仓唯一接近"自动化 agentic 用量"的形态，计费口径存在歧义
 - 处置：将仅存的测试产物 DW 及其所有引用彻底删除，方法论全面回归"交互式会话 + `Agent` 工具"——后者跟随会话走 Max 订阅，不进 Credit Pool
