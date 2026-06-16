@@ -12,6 +12,7 @@
 
 - **Gate**：G2 已签（TRD + 三份 standards 就位）
 - **文件**：
+  - `iterations/vN/prd.md`（AC 来源，任务包 AC 须能回链到此）
   - `iterations/vN/trd.md`
   - `iterations/vN/standards-shared.md` / `standards-frontend.md` / `standards-backend.md`
   - `reusables.md`（了解可复用资产，避免任务包重复指派已有实现）
@@ -28,7 +29,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范（16 字段） |
+| 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范（17 字段） |
 | sprint.md | `iterations/vN/sprint.md` | 见下方格式说明 |
 | G3 签字 | `iterations/vN/gates.md` | `- [x] G3：开发包就绪 — YYYY-MM-DD` |
 | 进度断点（compact 时写入） | `_meta/sessions/plan-sprint-progress.md` | 任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单答案摘要 |
@@ -56,7 +57,10 @@
 
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] TRD 每个模块都有对应的 develop 任务包
-- [ ] 所有任务包 16 字段完整，无空字段；`layers=[backend]` 且有前端消费的任务包 `api-contract` 已填写并经用户确认
+- [ ] 所有任务包 17 字段完整，无空字段；`layers=[backend]` 且有前端消费的任务包 `api-contract` 已填写并经用户确认
+- [ ] 字段保真自检通过：`reference` 每条含行号（拒"全文"/无范围）；前端任务且 ux-flows 存在时 reference 必含 ux-flows 行号条目；后端任务 reference 必含 TRD 错误码/服务流程段行号条目
+- [ ] AC 双向对账通过：每条任务包 AC 可回链 PRD AC（或标 `(技术)`），且 PRD 每条 AC 都被至少一个任务包覆盖
+- [ ] 任务包独立对抗审查通过（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖 四类无 [阻断]，或阻断已修复 / 已转 revise-doc）
 - [ ] 依赖关系已标注（无依赖标 `—`，有依赖标被依赖的 task-id）
 - [ ] 每个任务的 `交付` 列已填（`独立` 或 `批量`），判断理由已向用户说明并确认
 - [ ] sprint.md 已写，任务列表与 queue/ 一致

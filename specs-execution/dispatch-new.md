@@ -89,7 +89,7 @@
 
 ## Step 4：写任务包
 
-按 `specs-structural/develop.md §字段规范` 写完整 16 字段任务包，写入 `b-queue/{task-id}.md`，状态 `[可取]`。
+按 `specs-structural/develop.md §字段规范` 写完整 17 字段任务包，写入 `b-queue/{task-id}.md`，状态 `[可取]`。
 
 关键字段确认（写完对照检查）：
 
@@ -102,7 +102,7 @@
 | `acceptance-criteria` | bug → 现象消失 + 复现步骤无法复现；optimization → 用户提供的可观测验收标准；`schema-change=true` 时额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
 | `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；`schema-change=true` 时必须写明：最坏情况 / 如何发现 / 如何回滚 |
 
-**16 字段无空字段方可写入 queue**。
+**17 字段无空字段方可写入 queue**。
 
 **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
 

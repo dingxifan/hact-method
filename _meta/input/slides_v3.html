@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 辅助开发工作流</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink:#1a1a1a;--ink2:#555;--ink3:#999;
+  --green:#2d6a4f;--green-l:#52b788;--green-p:#d8f3dc;
+  --red:#c9473a;--red-p:#fdecea;
+  --gold:#b5830a;--gold-p:#fef3c7;
+  --blue:#1e6fa5;--blue-p:#e0f2fe;
+  --purple:#5b21b6;--purple-p:#ede9fe;
+  --bg:#fafaf8;--surface:#fff;--border:#e8e4dc;
+}
+
+body{
+  font-family:'Noto Sans SC',sans-serif;
+  background:#222;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:100vh;padding:16px;gap:10px;
+}
+
+.controls{display:flex;gap:10px;align-items:center;color:#888;font-size:13px}
+.controls button{
+  background:#3a3a3a;border:none;color:#fff;
+  padding:7px 18px;border-radius:6px;cursor:pointer;
+  font-size:13px;font-family:inherit;transition:background .2s;
+}
+.controls button:hover{background:#505050}
+#counter{min-width:60px;text-align:center}
+
+.wrap{width:100%;max-width:980px;aspect-ratio:16/9;position:relative}
+
+.slide{
+  position:absolute;inset:0;background:var(--bg);
+  border-radius:10px;overflow:hidden;
+  display:none;flex-direction:column;
+}
+.slide.active{display:flex}
+
+/* typography */
+.slide-header{
+  padding:26px 48px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:baseline;gap:14px;flex-shrink:0;
+}
+.tag{font-size:clamp(9px,1.1vw,12px);font-weight:700;color:var(--green);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.slide-h{font-family:'Noto Serif SC',serif;font-size:clamp(15px,2.3vw,27px);color:var(--ink);line-height:1.25}
+.body{flex:1;padding:18px 48px 24px;display:flex;gap:28px;align-items:stretch;overflow:hidden}
+.col{display:flex;flex-direction:column;gap:10px;flex:1}
+
+/* ── S1 Cover ── */
+#s1{background:var(--ink);align-items:center;justify-content:center;text-align:center;gap:0}
+#s1 .eye{font-size:clamp(10px,1.3vw,14px);color:var(--green-l);letter-spacing:.2em;text-transform:uppercase;margin-bottom:22px}
+#s1 h1{font-family:'Noto Serif SC',serif;font-size:clamp(20px,3.8vw,46px);color:#fff;line-height:1.3;margin-bottom:18px;max-width:660px}
+#s1 h1 em{font-style:normal;color:var(--green-l)}
+#s1 .sub{font-size:clamp(11px,1.4vw,16px);color:#888;max-width:480px;line-height:1.8}
+#s1 .ring{position:absolute;border-radius:50%;border:1px solid rgba(82,183,136,.1)}
+.section-divider{
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(9px,1vw,11px);color:var(--green-l);
+  letter-spacing:.15em;text-transform:uppercase;margin-top:28px;
+  gap:12px;
+}
+.section-divider::before,.section-divider::after{
+  content:'';flex:1;max-width:60px;height:1px;background:rgba(82,183,136,.3);
+}
+
+/* ── S2 AI是什么 ── */
+.what-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.what-card{
+  padding:16px 18px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  display:flex;flex-direction:column;gap:8px;
+}
+.what-card .wc-icon{font-size:clamp(20px,2.8vw,32px)}
+.what-card .wc-title{font-size:clamp(12px,1.5vw,16px);font-weight:700;color:var(--ink)}
+.what-card .wc-desc{font-size:clamp(10px,1.2vw,13px);color:var(--ink2);line-height:1.6}
+.what-card.bad{border-color:#fca5a5;background:#fff5f5}
+.what-card.bad .wc-title{color:var(--red)}
+.what-card.good{border-color:#86efac;background:#f0fdf4}
+.what-card.good .wc-title{color:var(--green)}
+.what-hl{
+  width:100%;padding:12px 18px;background:var(--ink);border-radius:7px;
+  color:#fff;font-size:clamp(11px,1.3vw,14px);line-height:1.7;text-align:center;
+}
+.what-hl em{font-style:normal;color:var(--green-l)}
+
+/* ── S3 三个局限 ── */
+.limit-item{
+  display:flex;gap:16px;align-items:flex-start;
+  padding:14px 18px;border-radius:8px;border-left:4px solid;background:var(--surface);
+  border:1px solid var(--border);border-left-width:4px;
+}
+.limit-item.l1{border-left-color:var(--purple)}
+.limit-item.l2{border-left-color:var(--red)}
+.limit-item.l3{border-left-color:var(--blue)}
+.li-num{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px;
+}
+.n-purple{background:var(--purple)}.n-red{background:var(--red)}.n-blue{background:var(--blue)}
+.li-body strong{display:block;font-size:clamp(12px,1.4vw,15px);color:var(--ink);margin-bottom:3px}
+.li-body span{font-size:clamp(10px,1.2vw,13px);color:var(--ink2);line-height:1.5}
+.li-solution{
+  margin-left:auto;flex-shrink:0;
+  padding:4px 10px;border-radius:20px;
+  font-size:clamp(9px,1vw,11px);font-weight:700;
+  background:var(--green-p);color:var(--green);white-space:nowrap;
+}
+
+/* ── S4 输入决定输出 ── */
+.io-row{display:flex;align-items:center;gap:0;width:100%}
+.io-box{
+  flex:1;padding:14px 16px;border-radius:8px;text-align:center;
+  font-size:clamp(11px,1.3vw,14px);
+}
+.io-bad{background:var(--red-p);border:1px solid #fca5a5}
+.io-bad .io-title{color:var(--red);font-weight:700;font-size:clamp(13px,1.6vw,17px);margin-bottom:4px}
+.io-good{background:var(--green-p);border:1px solid #86efac}
+.io-good .io-title{color:var(--green);font-weight:700;font-size:clamp(13px,1.6vw,17px);margin-bottom:4px}
+.io-arr{padding:0 16px;font-size:24px;color:var(--ink3);flex-shrink:0}
+.io-desc{font-size:clamp(9px,1.1vw,12px);color:var(--ink2);line-height:1.5}
+.io-methods{display:flex;gap:8px;width:100%}
+.io-method{
+  flex:1;padding:10px 12px;border-radius:7px;border:1px solid var(--border);
+  background:var(--surface);text-align:center;
+  font-size:clamp(9px,1.1vw,12px);color:var(--ink2);
+}
+.io-method strong{display:block;color:var(--ink);margin-bottom:2px;font-size:clamp(10px,1.2vw,13px)}
+.io-insight{
+  width:100%;padding:11px 18px;border-left:4px solid var(--green);background:#fff;
+  font-size:clamp(11px,1.3vw,14px);color:var(--ink);line-height:1.7;font-style:italic;
+}
+
+/* ── S5 六个层次 ── */
+.levels{display:flex;flex-direction:column;gap:7px;width:100%}
+.level-row{
+  display:flex;gap:12px;align-items:center;
+  padding:9px 14px;border-radius:7px;background:var(--surface);border:1px solid var(--border);
+}
+.lv-badge{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.lv-title{font-size:clamp(11px,1.3vw,14px);font-weight:700;color:var(--ink);min-width:160px;flex-shrink:0}
+.lv-desc{font-size:clamp(9px,1.1vw,12px);color:var(--ink2);line-height:1.5}
+.lv-tag{
+  margin-left:auto;flex-shrink:0;padding:3px 8px;border-radius:12px;
+  font-size:clamp(8px,.9vw,10px);font-weight:700;white-space:nowrap;
+}
+.tag-most{background:#fee2e2;color:var(--red)}
+.tag-you{background:var(--green-p);color:var(--green)}
+.tag-few{background:var(--gold-p);color:var(--gold)}
+.levels-note{
+  padding:10px 16px;background:var(--ink);border-radius:7px;
+  color:#fff;font-size:clamp(10px,1.2vw,13px);text-align:center;
+}
+
+/* ── S6 使用习惯 ── */
+.habit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.habit-card{
+  padding:14px 16px;border-radius:8px;background:var(--surface);border:1px solid var(--border);
+}
+.hc-num{
+  display:inline-block;width:20px;height:20px;border-radius:50%;
+  background:var(--green);color:#fff;font-size:10px;font-weight:700;
+  text-align:center;line-height:20px;margin-bottom:6px;
+}
+.hc-title{font-size:clamp(11px,1.3vw,14px);font-weight:700;color:var(--ink);margin-bottom:4px}
+.hc-desc{font-size:clamp(9px,1.1vw,12px);color:var(--ink2);line-height:1.6}
+.habit-bottom{
+  width:100%;padding:11px 16px;border-left:4px solid var(--green);background:#fff;
+  font-size:clamp(11px,1.3vw,14px);color:var(--ink);line-height:1.7;font-style:italic;
+}
+
+/* ── S7 Problem ── */
+.prob-item{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 15px;background:var(--red-p);
+  border-left:3px solid var(--red);border-radius:0 7px 7px 0;
+}
+.prob-icon{font-size:clamp(15px,1.9vw,22px);line-height:1;flex-shrink:0}
+.prob-strong{display:block;font-size:clamp(11px,1.3vw,14px);color:var(--ink);margin-bottom:2px;font-weight:700}
+.prob-sub{font-size:clamp(9px,1.1vw,12px);color:var(--ink2)}
+.callout{
+  padding:11px 16px;background:var(--ink);border-radius:7px;
+  color:#fff;font-size:clamp(10px,1.2vw,13px);line-height:1.7;font-style:italic;
+}
+.tchart{width:190px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.cl{font-size:clamp(9px,1vw,11px);color:var(--ink2);margin-bottom:4px;font-weight:500}
+.bar{display:flex;height:24px;border-radius:5px;overflow:hidden}
+.bs{display:flex;align-items:center;justify-content:center;font-size:clamp(8px,.85vw,10px);font-weight:700;color:#fff}
+.ba{background:#aaa}.bb{background:var(--red)}.bc{background:var(--green)}.bd{background:var(--green-l)}
+.leg{display:flex;gap:7px;flex-wrap:wrap;margin-top:3px}
+.ld{display:inline-flex;align-items:center;gap:3px;font-size:clamp(8px,.85vw,10px);color:var(--ink2)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ── S8 Excuses ── */
+.exc-row{display:grid;grid-template-columns:1fr 38px 1fr;align-items:stretch}
+.exc-row+.exc-row{margin-top:9px}
+.exc-b{padding:11px 14px;background:#f5f0ea;border-radius:7px 0 0 7px;font-size:clamp(10px,1.2vw,13px);color:var(--ink2);text-decoration:line-through;text-decoration-color:var(--red)}
+.exc-arr{background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.exc-a{padding:11px 14px;background:var(--green-p);border-radius:0 7px 7px 0;font-size:clamp(10px,1.2vw,13px);color:var(--green);font-weight:500}
+.hl{padding:12px 16px;border-left:4px solid var(--green);background:#fff;font-size:clamp(11px,1.3vw,14px);color:var(--ink);line-height:1.7;font-style:italic;margin-top:4px}
+
+/* ── S9 Structure ── */
+.struct-outer{
+  width:100%;border:1px solid var(--border);border-radius:9px;
+  padding:14px 18px;background:var(--surface);
+  display:flex;flex-direction:column;gap:9px;
+}
+.struct-title{font-size:clamp(10px,1.2vw,13px);font-weight:700;color:var(--ink);margin-bottom:2px}
+.struct-row{display:flex;gap:8px;align-items:stretch}
+.struct-box{flex:1;padding:9px 12px;border-radius:6px;font-size:clamp(9px,1.1vw,12px);line-height:1.5}
+.sb-gray{background:#f5f3ee;border:1px solid var(--border)}
+.sb-purple{background:var(--purple-p);border:1px solid #c4b5fd}
+.sb-green{background:var(--green-p);border:1px solid #a7f3d0}
+.sb-gold{background:var(--gold-p);border:1px solid #fde68a}
+.sb-blue{background:var(--blue-p);border:1px solid #bae6fd}
+.sb-label{font-weight:700;display:block;margin-bottom:2px;font-size:clamp(10px,1.2vw,13px)}
+.struct-rule{display:flex;gap:7px}
+.rule-c{
+  flex:1;padding:7px 10px;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;font-size:clamp(9px,1vw,11px);color:var(--ink2);text-align:center;line-height:1.4;
+}
+.rule-c strong{display:block;color:var(--ink);font-size:clamp(9px,1.1vw,12px);margin-bottom:1px}
+
+/* ── S10 Workflow ── */
+.flow-wrap{display:flex;align-items:center;justify-content:center;gap:0;width:100%}
+.fn{display:flex;flex-direction:column;align-items:center;gap:7px;flex:1}
+.fi{width:clamp(42px,6vw,62px);height:clamp(42px,6vw,62px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(17px,2.6vw,28px)}
+.fi-p{background:var(--purple-p)}.fi-g{background:var(--green-p)}.fi-b{background:var(--blue-p)}
+.fn-l{font-size:clamp(11px,1.3vw,14px);font-weight:700;color:var(--ink);text-align:center}
+.fn-s{font-size:clamp(9px,1.1vw,12px);color:var(--ink2);text-align:center;line-height:1.4}
+.fa{display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 5px;flex-shrink:0}
+.fa-line{width:clamp(26px,4vw,48px);height:2px;background:var(--border);position:relative}
+.fa-line::after{content:'';position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left-color:var(--border)}
+.fa-f{font-size:clamp(8px,.95vw,11px);color:var(--green);white-space:nowrap;font-weight:500}
+.path-box{width:100%;border-radius:7px;border:1px solid var(--border);overflow:hidden;flex-shrink:0}
+.path-hd{background:var(--ink);color:#fff;padding:7px 14px;font-size:clamp(10px,1.2vw,13px);font-weight:700}
+.path-rows{display:grid;grid-template-columns:repeat(3,1fr)}
+.path-cell{padding:9px 12px;border-right:1px solid var(--border);border-top:1px solid var(--border);font-size:clamp(9px,1.1vw,12px)}
+.path-cell:last-child{border-right:none}
+.path-cell strong{display:block;color:var(--ink);margin-bottom:2px;font-size:clamp(10px,1.2vw,13px)}
+.path-cell span{color:var(--ink2);line-height:1.5}
+.path-cell.c-do strong{color:var(--green)}
+.path-cell.c-skip strong{color:var(--red)}
+
+/* ── S11 Memory ── */
+.mem-layers{display:flex;flex-direction:column;gap:7px;width:100%}
+.mem-layer{display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:7px;border-left:4px solid}
+.ml-global{background:#f5f0ea;border-color:var(--gold)}
+.ml-workspace{background:var(--green-p);border-color:var(--green)}
+.ml-project{background:var(--blue-p);border-color:var(--blue)}
+.ml-sprint{background:var(--red-p);border-color:var(--red)}
+.ml-scope{font-size:clamp(9px,1vw,11px);font-weight:700;width:52px;flex-shrink:0;text-align:right;color:var(--ink2)}
+.ml-name{font-size:clamp(10px,1.2vw,13px);font-weight:700;color:var(--ink);flex-shrink:0;width:130px}
+.ml-desc{font-size:clamp(9px,1.1vw,12px);color:var(--ink2);line-height:1.5}
+.mem-note{padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-size:clamp(10px,1.2vw,13px);color:var(--ink);line-height:1.7}
+.mem-note em{font-style:normal;color:var(--green);font-weight:500}
+
+/* ── S12 Checklist ── */
+.check-cols{display:flex;gap:14px;width:100%}
+.check-col{flex:1;display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.check-hd{padding:9px 14px;font-size:clamp(11px,1.3vw,14px);font-weight:700;color:#fff}
+.hd-fe{background:var(--blue)}.hd-be{background:var(--green)}
+.check-item{display:flex;gap:8px;align-items:flex-start;padding:8px 12px;border-top:1px solid var(--border);background:var(--surface);font-size:clamp(9px,1.1vw,12px);color:var(--ink);line-height:1.5}
+.ci-icon{flex-shrink:0;font-size:11px;margin-top:1px}
+.check-note{padding:10px 14px;background:var(--ink);border-radius:7px;color:#fff;font-size:clamp(10px,1.2vw,13px);line-height:1.7}
+
+/* ── S13 Feedback ── */
+.fb-top{display:flex;gap:9px;width:100%}
+.fb-agent{flex:1;padding:9px 10px;border-radius:7px;text-align:center;font-size:clamp(10px,1.2vw,13px)}
+.fb-p{background:var(--purple-p)}.fb-t{background:var(--green-p)}.fb-d{background:var(--blue-p)}
+.fb-agent strong{display:block;font-size:clamp(11px,1.3vw,14px);margin-bottom:2px}
+.fb-arrow-row{display:flex;align-items:center;width:100%;padding:2px 0}
+.fb-darr{flex:1;text-align:center;font-size:clamp(9px,1vw,11px);color:var(--ink2)}
+.fb-files{display:flex;gap:9px;width:100%}
+.fb-file{flex:1;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:clamp(9px,1.1vw,12px);text-align:center;color:var(--ink2)}
+.fb-file strong{display:block;color:var(--ink);margin-bottom:1px}
+.fb-you{width:100%;padding:10px 14px;background:var(--gold-p);border:1px solid #fde68a;border-radius:7px;font-size:clamp(11px,1.3vw,14px);text-align:center;color:var(--ink);font-weight:500}
+.fb-out{display:flex;gap:9px;width:100%}
+.fb-out-box{flex:1;padding:9px 12px;border-radius:7px;border:1px solid var(--border);font-size:clamp(9px,1.1vw,12px);color:var(--ink2)}
+.fb-out-box strong{display:block;color:var(--ink);margin-bottom:2px;font-size:clamp(10px,1.2vw,13px)}
+.fb-principle{width:100%;padding:9px 14px;background:var(--ink);border-radius:7px;color:#fff;font-size:clamp(10px,1.2vw,13px);text-align:center;line-height:1.7}
+
+/* ── S14 Start ── */
+#s14{background:var(--ink)}
+#s14 .slide-header{border-color:rgba(255,255,255,.1)}
+#s14 .tag{color:var(--green-l)}
+#s14 .slide-h{color:#fff}
+.start-step{display:flex;gap:14px;align-items:flex-start}
+.ss-badge{width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.ss-text strong{display:block;color:#fff;font-size:clamp(12px,1.5vw,16px);margin-bottom:3px}
+.ss-text span{color:#888;font-size:clamp(10px,1.2vw,13px);line-height:1.6}
+.final{width:100%;padding:13px 18px;border:1px solid rgba(82,183,136,.3);border-radius:8px;color:var(--green-l);font-family:'Noto Serif SC',serif;font-size:clamp(13px,1.6vw,18px);text-align:center;line-height:1.7}
+
+/* progress */
+.progress{width:100%;max-width:980px;height:3px;background:#444;border-radius:2px}
+.pf{height:100%;background:var(--green-l);border-radius:2px;transition:width .3s}
+
+/* section label on slide */
+.section-tag{
+  display:inline-block;padding:2px 10px;border-radius:12px;
+  font-size:clamp(8px,.9vw,10px);font-weight:700;letter-spacing:.08em;
+  margin-bottom:4px;
+}
+.st-cognition{background:var(--purple-p);color:var(--purple)}
+.st-method{background:var(--green-p);color:var(--green)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<!-- S1 Cover -->
+<div class="slide active" id="s1">
+  <div class="ring" style="width:340px;height:340px;top:-90px;right:-90px"></div>
+  <div class="ring" style="width:180px;height:180px;bottom:30px;left:30px"></div>
+  <div class="eye">内部技术分享</div>
+  <h1>AI 不是来替你<em>写代码</em>的<br>是来补你一直<em>跳过</em>的步骤的</h1>
+  <p class="sub">用三个角色、三份文件，把需求分析和架构设计的成本打到接近零</p>
+  <div class="section-divider">认知篇 · 方法篇</div>
+</div>
+
+<!-- S2 AI是什么 -->
+<div class="slide" id="s2">
+  <div class="slide-header">
+    <span class="tag">认知 01</span>
+    <h2 class="slide-h">先说清楚 AI 是什么</h2>
+  </div>
+  <div class="body" style="flex-direction:column">
+    <div class="what-grid">
+      <div class="what-card bad">
+        <div class="wc-icon">🔍</div>
+        <div class="wc-title">不是搜索引擎</div>
+        <div class="wc-desc">不期待标准答案，同一个问题在不同上下文下答案会不同</div>
+      </div>
+      <div class="what-card bad">
+        <div class="wc-icon">🖩</div>
+        <div class="wc-title">不是计算器</div>
+        <div class="wc-desc">不期待精确无误，它会犯错，而且犯的错有规律</div>
+      </div>
+      <div class="what-card good">
+        <div class="wc-icon">🧑‍💼</div>
+        <div class="wc-title">是一个协作者</div>
+        <div class="wc-desc">有专业边界、会犯错、会遗忘——把它当人看，心态就对了</div>
+      </div>
+      <div class="what-card good">
+        <div class="wc-icon">🎭</div>
+        <div class="wc-title">不同领域观点会打架</div>
+        <div class="wc-desc">同一个 AI 同时扮演多个角色，输出质量下降——所以要分角色</div>
+      </div>
+    </div>
+    <div class="what-hl">把它当人看待，这个比喻决定了你和它协作的<em>心态</em></div>
+  </div>
+</div>
+
+<!-- S3 三个局限 -->
+<div class="slide" id="s3">
+  <div class="slide-header">
+    <span class="tag">认知 02</span>
+    <h2 class="slide-h">它的三个局限，以及对应的解法</h2>
+  </div>
+  <div class="body" style="flex-direction:column;justify-content:center">
+    <div class="limit-item l1">
+      <div class="li-num n-purple">1</div>
+      <div class="li-body">
+        <strong>知识有边界，不同领域观点会打架</strong>
+        <span>同一个 AI 同时处理多个领域，内部冲突会拉低输出质量</span>
+      </div>
+      <div class="li-solution">→ 分角色，每次只激活一种思维模式</div>
+    </div>
+    <div class="limit-item l2">
+      <div class="li-num n-red">2</div>
+      <div class="li-body">
+        <strong>知道也会犯错，底层是概率推算</strong>
+        <span>同类错误会反复出现——不是随机的，是有规律的</span>
+      </div>
+      <div class="li-solution">→ 把踩过的坑写进规范，加强制约束</div>
+    </div>
+    <div class="limit-item l3">
+      <div class="li-num n-blue">3</div>
+      <div class="li-body">
+        <strong>对话越长忘得越多，而且忘得不均匀</strong>
+        <span>开头的指令保留最好，中间的细节最易丢失</span>
+      </div>
+      <div class="li-solution">→ 重要的东西写进文件，不能只靠口头说</div>
+    </div>
+  </div>
+</div>
+
+<!-- S4 输入决定输出 -->
+<div class="slide" id="s4">
+  <div class="slide-header">
+    <span class="tag">认知 03</span>
+    <h2 class="slide-h">输入决定输出</h2>
+  </div>
+  <div class="body" style="flex-direction:column;justify-content:center">
+    <div class="io-row">
+      <div class="io-box io-bad">
+        <div class="io-title">模糊的输入</div>
+        <div class="io-desc">没有角色定义<br>没有规范约束<br>没有项目背景</div>
+      </div>
+      <div class="io-arr">→</div>
+      <div class="io-box io-bad">
+        <div class="io-title">低质量的输出</div>
+        <div class="io-desc">风格随机<br>反复犯同类错误<br>每次都要重新解释</div>
+      </div>
+      <div class="io-arr" style="color:var(--green)">→</div>
+      <div class="io-box io-good">
+        <div class="io-title">结构化的输入</div>
+        <div class="io-desc">角色定义清晰<br>规范写入文件<br>项目上下文完整</div>
+      </div>
+      <div class="io-arr">→</div>
+      <div class="io-box io-good">
+        <div class="io-title">稳定的输出</div>
+        <div class="io-desc">风格一致<br>自动遵守规范<br>启动即知项目全貌</div>
+      </div>
+    </div>
+    <div class="io-methods">
+      <div class="io-method"><strong>Prompt</strong>最早的输入结构化方式</div>
+      <div class="io-method"><strong>工作流</strong>流程约束输出节奏</div>
+      <div class="io-method"><strong>Skill</strong>专项能力按需加载</div>
+      <div class="io-method"><strong>CLAUDE.md</strong>项目记忆持久化</div>
+    </div>
+    <div class="io-insight">把规范写进文件，不是在教它新知识——是在它的概率分布上加一个强制约束</div>
+  </div>
+</div>
+
+<!-- S5 六个层次 -->
+<div class="slide" id="s5">
+  <div class="slide-header">
+    <span class="tag">认知 04</span>
+    <h2 class="slide-h">和 AI 协作的六个层次</h2>
+  </div>
+  <div class="body" style="flex-direction:column">
+    <div class="levels">
+      <div class="level-row">
+        <div class="lv-badge" style="background:#aaa">1</div>
+        <div class="lv-title">接受它的局限</div>
+        <div class="lv-desc">知道它会错、会忘、有边界。不期待全知全能，心态就对了</div>
+        <div class="lv-tag tag-most">大多数人停在这里</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-badge" style="background:#888">2</div>
+        <div class="lv-title">用结构化输入补偿</div>
+        <div class="lv-desc">角色定义、规范文件、自检清单——所有方法的本质都是提高输入质量</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-badge" style="background:var(--blue)">3</div>
+        <div class="lv-title">用上下文管理控制质量</div>
+        <div class="lv-desc">分角色、清上下文、保文件。知道什么时候该踩刹车，什么时候重新开始</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-badge" style="background:var(--green)">4</div>
+        <div class="lv-title">用 AI 改进和 AI 协作的方式</div>
+        <div class="lv-desc">不只是用 AI 做事，而是用 AI 优化怎么用 AI。让这套体系自我迭代</div>
+        <div class="lv-tag tag-you">当前阶段</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-badge" style="background:var(--gold)">5</div>
+        <div class="lv-title">你自己也在被改变</div>
+        <div class="lv-desc">严谨的工作习惯内化成你自己的方式。这是最持久的收益</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-badge" style="background:var(--purple)">6</div>
+        <div class="lv-title">知道什么时候不用 AI</div>
+        <div class="lv-desc">知道哪些判断必须自己做，哪些时候 AI 的参与反而干扰直觉</div>
+        <div class="lv-tag tag-few">需要踩够坑</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S6 使用习惯 -->
+<div class="slide" id="s6">
+  <div class="slide-header">
+    <span class="tag">认知 05</span>
+    <h2 class="slide-h">我的使用习惯：提问者，不是发令者</h2>
+  </div>
+  <div class="body" style="flex-direction:column">
+    <div class="habit-grid">
+      <div class="habit-card">
+        <div class="hc-num">1</div>
+        <div class="hc-title">说目的，不说动作</div>
+        <div class="hc-desc">告诉它你想达到什么，而不是让它执行什么。它会主动告诉你有没有更好的路径</div>
+      </div>
+      <div class="habit-card">
+        <div class="hc-num">2</div>
+        <div class="hc-title">把判断空间留给它</div>
+        <div class="hc-desc">少用「帮我做 X」，多说「你觉得这样行吗」「有没有更好的方法」。你来做最终选择</div>
+      </div>
+      <div class="habit-card">
+        <div class="hc-num">3</div>
+        <div class="hc-title">想清楚再动手</div>
+        <div class="hc-desc">对过早锁定方案保持警觉。在纸上想清楚的时间，会在执行中成倍省回来</div>
+      </div>
+      <div class="habit-card">
+        <div class="hc-num">4</div>
+        <div class="hc-title">先跑起来，出了问题再调</div>
+        <div class="hc-desc">不追求一次把所有东西想完美。核心逻辑要严谨，细节在实践中修正</div>
+      </div>
+    </div>
+    <div class="habit-bottom">你负责判断，它负责执行。AI 在执行层面比你强，所以把执行交给它——但判断和选择不能外包</div>
+  </div>
+</div>
+
+<!-- S7 Problem -->
+<div class="slide" id="s7">
+  <div class="slide-header">
+    <span class="tag">方法 01</span>
+    <h2 class="slide-h">前期省的时间，全花在后期修复上</h2>
+  </div>
+  <div class="body">
+    <div class="col">
+      <div class="prob-item">
+        <div class="prob-icon">🎯</div>
+        <div><span class="prob-strong">需求理解偏差</span><span class="prob-sub">做出来不是用户要的，返工重做</span></div>
+      </div>
+      <div class="prob-item">
+        <div class="prob-icon">🏗️</div>
+        <div><span class="prob-strong">架构临时拍脑袋</span><span class="prob-sub">后期改动牵一发动全身</span></div>
+      </div>
+      <div class="prob-item">
+        <div class="prob-icon">🔥</div>
+        <div><span class="prob-strong">上线后体验差</span><span class="prob-sub">用户抱怨，大量返工，士气低落</span></div>
+      </div>
+      <div class="callout">「我们把该花在前期的时间，全部花在了后期的修复上」</div>
+    </div>
+    <div class="tchart">
+      <div><div class="cl">旧方式</div><div class="bar"><div class="bs ba" style="width:10%">10%</div><div class="bs bb" style="width:90%">90% 编码+返工</div></div></div>
+      <div><div class="cl">新方式</div><div class="bar"><div class="bs bc" style="width:40%">40%</div><div class="bs bd" style="width:60%">60% 编码</div></div></div>
+      <div class="leg">
+        <span class="ld"><span class="dot" style="background:#aaa"></span>分析</span>
+        <span class="ld"><span class="dot" style="background:var(--red)"></span>返工</span>
+        <span class="ld"><span class="dot" style="background:var(--green)"></span>设计</span>
+        <span class="ld"><span class="dot" style="background:var(--green-l)"></span>编码</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S8 Excuses -->
+<div class="slide" id="s8">
+  <div class="slide-header">
+    <span class="tag">方法 02</span>
+    <h2 class="slide-h">借口没了——AI 把分析设计的成本打没了</h2>
+  </div>
+  <div class="body" style="flex-direction:column;justify-content:center">
+    <div class="exc-row"><div class="exc-b">写文档太费时间</div><div class="exc-arr">→</div><div class="exc-a">AI 引导你说，几分钟生成结构化文档</div></div>
+    <div class="exc-row"><div class="exc-b">我是工程师，不懂产品设计</div><div class="exc-arr">→</div><div class="exc-a">AI 扮演产品经理，帮你做用户视角的拷问</div></div>
+    <div class="exc-row"><div class="exc-b">架构设计靠经验，我经验不够</div><div class="exc-arr">→</div><div class="exc-a">AI 帮你识别风险、提出取舍、补全盲点</div></div>
+    <div class="hl">AI 介入的不是代码环节，而是你之前一直跳过的分析和设计环节</div>
+  </div>
+</div>
+
+<!-- S9 Structure -->
+<div class="slide" id="s9">
+  <div class="slide-header">
+    <span class="tag">方法 03</span>
+    <h2 class="slide-h">体系结构：一个工作区，三个角色，一套知识库</h2>
+  </div>
+  <div class="body" style="flex-direction:column">
+    <div class="struct-outer">
+      <div class="struct-title">aicoder/ 工作区</div>
+      <div class="struct-row">
+        <div class="struct-box sb-purple"><span class="sb-label">roles/</span>product · tech · developer</div>
+        <div class="struct-box sb-green"><span class="sb-label">skills/</span>backend-checklist · responsive-checklist</div>
+        <div class="struct-box sb-gold"><span class="sb-label">projects/jihehao/</span>术语表 · 关键决策 · 项目约束</div>
+      </div>
+      <div class="struct-row">
+        <div class="struct-box sb-gray"><span class="sb-label">product/jihehao/</span>docs/input · output/prd_vN · feedback</div>
+        <div class="struct-box sb-gray"><span class="sb-label">tech/jihehao/</span>docs/input · output/trd_vN · feedback</div>
+        <div class="struct-box sb-blue"><span class="sb-label">developer/jihehao/</span>代码库 · docs/config · backlog · faq</div>
+      </div>
+    </div>
+    <div class="struct-rule">
+      <div class="rule-c"><strong>角色只读知识库</strong>不写入，保持单向</div>
+      <div class="rule-c"><strong>文件是交接物</strong>不跨文件夹直接沟通</div>
+      <div class="rule-c"><strong>三层继承</strong>全局→工作区→项目</div>
+      <div class="rule-c"><strong>经验沉淀</strong>feedback 经你判断后写入</div>
+    </div>
+  </div>
+</div>
+
+<!-- S10 Workflow -->
+<div class="slide" id="s10">
+  <div class="slide-header">
+    <span class="tag">方法 04</span>
+    <h2 class="slide-h">项目工作流：三角色接力，文件唯一交接</h2>
+  </div>
+  <div class="body" style="flex-direction:column">
+    <div class="flow-wrap">
+      <div class="fn"><div class="fi fi-p">💬</div><div class="fn-l">产品角色</div><div class="fn-s">澄清需求<br>定义边界</div></div>
+      <div class="fa"><div class="fa-line"></div><div class="fa-f">PRD</div></div>
+      <div class="fn"><div class="fi fi-g">🏛️</div><div class="fn-l">技术角色</div><div class="fn-s">数据库设计<br>接口拆分</div></div>
+      <div class="fa"><div class="fa-line"></div><div class="fa-f">TRD</div></div>
+      <div class="fn"><div class="fi fi-b">⌨️</div><div class="fn-l">开发角色</div><div class="fn-s">按模块实现<br>步步确认</div></div>
+    </div>
+    <div class="path-box">
+      <div class="path-hd">临时变更快捷路径——按影响范围选路，不是按改动大小</div>
+      <div class="path-rows">
+        <div class="path-cell c-do"><strong>只改实现细节</strong><span>样式、函数写法<br>→ 直接在 developer/ 改</span></div>
+        <div class="path-cell"><strong>改接口或数据结构</strong><span>字段增删、接口路径<br>→ tech/ 更新 TRD → 改代码</span></div>
+        <div class="path-cell c-skip"><strong>改功能边界</strong><span>做什么变了、用户流程变了<br>→ 必须走完整三段流程</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S11 Memory -->
+<div class="slide" id="s11">
+  <div class="slide-header">
+    <span class="tag">方法 05</span>
+    <h2 class="slide-h">AI 的记忆机制：CLAUDE.md 四层体系</h2>
+  </div>
+  <div class="body" style="flex-direction:column">
+    <div class="mem-layers">
+      <div class="mem-layer ml-global">
+        <div class="ml-scope">全局层</div>
+        <div class="ml-name">~/.claude/CLAUDE.md</div>
+        <div class="ml-desc">你的个人偏好、协作方式——对所有项目生效</div>
+      </div>
+      <div class="mem-layer ml-workspace">
+        <div class="ml-scope">工作区层</div>
+        <div class="ml-name">aicoder/CLAUDE.md</div>
+        <div class="ml-desc">三角色定义、变更处理规则——对所有项目生效</div>
+      </div>
+      <div class="mem-layer ml-project">
+        <div class="ml-scope">项目层</div>
+        <div class="ml-name">docs/config/</div>
+        <div class="ml-desc">STANDARDS · PROJECT · 目录结构 · 数据库设计——只对本项目生效</div>
+      </div>
+      <div class="mem-layer ml-sprint">
+        <div class="ml-scope">迭代层</div>
+        <div class="ml-name">SPRINT.md</div>
+        <div class="ml-desc">当前开发状态 · 本期任务 · backlog——每期迭代更新</div>
+      </div>
+    </div>
+    <div class="mem-note">
+      Claude Code 启动时<em>自动从上往下合并读取</em>这四层。规范写进文件 = 永久生效；口头说 = 下次对话就忘。
+    </div>
+  </div>
+</div>
+
+<!-- S12 Checklist -->
+<div class="slide" id="s12">
+  <div class="slide-header">
+    <span class="tag">方法 06</span>
+    <h2 class="slide-h">质量保障：从真实踩坑里提炼的自检清单</h2>
+  </div>
+  <div class="body" style="flex-direction:column">
+    <div class="check-cols">
+      <div class="check-col">
+        <div class="check-hd hd-fe">前端自检</div>
+        <div class="check-item"><span class="ci-icon">□</span>固定像素宽度 → 手机端溢出</div>
+        <div class="check-item"><span class="ci-icon">□</span>弹窗/抽屉移动端未改为全屏</div>
+        <div class="check-item"><span class="ci-icon">□</span>输入框 font-size &lt; 16px → iOS 自动放大</div>
+        <div class="check-item"><span class="ci-icon">□</span>按钮点击区域小于 44×44px</div>
+        <div class="check-item"><span class="ci-icon">□</span>筛选栏移动端未换列排列</div>
+      </div>
+      <div class="check-col">
+        <div class="check-hd hd-be">后端自检</div>
+        <div class="check-item"><span class="ci-icon">□</span>Controller 有业务逻辑（应在 Service）</div>
+        <div class="check-item"><span class="ci-icon">□</span>手动包响应结构导致双层包装</div>
+        <div class="check-item"><span class="ci-icon">□</span>响应中含 password/apiKey 明文</div>
+        <div class="check-item"><span class="ci-icon">□</span>数字字段用 @IsNotEmpty 验证（无效）</div>
+        <div class="check-item"><span class="ci-icon">□</span>多步写操作未用事务包裹</div>
+      </div>
+    </div>
+    <div class="check-note">
+      每个模块完成后 Claude Code 自动对照清单输出自检报告，问题标注文件行号。你执行回归清单，发现问题告诉它修。
+    </div>
+  </div>
+</div>
+
+<!-- S13 Feedback -->
+<div class="slide" id="s13">
+  <div class="slide-header">
+    <span class="tag">方法 07</span>
+    <h2 class="slide-h">反馈闭环：越用越好</h2>
+  </div>
+  <div class="body" style="flex-direction:column;gap:7px">
+    <div class="fb-top">
+      <div class="fb-agent fb-p"><strong>产品角色</strong>需求判断偏差</div>
+      <div class="fb-agent fb-t"><strong>技术角色</strong>技术决策问题</div>
+      <div class="fb-agent fb-d"><strong>开发角色</strong>踩坑记录</div>
+    </div>
+    <div class="fb-arrow-row"><div class="fb-darr">↓ 写入各自 feedback.md</div></div>
+    <div class="fb-you">你定期审阅（每期迭代结束）— 判断：值得沉淀 / 无价值删除</div>
+    <div class="fb-arrow-row">
+      <div class="fb-darr" style="text-align:right">↙ 更新共享知识库</div>
+      <div style="width:40px"></div>
+      <div class="fb-darr" style="text-align:left">↘ 更新角色/技能文件</div>
+    </div>
+    <div class="fb-out">
+      <div class="fb-out-box"><strong>projects/jihehao/</strong>术语表 · 关键决策 · 项目约束 · 用户反馈</div>
+      <div class="fb-out-box"><strong>roles/ · skills/</strong>角色定义 · 自检清单 · 禁止事项</div>
+    </div>
+    <div class="fb-principle">Agent 负责发现 · 你负责判断 · 文件负责记忆</div>
+  </div>
+</div>
+
+<!-- S14 Start -->
+<div class="slide" id="s14">
+  <div class="slide-header">
+    <span class="tag">方法 08</span>
+    <h2 class="slide-h">怎么开始：三步上手，下一个功能就用</h2>
+  </div>
+  <div class="body" style="flex-direction:column;justify-content:center">
+    <div class="col" style="gap:16px">
+      <div class="start-step">
+        <div class="ss-badge">1</div>
+        <div class="ss-text">
+          <strong>告诉 AI「你现在是产品经理」</strong>
+          <span>把功能想法说给它听，让它帮你问问题、定边界，输出 PRD</span>
+        </div>
+      </div>
+      <div class="start-step">
+        <div class="ss-badge">2</div>
+        <div class="ss-text">
+          <strong>切换「你现在是架构师」</strong>
+          <span>把 PRD 给它，让它出技术方案、拆模块顺序，输出 TRD</span>
+        </div>
+      </div>
+      <div class="start-step">
+        <div class="ss-badge">3</div>
+        <div class="ss-text">
+          <strong>有了 TRD，再开始写代码</strong>
+          <span>每次只做一件事，做完验证，再做下一件。每步等确认，不自动串联</span>
+        </div>
+      </div>
+      <div class="final">慢下来的前期，是为了不在后期乱跑</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- wrap -->
+
+<div class="progress"><div class="pf" id="pf" style="width:7.14%"></div></div>
+
+<div class="controls">
+  <button onclick="prev()">← 上一张</button>
+  <span id="counter">1 / 14</span>
+  <button onclick="next()">下一张 →</button>
+  <button onclick="fs()" style="background:#333">全屏</button>
+</div>
+
+<script>
+const slides=document.querySelectorAll('.slide');
+const n=slides.length;
+let c=0;
+function show(i){
+  slides[c].classList.remove('active');
+  c=(i+n)%n;
+  slides[c].classList.add('active');
+  document.getElementById('counter').textContent=(c+1)+' / '+n;
+  document.getElementById('pf').style.width=((c+1)/n*100)+'%';
+}
+function next(){show(c+1)}
+function prev(){show(c-1)}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();next()}
+  if(e.key==='ArrowLeft'){e.preventDefault();prev()}
+});
+function fs(){
+  if(!document.fullscreenElement)document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>

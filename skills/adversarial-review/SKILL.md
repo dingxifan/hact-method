@@ -13,7 +13,6 @@ description: 对当前代码改动做独立对抗审查。commit 前调用，传
   - 所有改动仅限 `b-queue/`、`status.yml`、`b-tasks.md`、`backlog.md`
   - `git diff --stat` 总行数 < 15
   - commit message 明确含 `chore` / `dispatch` / `状态`（纯管理提交）
-  - 已通过 b-class-develop workflow 完整跑过（workflow 内置 Phase 3）
 
 ## 步骤
 

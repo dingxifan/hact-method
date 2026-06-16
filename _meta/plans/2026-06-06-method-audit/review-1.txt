@@ -1,0 +1,105 @@
+﻿Now I have a comprehensive picture of the entire method. Let me compile the findings based on my scenario simulations.
+
+---
+
+以下是基于文档通读后的全部审查发现：
+
+---
+
+### [queue 任务包内的任务间依赖关系无统一机器可读格式]
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution / specs-structural
+**定位**: `specs-structural/plan-sprint.md §sprint.md 格式说明` + `specs-execution/develop.md §拾取任务`
+**问题**: `sprint.md` 中 `依赖` 列是自由文本（填写 `task-id` 字符串），任务包 `known-risks` 字段也是自由文本；规范只说"被依赖任务先合并才能开始"，但没有定义：当同一个 queue 里有两个都标了 `交付=批量` 的任务、其中一个依赖另一个时，开发者该如何识别和验证这条依赖已被满足。任务包 16 字段中有 `depends-on` 字段（在 status.yml 契约中写为 `depends_on: []`），但任务包 `.md` 文件的字段列表（`specs-structural/develop.md §字段规范`）里没有这个字段，只存在于 `status.yml` 契约。两处定义没有对应，导致任务包文件里没地方写 `depends-on`，开发者只能靠读 `sprint.md` 的自然语言判断。
+**影响**: 开发者无法通过任务包自身字段确认依赖是否满足，依赖关系分散在 sprint.md 的表格文字和 status.yml 里，新人第一次认领任务时容易无视依赖直接开始，导致后续 PR 在依赖未合并时无法集成。
+**建议**: 在 `specs-structural/develop.md §字段规范` 的 16 字段表里补入 `depends-on` 字段（与 status.yml 对齐），明确取值格式（task-id 列表）；并在 `specs-execution/develop.md §拾取任务` 增加一步"依赖前置检查"：若 `depends-on` 非空，验证引用的 task-id 是否在 sprint.md 中已标记 `[merged]`，否则阻断。
+
+---
+
+### [develop 全流程：会话在哪个目录/哪个分支启动没有明确说明]
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution
+**定位**: `specs-execution/develop.md §会话启动` + `templates/CLAUDE.md §Step 0`
+**问题**: `develop.md` 的会话启动部分描述了"第零步确认执行层"和"拾取任务包"，但没有说明开发者应在哪个 git 分支上开始工作。Step 6 说"分支必须从 master 切"，但在 Step 6 之前的 Step 1–5（理解任务、实现代码）期间，开发者处于什么分支是未定义的——如果他们在 master 上写了代码才到 Step 6，就需要撤销再重切分支。`templates/CLAUDE.md §Step 0` 说明了 git pull 同步，但没有说明切分支的时机。
+**影响**: 第一次按文档操作的新开发者可能在 master 直接写代码，到 Step 6 才发现需要建分支，此时已有改动要 stash 或重置，造成混乱；或者直接在 master 提了 commit，破坏主分支。
+**建议**: 在 `develop.md §会话启动` 末尾或 Step 1 之前增加一步"切功能分支"：`git checkout -b {task-id}`，并标明"所有代码改动在此分支上完成，Step 6 的 commit 针对此分支"。
+
+---
+
+### [PR 被打回后的"结构性建议"：develop 和 pr-review 都没有明确的处理路径]
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution
+**定位**: `specs-execution/pr-review.md §升级条件` + `specs-execution/develop.md §上下文重置协议`
+**问题**: `pr-review.md` 定义了两种打回情形：普通 `[阻断]` 和"升级条件（停止，等人介入）"。对于"CR 给出的是方案/结构层面的建议（不是简单的代码问题，但也没触发升级条件）"这个中间地带，规范没有明确指路。`pr-review.md §升级条件` 只覆盖安全敏感、和同一 `[阻断]` 三次仍未解决两种情况。开发者拿到包含结构性 CR 建议的打回后：是改了再次推 PR？是回退任务到 `[可取]` 让别人重做？还是先开 `revise-doc`？规范中这三条路径都有迹可循但都不完整。`develop.md` 的"阻塞于 revise-doc 结论"一节说"任务保持 `[taken-by]` 不变"，但没有覆盖"根因是在实现方案层而非文档层"的情形。
+**影响**: 开发者和 reviewer 对"结构性建议"的处理各自为政：有人继续改代码、有人回退任务、有人开 revise-doc，协调成本高，团队在这个环节频繁产生隐性沟通。
+**建议**: 在 `pr-review.md §打回后处理` 增加一张决策矩阵：根因在文档层（TRD/standards）→ 打回 + 创建 `revise-doc`；根因在实现方案（不需要改文档但方案需要重构）→ 打回，develop 任务保持 `[taken-by]`，由开发者根据 CR 评论自主重做；根因在 AC 本身 → 打回 + 创建 `revise-doc(target=prd)`。三条路都需要在 PR comment 中写明"打回原因属于哪类"。
+
+---
+
+### [status.yml 并发更新：文件式软锁只保护任务拾取，不保护状态更新步骤]
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution / skeleton
+**定位**: `skeleton/05-state-machine.md §3 软锁机制` + `skeleton/07-status-contract.md §五、写入协议` + `specs-execution/develop.md §Step 8 更新状态`
+**问题**: `05-state-machine.md` 的软锁机制只覆盖"拉任务"这个动作（`可取 → taken-by`），靠 git push 时序实现。但 `status.yml` 是项目级单文件，在多人并行开发场景下，两个开发者可能在同一天分别完成各自任务（Step 8），都要往 `status.yml` 的 `tasks[]` 写入自己任务的状态变更。两人各自在本地修改 `status.yml` 后 push，后 push 的人必然遭遇 git 冲突——规范对"非拾取动作的 status.yml 并发写入冲突"如何解决只字未提。`skeleton/05` 说"冲突时后到者重选任务"，但这是针对拾取冲突的，状态更新冲突性质不同（不能"重选"，只能解决冲突）。
+**影响**: 在一个有 5-8 人并行开发的团队里，同一 sprint 期间多名开发者同时提交代码时频繁遭遇 `status.yml` git 冲突，且合并策略不明确，容易因为手动解决冲突时弄错字段值而导致 hact-app 取数错误。
+**建议**: 在 `skeleton/07-status-contract.md §五 写入协议` 增加"并发写入冲突处理"小节，明确：YAML 文件按 task-id 段分块，两人修改的是不同 task-id 的条目，冲突时保留两段（not-yours and mine）；只有修改同一 task-id 的状态时才是真实冲突，此时以最新状态为准；推荐在 git 层面用 rerere 或明确标注哪些字段冲突时取谁的值。
+
+---
+
+### [跨任务依赖阻塞：被阻塞任务的状态定义与操作指引缺失]
+**严重程度**: P1（重要漏洞）
+**所在层**: skeleton / specs-execution
+**定位**: `skeleton/05-state-machine.md §4 异常转移` + `specs-execution/develop.md §上下文管理`
+**问题**: `develop.md §阻塞于 revise-doc 结论` 只覆盖了一种阻塞情形（等 revise-doc 完成），说"任务保持 `[taken-by]` 不变，在 `progress.md` 写明阻塞理由"。但规范没有回答以下问题：（1）我的任务依赖另一名开发者的 `develop` 任务还没合并，我该等（`taken-by`）还是退回 `[可取]`？（2）等待期间我可以开始其他任务吗？（3）阻塞超过多久需要上报，谁来解决？`skeleton/05 §4` 说异常转移的条件是"任意非 merged task 可被改回可取，前提是写理由"，但没有说阻塞等待时是否应该用这个机制。
+**影响**: 新开发者遇到依赖阻塞时不知道是等待（占着任务锁），还是退回（让别人或自己稍后重拾）；不同人做法不一致，导致 sprint.md 的状态分布对 hact-app 的推断逻辑产生误导，queue 里出现长期 `[taken-by]` 僵尸任务。
+**建议**: 在 `specs-execution/develop.md §上下文管理` 增加"依赖阻塞等待策略"：跨 layer 依赖（前端等后端 `独立` 任务合并）→ 不认领，等依赖合并后再拾取（规范已在 develop.md 阻断部分说明，但没在这里引用）；同 layer 依赖但上游任务被人拿走→ 保持 `[可取]`，不认领；已经 `[taken-by]` 但上游遭遇阻塞 → 持有者决定等（写阻塞理由）或退回（写退回理由），等待超 N 天（需定义阈值）由 dispatch 重派。
+
+---
+
+### [B 类紧急 BUG：dispatch-new 没有描述 hotfix 与进行中 sprint 任务的分支冲突处理]
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution
+**定位**: `specs-execution/dispatch-new.md §Step 4 known-risks 字段` + `specs-execution/deploy.md §边界场景`
+**问题**: `dispatch-new.md §Step 4` 提到了一个 `known-risks` 提示："urgency=hotfix 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序"，但这只是一个提示，没有给出具体的协调流程。具体问题：hotfix 任务的分支从 master 切（与当前在做 sprint 功能的多个任务分支并存）；deploy.md 说"hotfix 与当前未部署的 A 类改动代码冲突时，解决冲突后再部署"，但没有说 hotfix 是否应该在 A 类 sprint 分支合并之前或之后部署、谁来主导冲突解决。此外，dispatch-new 完成后的通知机制只有文字提示"立即告知相关 develop 执行人"，没有任何机制保证通知到达。
+**影响**: 在一个 sprint 进行中时发生 hotfix，开发者和 reviewer 会卡在"hotfix 先合并还是等 sprint 全部 merged 再合并"的决策上；如果团队规范不一致，hotfix 可能把半成品的 sprint 代码带上生产。
+**建议**: 在 `dispatch-new.md §Step 5 移交` 和 `deploy.md §hotfix 快速通道` 增加明确的策略：hotfix 始终从 master 最新提交切分支，完成后直接合并回 master（不等 sprint）；如果 sprint 分支和 hotfix 有文件重叠，sprint 分支需要在 hotfix 合并后 rebase 到最新 master；由 dispatch discipline 用户负责确认分支状态无重叠再触发部署。
+
+---
+
+### [CC 会话重开：CLAUDE.md 的 Step 1 状态推断在多迭代并行和 B 类任务混合时存在盲区]
+**严重程度**: P2（摩擦点）
+**所在层**: templates
+**定位**: `templates/CLAUDE.md §Step 1 推断当前任务类型`
+**问题**: `CLAUDE.md §Step 1` 的状态推断表依赖 `sprint.md` 的状态分布来决定下一步任务类型，覆盖了 7 种情形。但以下情形没有被覆盖：（1）当前既有 A 类 sprint 任务在进行，又有 B 类任务在 `b-queue/` 中 `[可取]`，表中没有规则告诉 CC 如何声明或建议 B 类任务；（2）多迭代并行：v1 在 G4-G5 阶段，v2 的 sprint.md 已经存在且有 `[可取]` 任务，推断逻辑只读"最新迭代目录下的 gates.md"，不会主动提示 v2 任务池；（3）当 `sprint.md` 不存在（项目处于 G1/G2 阶段）时，推断表没有对应行，CC 行为未定义（规范只说"无 gates.md 等，收到用户任务指令后加载对应 exec spec"，但没有主动提示当前阶段应做什么）。
+**影响**: 开发者重开会话时，CC 给出的状态摘要可能漏掉 B 类待办任务，或者在多迭代并行时只报告一个迭代的状态，导致任务被遗忘；团队成员在没有管理者主动告知的情况下无法自主发现"有 B 类任务需要处理"。
+**建议**: 在 `CLAUDE.md §Step 1` 的状态读取逻辑中，增加：读取 `b-tasks.md` 找 `[可取]` 或 `[taken-by: {current-user}]` 的 B 类任务并列出；对于多迭代，在"最新迭代"之外额外扫描所有存在 `queue/` 目录的迭代版本；在推断表中增加"sprint.md 不存在 + gates.md 中 G1 未签"行，推断结果为"项目初始化阶段，下一步 draft-prd-vN"。
+
+---
+
+### [develop 全流程：任务拾取后的 user 是谁 靠 git config user.name 推断，但没有说明多人公用一台机器时如何处理]
+**严重程度**: P2（摩擦点）
+**所在层**: skeleton / specs-execution
+**定位**: `skeleton/01-identity.md §4 跨会话身份连续性` + `specs-execution/develop.md §拾取任务`
+**问题**: `01-identity.md §4` 说"CC 启动协议靠 `git config user.name` 推断当前操作者"，`develop.md` 在认领 commit 里写 `[taken-by: {user}]`，其中 `{user}` 取自这个推断。但文档没有回答：如果两名开发者在同一台开发机器上工作（共用 git config），认领 commit 的署名就会相同，导致 hact-app 上任务归属混乱。这是早期小团队（5-8 人可能共用一台 CI 机器）的真实场景。
+**影响**: 任务归属在 hact-app 和 status.yml 中会被错误记录，`sprint.md` 的 taken-by 字段混淆，跨会话接续时 CC 会推荐错误的任务（把同机器其他人的任务当成当前用户的）。
+**建议**: 在 `specs-execution/develop.md §会话启动` 增加：当 git config user.name 不能唯一标识当前开发者时（如共用机器），在"第零步"让用户明确声明自己的 Gitee username，由 CC 将 `{user}` 赋值为该声明值而非 git config；或者在 `templates/CLAUDE.md §Step 0` 加一行检查：确认 `git config user.email` 与 hact-app 的成员列表中哪个人对应，如有歧义则询问。
+
+---
+
+### [B 类任务 develop 中"就地分流"的目标路径依赖 hact-notes 仓已存在且已配置]
+**严重程度**: P2（摩擦点）
+**所在层**: specs-execution
+**定位**: `specs-execution/develop.md §Step 10 feedback 检查 / 就地分流`
+**问题**: `develop.md §Step 10` 规定 B 类任务发现值得沉淀的内容时"当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）"，但没有说明：如果当前开发者的 hact-notes 仓尚未创建（`init-project Step 4.5` 还没跑，或者是新成员在 init-project 之后才加入项目），应该怎么办。文档只在 `templates/CLAUDE.md §Step 0` 的 git pull 命令里加了"不存在则跳过"的注释，但并没有在 Step 10 里有对应的降级说明。
+**影响**: 新加入团队的开发者在做第一个 B 类任务时，到 Step 10 会发现 notes 仓不存在；规范没有告诉他是跳过分流、手动创建仓再继续、还是把内容暂存某处等到仓创建好再写入。
+**建议**: 在 `develop.md §Step 10` 的 B 类就地分流部分增加：若 `../hact-notes-{name}/` 目录不存在，先检查 `_meta/hact-config.md` 的成员登记表确认是否已登记；未登记则提示"请通知管理者在 init-project Step 4.5 或 hact-config.md 中登记你的 notes 仓后再写入；当前条目可暂存在任务包 `feedback` 字段或 `feedback.md` 中"。
+
+---
+
+### [status.yml 更新时机在 develop spec 中要求"push 随首次代码 commit 一起推送"，但 hotfix 的认领 commit 可能在深夜孤立存在]
+**严重程度**: P3（优化建议）
+**所在层**: specs-execution
+**定位**: `specs-execution/develop.md §拾取任务` + `specs-execution/dispatch-new.md §Step 6`
+**问题**: `develop.md` 的拾取流程说"认领 commit 的 push 随首次代码 commit 一起推送，无需单独 push"，但 `dispatch-new.md §Step 6` 在写完任务包后立即 `git push origin master`（把 status.yml 状态推到 master）。对于 `urgency=hotfix` 的流程，dispatch-new 完成后 status.yml 已经记录了任务为 `[可取]`，而开发者认领之后的状态变更 `[taken-by]` 要等到"首次代码 commit 一起推"才能到 master，这中间可能有数小时。hact-app 的看板在这段时间内会显示任务"待认领"，而实际上已经有人在做了。
+**影响**: 团队看板出现虚假的"待认领"状态，可能导致另一名开发者也去认领同一个 hotfix 任务（虽然软锁会阻止他们 push 认领 commit，但他们已经花时间读了任务包）。
+**建议**: 对 hotfix 任务，在 `develop.md §拾取任务` 增加特殊说明：`urgency=hotfix` 时，认领 commit 应立即单独 push（不等首次代码 commit），确保看板实时反映认领状态，与普通任务的"随代码一起 push"策略区分开。

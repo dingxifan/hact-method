@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发 hact-app**（进行中）
-- 上次更新：2026-06-03
+- 上次更新：2026-06-08
 
 ## 各阶段完成情况
 
@@ -48,6 +48,14 @@
 | exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 13/13 全部完成，已通过评审和一致性检查 |
 
 ## 历史里程碑
+
+### 2026-06-08 方法论清理：移除全部 Dynamic Workflow（计费口径对齐）
+- 背景：Anthropic 2026-06-15 起将 Agent SDK / `claude -p` headless / GitHub Actions 等程序化 agentic 用量从订阅额度池剥离，改走独立 Agent Credit Pool 按 API 价计费。DW（`Workflow` 工具）是全仓唯一接近"自动化 agentic 用量"的形态，计费口径存在歧义
+- 处置：将仅存的测试产物 DW 及其所有引用彻底删除，方法论全面回归"交互式会话 + `Agent` 工具"——后者跟随会话走 Max 订阅，不进 Credit Pool
+- 删除：`workflows/` 整个目录（`adversarial-review.js` + `README.md`）；`docs/superpowers/` 下两份构建档案（plan 内嵌完整可运行脚本副本 + spec），删后 `docs/` 空目录一并移除
+- 修改：`templates/CLAUDE.md` 移除「B 类自动修复（DW）」死引用段（原指向已于 2026-06-06 删除的 `b-class-develop.js`），改指向 `adversarial-review` skill；`skills/adversarial-review/SKILL.md` 删去指向 `b-class-develop workflow` 的跳过条件
+- 保留：`adversarial-review` skill 本体（用 `Agent` 工具、交互式、不计费）；`_meta/plans/` 历史记录（纯日志、不含可运行脚本）
+- 结果：hact-method 全仓零 DW、零 `claude -p`、零 GitHub Actions、零 Agent SDK——无任何会进 Agent Credit Pool 的内容
 
 ### 2026-05-31 方法论调整：status.yml 状态契约（hact-app 取数稳定化）
 - 背景：hact-app 靠解析 queue/sprint.md/gates.md 等叙述性 markdown 取状态，格式漂移导致持续取错数

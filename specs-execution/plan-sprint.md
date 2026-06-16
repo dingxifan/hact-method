@@ -20,6 +20,7 @@
 - G2 已签 → 继续
 
 **必读文件**（Explore subagent 并行读取）：
+- `iterations/vN/prd.md`（AC 来源——任务包 AC 须能回链到此，G2 后开发链中段唯一回看 PRD 的窗口）
 - `iterations/vN/trd.md`
 - `iterations/vN/standards-shared.md`
 - `iterations/vN/standards-frontend.md`
@@ -121,11 +122,31 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后，按 `specs-structural/develop.md §字段规范` 为每个任务写完整 16 字段任务包。
+骨架确认后，按 `specs-structural/develop.md §字段规范` 为每个任务写完整 17 字段任务包。
 
-**字段完整性自检**（每包写完前对照 `specs-structural/develop.md §字段规范` 检查 16 字段，无空字段方可写入 queue；`layers=[backend]` 且有前端消费时，还须检查 `api-contract` 已填写）。
+**字段完整性自检**（每包写完前对照 `specs-structural/develop.md §字段规范` 检查 17 字段，无空字段方可写入 queue；`layers=[backend]` 且有前端消费时，还须检查 `api-contract` 已填写）。
+
+**depends_on 填写**：每个任务包的 `depends_on` 填入 Step2 骨架已确认的「依赖」（与 sprint.md「依赖」列、status.yml `depends_on` 三处一致），无依赖填 `[]`。共享资产消费关系（多任务共享同一表 / 枚举 / 共享类型）也走 `depends_on`——消费方指向 source-of-truth 任务，不另存消费方列表（消费方由反查得出）。
+> 团队期加固（暂不做，记 `_meta/plans/方法论待议.md`）：Step3.5 独审增一类「共享资产依赖完备性」——交叉比对各任务包 `files`，≥2 任务碰同一共享文件/表/枚举则校验 `depends_on` 边是否标全。单人串行开发本人有全局上下文，暂靠 Step2.5 交付判断 + 既有拾取顺序兜。
+
+**字段保真自检（机械可查，区别于上面的非空检查）**：
+- `reference` 每条必含行号范围（如 `L142` 或 `142-160`）；填"全文"或无行号范围的不通过——reference 指向已存在的代码/文档，行号可查，必须精确
+- `layers` 含 `frontend` 且 `ux-flows.md` 存在 → `reference` 必含 `ux-flows.md` 对应功能段的行号条目（把下方"前端任务 reference 字段补充"的"须补入"从无校验变成硬卡，堵住"手抄漏抄→develop 退化为 title 字面匹配"）
+- `layers` 含 `backend` 的任务包 → `reference` 必含该接口在 TRD 的**错误码清单段 + `# 服务流程：{场景名}` 标注段**的行号条目，使后端失败回退 / 状态分支 / 校验分支进 develop 上下文（与前端 ux-flows 硬卡对称——后端失败分支的权威来源是 TRD，不是 ux-flows）
+> `files` 行号**不在此卡**：它指向本任务将要改、可能尚未存在的目标文件，无法机械核对，维持"已知则填"（见 `specs-structural/develop.md §字段规范`）。
+> `relevant-standards` 是否覆盖 files 所属强制规范，属语义判断（standards 无"文件类型→规范"映射表，机械查不了），移交 Step 3.5 独立审查第④类。
+
+**AC 回链（PRD AC 溯源）**：每个任务包的 `acceptance-criteria` 每条须标注其覆盖的 PRD AC 文本引用，格式 `(源：PRD {功能名}·{AC 关键词})`；无 PRD AC 来源的纯技术约束（加索引 / DTO 校验 / 错误码对齐等）标 `(技术)`。不得凭 TRD 派生发明无来源的 AC——TRD 在 G2 时已剥离 AC，任务包 AC 的权威来源是 PRD。
+
+**AC 双向对账自检**（全部任务包写完后、生成 sprint.md 前执行，缺一不可）：
+- 纵向：每条任务包 AC 都能指回某条 PRD AC（或标 `(技术)`），无凭空发明
+- 横向：PRD 每条 AC 都至少被一个任务包 AC 覆盖，无整条遗漏
+- 不满足 → 列出失配项（漏覆盖的 PRD AC / 无来源的任务包 AC），向用户报告并补齐，不静默放过
 
 **前端任务 reference 字段补充**：对 `layers` 含 `frontend` 的任务包，若 `ux-flows.md` 存在，`reference` 字段须补入 `ux-flows.md` 对应功能段的行号范围（格式与其他 reference 条目一致），使 develop 执行时可精确定位交互路径，不遗漏替代路径实现。
+
+**后端任务 reference 字段补充**：对 `layers` 含 `backend` 的任务包，`reference` 字段须补入该接口在 `trd.md` 的**错误码清单段** + **`# 服务流程：{场景名}` 标注段**的行号范围，使 develop 实现后端时拿得到失败回退 / 状态分支 / 校验分支等替代路径，不只做 happy path（draft-ux 红线把后端校验排除在 ux-flows 外，后端分支的来源在 TRD）。
+> **前后端对齐锚点**：前端 reference 链 `ux-flows.md` 的场景名、后端 reference 链 TRD 同名 `# 服务流程：{场景名}` 接口——同一场景名使前端（UI 反馈）与后端（校验/状态）对同一条分支不重不漏。
 
 **api-contract 推导**（对每个 `layers=[backend]` 且被前端任务依赖的任务）：
 - **来源**：同时参考 `trd.md`（数据模型）+ `standards-frontend.md`（组件字段需求）+ 已写的前端任务包草稿（表格列 / 表单字段）
@@ -141,6 +162,77 @@
 
 ```
 ✅ 任务包写完：共 [N] 个，全部入 queue，字段自检通过。
+→ 下一步：任务包独立对抗审查
+继续？
+```
+
+---
+
+### Step 3.5：任务包独立对抗审查
+
+任务包是 develop 唯一消费的工单、杠杆最大的产物，但前面的字段自检 / AC 双向对账是 CC 自审（自己审自己写的）。此处补一道**独立眼睛**——派从未参与任务包写作的 sub-agent 对抗审查任务包，与 develop Step5.5 审代码对称：在源头堵住"任务包 AC 偏离 PRD"，让下游 develop 的对抗审查保持纯粹（只审代码对任务包 AC，不必再回看 PRD）。
+
+**【构建 prompt — 独立性约束】**
+
+审查 sub-agent **只从 `queue/*.md` 读最终任务包产物**，传入：
+- 全部任务包（queue 内本期所有 `[可取]` 包）
+- PRD 全文（`iterations/vN/prd.md`）
+- TRD（`iterations/vN/trd.md`）+ 三份 standards
+
+禁止传递：写包过程的中间叙事、"为什么这么拆"的推导理由、骨架讨论记录——审查员只对照"需求事实 vs 产物"，不被规划思路带偏（同 develop Step5.5 对"实现意图"的屏蔽）。
+
+任务包多时（> 4 个）**按任务包分批审**，不一次性全量塞入，利于 loop 收敛。
+
+**【sub-agent mandate】**
+
+```
+你是一名独立审查员，从未参与这批任务包的拆分与写作。
+
+【输入】
+PRD（用户 G1 签字认可的需求事实，含各功能 Acceptance Criteria）：
+{prd.md 全文}
+
+TRD + standards（技术契约）：
+{trd.md + standards 摘要}
+
+任务包（待审产物）：
+{queue 内全部任务包}
+
+【默认假设】
+任务包存在问题。你的任务是找出所有"产物不忠于需求事实"的地方，不是确认它对。
+
+【逐类检查】（每类必须有明确结论，不允许跳过）
+
+1. AC 忠实性：每条任务包 `acceptance-criteria` 是否忠实覆盖其回链的 PRD AC（`(源：PRD ...)`）？逐条比对两段文本——有无偏离、缩水、夹带 PRD 没有的要求、或把 PRD 一条 AC 实现成另一回事。标 `(技术)` 的无 PRD 来源条目，确认它确实是技术约束而非漏标的需求。
+2. AC 完备性：PRD 每条 AC 是否都被至少一个任务包覆盖？逐条核对，找出整条遗漏的 PRD AC。
+3. api-contract 推导正确性：`layers=[backend]` 且被前端消费的任务包，其 `api-contract` 的 response 字段是否覆盖了前端任务包 / standards 描述的全部消费字段？有无漏字段、类型错配、该平铺却嵌套。
+4. relevant-standards 覆盖：每个任务包的 `relevant-standards` 是否覆盖了其 `files` 涉及文件应当适用的强制规范？按文件用途语义判断（如 controller 应含响应格式 / 入参验证规范，.vue 应含设计系统 / 组件规范等）。漏列会导致 develop 静默不加载该规范——逐包核对，指出漏列项。
+
+【边界 — 不审以下，这些归用户确认 / 留下游】
+- 任务拆分粒度、依赖方向、交付方式（独立/批量）——这是用户在 Step2/2.5 的决策权，你不得否决。
+- `files` 字段行号是否精确——目标文件此刻尚未写出，无法核对，留 develop 阶段。
+
+【输出格式】
+每条 finding：
+- 类别：{AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖}
+- 位置：{任务包 task-id / PRD 功能名}
+- 问题：{具体描述，一句话}
+- 严重程度：{阻断 / 建议}
+
+某类无发现时明确写「{类别}：无发现」；全部无发现输出 findings: []。禁止输出「整体看起来不错」等总结性正面评价。
+```
+
+**【loop 逻辑】**
+
+| sub-agent 输出 | 动作 |
+|---|---|
+| `findings: []` | 退出，进入 Step 4 |
+| 只有 `[建议]` | 记入 `feedback.md`（供 wrap-up 分流）；退出，进入 Step 4 |
+| 有 `[阻断]` | 主线修对应任务包（改 AC 回链 / 补漏覆盖的 PRD AC / 修 api-contract），重审 |
+| 同一 `[阻断]` 修 3 次仍出现 | 停止 loop，上报用户；判断根因——若在 TRD（漂移点①：TRD 丢了 AC）则创建 `revise-doc(target=trd)`，不在本会话硬改 |
+
+```
+✅ 任务包独立审查完成：[findings: [] / 修复 {N} 条阻断后通过]，AC 忠于 PRD、无遗漏。
 → 下一步：生成 sprint.md 汇总视图
 继续？
 ```
@@ -176,7 +268,7 @@
 
 每个任务一条，`source: sprint`、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / type / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
 
-> 这是「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是 hact-app 取数的唯一来源；任务包正文（16 字段）不进 YAML，由 hact-app 用到时走 API 现拉。
+> 这是「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是 hact-app 取数的唯一来源；任务包正文（17 字段）不进 YAML，由 hact-app 用到时走 API 现拉。
 
 ---
 
@@ -212,7 +304,8 @@
 | 触发点 | Subagent 任务 | Subagent Prompt 要点 | 失败处理 |
 |--------|-------------|---------------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件 | — | 读取失败则主线单独读 |
-| Step 3（任务 > 4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 16 字段 YAML | 失败则主线接管该包 |
+| Step 3（任务 > 4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 17 字段 YAML | 失败则主线接管该包 |
+| Step 3.5 独立审查 | 独立 sub-agent 审任务包对 PRD/TRD/standards 保真（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖） | **只读 queue 最终产物 + PRD/TRD/standards**，禁传写包叙事与拆分理由；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
 **重要**：subagent 只返回任务包内容，**由主线负责写入文件**，不让 subagent 直接操作文件系统。
 
@@ -222,6 +315,7 @@
 
 - Step 2（任务骨架确认后）做一次 compact，再开始写任务包——骨架确认是探索讨论阶段的天然终点，任务包写作需要跨任务保持依赖关系和字段一致性
 - compact 前在 `_meta/sessions/plan-sprint-progress.md` 记录：任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单各条答案摘要
+- Step 3.5 独立审查 + 修包发生在 compact 之后的高密度区；修包若需回看 PRD 细节而上下文已瘦，重读 `prd.md` 对应功能段再改，不凭记忆修
 
 **断点续做**：
 - 读 `queue/` 目录，统计已写任务包数量

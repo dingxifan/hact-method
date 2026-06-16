@@ -1,0 +1,133 @@
+﻿Now I have read all the relevant files. Let me compile my findings.
+
+---
+
+### [task.type 路由完全依赖用户声明，无早期误判检测]
+
+**严重程度**: P0（系统性缺陷）
+**所在层**: 跨层（skeleton / specs-execution / templates/CLAUDE.md）
+**定位**: `skeleton/01-identity.md` §2、`templates/CLAUDE.md` §Step 1 推断逻辑
+**问题**: 整个系统的规范加载路由键是 `task.type`，但 templates/CLAUDE.md 的 Step 1 是通过 sprint.md 状态分布推断任务类型，而非从显式声明的 task 包读取。推断逻辑依赖对多个文件状态的解读，CC 在推断错误时没有任何验证门：若 sprint.md 格式漂移、states 描述不规范，CC 会静默加载错误规范执行——例如把 `pr-review` 时机误判为 `generate-integration-tests` 时机。
+**影响**: CC 带着错误规范把整个会话跑完，产物按错误规范生成，无人发现直到下一阶段出现结构性不兼容。
+**建议**: Step 1 推断完毕后强制要求 CC 输出"我推断当前任务是 X，加载规范 Y，请确认"并等用户明确回应（🚫 阻断），不允许自动滑入规范执行。现有逻辑在确认后才进入规范，但 templates/CLAUDE.md Step 1 结尾只说"加载规范"未设 🚫 门。
+
+---
+
+### [上下文截断后的静默状态漂移：跨会话接续依赖 CC 读文件"记住"，无完整性校验]
+
+**严重程度**: P0（系统性缺陷）
+**所在层**: 跨层（specs-execution 全部 task）
+**定位**: 每份 exec spec 的"断点续做"章节（以 `specs-execution/develop.md`、`generate-integration-tests.md`、`manual-test.md` 为代表）
+**问题**: 断点续做依赖 CC 读 progress.md / sprint.md / gates.md 等多个文件"重建状态"，但这些文件是 CC 自己在上一会话写入的——若上一会话在写入中途被截断（context 满、crash、网络断开），文件可能存在半写入状态。CC 新会话读到不完整文件时，会用部分信息推断出一个"看上去合理"的状态继续执行，而非报告状态不一致。规范里没有任何"文件完整性检查"或"状态一致性校验"步骤。
+**影响**: 在长流程的 develop / generate-integration-tests 会话中，CC 可能重复派发已处于 taken-by 状态的修复任务，或跳过已存在但被误认为"未完成"的步骤，产生重复条目或遗漏步骤，且没有任何报错。
+**建议**: 在每个 exec spec 的"断点续做"章节，增加一个明确的"状态一致性核查"步骤：对比 status.yml 的 task 状态与 queue/*.md 文件的状态标记，两者不一致时报告差异等待人工确认，不自行猜测"以哪个为准"。
+
+---
+
+### [generate-integration-tests 生成的脚本测的是"CC 理解的场景"而非真实业务场景，无防幻觉机制]
+
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution
+**定位**: `specs-execution/draft-tech-design.md` §Step 6（预生成）、`specs-execution/generate-integration-tests.md` §Step 3
+**问题**: G2 签署后立即 spawn subagent "预生成"集成测试脚本，subagent 只接收 TRD 接口设计和 PRD AC 文本——这是 CC 对"应该如何工作"的理解，而非真实系统的行为。subagent 生成 `.http` 脚本时会基于 TRD 的字段名和路径，如果 TRD 与实际实现有任何偏差（这在 B 类修复、快速直修后很常见），测试脚本会用错误的 URL/字段请求，得到特定错误响应，CC 却可能把这个错误响应解读为"符合 TRD 规定的错误码"从而标记通过。规范中 Step 2 的"脚本对齐核查"只读 PR description 里的"偏离说明"，但开发者在快速直修时不写偏离说明（快速通道条件之一是"原因显而易见"）。
+**影响**: 集成测试通过但测的是幻觉场景。进入 manual-test 时用户才发现问题，此时已在 G4 阶段，修复成本高。若用户的 manual-test 经验不足，可能直接签 G4，带着潜在 bug 部署。
+**建议**: Step 2 脚本对齐时，除读 PR description 偏离说明外，还应对每个测试端点执行一次"探活"请求（返回任意状态码即可），确认端点路径存在；若路径 404 则立即标记该场景为"路径不可达，需修正"，不等到 Step 3 全量跑才发现。另外，快速直修完成后应在 backlog 或 progress.md 留一条"偏离记录"，供 Step 2 读取。
+
+---
+
+### [status.yml 写入无 schema 校验，CC 格式错误静默污染数据源]
+
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution / skeleton
+**定位**: `skeleton/07-status-contract.md` §五（写入协议）；所有涉及 status.yml 写入的 exec spec（共 10 处：draft-prd-vN、draft-tech-design、plan-sprint、develop、pr-review、generate-integration-tests、manual-test、wrap-up-iteration、dispatch-new、init-project）
+**问题**: status.yml 是 hact-app 的唯一数据源（YAML.parse 直接取数），但所有写入步骤的实现方式是"CC 按指令修改对应字段"——这依赖 CC 每次都输出合法 YAML 且字段值完全符合枚举。规范中虽有"写入纪律"（显式写 null、不省略键），但没有任何写入后的校验步骤：既没有 `yaml lint`、没有 schema validate，也没有要求 CC 读回 status.yml 确认写入内容可被正常解析。CC 在长会话上下文较重时，特别容易在嵌套 YAML 的缩进上出错（例如 `tasks[]` 中混入 `code_reviews[]` 的缩进级别）。更危险的是，写入错误会随当步的 git commit 一并提交推送，hact-app 下次 sync 时直接 YAML.parse 失败或取到异常值，而且没有回滚机制。
+**影响**: hact-app 数据异常，看板显示错乱，且由于"出错的 commit 已推送到 master"，回溯需要手动 git revert 并重新修复 status.yml，代价高且容易遗漏。
+**建议**: 每次 CC 写入 status.yml 后，强制执行一行 yaml 语法检查命令（如 `python -c "import yaml; yaml.safe_load(open('status.yml'))"`）或 Node.js 等价命令，检查失败则报告错误、不执行 git add，等修复后重试。此步骤应作为 07 契约的一条写入纪律写入，而非留给各 exec spec 自行决定。
+
+---
+
+### [AI 测试（generate-integration-tests）与人工验收（manual-test）的边界定义不清晰，存在责任替代风险]
+
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-structural / specs-execution
+**定位**: `specs-structural/generate-integration-tests.md` §完成判据、`specs-execution/manual-test.md` §Step 2
+**问题**: generate-integration-tests 的三条完成判据（主流程无阻断失败、场景全有结论、不阻断问题已分级）实质上构成了一份"联调通过证明"——而 manual-test 的会话启动前置检查直接读取这三条结论作为准入条件。这形成了一个路径：若 CC 在联调阶段对失败场景的"级别"判定偏宽松（本应 [阻断] 被判为 [不阻断]），或对"主流程"的界定过窄（把某个核心路径排除在主流程之外），所有这些错误判断都会被 manual-test 的前置检查直接接受。manual-test 规范虽然明确"不替用户判断通过"，但只要进入 Step 2，CC 已向用户声明"联调三条件已满足"，产生了隐性的信任传递——用户倾向于轻量验收。规范里没有要求人工验收必须覆盖 generate-integration-tests 已测场景（仅靠 PRD AC 驱动），意味着联调测了假场景的情况在 manual-test 阶段不会被系统性捕获。
+**影响**: 联调幻觉场景漏过，进入生产。此类 bug 发现于用户反馈阶段，修复成本是最高的。
+**建议**: manual-test 的告知信息（Step 2）应附上联调结果摘要（测了哪些场景、哪些是 [不阻断]），引导用户特别关注联调中未覆盖或降级处理的场景。同时，specs-structural/generate-integration-tests.md 的完成判据应增加"场景覆盖率自检"：每条 PRD AC 必须有至少一条对应的测试场景，否则不能标记完成，强制 AC 到场景的溯源。
+
+---
+
+### [CC 不可用时缺乏系统性降级路径描述]
+
+**严重程度**: P1（重要漏洞）
+**所在层**: 跨层（specs-execution 全部 task）
+**定位**: 所有 `specs-execution/*.md` 文件；以 `deploy.md`、`generate-integration-tests.md` 为典型
+**问题**: 所有 exec spec 的设计假设 CC 会话可正常运行，没有任何 task type 包含"CC 不可用时的人工操作指引"。在 generate-integration-tests 中，subagent 按模块并行执行测试脚本，失败处理是"降级主线逐条执行"——但这仍依赖 CC；deploy 中整个步骤序列（本地构建→推送→SSH拉取→重启→健康验证）完全依赖 CC 调用 SSH MCP 执行，没有对应的"手动部署步骤单"。对于 develop 的对抗审查 subagent、pr-review 批量审查，若 CC API 限流或 token 耗尽，整个 sprint 可能卡死在一个会话里，没有人工接管协议。
+**影响**: 在 CC 不可用时（API 故障、账单到期、token 超限、MCP 工具故障），团队没有任何文档指导如何手动完成当前卡住的 task，尤其对于 deploy 等时间敏感任务，可能导致生产环境长时间无法更新。
+**建议**: 对每个 exec spec，在"边界与异常"章节增加一条"CC 不可用时的人工处理路径"，至少列出该 task 的关键操作序列（不需要完整，够指引人工操作即可）。对 deploy 这类操作系统性的 task，应有独立的"手动部署清单"文档，不依赖 CC 会话。
+
+---
+
+### [draft-tech-design 双源规范注入：notes 中的错误规范无有效过滤机制]
+
+**严重程度**: P1（重要漏洞）
+**所在层**: specs-execution
+**定位**: `specs-execution/draft-tech-design.md` §Step 4（Standards 来源规则，双源补充部分）
+**问题**: Step 4 规定从执行人个人 notes（`hact-notes-{name}/notes.md`）中取 `[规范]` 标签条目并入本期 standards，过滤机制仅有"对照公共模板/上期 standards 去重"。但去重只能过滤"已收录的同条目"，无法过滤"新的但错误的规范"——例如开发者在 notes 里记了一条基于个人错误理解写出的 `[规范]`，或者针对某个早期临时方案写的规范已经过时，这些条目会被完全信任地并入当期 standards，继而被所有 develop 任务加载执行。更严重的是，并入过程是 CC 阅读 notes 文本后自行提取"与本 layer 相关的条目"——这个相关性判断本身也是 CC 的主观判断，没有人工审阅步骤。规范中唯一的安全控制是"与公共模板冲突时以 TRD 决策为准写入 decisions.md"，但这只处理冲突场景，不处理"没有已知冲突但内容有误"的场景。
+**影响**: 错误规范被注入当期 standards，所有 develop 任务按该错误规范实现，pr-review 也以该规范为评判依据。错误可能在 manual-test 或生产环境才被发现，且追溯来源需要比对 notes 历史，成本高。
+**建议**: 从 notes 并入 standards 的步骤应改为"建议清单"而非"直接并入"：Step 4 在生成 standards 草稿时，将来自 notes 的条目单独列出作为"本人待评估条目"，在 Step 6（G2 签字确认环节）由用户逐条确认是否纳入，经确认后再写入最终 standards 文件。这与 harvest-notes 的"管理者审阅后才写入公共层"逻辑保持一致。
+
+---
+
+### [Context Compact 发生时 progress.md 写入窗口不原子性，存在状态丢失风险]
+
+**严重程度**: P2（摩擦点）
+**所在层**: specs-execution
+**定位**: `specs-execution/draft-tech-design.md` §上下文管理（compact 前写入 progress.md）；`specs-execution/develop.md` §上下文重置协议；`specs-execution/plan-sprint.md` §上下文管理
+**问题**: 多个高密度 exec spec（draft-tech-design、plan-sprint、develop）在 compact 前要求 CC 将关键状态写入 `_meta/sessions/{task}-progress.md`，以便下次会话断点续做。但 compact 的触发时机是上下文"过重时"——这意味着 compact 可能在 progress.md 写入途中发生（CC 写了一半 context-state 就被压缩），或者写完 progress.md 后还没来得及 commit 就 compact 了。断点续做逻辑读 progress.md 时会读到不完整的状态快照，导致"跳回到看上去正确但实际有遗漏的断点"，且不会报任何错误。
+**影响**: 在 develop 的"上下文重置协议"中，若 context-state 写入不完整，接手会话可能找不到已完成的文件，重复实现部分模块，与已有代码产生冲突。
+**建议**: compact 前的写入步骤应强制包含一个验证子步骤：写入 progress.md 后立即读回并输出摘要（证明文件已完整落盘），然后执行 git commit（确保持久化），最后再执行 compact。规范当前描述是"compact 前确认：已写入"，但没有强制要求 git commit 先于 compact。
+
+---
+
+### [B 类 dispatch-new 的 schema-change 检测逻辑依赖执行人诚实填写，CC 无法独立验证]
+
+**严重程度**: P2（摩擦点）
+**所在层**: specs-execution
+**定位**: `specs-execution/dispatch-new.md` §Step 4（schema-change 字段）；`workflows/README.md` §Phase 1
+**问题**: dispatch-new Step 4 要求在任务包写入 `schema-change: true/false`，标准是"本任务含接口或数据结构纯加法变更"。这个判断完全依赖 dispatch 执行人（人或 CC）在写包时正确评估，没有任何后续验证。DW 脚本在 Phase 1 检查 `schema-change=true` 时直接升级给人，这是正确行为——但若 `schema-change` 被漏标为 false（执行人认为"只是加了一个可选字段，不算"），DW 会继续执行，在 agent-fix 阶段修改了接口，对抗审查也不会专门检测 schema 变更，最终带着接口改动的 PR 被自动 push。
+**影响**: 接口变更绕过了人工确认，可能导致前端与后端接口不兼容，或破坏已有客户端（特别是在多迭代并行场景下 v1 的前端还在用旧接口时）。
+**建议**: DW 的 Phase 2（agent-fix 完成后）增加一个独立的 schema-diff 检查：对比任务包 `files` 字段中涉及 controller/DTO/entity 的文件，如果 git diff 显示接口路径、请求/响应字段有任何变动（不只是纯加法），立即升级给人并暂停 DW，不论任务包的 `schema-change` 字段标记如何。
+
+---
+
+### [Gates.md 与 status.yml 双写存在不一致风险，但任何一方都不是强制数据源]
+
+**严重程度**: P2（摩擦点）
+**所在层**: specs-execution / skeleton
+**定位**: `specs-execution/draft-prd-vN.md` §Step 8；`specs-execution/draft-tech-design.md` §Step 6；同类 Gate 签字步骤（共 5 处）
+**问题**: 每次签 Gate 需要同时更新两个地方：`iterations/vN/gates.md`（人看的文档视图）和 `status.yml`（机器侧数据源）。两处写入在同一步骤的同一 git commit 中，通常不会分开，但如果 CC 在写 gates.md 后上下文被截断，下次接续会话读 gates.md 发现 G1 已签，但 status.yml 中 G1 仍为 false。接续逻辑只检查 gates.md（如 draft-tech-design 的前置检查读 gates.md），会认为状态正确继续推进，而 hact-app 读 status.yml 却显示 G1 未签，两个视图长期不一致，无人主动修复。
+**影响**: hact-app 看板显示与实际进度不符，管理者基于看板做的判断（如"G2 还没签，不能 dispatch"）可能是错误的，导致流程卡顿或被错误放行。
+**建议**: 在模板 CLAUDE.md 的 Step 1（会话启动状态推断）中增加一条：对比 status.yml 的 gates 状态与 gates.md 的 `[x]` 标记，如有不一致立即报告并要求人工确认修复，再进入推断逻辑。此检查应常态化，而非只在发现问题后才执行。
+
+---
+
+### [harvest-notes 的"去重择优"完全依赖 CC 主观判断，无量化标准]
+
+**严重程度**: P2（摩擦点）
+**所在层**: specs-execution
+**定位**: `specs-execution/harvest-notes.md` §第二步（去重择优）
+**问题**: 去重择优的判断标准只有四种定性描述（重复/多人提同一问题/单人通用有价值/单人仅个人相关），没有任何量化阈值。"单人、通用、有价值"这个判断完全是 CC 对规范条目"通用性"的主观评估。当 notes 条目描述的是一个小众技术选型的特定行为（例如某个 NestJS 拦截器的边界行为），CC 可能因"看上去是通用规范"而错误上提；反之，对团队真正有价值的经验也可能因措辞太个人化而被丢弃。规范中虽然有"采纳清单较多时，先让管理者过目"的 🚫 阻断，但"较多"没有定义数量，CC 可能在条目不多时直接写入不经过目。
+**影响**: 公共层（templates/standards）被注入低质量或错误的规范条目，污染全团队的开发标准，且追溯来源需要 git blame 对比 hact-config 游标，不直观。
+**建议**: 明确"较多"的阈值（例如超过 3 条新条目即必须让管理者过目）；同时在采纳清单中对每条条目标注来源成员和原始措辞，使管理者审阅时有原始上下文，而非只看 CC 提炼后的版本。
+
+---
+
+### [B 类任务的 feedback 就地分流依赖 CC 识别"值得沉淀的发现"，无捕获率保证]
+
+**严重程度**: P3（优化建议）
+**所在层**: specs-execution
+**定位**: `specs-execution/develop.md` §Step 10（B 类就地分流）
+**问题**: B 类任务完成后，Step 10 要求 CC 识别"遇到 standards 未覆盖的决策"或"上下文重置协议被触发"等值得沉淀的发现，然后分类写入个人 notes。这一步是可选的（"无发现 → 跳过"），完全依赖 CC 主动识别。但 CC 在长会话末尾（会话将要结束时上下文已较重）的反思质量较低，最有价值的实现过程发现往往在 Step 4 代码实现时被处理过去，到 Step 10 时已"记忆模糊"，产生较高的漏记率。与 A 类不同，B 类没有 wrap-up 的系统性回顾，丢失的发现无处追回。
+**影响**: B 类任务是日常运行中最频繁的任务类型，踩坑经验的积累效率直接影响团队学习曲线。长期来看，公共层规范的演化质量主要靠 B 类发现驱动，漏记率高意味着团队经验沉淀缓慢。
+**建议**: Step 4 代码实现时增加一个"即时记录钩子"：每当 CC 遇到 standards 未覆盖的决策或执行偏离 files 清单时，立即在 progress.md 追加一条"待沉淀"标注，Step 10 只需读 progress.md 中的"待沉淀"列表归类写入 notes，不再依赖回忆。

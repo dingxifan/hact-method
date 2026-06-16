@@ -32,13 +32,14 @@
 | `title` | string | ✅ | 简短描述，15字以内 |
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
 | `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |
-| `acceptance-criteria` | string[] | ✅ | 3–5条，每条可独立验证；"功能正常"不算 |
+| `acceptance-criteria` | string[] | ✅ | 3–5条，每条可独立验证；"功能正常"不算；每条须标注覆盖的 PRD AC 文本引用 `(源：PRD {功能名}·{AC 关键词})`，纯技术约束标 `(技术)`（由 plan-sprint 回链写入） |
 | `relevant-standards` | string[] | ✅ | 精确指向 `standards-{layer}.md` / `standards-shared.md` 的章节（§ 章节名）；前端涉及视觉必须列 design.md |
-| `reference` | string[] | ✅ | 文件路径 + 行号 + 说明；无相关文件时明确标注原因 |
+| `reference` | string[] | ✅ | 文件路径 + 行号 + 说明；行号必填、不接受"全文"或无范围（指向已存在代码/文档，可精确定位）；无相关文件时明确标注原因 |
 | `context` | string | ✅ | 关键实现切入点（如：`GoalList.vue L142 handleDelete()`…） |
 | `known-risks` | string[] | ✅ | 来自 TRD 或现有代码的实际陷阱，不是猜测 |
 | `do-not` | string[] | ✅ | 明确禁止边界，防止范围蔓延；必须包含通用凭据红线 |
 | `escalate-if` | string[] | ✅ | 触发上报的条件；必须包含"上下文不足以做实现决策" |
+| `depends_on` | string[] | ✅ | 本任务依赖的前置 task-id 列表，无依赖填 `[]`。两类来源：① 编译/接口依赖（下游引用上游新增的共享类型/接口，须等上游合并）② 共享资产消费（多任务共享同一表/枚举/共享类型时，指向 source-of-truth 任务）。**消费方无需另存**——由其他任务的 `depends_on` 反查得出（谁的 `depends_on` 含本 task-id，谁即消费方）。与 sprint.md「依赖」列、status.yml `depends_on` 三处一致 |
 | `api-contract` | object | 条件 | 仅 `layers=[backend]` 且该接口被前端消费时必填；由 plan-sprint 推导写入，develop 只读；见下方格式说明 |
 
 **api-contract 格式**：

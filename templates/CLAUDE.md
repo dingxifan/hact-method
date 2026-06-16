@@ -22,21 +22,7 @@
 - `dispatch-new`              → `@../hact-method/specs-execution/dispatch-new.md`
 - `revise-doc`                → `@../hact-method/specs-execution/revise-doc.md`
 
-### B 类自动修复（Dynamic Workflow，可选）
-
-`dispatch-new` 完成后，B 类任务可通过 DW 脚本自动执行修复流程（fix-test loop + 对抗审查 + commit + PR）。
-
-触发方式——告诉 CC：
-```
-用 workflow 运行 B 类任务修复，
-脚本路径 ../hact-method/workflows/b-class-develop.js，
-任务 ID 是 {task-id}
-```
-
-详见 `../hact-method/workflows/README.md`。
-
-> 触发后无需逐步确认，DW 自动执行到 PR 创建为止；
-> 人工只需在完成后跑 `pr-review` 审查 PR。
+> B 类任务手动实现后、commit 前，调用 `adversarial-review` skill 做独立对抗审查（diff ≥ 15 行且改了代码文件时）。
 
 ## 个人工具（人工触发，不在主线流程）
 
@@ -99,3 +85,5 @@ git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{userna
 
 5. 加载对应规范，输出当前状态摘要：Gate 进度 + 任务状态分布 + 推断的下一步动作
 6. 若 Step 1 结束时处于等待状态（迭代完结、无 gates.md 等），收到用户任务指令后，**必须先加载对应 exec spec，再执行，不得跳过**。
+
+**断点续做对账原则**（适用所有 task 的「断点续做」）：恢复某个进行中任务时，以**工作区实际文件 / `git diff --stat` 为准**核对 `_meta/sessions/*-progress.md`，二者冲突时**信工作区**，progress.md 仅作"上次意图"补充——不得仅凭 progress.md 推断进度而重复实现已落盘的改动（compact 不删工作区文件；progress.md 可能落后于实际进度）。

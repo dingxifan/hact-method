@@ -1,0 +1,145 @@
+﻿Now I have read all the core documentation. Let me deliver my analysis.
+
+---
+
+以下是基于完整文档阅读的审查发现，按七个维度展开，不自我审查。
+
+---
+
+### 1. task.type 路由假设在多 discipline 持有者处的失效
+
+**严重程度**: P1（重要漏洞）
+**所在层**: skeleton / specs-execution 跨层
+**定位**: `skeleton/01-identity.md §2 任务是路由键` + `skeleton/03-disciplines.md §各 discipline` + `BRIEF.md 决策#1`
+
+**问题**: 方法论核心承诺是"task.type 决定加载哪份规范，而非用户身份"。但当一个用户同时持有 `architecture`、`dispatch`、`product` 三个 discipline 授权时，同一会话里可以依序拉取 `draft-tech-design`、`plan-sprint`、`draft-prd-vN`——而这些 spec 的加载路径完全不同。此时"你是谁不重要"这个命题实际上隐含了一个前提：每个会话只处理一类任务。文档中 `02-workspaces.md §5 心态切换 = 开新会话` 靠的是人的自律，而非技术约束。当管理者（持有全部 9 个 discipline）独自推进早期阶段时，他在实践中会在一个会话里做 PRD + TRD + sprint，CLAUDE.md 加载机制无法感知"这个会话现在应该服从哪份 spec"，因为 CC 会话的 spec 路由键是在会话开始时由用户声明任务类型，而非后续动态注入。
+
+**影响**: 早期单人驱动阶段（即当前 hact-app 开发阶段），管理者扮演所有角色，task.type 路由假设根本无法落地——用户实际上仍在凭直觉和习惯行事，方法论的规范约束形同虚设。验证结果会被"单人运行就是正确"掩盖，进入团队阶段后才会暴露。
+
+**建议**: 增加会话初始化时的"当前 task 声明"硬性步骤，并限制单会话内只能声明一个 task.type；或在 CLAUDE.md 的跨会话接续规则中明确"已声明任务不得在同会话内切换"。
+
+---
+
+### 2. Gate 签字权限与任务 discipline 的循环依赖
+
+**严重程度**: P1（重要漏洞）
+**所在层**: skeleton / specs-structural 跨层
+**定位**: `skeleton/01-identity.md §3 管理性操作不另开后门` + `skeleton/06-gates.md §1` + `BRIEF.md 决策#19`
+
+**问题**: Gate 签字被合并入前置任务末尾（G1 在 `draft-prd-vN`，G2 在 `draft-tech-design`），签字权 = 能拉该任务的用户，即持有对应 discipline 的用户。这制造了一个内部矛盾：**任务完成者即签字者**——同一用户既做 PRD 又签 G1，既做 TRD 又签 G2。在 5-8 人团队中，这是设计意图（减少摩擦），但文档中在 `guide/02-一期完整流程.md §1.1` 里描述的"AI 在文档末尾询问是否签 G1"意味着签字是自我验证而非独立审查。Gate 的价值在于"阶段性的独立确认"，而当前设计让这个确认退化为"我做完了，我同意我自己做完了"。文档没有任何条文要求签字者不能是任务持有者，也没有要求第三方参与签字。
+
+**影响**: 5 个 Gate 在实践中变成 5 次格式化的自我宣告。对于一个管理者主导、开发者第五阶段才引入的架构，Gate 全程由同一个人签，完全无法提供质量把关价值，仅剩流程标记功能。它增加了格式成本而不带来实质审查收益。
+
+**建议**: 明确规定 G1/G2/G4 的签字者必须与任务 taken-by 不是同一 user（至少有一个 discipline 不同的人确认），或者在早期单人阶段显式承认 Gate 是"里程碑标记"而非"独立审查门"，消除概念混淆。
+
+---
+
+### 3. B 类恒定 2 会期约束是未经验证的假设
+
+**严重程度**: P1（重要漏洞）
+**所在层**: skeleton / specs-execution
+**定位**: `BRIEF.md 决策#6` + `skeleton/06-gates.md §4` + `guide/00-核心概念.md §A 类 vs B 类`
+
+**问题**: "B 类恒定 2 会期（BUG 处理 + 功能优化）"这个约束在整个文档体系中只出现在 BRIEF.md 决策#6 和速查表中，没有任何推理或数据支撑。现实中 BUG 的复杂度差异可以是 10 倍量级以上：修复一个按钮颜色错误可能 5 分钟，而修复一个账户安全漏洞可能需要 2 周。文档中的 `dispatch-new §Step 1` 通过"B 类判定"将复杂 BUG 升级为 A 类，但这个升级门槛是主观的（"影响两个以上模块的核心逻辑"），中间地带极大——一个复杂但不触发升级条件的 BUG 被强行塞入 2 会期，要么过度压缩（偷工减料），要么会期概念本身被架空（第二个会期拉很长）。文档中 `specs-execution/develop.md` 中 B 类任务本身有完整的 16 字段任务包、对抗审查、subagent 循环，跟 A 类 develop 几乎等量，"2 会期"就成了空标签。
+
+**影响**: 一旦团队遇到真实复杂 BUG，要么违反"2 会期"约束产生认知混乱，要么滥用"升级 A 类"绕过流程，使 B 类实际上成为 A 类的简化入口而非独立路径。
+
+**建议**: 去掉"恒定 2 会期"这个未定义的概念，改为"B 类无 Gate、无 PRD，但会期数量由任务包的 AC 复杂度决定"，或将会期定义明确化（什么算一个会期的边界）。
+
+---
+
+### 4. merged 终态不变量与并发修订的认知混乱
+
+**严重程度**: P1（重要漏洞）
+**所在层**: skeleton / specs-structural 跨层
+**定位**: `skeleton/05-state-machine.md §2 关键不变量` + `skeleton/06-gates.md §6` + `specs-structural/revise-doc.md §完成判据`
+
+**问题**: 文档规定"merged 是终态——一旦进入不回退，要回退走修订路径（revise-doc 等）"。这在多迭代并行场景下制造了一个隐性问题：假设 v1 的 `trd.md` 已 merged，在 v1 G4 期间启动了 v2，v2 的 `draft-tech-design` 开始时需要读 v1 trd 作为基础。此时若 v1 跑 `revise-doc(target=trd)` 修改了 `iterations/v1/trd.md`，与 v2 已在引用的 v1 TRD 之间产生了版本分叉，但两者都处于 `merged` 状态的不同版本。文档中 `skeleton/06-gates.md §6` 承认了这一点（"G1 已签 + 之后 revise-doc → G1 仍是已签"），但未解决一个更根本的问题：**revise-doc 产物本身的 merged 状态**意味着"修订版"和"原版"都是 merged，哪个是当前权威版本？文档中 `backlog.md` + `[修订]` 条目是唯一的版本追踪机制，但它是人看的文本，不是机器可查询的版本控制。
+
+**影响**: 在多迭代并行下，同一份文档可以经过多次 revise-doc，每次都被标记为 merged，但最新版本只能通过读 backlog 手动追溯，而不是通过状态机查询。这与"status.yml 是机器侧唯一数据源"的原则形成矛盾——status.yml 无法表达文档的修订历史，hact-app 拿到的永远是 git 当前版本，无从知晓文档经历了多少次 revise-doc。
+
+**建议**: 在 status.yml 中增加 `documents` 块，记录每份关键文档的版本号和最近修订时间；或在 revise-doc 完成时给文档文件头追加版本戳，让机器可识别当前是第几次修订版。
+
+---
+
+### 5. 拉取池假设开发者有足够的冷启动上下文
+
+**严重程度**: P1（重要漏洞）
+**所在层**: skeleton / specs-execution
+**定位**: `skeleton/04-task-catalog.md §develop` + `specs-execution/develop.md §精确加载上下文` + `guide/00-核心概念.md §queue`
+
+**问题**: queue 的拉取模型假设开发者打开一个任务包文件，就能自主判断"该拿哪个任务"并获得足够上下文去执行。任务包中的 `reference`、`relevant-standards`、`known-risks` 字段要求精确定位文件和行号。但这些字段是由 `plan-sprint` 时的 CC 会话写入的——写任务包的人（架构师/dispatch 角色）和拿任务包的人（开发者）可能不是同一个人，也可能不共享同一个会话上下文。当任务包指向的 `reference` 路径是 6 周前写的代码，而开发者从未见过这个代码库时，任务包中"精确到行号"的 reference 字段变成了冷知识的索引，而不是实际的上下文入口。`specs-execution/develop.md` 的 `精确加载上下文` 小节告诉 CC 只读 reference 字段列出的行号范围，这在 CC 层面合理，但对真实开发者（如果有人工操作的场景）意味着"任务包就是全部上下文"，而任务包的质量完全依赖于 `plan-sprint` 时 dispatch 角色的认知深度。
+
+**影响**: 团队引入阶段（第五阶段），新开发者面对的是一批由 CC 或管理者写成的任务包，如果 `reference` 字段引用了他们不熟悉的模块，他们没有独立探索上下文的规范路径——`develop` spec 只规定了 CC 的行为，没有规定人工开发者如何补充上下文，也没有"任务包上下文不足时应如何上报"的人工路径（只有 CC 的上报路径）。
+
+**建议**: 在 dispatch `plan-sprint` 阶段增加"任务包可读性测试"——让一个不参与 TRD 写作的 user 试读任务包并确认无歧义再入 queue；或在任务包增加 `prerequisites` 字段说明前置知识要求，让开发者能在认领前做自我评估。
+
+---
+
+### 6. 设计决策#23 与决策#20 的根本性矛盾
+
+**严重程度**: P1（重要漏洞）
+**所在层**: 跨层（BRIEF.md 决策层 + specs-execution/draft-tech-design）
+**定位**: `BRIEF.md 决策#20` vs `BRIEF.md 决策#23` + `specs-execution/draft-tech-design.md §Step 4 Standards 来源规则`
+
+**问题**: 决策#20 规定"复杂工作不强行预定义为 task type，方法论调整等发散性工作由 management 直接做"。决策#23（双源规范）规定 `draft-tech-design` 在生成 standards 时，除公共模板外，还并入"执行人本人 hact-notes 的 `[规范]`"。这两条设计形成了一个矛盾：决策#23 假设"当前架构与开发高度重叠，生成端执行人 ≈ 真实开发者"（文档原文），即 standards 的生成应该反映真实开发者的经验。但决策#20 允许 management 直接做方法论类工作——当管理者（非技术背景，BRIEF.md 干系人描述）以 management discipline 身份运行 `draft-tech-design` 时，他的 notes 里很可能没有任何 `[规范]` 条目，或者有的条目并非来自实际编码经验。此时双源合并逻辑降级为"空合并"，但 spec 并未处理这个空状态。更严重的是，当管理者即是架构师时，决策#23 的"适用前提（设计甲）"已经失效，因为管理者角色 ≠ 真实开发者，标注在 `specs-execution/draft-tech-design.md §Step 4` 的"适用前提"是条件句而不是前置检查——CC 不会验证执行人是否满足该条件，会静默地做一次空合并并继续。
+
+**影响**: standards 双源机制的价值来自"让实际写代码的人的经验即时生效"，但如果执行人是管理者而非开发者，这个机制对当前团队构成完全没有提升效果。更糟糕的是，管理者的 notes 里如果有基于旧项目的规范条目，被当期 standards 并入后可能污染新项目的编码约束。
+
+**建议**: 在 `draft-tech-design` 会话启动时增加前置检查：确认执行人 notes 中 `[规范]` 条目数量，若为零或执行人的主 discipline 是 management（非 architecture/dev-*），跳过双源合并步骤并明确告知用户。或将决策#23 的适用范围缩小到"执行人 discipline 包含 dev-frontend 或 dev-backend"。
+
+---
+
+### 7. wrap-up-iteration 的 feedback 分流路径形成知识孤岛
+
+**严重程度**: P2（摩擦点）
+**所在层**: specs-execution
+**定位**: `specs-execution/wrap-up-iteration.md §第二步 feedback 审阅分流` + `specs-execution/develop.md §Step 10` + `BRIEF.md 决策#21`
+
+**问题**: feedback 分流路径是：A 类任务的反馈写入 `feedback.md` → `wrap-up-iteration` 第二步誊入执行人 notes → `harvest-notes` 收割上提公共层。而 B 类任务（无 wrap-up）的反馈走就地分流：`develop` Step 10 直接写入个人 notes。两条路径最终都到达个人 notes，但关键问题是：**谁誊入 notes？** `wrap-up-iteration` 的描述是"誊入执行人个人 notes"——而 wrap-up 的执行人是 management discipline 的用户，可能与产生 feedback 的 develop 执行人完全不同。文档中 `wrap-up-iteration §第二步` 有一个脚注："归属：誊入产生该反馈的成员的 notes"，但同时说"当前架构/开发/管理高度重叠场景下，即收尾执行人本人的 notes 仓"。这两个表述是矛盾的——当团队分化时，management 执行 wrap-up，但 feedback 应该进 develop 执行人的 notes（他们产生了 feedback），这要求 management 去写别人的私有 notes 仓，而 management 对别人的 notes 仓没有写权限（决策#21 只有本人可写）。
+
+**影响**: 团队分化后，wrap-up-iteration 第二步"誊入执行人 notes"会变成一个死锁：management 既无法写别人的 notes，也无法确定该把 feedback 写进哪个成员的 notes，最终结果是 feedback 堆积在 `feedback.md` 无法分流，或者 management 跳过分流直接清空 feedback.md，使知识永久丢失。
+
+**建议**: 修改 wrap-up 第二步，将 feedback 条目保留在 `feedback.md` 中并标注"来源成员"（taken-by 字段），由各成员在 wrap-up 后各自认领属于自己的条目誊入 notes——而不是由 wrap-up 执行人统一誊入。这需要在 feedback 格式中增加来源归属字段。
+
+---
+
+### 8. 方法论自举悖论：hact-method 用 hact-method 开发 hact-app
+
+**严重程度**: P2（摩擦点）
+**所在层**: 跨层（BRIEF.md 阶段划分 + STATUS.md + 设计原则）
+**定位**: `BRIEF.md §阶段划分 第三阶段` + `STATUS.md §已知风险` + `skeleton/README.md §第一阶段完成标志`
+
+**问题**: BRIEF.md 明确"第三阶段：开发 hact-app，用 hact-method 走完一遍 PRD/TRD/Gate 流程"，STATUS.md 也承认"hact-app 即压力测试，发现问题即修规范"。这是一个自举系统：开发工具（hact-app）用这套工具自身的流程来开发。问题在于：当方法论有缺陷时，用该方法论开发出的产品（hact-app）的需求、设计和实现决策都会受到这个缺陷的影响；而 hact-app 一旦上线，它就成为方法论的"唯一可见实现"，方法论修改需要同时修改 hact-app，形成循环依赖。更具体地，hact-app 的 TRD 数据模型已经反映了 status.yml 契约（`skeleton/07-status-contract.md`）——如果 status.yml 的 schema 需要修改（例如增加文档修订版本号字段），既需要改方法论文档，又需要改 hact-app 数据库迁移和 API，两个仓库的变更需要同步。文档中对这个同步问题没有任何记录。
+
+**影响**: 方法论迭代（hact-method 修改）与工具迭代（hact-app 修改）之间没有协调机制，随着 hact-app 功能增加，方法论与工具之间的同步成本会线性增长。验证过程本身会被工具的已有实现锚定——设计者倾向于修改方法论来适应已实现的工具，而不是修改工具来适应更好的方法论。
+
+**建议**: 建立 hact-method 变更与 hact-app 变更之间的依赖追踪机制（例如在 hact-method 的 decisions.md 里标注哪些决策直接影响 hact-app schema），并在方法论修改时明确标识"需要 hact-app 同步修改"。
+
+---
+
+### 9. BRIEF.md 决策内部摩擦对：决策#12 与决策#15
+
+**严重程度**: P2（摩擦点）
+**所在层**: skeleton / specs-execution 跨层
+**定位**: `BRIEF.md 决策#12 CC 启动协议状态推断` vs `BRIEF.md 决策#15 任务范围扩到全流程`
+
+**问题**: 决策#12 规定"CC 启动协议从文件状态推断子阶段，不在 iteration 文件加显式标记"。决策#15 规定"所有动作都任务化，包括联调脚本、修复任务、部署任务"。两者叠加后形成一个矛盾：任务越来越多（决策#15 扩大任务范围），但 CC 推断当前状态的能力依赖于"文件状态可读"（决策#12）。当同一时刻存在多个并行任务（多个 develop + 一个 generate-integration-tests + 若干 B 类任务）时，`status.yml` 虽然记录了所有任务状态，但 CC 启动协议（见 CLAUDE.md 跨会话接续规则）读的是 `_meta/.current_plan` + `task_plan.md`——这是 hact-method 工作区的内容，不是项目仓的 status.yml。项目仓没有 `.current_plan` 机制（CLAUDE.md 跨会话接续规则只针对 hact-method 工作区定义），所以项目仓的 CC 启动只能靠人工声明当前任务，而不是协议自动推断。
+
+**影响**: 在团队引入阶段，开发者每次开启项目仓 CC 会话时，没有可靠的"上次在做什么"的自动恢复机制。status.yml 有状态但 CC 不主动读它；queue 文件有任务包但需要开发者知道自己该去哪里找。这意味着"从断点续做"的能力完全依赖开发者记住自己的 task-id。
+
+**建议**: 在项目仓 CLAUDE.md 中增加跨会话接续规则，明确规定会话启动时读 status.yml 的 taken-by 状态来推断当前操作者的进行中任务，而不是依赖人工声明。
+
+---
+
+### 10. 软锁机制在异步代码审查场景的语义空洞
+
+**严重程度**: P2（摩擦点）
+**所在层**: skeleton / specs-structural
+**定位**: `skeleton/05-state-machine.md §2 + §3` + `specs-structural/develop.md §完成判据`
+
+**问题**: `develop` 任务的 `done` 状态定义为"持有者宣告完工（PR 已推）"，`merged` 为终态。但 PR 从推出到被 pr-review 合并的时间窗口内，develop 任务处于 `done` 状态，而不是 `taken-by`。在此期间，如果 `pr-review` 打回，任务需要回到 `可取`（异常转移）或保持 `done`？文档 `skeleton/05-state-machine.md §5 跨任务状态联动` 说"pr-review 打回 → 关联的 develop 仍 status=done"，并注明"持有者根据 CR 评论继续提 commit；严重时走异常转移"。这意味着一个被打回 PR 的任务处于 `done` 状态，但实际上开发工作尚未完成——`done` 的语义被破坏了（"`done` 不代表完成，只代表 PR 推出"）。同时，被打回的任务对其他用户仍显示为 `done`，外部观察者无法判断"这个任务到底完了没有"。
+
+**影响**: hact-app 看板展示"done"状态任务时，用户无法区分"等待 CR 的 PR"和"PR 被打回、开发者正在修复"。如果看板按 `done` 任务数统计 sprint 完成率，被打回的 PR 会被错误计入已完成，导致进度虚假。
+
+**建议**: 引入 `in-review` 子状态（或在 done 状态添加 `under_review: true/false` 字段）以区分"正在 CR"和"CR 打回修复中"，使看板状态语义清晰。

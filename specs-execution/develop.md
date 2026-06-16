@@ -270,7 +270,7 @@ git diff --stat
 ### Step 6：commit
 
 **分支规则**：分支必须从 `master` 切，禁止从其他任务分支切（禁止 stacked PR）。
-唯一例外：任务包 `depends-on` 字段明确标注了前置任务且该任务尚未合并到 master。
+唯一例外：任务包 `depends_on` 字段明确标注了前置任务且该任务尚未合并到 master。
 
 ```bash
 git add {改动的文件列表}

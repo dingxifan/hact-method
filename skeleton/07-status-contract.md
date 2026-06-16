@@ -126,7 +126,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 > CR severity 映射：pr-review 流程内部用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`。
 
 ### 不进 YAML（hact-app 走 API 现拉）
-任务包 16 字段正文、`description`、`completion_report`、`output`、PRD/TRD/sprint/联调报告正文。
+任务包 17 字段正文、`description`、`completion_report`、`output`、PRD/TRD/sprint/联调报告正文。
 
 ### CR issue 内联（已查证定案）
 CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API。依据：hact-method `pr-review.md` 流程把逐条 issue 写进 Gitee PR comment，仓库内无含结构化 issue 的文件可供 API 拉取；hact-app 前端 `CRDrawer.vue` 已就绪、期望 `{ conclusion, issues[], comment }`，内联后即可用。
