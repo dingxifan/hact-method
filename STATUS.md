@@ -49,6 +49,18 @@
 
 ## 历史里程碑
 
+### 2026-06-18 方法论调整：draft-ux 交互质量（②造前探选 + ③subagent 冷审 + ①行为化清单）
+
+- **背景**：前一轮 design-fidelity 解决的是"保真"（照设计做得出来），本轮解决"设计质量"（设计本身好不好）。聚焦方向 A——CC 自己在 draft-ux 阶段怎么设计得更好。
+- **病根**：不是"不懂 UX 原则"，是 ① 回归平均（无目标时输出最通用平庸解）+ ② 自评宽松（同上下文自我 review 被锚定、盖章）。抽象原则清单对此无效。
+- **落地三招**：
+  - **①** 新建 `templates/checklists/ux-checklist.md`：行为化、靠看就能答的问题（抗盖章）；只管结构/交互层，视觉归 design.md；与 frontend-checklist『设计保真』分工不同。
+  - **②** Step 2.5 交互方案探选：非平凡画面 2-3 方案 + 取舍 + 选型（治回归平均），纯 CRUD 跳过。
+  - **③** Step 3.5 交互质量冷审：**派全新 subagent 陌生视角审**（只喂 prototype.html + ux-checklist + 场景列表，不喂决策理由与生成对话）——经用户追问"自己对抗自己有效吗"后，由内联自我走查升级为上下文隔离冷审。自我批判只扛"可检查的遗漏/不一致"，判断/品味交人的 🚫 兜底。
+- **修改文件**：新建 `templates/checklists/ux-checklist.md`；`specs-execution/draft-ux.md`（读清单+红线+状态表+Step2.5+Step3.5+收尾+Subagent 表）；`specs-structural/draft-ux.md`（判据+2、产物+2 段、输入+清单）。
+- **parked**：同模型共享盲区 + ④ 跨项目 UX 参考样例库（harvest-notes `[UX]`）——先跑 subagent 冷审积累经验后再评估。
+- **记录**：`_meta/plans/2026-06-18-ux-design-quality/findings.md`
+
 ### 2026-06-18 方法论调整：前端设计保真（design.md 必读 + pr-review 保真维度）
 
 - **背景**：用户反映前端产出物经常偏离前置设计（交互/字体字号/组件复用）。专题研究（跨 hact-app + org-krm-v2）确认为**系统性、跨迭代复发**：29 条偏离记录，其中 org-krm-v2 硬编码颜色/间距横跨 v3→v5 至少 6 处（变量已定义却仍硬编码）；交互偏离（Tab 结构与 AC 不符、缺标签、分支遗漏）均拖到联调/验收才暴露。

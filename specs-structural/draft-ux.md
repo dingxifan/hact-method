@@ -39,6 +39,8 @@
 | 场景列表 | 每条一句话："用户从 X 进入，执行 Y，到达 Z" |
 | 流程图 | mermaid flowchart，覆盖全部场景及分支 |
 | 死路检查 | 确认每条分支都有明确出口 |
+| 交互决策 | 非平凡画面的 2-3 方案对比 + 选型理由（Step 2.5） |
+| 交互质量走查记录 | ux-checklist 逐条结论 + 第一人称走查发现 + 修订项（Step 3.5 冷审）|
 
 **prototype.html 要求：**
 
@@ -58,6 +60,8 @@
 - [ ] 流程图中无死路（每条分支都有明确去向）
 - [ ] prototype.html 可在浏览器打开，无 JS 报错
 - [ ] 流程图中每条路径都能在原型中走通，不卡死
+- [ ] 非平凡画面已做方案探选（每个 ≥2 方案择一并记理由），纯标准 CRUD 画面除外
+- [ ] 原型已过交互质量冷审（陌生 subagent：ux-checklist 逐条 + 第一人称），发现项已修订或记录
 - [ ] 用户已确认场景列表完整、原型逻辑正确
 
 ---
@@ -70,6 +74,7 @@
 |------|---------|------|
 | `draft-prd-vN` | 定稿 PRD，含功能清单和 acceptance criteria | `iterations/vN/prd.md` |
 | `design.md` | 视觉规格（如有，用于原型风格参考，非强制） | `design.md` |
+| `ux-checklist` | 交互质量自检清单（结构/交互层），Step 3.5 冷审用 | `templates/checklists/ux-checklist.md` |
 
 **输出给**
 
