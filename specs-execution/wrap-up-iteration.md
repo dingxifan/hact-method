@@ -139,6 +139,14 @@
 
 ---
 
+## 签 G5 前 · 完成判据冷核
+
+执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G5`。派一个**全新 subagent**，喂 `backlog.md` / `feedback.md` / `project.md` 相关段 + `../hact-method/specs-structural/wrap-up-iteration.md` 完成判据，逐条对抗核对（backlog `[偏离]` 已清、feedback.md 已清空、project.md 无"开发中"标注）。凭证写 `iterations/vN/gate-checks/G5.md`。有 FAIL 先修再重核。
+
+🚫 人工抽看 `gate-checks/G5.md` 后，方可签 G5。
+
+---
+
 ## 签 G5
 
 三步全部完成（revise-doc 任务已全部完成）后：
@@ -151,7 +159,7 @@
 
 用户确认后，在 `iterations/vN/gates.md` 写入 G5；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G5` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）。执行：
 ```bash
-git add iterations/vN/gates.md status.yml project.md decisions.md backlog.md feedback.md
+git add iterations/vN/gates.md iterations/vN/gate-checks/G5.md status.yml project.md decisions.md backlog.md feedback.md
 git commit -m "chore: 迭代 {version} 收尾，G5 签署 [{项目名}]"
 git push
 ```

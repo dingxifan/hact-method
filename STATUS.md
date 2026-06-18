@@ -49,6 +49,20 @@
 
 ## 历史里程碑
 
+### 2026-06-18 方法论调整：Gate 签署前完成判据冷核（B 软版）+ draft-ux 回退修复
+
+- **背景**：起于"同事开发时方法论没同步到最新"。推演发现该症状底下有三类根因：① 真·同步滞后（没拉新，git 能修）② 假·同步滞后（拉了、规范也在，但没照做）③ 已落地改动被后续提交悄悄回退。本轮主攻第②类。
+- **病根（三层真相）**：CC 执行依据的是上下文里的快照而非"执行那刻的最新文件"，且最致命的第③层是"印象执行"——最新判据即便在上下文也按熟悉旧形状填、逐条漏核（hact-app V4 PRD 缺 `入口`/`draft-ux` 字段即此，判据 `6b39b49`/2026-06-03 早已生效）。重读不够（同上下文锚定），只能换隔离上下文的陌生 subagent 比"产物 vs 判据"。
+- **意外发现（第③类活体证据）**：`5d53088` 落地的 draft-ux Step 2.5/3.5 冷审，被 16 分钟后 `5cfdedb`（自称"docs(meta)…表格格式化内容不变"）实际 -87/+34 删除，导致 execution spec 与 structural 契约 + 孤儿 ux-checklist 三者矛盾、运行时无冷审。已 `9074062` 从 5d53088 增量恢复。
+- **落地（B 软版，hook 与上游 linter 延后）**：
+  - `skeleton/06-gates.md` 新增 **§7「完成判据冷核协议」**（单一来源，G1–G5 参数化引用，防 5 份拷贝漂移）：派全新 subagent 隔离上下文逐条对抗核判据、自写凭证 `iterations/vN/gate-checks/G{N}.md`（带产物指纹）、人驱动项标 `N/A·人工`、🚫 人工抽看凭证兜底。
+  - 5 份 `specs-execution`（draft-prd-vN Step7.5 / draft-tech-design Step5.5 / plan-sprint Step4.7 / manual-test 签 G4 前 / wrap-up 签 G5 前）各插短步骤引用 §7 + 签字前置 + 凭证纳入签字 commit；draft-tech-design / plan-sprint 的 Subagent 表补冷核行。
+  - 5 份 `specs-structural` 完成判据各补「完成判据已冷核」。
+  - 与既有 plan-sprint Step3.5 独审 / draft-ux Step3.5 冷审 **互补不合并**（深审是某条判据的输入，本协议核整张清单）。
+- **明确取舍**：软版无机械防线——"彻底不做"和"假装做（六种伪造 pass）"都靠人在 Gate 现场抽看凭证兜底，待后续上 hook 补硬闸。
+- **延后**：B3 hook 闸门、Layer A（模板空槽 + 产物 linter）、第①类 Step 0 改造。
+- **记录**：`_meta/plans/2026-06-18-gate-criteria-cold-check/`（design.md 完整方案 + findings F1–F8）
+
 ### 2026-06-18 方法论调整：draft-ux 交互质量（②造前探选 + ③subagent 冷审 + ①行为化清单）
 
 - **背景**：前一轮 design-fidelity 解决的是"保真"（照设计做得出来），本轮解决"设计质量"（设计本身好不好）。聚焦方向 A——CC 自己在 draft-ux 阶段怎么设计得更好。

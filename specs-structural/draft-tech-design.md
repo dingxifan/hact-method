@@ -61,6 +61,7 @@
 - [ ] 三份 standards 已输出（shared / frontend / backend）
 - [ ] decisions.md 已追加本期架构决策
 - [ ] project.md 技术层已更新
+- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G2.md`，人已抽看；见 `skeleton/06-gates.md` §7）
 - [ ] G2 已签（`gates.md` 已记录 + commit）
 
 ---

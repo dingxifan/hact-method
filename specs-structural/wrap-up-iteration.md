@@ -45,6 +45,7 @@
 - [ ] 第一步：backlog `[偏离]` 条目全部处理（创建 revise-doc 或记入 decisions.md）
 - [ ] 第二步：feedback.md 每条已分流，文件已清空
 - [ ] 第三步：project.md 反映本期最终状态，无"开发中"标注
+- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G5.md`，人已抽看；见 `skeleton/06-gates.md` §7）
 - [ ] G5 已签（`gates.md` 已记录 + commit）
 
 ---

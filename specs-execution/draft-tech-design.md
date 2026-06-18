@@ -195,7 +195,17 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 
 ---
 
+### Step 5.5：签 G2 前 · 完成判据冷核
+
+执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G2`。派一个**全新 subagent**，喂 TRD + 三份 standards + `../hact-method/specs-structural/draft-tech-design.md` 完成判据（+ `prd.md`/`ux-flows.md` 作对照源），**不喂本会话生成过程**，逐条对抗核对，凭证写 `iterations/vN/gate-checks/G2.md`。有 FAIL 先修再重核。
+
+🚫 人工抽看 `gate-checks/G2.md` 后，方可进 Step 6 签字。
+
+---
+
 ### Step 6：G2
+
+> **签字前置**：Step 5.5 冷核凭证 `gate-checks/G2.md` 存在、结论全 pass、人已抽看。
 
 ```
 ✅ TRD + standards 完成：TRD [N] 段，standards 三份（shared / frontend / backend），decisions.md 已更新。
@@ -211,7 +221,7 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 
 **更新项目根 `status.yml`**（字段见 `../hact-method/skeleton/07-status-contract.md`）：将 `iterations.vN.gates.G2` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
 
-执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`
+执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md iterations/vN/gate-checks/G2.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`
 
 **feedback 检查**（签 G2 后）：
 - 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
@@ -236,6 +246,7 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 |--------|-------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件 | 读取失败则主线单独读，不阻断 |
 | Step 4 standards 生成 | 2 个并行 subagent 各生成一份 | 失败则主线接管该份，记录原因 |
+| Step 5.5 完成判据冷核 | 全新 subagent 隔离上下文逐条核对完成判据（见 `../hact-method/skeleton/06-gates.md` §7）| 失败则主线内联核对（降级，需人工加强抽看）|
 
 ---
 

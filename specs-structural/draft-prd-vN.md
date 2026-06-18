@@ -60,6 +60,7 @@
 - [ ] 每个功能已标记是否需要 `draft-ux`（含新页面或多分支交互流程的功能必须标记 `需要`）
 - [ ] 有新页面 / 新交互 / ≥3 个状态：已在 acceptance criteria 中覆盖交互规格
 - [ ] project.md 产品层已更新
+- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G1.md`，人已抽看；见 `skeleton/06-gates.md` §7）
 - [ ] G1 已签（`gates.md` 已记录 + commit）
 
 ---

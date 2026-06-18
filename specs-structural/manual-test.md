@@ -66,6 +66,7 @@
 - [ ] 所有用户反馈问题已处理：修复或有明确结论（记入 backlog 的须已分级）
 - [ ] 所有 develop(source=manual-test) 任务已 [merged]
 - [ ] 验收报告已写，结论为"通过"
+- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G4.md`，人已抽看；见 `skeleton/06-gates.md` §7）
 - [ ] G4 已签（`gates.md` 已记录 + commit）
 
 ---

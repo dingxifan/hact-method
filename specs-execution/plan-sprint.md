@@ -272,7 +272,19 @@ TRD + standards（技术契约）：
 
 ---
 
+### Step 4.7：签 G3 前 · 完成判据冷核
+
+执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G3`。派一个**全新 subagent**，喂 queue 任务包 + sprint.md + `../hact-method/specs-structural/plan-sprint.md` 完成判据（+ `prd.md`/`trd.md`/standards 作对照源），**不喂本会话生成过程**，逐条对抗核对（含"Step 3.5 独审是否真跑过且无遗留阻断"），凭证写 `iterations/vN/gate-checks/G3.md`。有 FAIL 先修再重核。
+
+> 与 Step 3.5 独审**互补不重复**：独审深查任务包对 PRD/TRD 保真（是完成判据之一），本步核**整张**完成判据清单。
+
+🚫 人工抽看 `gate-checks/G3.md` 后，方可进 Step 5 签字。
+
+---
+
 ### Step 5：G3
+
+> **签字前置**：Step 4.7 冷核凭证 `gate-checks/G3.md` 存在、结论全 pass、人已抽看。
 
 ```
 ✅ Sprint 规划完成：[N] 个任务包已入 queue，sprint.md 已生成，依赖关系已标注。
@@ -288,7 +300,7 @@ TRD + standards（技术契约）：
 
 **更新项目根 `status.yml`**：将 `iterations.vN.gates.G3` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（tasks[] 已在 Step 4.5 填好）。
 
-执行 `git add iterations/vN/queue/ iterations/vN/sprint.md iterations/vN/gates.md status.yml && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
+执行 `git add iterations/vN/queue/ iterations/vN/sprint.md iterations/vN/gates.md iterations/vN/gate-checks/G3.md status.yml && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
 
 **feedback 检查**（签 G3 后）：
 - 疑点清单超过 3 条且根因集中（如 TRD 某类接口描述普遍不完整）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-tech-design 的疑点确认步骤中加强 {哪类场景}`）
@@ -306,6 +318,7 @@ TRD + standards（技术契约）：
 | 会话启动 | Explore 并行读 6 份输入文件 | — | 读取失败则主线单独读 |
 | Step 3（任务 > 4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 17 字段 YAML | 失败则主线接管该包 |
 | Step 3.5 独立审查 | 独立 sub-agent 审任务包对 PRD/TRD/standards 保真（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖） | **只读 queue 最终产物 + PRD/TRD/standards**，禁传写包叙事与拆分理由；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
+| Step 4.7 完成判据冷核 | 全新 subagent 隔离上下文逐条核对整张完成判据（见 `../hact-method/skeleton/06-gates.md` §7）；与 Step 3.5 独审互补不重复 | 只读 queue 产物 + sprint.md + 完成判据 + 对照源，不传生成过程 | 失败则主线内联核对（降级，需人工加强抽看）|
 
 **重要**：subagent 只返回任务包内容，**由主线负责写入文件**，不让 subagent 直接操作文件系统。
 

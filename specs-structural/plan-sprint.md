@@ -64,6 +64,7 @@
 - [ ] 依赖关系已标注（无依赖标 `—`，有依赖标被依赖的 task-id）
 - [ ] 每个任务的 `交付` 列已填（`独立` 或 `批量`），判断理由已向用户说明并确认
 - [ ] sprint.md 已写，任务列表与 queue/ 一致
+- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G3.md`，人已抽看；见 `skeleton/06-gates.md` §7）
 - [ ] G3 已签（`gates.md` 已记录 + commit）
 
 ---

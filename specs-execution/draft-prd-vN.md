@@ -241,7 +241,17 @@ MVP 边界（不做什么）：
 
 ---
 
+### Step 7.5：签 G1 前 · 完成判据冷核
+
+执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G1`。派一个**全新 subagent**，喂 `iterations/vN/prd.md` + `design.md`（如有）+ `../hact-method/specs-structural/draft-prd-vN.md` 完成判据，**不喂本会话生成过程**，逐条对抗核对（每条用 PRD 原句作证据），凭证写 `iterations/vN/gate-checks/G1.md`。有 FAIL 先修产物再重核。
+
+🚫 人工抽看 `gate-checks/G1.md`（逐条带证据、非盖章）后，方可进 Step 8 签字。
+
+---
+
 ### Step 8：G1
+
+> **签字前置**：Step 7.5 冷核凭证 `gate-checks/G1.md` 存在、结论全 pass（人驱动项除外）、人已抽看。
 
 ```
 ✅ PRD v{N} 完成：[功能数量] 个功能，开放问题已清零，视觉规格 [已/未] 输出。
@@ -259,7 +269,7 @@ MVP 边界（不做什么）：
 - 确保 `iterations.vN.gates` 块存在（v1 已由 init-project 建好；v2+ 在此新增该期 gates 块，G1–G5 全未签）
 - 将 `iterations.vN.gates.G1` 改为 `{ signed: true, date: {YYYY-MM-DD} }`
 
-执行 `git add iterations/vN/prd.md iterations/vN/gates.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
+执行 `git add iterations/vN/prd.md iterations/vN/gates.md iterations/vN/gate-checks/G1.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
 
 > **异常**：PRD 定稿后发现遗漏关键功能 → 创建 `revise-doc(target=prd)` task，不直接修改已签 G1 的 PRD。
 
@@ -274,7 +284,7 @@ MVP 边界（不做什么）：
 
 ## Subagent 使用
 
-无。PRD 写作是纯对话过程，不需要 subagent。
+PRD 写作本身是纯对话，无需 subagent；**唯一例外**：Step 7.5 签 G1 前的完成判据冷核派一个全新 subagent（隔离上下文逐条核判据，见 `../hact-method/skeleton/06-gates.md` §7）。
 
 ---
 
