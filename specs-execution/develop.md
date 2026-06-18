@@ -72,7 +72,9 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 - 读拾取的所有任务包全文（`source=sprint/integration/manual-test` → `iterations/vN/queue/{task-id}.md`；`source=bug/optimization` → `b-queue/{task-id}.md`）
 - 只读 `relevant-standards` 字段指向的具体章节，不读整份 standards 文件
 - 只读 `reference` 字段列出的文件行号范围，不读全文
+- **frontend 任务：必读项目根 `design.md` 全文**——视觉规格唯一参照，文件短、无条件加载，不再凭"是否涉及视觉"自行判断（堵住"改个样式类名觉得不涉及视觉→硬编码字号/间距"的泄漏）
 - frontend 任务：若 `reference` 字段已含 `ux-flows.md` 相关段落则直接读；若未含但 `ux-flows.md` 存在，则按任务包 title 匹配功能名补读对应段落
+- frontend 任务：若 `iterations/vN/prototype.html` 存在，按任务包 title 匹配对应交互路径读取，作为交互实现基准（happy path 之外的分支照原型走通）
 
 ---
 
@@ -157,7 +159,7 @@ hotfix 模式：最小化修复路径，直接开始实现，不等用户确认�
 
 实现过程中：
 - 遇到 `do-not` 约束边界 → 立即停止，报告，等用户指示
-- 前端遇到 standards 未覆盖的视觉决策 → 暂停，输出 2–3 个选项，等用户确认
+- 前端视觉实现先对照 `design.md`：字号/行高/字重、颜色/间距/圆角/阴影、控件尺寸一律用对应 SCSS 变量，禁止硬编码字面值；遇到 `design.md` 与 standards **均未覆盖**的视觉决策 → 暂停，输出 2–3 个选项，等用户确认
 - 发现 sprint 范围外的功能缺口（非禁止，只是本次未规划）→ 评估规模，≤3 文件且依赖层已就绪则建议走 B 类 dispatch，不直接记 backlog
 
 🚫 遇到以上两种情况时阻断，不自行绕过
@@ -450,7 +452,7 @@ context-state:
 
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
-| 额外加载 | `design.md`（涉及视觉时）；`ux-flows.md` 对应功能段（若存在）| 无 |
+| 额外加载 | `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
 | Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md` |
 | 视觉决策暂停 | 有（🚫） | 无 |
 | Subagent 拆分粒度 | 按组件拆（每个组件一个 subagent） | 按模块拆（controller / service 分开）|

@@ -50,6 +50,7 @@
 - [ ] `pr-links` 中每个 PR 都有 review comment + 明确决定（通过 / 打回）
 - [ ] 所有 `[阻断]` 问题已在 comment 中列出，说明原因
 - [ ] sprint.md 已更新各 PR 的 CR 结论
+- [ ] frontend PR 已对照 `design.md`（视觉）+ `prototype.html`（交互，若存在）做设计保真核查
 - [ ] 通过的 PR 已通过平台 merge API 合并，对应 develop task 状态已推 [merged]
 
 > **注意**：pr-review task 的 [done] = 结论写入 PR。PR 合并是 develop task 进入 [merged] 的触发点，两者独立。

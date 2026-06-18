@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发 hact-app**（进行中）
-- 上次更新：2026-06-08
+- 上次更新：2026-06-18
 
 ## 各阶段完成情况
 
@@ -48,6 +48,21 @@
 | exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 13/13 全部完成，已通过评审和一致性检查 |
 
 ## 历史里程碑
+
+### 2026-06-18 方法论调整：前端设计保真（design.md 必读 + pr-review 保真维度）
+
+- **背景**：用户反映前端产出物经常偏离前置设计（交互/字体字号/组件复用）。专题研究（跨 hact-app + org-krm-v2）确认为**系统性、跨迭代复发**：29 条偏离记录，其中 org-krm-v2 硬编码颜色/间距横跨 v3→v5 至少 6 处（变量已定义却仍硬编码）；交互偏离（Tab 结构与 AC 不符、缺标签、分支遗漏）均拖到联调/验收才暴露。
+- **病因**（与 2026-06-16 develop-loading-audit 吻合）：① design.md 在 develop 是"涉及视觉时"条件加载，靠自判 → 字号字体无人负责落地；② prototype.html 全程失联；③ develop/pr-review 只对照 standards，无设计保真对账闸口，唯一对账落在 manual-test（太晚）。
+- **决策**：本轮落地 fix 1 + fix 2（fix 3 原型重新接入链路留待后续）。
+  - **Fix 1**：`design.md` 升级为 frontend develop **无条件必读全文**；prototype.html 对应交互路径作实现基准。
+  - **Fix 2**：pr-review 增设计保真维度——额外加载 design.md + prototype.html，新增通过/打回条件与「第四步：设计保真核查」。
+- **修改文件**：
+  - `specs-execution/develop.md`：精确加载上下文 +2 条（design.md 必读 / prototype.html 基准）；Step 4 视觉先对照 design.md 用 SCSS 变量；前后端差异表额外加载列改写
+  - `specs-structural/develop.md`：relevant-standards 字段说明注明 design.md 为无条件必读
+  - `templates/checklists/frontend-checklist.md`：新增「十一、设计保真」5 项
+  - `specs-execution/pr-review.md`：frontend standards 加载 +design.md/prototype.html；通过条件第 4 条；打回条件 +1；评估方法「第四步」；快速通道允许变量替换、禁交互改动
+  - `specs-structural/pr-review.md`：完成判据 +frontend 设计保真核查
+- **研究与记录**：`_meta/plans/2026-06-18-design-fidelity/findings.md`
 
 ### 2026-06-16 方法论调整：集成测试脚本移至 generate-integration-tests 阶段生成
 

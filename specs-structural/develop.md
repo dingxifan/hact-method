@@ -33,7 +33,7 @@
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
 | `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |
 | `acceptance-criteria` | string[] | ✅ | 3–5条，每条可独立验证；"功能正常"不算；每条须标注覆盖的 PRD AC 文本引用 `(源：PRD {功能名}·{AC 关键词})`，纯技术约束标 `(技术)`（由 plan-sprint 回链写入） |
-| `relevant-standards` | string[] | ✅ | 精确指向 `standards-{layer}.md` / `standards-shared.md` 的章节（§ 章节名）；前端涉及视觉必须列 design.md |
+| `relevant-standards` | string[] | ✅ | 精确指向 `standards-{layer}.md` / `standards-shared.md` 的章节（§ 章节名）。注：`design.md` 现为 frontend 任务的**无条件必读项**（见 `specs-execution/develop.md` 加载规范），不再依赖本字段触发，无需在此重复列出 |
 | `reference` | string[] | ✅ | 文件路径 + 行号 + 说明；行号必填、不接受"全文"或无范围（指向已存在代码/文档，可精确定位）；无相关文件时明确标注原因 |
 | `context` | string | ✅ | 关键实现切入点（如：`GoalList.vue L142 handleDelete()`…） |
 | `known-risks` | string[] | ✅ | 来自 TRD 或现有代码的实际陷阱，不是猜测 |
