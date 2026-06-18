@@ -64,6 +64,16 @@
   - `specs-structural/pr-review.md`：完成判据 +frontend 设计保真核查
 - **研究与记录**：`_meta/plans/2026-06-18-design-fidelity/findings.md`
 
+### 2026-06-18 方法论调整（续）：prototype.html 接入链路（fix 3）+ fix 2 口径收口
+
+- **关键认识**：交互保真分两段——sprint/develop「照规格造」原型新鲜、AI 按约定实现；联调/人工「照现实迭代」人驱动、原型变旧。按阶段收口即可，无需"活规格/漂移维护"制度。
+- **口径定案**：`design.md` 视觉对照适用**全部 frontend PR**（视觉规格跨迭代稳定）；`prototype.html` 交互对照**仅 `source=sprint` 的 PR**（联调/人工/B 类派生修复 PR 原型已旧，再卡=误打回）。
+- **落地**：
+  - `specs-execution/pr-review.md`（4 处）+ `specs-structural/pr-review.md`（1 处）：prototype 交互对照限定 source=sprint，design.md 视觉对照不限
+  - `specs-execution/draft-tech-design.md`（2 处）：必读清单加 prototype.html；§接口设计加"逐画面对照确认接口字段满足画面数据需求"（develop 之前、原型最新鲜）
+  - `specs-execution/generate-integration-tests.md`（3 处）：脚本生成读取集合加 prototype.html；前端场景用原型**软核对覆盖齐全**（不设硬闸口，超 15 条照旧降级 backlog）
+- **明确不做**：manual-test 不动（人工阶段）；plan-sprint 不加原型锚点（与 ux-flows 行号重复）；不引入活规格制度；fix 1（develop 读 prototype）维持软参照。
+
 ### 2026-06-16 方法论调整：集成测试脚本移至 generate-integration-tests 阶段生成
 
 - **背景**：org-krm v5 联调阶段，前端 pinchtab 脚本（预生成于 draft-tech-design G2 后）在实际执行时暴露出系统性假设错误，导致 15 条场景全部失败、脚本修正反复经历 8 轮迭代才稳定。主要问题：

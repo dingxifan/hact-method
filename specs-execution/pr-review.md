@@ -30,7 +30,7 @@
 
 按 PR 改动文件路径推断总体 layer（`frontend` / `backend` / 混合 / `null`），精确加载对应 standards 章节——不全量加载，只读与本批 PR **直接相关**的部分：
 - `layer` 含 `backend` → `iterations/vN/standards-backend.md` + `standards-shared.md` 相关章节
-- `layer` 含 `frontend` → `iterations/vN/standards-frontend.md` + `standards-shared.md` 相关章节；**额外加载项目根 `design.md` 全文**（视觉保真基准）+ `iterations/vN/prototype.html` 对应交互路径（若存在，交互保真基准）
+- `layer` 含 `frontend` → `iterations/vN/standards-frontend.md` + `standards-shared.md` 相关章节；**额外加载项目根 `design.md` 全文**（视觉保真基准，对全部 frontend PR）；`iterations/vN/prototype.html` 对应交互路径（**仅当被审 PR 对应 develop task `source=sprint` 时加载**，作交互保真基准——联调/人工/B 类派生的修复 PR 原型已可能旧，不加载）
 - `layer=null` → 跳过 standards
 
 ```
@@ -63,7 +63,9 @@ PR 通过 = 以下全部满足：
 1. **description 完整**：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 五段齐全，内容有实质性内容（不是空占位）；AC 验证段需逐条列出每条 AC、附验证方式、使用 `[x]` 格式——笼统一句话不满足
 2. **偏离 / 遗留已正确处理**：偏离不为"无"时，超出 `files` 清单的文件已纳入审查；遗留不为"无"时，已写入 `backlog.md`
 3. **无 standards [阻断] 违反**：对照改动文件相关 standards 章节，无 [阻断] 级别违反（[建议] 不阻断合并）
-4. **设计保真（layer 含 frontend）**：对照 `design.md`，字号/行高/字重、颜色/间距/圆角、控件尺寸用对应 SCSS 变量、与规格无冲突；若存在 `prototype.html`，本 PR 覆盖功能的交互路径与原型一致、无遗漏分支——与规格明显冲突或遗漏交互分支为 [阻断]，细微视觉偏差为 [建议]。design.md / prototype.html 不存在则本条不适用
+4. **设计保真（layer 含 frontend）**：
+   - **视觉（全部 frontend PR）**：对照 `design.md`，字号/行高/字重、颜色/间距/圆角、控件尺寸用对应 SCSS 变量、与规格无冲突——自造字号或规格已有变量却硬编码为 [阻断]，细微偏差为 [建议]；design.md 不存在则不适用
+   - **交互（仅 `source=sprint` 的 PR）**：若存在 `prototype.html`，本 PR 覆盖功能的交互路径与原型一致、无遗漏分支——明显冲突或遗漏交互分支为 [阻断]。被审 PR 对应 task 的 `source≠sprint`（联调/人工/B 类派生修复，原型已可能旧）或 prototype.html 不存在则交互部分不适用
 
 ---
 
@@ -73,7 +75,8 @@ PR 通过 = 以下全部满足：
 - description 任意段落缺失或为空占位
 - 遗留问题不为"无"但未写入 backlog.md
 - 存在任意 [阻断] standards 违反
-- frontend PR 实现与 `design.md` 视觉规格明显冲突（自造字号 / 规格已有变量却硬编码字面值），或遗漏 `prototype.html` 中的交互路径分支
+- frontend PR 实现与 `design.md` 视觉规格明显冲突（自造字号 / 规格已有变量却硬编码字面值）
+- `source=sprint` 的 frontend PR 遗漏 `prototype.html` 中的交互路径分支，或与之明显不符（`source≠sprint` 不适用此条）
 
 ---
 
@@ -153,8 +156,8 @@ severity 映射：[阻断] → 严重，酌情 → 一般，[建议] → 建议�
 **第四步：设计保真核查（layer 含 frontend 时）**
 
 - **视觉**：抽查 diff 中的样式改动，比对 `design.md` 的字号/行高/字重、颜色/间距/圆角/阴影、控件尺寸——用字面值而非 SCSS 变量（且规格已定义对应变量）、或数值与规格不符 → 记 [阻断]；不影响规格一致性的细微偏差 → 记 [建议]
-- **交互**：若 `prototype.html` 存在，比对本 PR 覆盖功能的交互路径——遗漏原型中的分支（取消 / 失败 / 空态等）、入口缺失或路径与原型不符 → 记 [阻断]
-- `design.md` / `prototype.html` 不存在 → 跳过本步
+- **交互（仅 `source=sprint` PR）**：先看被审 PR 对应 develop task 的 `source` 字段——非 `sprint`（联调/人工/B 类派生的修复，原型已可能旧）则跳过交互核查；`source=sprint` 时若 `prototype.html` 存在，比对本 PR 覆盖功能的交互路径——遗漏原型中的分支（取消 / 失败 / 空态等）、入口缺失或路径与原型不符 → 记 [阻断]
+- `design.md` 不存在 → 跳过视觉核查；`prototype.html` 不存在或 source≠sprint → 跳过交互核查
 
 **后续顺序（非强制）**：写 comment → 🚫 等确认 → 执行决定。
 

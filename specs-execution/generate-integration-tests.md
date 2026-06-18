@@ -3,7 +3,7 @@
 > CC 加载本文时，当前任务是在所有 sprint develop 任务合并后，生成测试脚本、执行测试、处理失败，三条件满足后移交 manual-test。
 > 三层顺序：**准备**（脚本生成 + 环境核查）→ **执行**（跑测试 + 处理失败）→ **收尾**（复测 + 三条件确认）
 
-**上下文密度**：中高。脚本在本阶段生成，需读 PRD AC + TRD 接口设计段 + ux-flows.md；脚本稳定后只需读脚本索引 + 执行测试。
+**上下文密度**：中高。脚本在本阶段生成，需读 PRD AC + TRD 接口设计段 + ux-flows.md + prototype.html（若存在）；脚本稳定后只需读脚本索引 + 执行测试。
 
 ---
 
@@ -98,9 +98,9 @@ G3 签署时已确认环境可达，此处快速复核：
 
 检查 `integration-tests/scripts-v{N}.md` 是否存在：
 
-**脚本不存在（主线路径）** → 派 Explore subagent 读取 PRD AC + TRD 接口设计 + ux-flows.md，生成：
+**脚本不存在（主线路径）** → 派 Explore subagent 读取 PRD AC + TRD 接口设计 + ux-flows.md + `prototype.html`（若存在），生成：
 1. 后端场景：按接口逐条写 `.http` / `curl` 脚本，覆盖正常路径 + 鉴权边界 + 错误码 + 跨模块集成点；保存到 `integration-tests/backend/v{N}-run-all.sh`
-2. 前端场景（上限 15 条，优先覆盖主流程 + 跨模块集成点）：调用 `Skill(pinchtab)` 生成 pinchtab 脚本；保存到 `integration-tests/frontend/v{N}-run-all.sh`
+2. 前端场景（上限 15 条，优先覆盖主流程 + 跨模块集成点）：调用 `Skill(pinchtab)` 生成 pinchtab 脚本；保存到 `integration-tests/frontend/v{N}-run-all.sh`。`prototype.html` 存在时，用它**核对前端场景覆盖是否齐全**——每条原型交互分支应对应一条场景或显式标注豁免（软覆盖核对，不设硬闸口；超 15 条仍按上限规则降级 backlog）
 3. 写脚本索引 `integration-tests/scripts-v{N}.md`：按功能模块分段（`## {模块名}`），每段一张表（字段：序号 / 场景描述 / 覆盖 AC）
 4. `git add integration-tests/ && git commit -m "test(it): v{N} 集成测试脚本生成" && git push`
 
@@ -256,7 +256,7 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**测试脚本�
 
 | 触发点 | Subagent 任务 | Prompt 要点 | 失败处理 |
 |--------|-------------|------------|---------|
-| Step 2（脚本生成，主线） | Explore 读取 PRD AC + TRD 接口 + ux-flows，生成后端 curl + 前端 pinchtab 脚本 | 读 prd/trd/ux-flows 目标段落；生成 backend/v{N}-run-all.sh + 调用 `Skill(pinchtab)` 生成 frontend/v{N}-run-all.sh；写脚本索引；返回生成文件列表 | 失败则主线手动生成 |
+| Step 2（脚本生成，主线） | Explore 读取 PRD AC + TRD 接口 + ux-flows + prototype.html，生成后端 curl + 前端 pinchtab 脚本 | 读 prd/trd/ux-flows/prototype 目标段落；生成 backend/v{N}-run-all.sh + 调用 `Skill(pinchtab)` 生成 frontend/v{N}-run-all.sh；前端用 prototype 软核对场景覆盖齐全；写脚本索引；返回生成文件列表 | 失败则主线手动生成 |
 | Step 3（按模块并行） | 每模块一个 subagent，端到端执行该模块后端 curl + 前端 pinchtab | 传入：模块名、该模块 .http 脚本列表、pinchtab 场景列表、后端地址、前端地址；执行后端 curl 脚本 + 调用 `Skill(pinchtab)` 执行前端场景；返回：每条场景的结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要 + 失败现象；部分场景失败时仍返回其余场景结果，不中断 | 失败则降级：该模块主线逐条执行 |
 
 ---

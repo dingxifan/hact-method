@@ -48,5 +48,26 @@ org-krm-v2 backlog 至少 6 处硬编码颜色/间距违反设计系统，横跨
 - 快速通道（直修）允许范围纳入「硬编码字面值替换为 design.md 既有变量」，明确不允许交互路径改动
 - `specs-structural/pr-review.md` 完成判据新增 frontend 设计保真核查一条
 
-## 四、未做（留待后续，用户当前只要 1+2）
-- Fix 3：prototype.html 重新接入链路（任务包 reference 指向原型交互步骤 / generate-integration-tests 用原型当脚本基准）——更大改动，未动
+## 四、Fix 3 讨论与落地（prototype 接入链路，第二轮）
+
+### 关键转折：两个阶段，原型新鲜度不同（用户点出）
+- 原以为有"漂移"难题（prototype 冻结于 G1.5，下游会变旧），纠结活规格/冻结/弃用三策略。
+- 用户指出：sprint/develop 是"照规格造"，AI 按**新鲜**原型实现、不会故意违反；频繁调整发生在**联调/人工**段（人驱动、原型变旧）。
+- 结论：按阶段收口即可，**漂移问题自然消解**，不引入任何活规格维护制度。
+
+### 口径定案
+| 对照项 | 适用范围 | 理由 |
+|--------|---------|------|
+| design.md 视觉 | 全部 frontend PR | 视觉规格跨迭代稳定，硬编码在任何阶段都是问题 |
+| prototype.html 交互 | 仅 `source=sprint` 的 PR | 原型只在"照规格造"那遍新鲜；联调/人工/B 类派生修复 PR 原型已旧，再卡=误打回 |
+
+### 已落地（第二轮）
+- **调整 1（fix2 收口）** `specs-execution/pr-review.md` 4 处 + `specs-structural/pr-review.md` 1 处：prototype 交互对照限定 `source=sprint`；design.md 视觉对照保持全部 frontend PR
+- **调整 2** `specs-execution/draft-tech-design.md` 2 处：必读清单加 prototype.html；§接口设计加"逐画面对照确认接口字段满足画面数据需求"
+- **调整 3（轻版）** `specs-execution/generate-integration-tests.md` 3 处：脚本生成读取集合加 prototype.html；前端场景用原型**软核对覆盖齐全**（不设硬闸口，超 15 条照旧降级）
+
+### 明确不做
+- manual-test 不动（人工阶段，测试人自知怎么测）
+- plan-sprint 不加原型锚点指针（与 ux-flows 行号重复）
+- 不引入活规格/漂移维护制度
+- fix 1（develop 读 prototype）维持原样——软参照非闸口，读到旧原型风险低
