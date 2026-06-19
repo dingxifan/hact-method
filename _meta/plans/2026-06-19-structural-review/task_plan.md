@@ -17,6 +17,7 @@
 | 用户复审 design.md | ✅ 通过 |
 | 子计划 1（地基：产物结构化） | 🔨 **实施完成**，待用户验收（分支 `feat/sub1-foundation`，未合 master、未 push） |
 | 子计划 3（Gate 重定义：G1/G2 linter 接闸 + 删冷核） | 🔨 **实施完成**，待用户验收（同分支 `feat/sub1-foundation`，未合 master、未 push）；设计稿 `sub3-gate重定义-design.md` |
+| 子计划 3 独立对抗审查（聚焦 diff） | ✅ 无 blocker；3 条 suggestion 已整改（commit `e911323`）——核心是收窄 PRD 过宽【linter】标签（入口→·非空、draft-ux→·枚举），使标签与 check-docs 实际检查项一一对应 |
 
 ---
 
