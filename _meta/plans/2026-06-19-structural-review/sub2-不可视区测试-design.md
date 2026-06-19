@@ -69,7 +69,7 @@ PRD: AC 意图(散文, 鼓励具体例子)
   - 保留并迁移原 Step 5.5 的升级逻辑：同一测试反复修 3 次仍红 → 根因可能在 AC/TRD 设计层 → 创建 `revise-doc`，不硬磨。
 - **Step 5.5 对抗审查**：**整步删除**（spec 207–270，~64 行）——真测试套件即 validate，AI 伪测试退场（design §8 实证它与 21 条可转测试高度重叠）。
 - 连带删：Step 5 输出指向改 commit（非"对抗审查"）；Fast Mode 行去 "Step 5.5"；批量会话 Step 5.5 行删（批量 Step 5 覆盖全部任务测试）；Subagent 表 Step 5.5 行删；前后端差异表 Checklist 行 backend → 测试品类清单。
-- **前端**：Step 5.5 删除是全局的；前端写可测部分（接口对接/状态/表单）的测试，视觉残量归 manual-test/pr-review 设计保真（本就不在 Step 5.5 覆盖内，无损失）。frontend-checklist 本轮**不动**（可视区降维属子计划 4）。
+- **前端**：Step 5.5 删除是全局的；前端写可测部分（接口对接/状态/表单）的测试，视觉残量归 manual-test/pr-review 设计保真。**诚实记账**（对抗审查 SUGGESTION）：视觉本就不在 Step 5.5 覆盖内（这部分无损失），但前端**非视觉逻辑**（AC 覆盖/逻辑正确性）的审查，从"独立眼睛（fresh subagent 只看 AC+diff）"降级为"frontend-checklist 自审 + 可测部分测试"——确有覆盖下降，不是"无损失"。前端的独立审查残量留**子计划 4（可视区收口）**处理。frontend-checklist 本轮不动。
 
 ### 4.5 pr-review 路1 兜残（`specs-execution/pr-review.md` + structural）
 
@@ -95,7 +95,8 @@ PRD: AC 意图(散文, 鼓励具体例子)
 
 ## 6. 不做 / 边界
 
-- 不建测试运行器、不加 CI/hook（项目仓事 + 硬闸延后）。
+- 不**代**项目建测试运行器、不加 CI/hook（具体运行器是项目仓事 + 硬闸延后）。但**测试框架约定的归属已落实**（对抗审查 BLOCKER 2 整改）：`draft-tech-design` 生成 `standards-backend.md` 时必含「测试框架约定」节，存量项目迁移时补建；develop 遇无运行器时上报基建缺失、阻塞待补或显式降级（不静默跳过）——避免"假设测试基建存在却无人负责建立"的悬空。
+- **安全测试品类**（对抗审查 BLOCKER 1 整改）：backend-checklist 补「安全·注入/穿越」测试品类（路径穿越拒绝可测，对齐 design §8 的 T 清单）+ 留人判「注入面用法复核」，补回 Step 5.5 删除后丢失的注入/穿越防线。
 - 不动 templates/trd.md / check-docs.js（操作化例子是散文约定，不进 linter——属子计划 1 地基，不在本轮扩）。
 - frontend-checklist 降维留**子计划 4**（可视区收口）。
 - G3/G4/G5 冷核、PRD 语义、协调流程——不在本轮（子计划 3 已处理 G1/G2；其余 design 明确留 prose）。

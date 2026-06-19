@@ -186,13 +186,15 @@ npm run test           # 测试全绿（或项目测试命令）
 
 任意一条报错/红 → 先修复，不进入下一步。
 `build`/`type-check`/`lint` 项目无对应命令 → 跳过该条，不阻断。
-`test` 项目无测试运行器 → 这是项目配置缺陷（standards 应约定测试框架），**不静默跳过不可视区测试**：提示补测试运行器再继续，不可视区任务尤其不放过。
+`test` 项目无测试运行器 → 测试基建缺失（`standards-backend.md`「测试框架约定」由 `draft-tech-design` 确立；存量项目迁移时补建——见该 spec Step 4）。**不静默跳过、不假装通过**：
+- 上报「测试基建缺失」，不可视区任务**阻塞待补**——先补 standards 测试约定 + 项目装运行器，再回来落测试；
+- 若用户判定本任务必须先推进（基建一时补不上）：明确标记本不可视区 AC **未经测试验证（降级）**，PR description「遗留问题」写明，转由 `pr-review` 路1 人工审代码对 AC 兜底——这是**临时降级、非常态**，不得当作正常完成。
 
 **【测试品类自检】**（取代旧"逐条 checklist 审代码 + AI 对抗审查"——真测试即验证）
 
 对照 `templates/checklists/{layer}-checklist.md`（backend = 测试品类清单）确认：
 - 不可视区 AC 的 Given/When/Then 例子（任务包 `acceptance-criteria`，由 plan-sprint 从 TRD 操作化回链）已 **1:1 落成测试**且全绿；
-- 测试品类无空缺（backend：鉴权/边界/错误路径/契约/数据并发各有测试或合理标 N/A）；
+- 测试品类无空缺（backend：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试或合理标 N/A）；
 - 留人判项（N+1 / 日志隐私 / 冗余复用 / 并发竞态）逐项给结论。
 - 前端：可测部分（接口对接 / 状态 / 表单）写测试；视觉残量归 manual-test / pr-review 设计保真，不在此卡。
 
@@ -398,7 +400,7 @@ context-state:
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 额外加载 | `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
-| Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md`（**测试品类清单**：为鉴权/边界/错误/契约/并发各写测试） |
+| Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md`（**测试品类清单**：为鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
 | 视觉决策暂停 | 有（🚫） | 无 |
 | Subagent 拆分粒度 | 按组件拆（每个组件一个 subagent） | 按模块拆（controller / service 分开）|
 

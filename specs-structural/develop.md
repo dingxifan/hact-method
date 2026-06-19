@@ -72,7 +72,7 @@ api-contract:
 
 - [ ] 所有 `acceptance-criteria` 均已满足
 - [ ] **不可视区 AC 已 1:1 落成测试且全绿**（backend/逻辑任务：AC 的 Given/When/Then 例子各有对应测试，`npm run test` 全绿）
-- [ ] layer 对应 checklist 自检通过（backend = `backend-checklist.md` 测试品类清单：鉴权/边界/错误路径/契约/数据并发各有测试，留人判项有结论；frontend = `frontend-checklist.md` + 可测部分有测试）
+- [ ] layer 对应 checklist 自检通过（backend = `backend-checklist.md` 测试品类清单：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试，留人判项有结论；frontend = `frontend-checklist.md` + 可测部分有测试）
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
 - [ ] `pr-review` 通过（PR 状态 [merged]）
 
