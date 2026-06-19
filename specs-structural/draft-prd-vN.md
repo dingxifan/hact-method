@@ -33,7 +33,6 @@
 | [v2+] 迭代目录结构 | `iterations/vN/queue/done/` | 目录；仅 v2+ 创建，v1 由 `init-project` 预创建 |
 | PRD | `iterations/vN/prd.md` | Markdown，套结构化模板 `templates/prd.md`（固定 6 段 header + 功能块 `### 功能：` + 槽位，供 `scripts/check-docs.js` 解析） |
 | G1 签字 | `iterations/vN/gates.md` | `- [x] G1：PRD 已确认 — YYYY-MM-DD` |
-| 视觉规格（首期必做，迭代按需） | `design.md` | 色彩 / 字体 / 间距 / 组件风格关键词 |
 | project.md 更新（产品层） | `project.md` | 追加或更新产品层内容 |
 | 进度断点（compact 时写入） | `_meta/sessions/draft-prd-progress.md` | 已确认功能清单 + 骨架描述 + 排除项 |
 
@@ -66,6 +65,7 @@
 - [ ] 有新页面 / 新交互 / ≥3 个状态：已在 acceptance criteria 中覆盖交互规格
 - [ ] project.md 产品层已更新
 - [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）
+- [ ] 末端独立内容审查已过（draft-prd-vN Step 7.5 派陌生视角 subagent 审内容有效性：一致性 / AC 可验性 / 覆盖完整；输出问题清单已处理）——语义判据，签字人确认；"是否用户真要的"归用户（design §10），subagent 不判
 - [ ] G1 已签（`gates.md` 已记录 + commit）
 
 ---
