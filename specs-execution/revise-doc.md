@@ -99,7 +99,7 @@
 | `trd` | 是否影响已派发的 queue 任务包？ | 是 → 更新对应任务包的 `relevant-standards` / `acceptance-criteria` 字段，在任务包备注「TRD 已修订，请重新拾取」 |
 | `standards` | 是否影响进行中的 develop task？ | 是 → 在对应任务包 `relevant-standards` 字段追加变更说明 |
 
-**AC 漂移兜底**（target=prd 改了某条 AC 文本，或 target=trd 导致任务包 AC 需更新时）：plan-sprint 的任务包独立对抗审查是**规划时一次性**的，覆盖不到此处的二次漂移。因此本步须对**受本次修订影响的任务包**重跑一次 AC 对账——逐条核对其 `acceptance-criteria` 回链的 PRD AC（`(源：PRD ...)`）是否仍忠实、完整；不一致则更新任务包 AC 与回链，并在任务包备注「AC 已随 PRD/TRD 修订对齐，请重新拾取」。这是撤销「develop Step5.5 回注 PRD AC」后，专门兜"中途 PRD/TRD 变更导致 AC 再漂移"的关卡。
+**AC 漂移兜底**（target=prd 改了某条 AC 文本，或 target=trd 导致任务包 AC 需更新时）：plan-sprint 的任务包独立对抗审查是**规划时一次性**的，覆盖不到此处的二次漂移。因此本步须对**受本次修订影响的任务包**重跑一次 AC 对账——逐条核对其 `acceptance-criteria` 回链的 PRD AC（`(源：PRD ...)`）是否仍忠实、完整；不一致则更新任务包 AC 与回链，并在任务包备注「AC 已随 PRD/TRD 修订对齐，请重新拾取」。这专门兜"中途 PRD/TRD 变更导致任务包 AC 再漂移"——develop 据任务包 AC（不可视区为 Given/When/Then 例子）写测试，AC 漂了测试就在测错的东西，故修订时须同步对齐。
 
 **修订影响已 [merged] 的 develop PR**（该 PR 代码已合并但与修订内容不一致）：
 - 创建新的 develop 任务包（`source=sprint`，urgency 按影响程度），说明需要修正已合并代码以与修订后文档对齐

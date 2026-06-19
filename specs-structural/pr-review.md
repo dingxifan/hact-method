@@ -51,6 +51,7 @@
 - [ ] 所有 `[阻断]` 问题已在 comment 中列出，说明原因
 - [ ] sprint.md 已更新各 PR 的 CR 结论
 - [ ] frontend PR 已对照 `design.md`（视觉，全部 frontend PR）做保真核查；`source=sprint` 的 frontend PR 另对照 `prototype.html`（交互，若存在）
+- [ ] backend PR 已核测试保真（不可视区 AC 测试忠实编码 AC + 测试品类无缺类 + 全绿）〔路1 兜残〕
 - [ ] 通过的 PR 已通过平台 merge API 合并，对应 develop task 状态已推 [merged]
 
 > **注意**：pr-review task 的 [done] = 结论写入 PR。PR 合并是 develop task 进入 [merged] 的触发点，两者独立。

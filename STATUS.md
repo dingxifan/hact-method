@@ -68,7 +68,13 @@
   - `skeleton/06-gates.md` §7：「完成判据冷核协议」→「完成判据核对」两层模型——G1/G2 走 linter 退出码 + 人签语义，**删 subagent 冷核**（存量项目无脚本退回兜底）；G3/G4/G5 沿用 subagent 冷核（原协议完整保留，冠适用范围 N∈{3,4,5}）
   - 删 G1/G2 实时路径**两个 subagent 冷核步骤**（draft-prd-vN Step7.5、draft-tech-design Step5.5），PRD 全程零 subagent；两份 structural 兑现【linter】删除埋点；commit 去 `gate-checks/G1/G2.md`；三处 G3-5 引用同步改 §7 新标题
   - **净收缩货币**：删 2 个 AI-肉眼步骤（design §2 判据）；§7 主体彻底删除待 G3/G4/G5 建检查器后兑现
-- **记录**：`_meta/plans/2026-06-19-structural-review/`（findings.md 四段分析 + design.md 方向 + sub1-地基-design.md + sub3-gate重定义-design.md + task_plan.md 接续）。master 仅 `976a399`（方向文档）；子计划1+3 操作改动隔离在分支保护存量项目。
+- **子计划2·不可视区迁移 已实施**（同分支 `feat/sub1-foundation`，**未合 master、未 push，待验收+对抗审查**；定调：**AC 操作化压 draft-tech-design** + **一次全做**）：
+  - **AC→可运行测试**成为不可视区正确性验证主轴：draft-tech-design 把不可视区 AC 操作化成 Given/When/Then 例子（挂 `# 满足 AC` 回链旁，散文约定不进 linter）→ plan-sprint 写进 backend 任务包 `acceptance-criteria` → develop 1:1 落成测试 + 跑绿 → pr-review 路1 兜残（验测试忠实 AC）
+  - **develop Step 5.5 AI 对抗审查整步删除**（~64 行 + Subagent 表行 + Fast Mode/批量引用）——design §8 实证它是"一次性人工跑的伪测试"，真测试套件取代之
+  - **backend-checklist 87 行→~55 行测试品类清单**：33 项逐条审代码 → 5 测试品类（鉴权/边界/错误路径/契约/数据并发，各写测试）+ lint 项归 `npm run lint` 一句 + 4 留人判（N+1/日志隐私/冗余/并发竞态）
+  - develop Step 5 加 `npm run test` + 测试品类自检 + 迁移升级逻辑（测试反复红→根因 AC/TRD→revise-doc）；4 份 structural（develop 字段+判据 / draft-tech-design 判据 / pr-review 判据）同步；修 3 处对 develop Step5.5 的悬挂引用（plan-sprint Step3.5 × 2 + revise-doc AC 漂移兜底）
+  - **净收缩货币**：删 1 个大 AI-肉眼步骤 + 短化 checklist；ADD 是"写真测试/验输出"非"堆规则"，不背叛 §2。frontend-checklist 降维留子计划4
+- **记录**：`_meta/plans/2026-06-19-structural-review/`（findings.md 四段分析 + design.md 方向 + sub1-地基-design.md + sub3-gate重定义-design.md + sub2-不可视区测试-design.md + task_plan.md 接续）。master 仅 `976a399`（方向文档）；子计划1+3+2 操作改动隔离在分支保护存量项目。
 
 ### 2026-06-19 方法论调整：draft-ux 整体重构（角色姿态反转）
 

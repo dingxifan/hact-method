@@ -66,6 +66,7 @@ PR 通过 = 以下全部满足：
 4. **设计保真（layer 含 frontend）**：
    - **视觉（全部 frontend PR）**：对照 `design.md`，字号/行高/字重、颜色/间距/圆角、控件尺寸用对应 SCSS 变量、与规格无冲突——自造字号或规格已有变量却硬编码为 [阻断]，细微偏差为 [建议]；design.md 不存在则不适用
    - **交互（仅 `source=sprint` 的 PR）**：若存在 `prototype.html`，本 PR 覆盖功能的交互路径与原型一致、无遗漏分支——明显冲突或遗漏交互分支为 [阻断]。被审 PR 对应 task 的 `source≠sprint`（联调/人工/B 类派生修复，原型已可能旧）或 prototype.html 不存在则交互部分不适用
+5. **测试保真（layer 含 backend）〔路1 兜残〕**：不可视区 AC 的测试存在、**忠实编码 AC**（测试的 Given/When/Then 与任务包 AC 例子一致，不是测了别的或空跑）、`npm run test` 全绿；测试品类（鉴权/边界/错误路径/契约/数据并发）无缺类。测试缺失 / 不忠实 AC / 红 / 缺品类为 [阻断]。这是保真路 2（TRD 操作化让测试近 1:1）收不干净时的人工兜底
 
 ---
 
@@ -77,6 +78,7 @@ PR 通过 = 以下全部满足：
 - 存在任意 [阻断] standards 违反
 - frontend PR 实现与 `design.md` 视觉规格明显冲突（自造字号 / 规格已有变量却硬编码字面值）
 - `source=sprint` 的 frontend PR 遗漏 `prototype.html` 中的交互路径分支，或与之明显不符（`source≠sprint` 不适用此条）
+- backend PR 不可视区 AC 无对应测试 / 测试不忠实 AC（测了别的或空跑）/ 测试红 / 缺测试品类
 
 ---
 
@@ -158,6 +160,13 @@ severity 映射：[阻断] → 严重，酌情 → 一般，[建议] → 建议�
 - **视觉**：抽查 diff 中的样式改动，比对 `design.md` 的字号/行高/字重、颜色/间距/圆角/阴影、控件尺寸——用字面值而非 SCSS 变量（且规格已定义对应变量）、或数值与规格不符 → 记 [阻断]；不影响规格一致性的细微偏差 → 记 [建议]
 - **交互（仅 `source=sprint` PR）**：先看被审 PR 对应 develop task 的 `source` 字段——非 `sprint`（联调/人工/B 类派生的修复，原型已可能旧）则跳过交互核查；`source=sprint` 时若 `prototype.html` 存在，比对本 PR 覆盖功能的交互路径——遗漏原型中的分支（取消 / 失败 / 空态等）、入口缺失或路径与原型不符 → 记 [阻断]
 - `design.md` 不存在 → 跳过视觉核查；`prototype.html` 不存在或 source≠sprint → 跳过交互核查
+
+**第五步：测试保真核查（layer 含 backend）〔路1 兜残〕**
+
+- 对照任务包 `acceptance-criteria` 的不可视区 AC（Given/When/Then 例子），抽查 diff 中的测试：每条 AC 有对应测试吗？测试的输入/期望与 AC 例子一致吗（不是测了无关分支或断言永真的空跑）？→ 缺失 / 不忠实记 [阻断]
+- 测试品类（鉴权/边界/错误路径/契约/数据并发）有无明显缺类 → 缺类记 [阻断]
+- 确认 PR 声称的测试确实跑绿（description / CI 输出）；无法确认时要求补证据
+- 纯 frontend PR 或 layer=null → 跳过本步
 
 **后续顺序（非强制）**：写 comment → 🚫 等确认 → 执行决定。
 

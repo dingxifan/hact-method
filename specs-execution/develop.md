@@ -16,7 +16,7 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 
 > **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
 
-> **Fast Mode**：用户在会话开头声明 "fast mode" 时，以下**确认型**阻断自动通过（CC 展示结论后直接继续，不等回应）：第零步（layer 从任务包自动判断）、Step 1（AC 理解）、Step 2 路径 B（拆分计划）、Step 5 / Step 5.5（继续？）。以下**决策型**阻断不受影响：Step 4 遇到 `do-not` 约束边界、Step 4 前端视觉未覆盖决策（CC 缺信息，必须等用户）。
+> **Fast Mode**：用户在会话开头声明 "fast mode" 时，以下**确认型**阻断自动通过（CC 展示结论后直接继续，不等回应）：第零步（layer 从任务包自动判断）、Step 1（AC 理解）、Step 2 路径 B（拆分计划）、Step 5（继续？）。以下**决策型**阻断不受影响：Step 4 遇到 `do-not` 约束边界、Step 4 前端视觉未覆盖决策（CC 缺信息，必须等用户）。
 
 ---
 
@@ -173,18 +173,32 @@ hotfix 模式：最小化修复路径，直接开始实现，不等用户确认�
 
 ## 第三层：执行层（自检 + 交付）
 
-### Step 5：自检
+### Step 5：自检（写测试 + 跑绿 + 偏离核查）
 
-**【机械验证】**（先跑命令，有报错先修，再进入偏离核查）
+**【机械验证】**（先跑命令，有报错先修，再进入测试与偏离核查）
 
 ```bash
 npm run build          # 构建通过
 npm run type-check     # 类型检查（或 npx tsc --noEmit）
-npm run lint           # lint 通过
+npm run lint           # lint 通过（含 no-any / console.log / 未用 import / TODO 等机械项）
+npm run test           # 测试全绿（或项目测试命令）
 ```
 
-三条命令任意一条报错 → 先修复，不进入偏离核查。
-项目无对应命令（如无 type-check script）→ 跳过该条，不阻断。
+任意一条报错/红 → 先修复，不进入下一步。
+`build`/`type-check`/`lint` 项目无对应命令 → 跳过该条，不阻断。
+`test` 项目无测试运行器 → 这是项目配置缺陷（standards 应约定测试框架），**不静默跳过不可视区测试**：提示补测试运行器再继续，不可视区任务尤其不放过。
+
+**【测试品类自检】**（取代旧"逐条 checklist 审代码 + AI 对抗审查"——真测试即验证）
+
+对照 `templates/checklists/{layer}-checklist.md`（backend = 测试品类清单）确认：
+- 不可视区 AC 的 Given/When/Then 例子（任务包 `acceptance-criteria`，由 plan-sprint 从 TRD 操作化回链）已 **1:1 落成测试**且全绿；
+- 测试品类无空缺（backend：鉴权/边界/错误路径/契约/数据并发各有测试或合理标 N/A）；
+- 留人判项（N+1 / 日志隐私 / 冗余复用 / 并发竞态）逐项给结论。
+- 前端：可测部分（接口对接 / 状态 / 表单）写测试；视觉残量归 manual-test / pr-review 设计保真，不在此卡。
+
+输出【{layer} 测试品类报告】（格式见 checklist 文末）。
+
+> **升级（同测试反复修不好）**：同一测试修 3 次仍红 → 根因可能在 AC / TRD 设计层（AC 本身矛盾或 TRD 契约错），停止硬磨、上报用户；判断是否创建 `revise-doc` 任务，不在本会话强行刷绿。
 
 **【偏离核查】**：
 
@@ -197,74 +211,7 @@ git diff --stat
 - 有 AC 未能实现 → 记入 PR description「遗留问题」
 
 ```
-✅ 自检完成：机械验证通过，[无偏离 / 偏离已记录]。
-→ 下一步：对抗审查
-继续？
-```
-
----
-
-### Step 5.5：对抗审查
-
-推 PR 前，派独立 sub-agent 对代码进行对抗性审查。
-
-**【构建 prompt — 严格限制传入内容】**
-
-只传递：
-- 任务包的 `acceptance-criteria` 字段（逐条列出）
-- `git diff` 全文
-- **（条件）** diff 涉及 `api/*.ts`（前端接口调用层）或后端 controller / DTO 文件时 → 额外传入 TRD 中与改动接口直接相关的接口定义段落（仅相关段，不全量加载）
-
-禁止传递：Step 2 拆分计划、模块完成报告、自检结论、任何关于实现意图的描述。
-
-**【sub-agent mandate】**
-
-```
-你是一名独立审查员，从未见过这段代码的开发过程和实现思路。
-
-【输入】
-需求（Acceptance Criteria）：
-{task 的 acceptance-criteria 字段，逐条列出}
-
-代码改动：
-{git diff 全文}
-
-【默认假设】
-代码存在问题。你的任务是找出所有失败方式，不是确认代码是否正确。
-
-【逐类检查】（每类必须有明确结论，不允许跳过，不允许合并）
-
-1. AC 覆盖：每条 AC 是否有对应实现？逐条核对，找出遗漏或实现偏差。
-2. 边界情况：输入为 null / 空值 / 极值 / 并发时代码会怎样？找出未处理的情况。
-3. 错误处理：失败路径是否正确处理？有没有吞异常、错误状态码、静默失败？
-4. 安全性：是否存在权限绕过、注入风险、数据隔离漏洞、未校验的用户输入？
-5. 逻辑正确性：业务逻辑是否与 AC 描述的行为一致？条件判断、状态转换有没有错误？
-6. 接口契约对齐（仅当输入包含 TRD 接口定义时执行）：前端 api/*.ts 的字段名 / 类型 / Auth header / 枚举值是否与 TRD 完全一致？后端 controller 路由 / DTO 字段 / 响应结构是否与 TRD 完全一致？不一致逐项列出。
-
-【输出格式】（严格遵守，不得偏离）
-
-每条 finding 格式：
-- 类别：{AC覆盖 / 边界情况 / 错误处理 / 安全性 / 逻辑正确性 / 接口契约对齐}
-- 位置：{文件名:行号}
-- 问题：{具体描述，一句话}
-- 严重程度：{阻断 / 建议}
-
-某类无发现时，必须明确写：「{类别}：无发现」
-全部无发现时，输出：findings: []
-禁止输出「整体看起来不错」「代码质量良好」等任何总结性语言。
-```
-
-**【loop 逻辑】**
-
-| sub-agent 输出 | 动作 |
-|---|---|
-| `findings: []` | 退出 loop，进入 Step 6 |
-| 只有 `[建议]`，无 `[阻断]` | 写入 `backlog.md`（格式：`- [ ] {日期} \| [CR-建议] {描述} \| {文件:行号}`）；PR description「遗留问题」填引用；退出 loop，进入 Step 6 |
-| 有 `[阻断]` | 修复所有 `[阻断]` 问题，重跑 sub-agent |
-| 同一 `[阻断]` 修了 3 次仍出现 | 停止 loop，上报用户；判断根因是否在 AC / TRD 设计层——若是则创建 `revise-doc` 任务，不再继续实现 |
-
-```
-✅ 对抗审查完成：[findings: [] / [建议] {N} 条已记入 backlog]，无阻断。
+✅ 自检完成：机械验证 + 测试全绿（[X] passed），测试品类无空缺，[无偏离 / 偏离已记录]。
 → 下一步：commit + PR
 继续？
 ```
@@ -368,8 +315,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 | 步骤 | 与单任务的差异 |
 |------|---------------|
-| 批量 Step 5 自检 | 机械验证 / 偏离核查各跑**一次**，覆盖本次所有改动文件；偏离对比所有任务包 `files` 字段的合集 |
-| 批量 Step 5.5 对抗审查 | sub-agent 传入**所有任务包的 AC 合集** + diff 全文；loop 逻辑同单任务会话 Step 5.5 |
+| 批量 Step 5 自检 | 机械验证 / 测试（全绿）/ 测试品类自检 / 偏离核查各跑**一次**，覆盖本次所有改动文件与所有任务包的不可视区 AC 测试；偏离对比所有任务包 `files` 字段的合集 |
 | 批量 Step 6 commit | 分支名 `{layer}-batch-v{N}`（如 `backend-batch-v3`）；message：`feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]` |
 | 批量 Step 7 推 PR | `git push origin {layer}-batch-v{N}`；PR description **按任务分节**（模板见下），偏离 / 遗留问题各任务分别列出或统一写"无"；同样禁止凭据 |
 | 批量 Step 8 更新状态 | 所有批量任务包 + sprint.md 对应行 → `[done]`，PR 列**全部填同一个 PR 号**；同步在项目根 `status.yml` 把这批 task 的 `status` 全改 `done`、`pr` 全填同一个 `{N}`；git add 含 `status.yml`；`chore(sprint): 批量标记 [done]，PR #{N}` 推 `{layer}-batch-v{N}` |
@@ -412,7 +358,6 @@ PR description 是本任务的唯一交付记录，需完整填写：
 | Step 3 复用检查 | Explore 读 reusables.md | 失败则主线直接读 |
 | Step 4 代码探索（reference 不足时）| Explore 扫描周边文件（返回 ≤20 行摘要）| 失败则主线读文件 |
 | Step 4（> 5 文件跨模块）| general-purpose subagent 实现单个模块 | 见下方失败协议 |
-| Step 5.5 对抗审查 | 独立 sub-agent，只传 AC + diff，不传实现思路；5 类逐项审查 | 同一 `[阻断]` 三次失败 → 停止 loop，上报用户 |
 
 **Subagent 失败协议**：
 1. 同一问题同一 subagent 三次失败 → subagent 返回失败结构：
@@ -453,7 +398,7 @@ context-state:
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 额外加载 | `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
-| Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md` |
+| Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md`（**测试品类清单**：为鉴权/边界/错误/契约/并发各写测试） |
 | 视觉决策暂停 | 有（🚫） | 无 |
 | Subagent 拆分粒度 | 按组件拆（每个组件一个 subagent） | 按模块拆（controller / service 分开）|
 
