@@ -36,7 +36,7 @@
 | `title` | string | ✅ | 简短描述，15字以内 |
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
 | `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |
-| `acceptance-criteria` | string[] | ✅ | 3–5条，每条可独立验证；"功能正常"不算；每条须标注覆盖的 PRD AC id `(源：PRD AC-nn)`（可选人读后缀 `·{关键词}`，linter 只读 `AC-nn`），纯技术约束标 `(技术)`（由 plan-sprint 回链写入；check-sprint 据 id 机械核逐条覆盖）。**不可视区（backend/逻辑）任务的 AC 以可执行例子（Given/When/Then：输入→期望输出）书写**，供 develop 1:1 落成测试——由 plan-sprint 从 `draft-tech-design` 的 AC 操作化结果回链写入；前端任务维持散文 AC |
+| `acceptance-criteria` | string[] | ✅ | 3–5条，每条可独立验证；"功能正常"不算；每条须标注覆盖的 PRD AC id `(源：PRD AC-nn)`（可选人读后缀 `·{关键词}`，linter 只读 `AC-nn`），纯技术约束标 `(技术)`（由 plan-sprint 回链写入；check-sprint 据 id 机械核逐条覆盖）。**不可视区（backend/逻辑）任务的 AC 以可执行例子规格（Given/When/Then：输入→期望输出）书写**，供 develop 物化成可运行测试——测试脊柱：行为源自 PRD 幕 1、技术精度源自 `draft-tech-design` 幕 2，由 plan-sprint 回链写入；前端任务维持散文 AC |
 | `relevant-standards` | string[] | ✅ | 精确指向 `standards-{layer}.md` / `standards-shared.md` 的章节（§ 章节名）。注：`design.md` 现为 frontend 任务的**无条件必读项**（见 `specs-execution/develop-core.md` 精确加载上下文），不再依赖本字段触发，无需在此重复列出 |
 | `reference` | string[] | ✅ | 文件路径 + 行号 + 说明；行号必填、不接受"全文"或无范围（指向已存在代码/文档，可精确定位）；无相关文件时明确标注原因 |
 | `context` | string | ✅ | 关键实现切入点（如：`GoalList.vue L142 handleDelete()`…） |

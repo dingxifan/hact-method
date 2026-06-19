@@ -120,7 +120,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 > 子计划 3（2026-06-19，设计见 `_meta/plans/2026-06-19-structural-review/sub3-gate重定义-design.md`）：PRD/TRD 的 ①结构完备 ②交叉一致已由 `check-docs.js` 覆盖，这两关**不再派 subagent 冷核**——原"派 AI 核 AI 盖章"协议（曾是规范膨胀退化回路的活体标本）在此退场。
 
 1. 跑 `node scripts/check-docs.js ...`（G1 仅 PRD；G2 含 PRD↔TRD 交叉对账）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到 0，**不得手改报告、不得跳过**。
-2. 未标【linter】的**语义判据**由签字人确认：PRD 在 `draft-prd-vN` 逐功能确认中已把关；TRD 的 AC 覆盖**齐全性**已由 check-docs 机械核（PRD AC↔`# 满足 AC` 回链逐条对账），残留语义（载体是否**真承接**所回链的 AC、操作化例子是否忠实 AC）+ 后续 `pr-review` 技术保真在签字时复核，无需另派 subagent。
+2. 未标【linter】的**语义判据**由签字人确认：PRD 在 `draft-prd-vN` 逐功能确认中已把关；TRD 的 AC 覆盖**齐全性**已由 check-docs 机械核（PRD AC↔`# 满足 AC` 回链逐条对账），残留语义（载体是否**真承接**所回链的 AC、PRD 行为例子是否齐全、TRD 精化例子规格是否忠实该行为例子）+ 后续 `pr-review` 技术保真在签字时复核，无需另派 subagent。
 3. **存量项目兜底**：项目仓无 `scripts/check-docs.js`（未铺）→ 签字人**逐条手工核对**该 task 完成判据（无 subagent），并提示补铺（见 `specs-execution/init-project.md` Step 3）。补铺后即自动切回 linter 路。
 
 ### G4 / G5（薄检查器 check-gate.js）

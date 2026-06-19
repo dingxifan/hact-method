@@ -146,7 +146,7 @@ npm run test           # 测试全绿（或项目测试命令）
 **【自检】**（取代旧"逐条 checklist 审代码 + AI 对抗审查"——确定性的交给工具、看不见的写测试、看得见的留人）
 
 对照 `templates/checklists/{layer}-checklist.md`（backend = 测试品类清单；frontend = 三段式自检）确认：
-- 不可视区 AC 的 Given/When/Then 例子（任务包 `acceptance-criteria`，由 plan-sprint 从 TRD 操作化回链）已 **1:1 落成测试**且全绿；
+- 不可视区 AC 的 Given/When/Then 例子规格（任务包 `acceptance-criteria`，测试脊柱：行为源自 PRD 幕 1、技术精度源自 TRD 幕 2）已在此 **1:1 物化成可运行测试**且全绿——这是脊柱例子规格第一次落成 runnable 形态（守 2026-06-16：runnable 物化在代码存在后）；落成后测试代码随分支携带，不蒸馏；
 - 测试品类无空缺（backend：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试或合理标 N/A）；
 - 留人判项（N+1 / 日志隐私 / 冗余复用 / 并发竞态）逐项给结论。
 - 前端：机械项交 `npm run lint`/`vue-tsc`/`stylelint`（含硬编码字面值）；可测逻辑（状态 / 边界 / 表单）写测试；视觉/交互/响应式残量留走查，归 manual-test / pr-review 设计保真，不在此硬卡。

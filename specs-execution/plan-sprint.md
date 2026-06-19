@@ -138,7 +138,7 @@
 
 **AC 回链（PRD AC 溯源）**：每个任务包的 `acceptance-criteria` 每条须标注其覆盖的 PRD AC id，格式 `(源：PRD AC-nn)`（可选人读后缀 `(源：PRD AC-nn·删除二次确认)`，check-sprint 只读 `AC-nn`）；无 PRD AC 来源的纯技术约束（加索引 / DTO 校验 / 错误码对齐等）标 `(技术)`。不得凭 TRD 派生发明无来源的 AC——任务包 AC 的权威来源是 PRD。
 
-**不可视区 AC 写成可执行例子**：对 **backend（不可视区）任务**，`acceptance-criteria` 各条以 `draft-tech-design` 在 TRD 接口段已操作化的 **Given/When/Then 例子**形式写入（输入→期望输出），供 develop 1:1 落成测试；仍带 `(源：PRD …)` 回链——**操作化是 PRD AC 的忠实翻译，不是 TRD 派生发明**（权威来源仍是 PRD，TRD 只提供可测形式）。TRD 未操作化某条不可视区 AC → 回链对不上，应在写包时发现并补（或回 `revise-doc(target=trd)`）。前端任务维持散文 AC。
+**不可视区 AC 携带可执行规格例子（测试脊柱）**：对 **backend（不可视区）任务**，`acceptance-criteria` 各条携带**精化后的 Given/When/Then 例子规格**——行为来自 PRD 幕 1、技术精度（状态码/错误码/断言）来自 `draft-tech-design` 幕 2 在 TRD 接口段的精化；供 develop 物化成可运行测试；仍带 `(源：PRD …)` 回链——**例子是 PRD 行为 AC 的忠实翻译 + TRD 技术精化，不是派生发明**（权威来源仍是 PRD）。某条不可视区 AC 在 PRD 缺行为例子或 TRD 缺精化 → 回链对不上，应在写包时发现并补（缺幕 1 回 `revise-doc(target=prd)`、缺幕 2 回 `revise-doc(target=trd)`）。前端任务维持散文 AC。任务包只携带例子规格文本，**不预写 runnable 测试文件**（物化点在 develop）。
 
 **AC 双向对账自检**（全部任务包写完后、生成 sprint.md 前执行，缺一不可）：
 - 纵向：每条任务包 AC 都能指回某条 PRD AC（或标 `(技术)`），无凭空发明
