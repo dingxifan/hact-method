@@ -52,8 +52,7 @@
 
 ## 完成判据
 
-> 标 **【linter】** 的判据已可由 `scripts/check-docs.js` 确定性机械核（draft-prd-vN Step 7.4 跑），不再依赖人/冷核肉眼扫。未标的是语义判据，仍留冷核 + 人核。
-> （子计划 3 把 linter 接进 Gate、确认可信后，冷核协议对【linter】项的覆盖即可删——此为删除埋点。当前软版仍由冷核兜底，双跑不冲突。）
+> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-prd-vN Step 7.4 跑）——这就是这些判据的最终判定，PRD 不再派 subagent 冷核。未标的是**语义判据**，由签字人（产品）确认。
 
 - [ ] 场景还原完整（5 要素齐全）
 - [ ] 三角评估已逐功能完成
@@ -65,7 +64,7 @@
 - [ ] **【linter】** 每个功能至少 1 条 Acceptance Criteria
 - [ ] 有新页面 / 新交互 / ≥3 个状态：已在 acceptance criteria 中覆盖交互规格
 - [ ] project.md 产品层已更新
-- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G1.md`，人已抽看；见 `skeleton/06-gates.md` §7）
+- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回 subagent 冷核兜底）
 - [ ] G1 已签（`gates.md` 已记录 + commit）
 
 ---

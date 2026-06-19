@@ -235,34 +235,26 @@ MVP 边界（不做什么）：
 
 ---
 
-### Step 7.4：结构 linter 自检（机械先行）
+### Step 7.4：结构 linter 自检（【linter】判据的最终判定）
 
-冷核之前先跑确定性结构检查，把"段落缺/槽位空/draft-ux 枚举非法/功能无 AC/开放问题未清零"这类机械问题挡在前面（这些不必劳烦冷核 subagent）：
+签 G1 前跑确定性结构检查，把【linter】判据（段落缺/槽位空/draft-ux 枚举非法/功能无 AC/开放问题未清零）一次性机械核定——这些是确定性的，**不再劳烦人或 subagent 肉眼扫**（子计划 3 已删 PRD 的 subagent 冷核）：
 
 ```bash
 node scripts/check-docs.js --prd iterations/vN/prd.md
 ```
 
-- 退出码 0（全 pass）→ 进 Step 7.5 冷核。
+- 退出码 0（全 pass）→【linter】判据全部通过；语义判据由你（产品）确认后直进 Step 8 签字。
 - 退出码 1（有 FAIL）→ 按报告逐条修 `prd.md`，重跑，直到 0。**不得手改报告、不得跳过。**
 
 > 交叉对账（PRD `涉及实体` ↔ TRD `### 表`）此刻无法跑——TRD 尚不存在，留到 `draft-tech-design` 阶段两文件齐备时由那边的 linter 步骤执行。
-> linter 只覆盖结构/一致性判据；语义判据（场景5要素/三角评估/AC 是否用户真要的）仍由 Step 7.5 冷核 + 人核。**本步不替代冷核**。
-> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 跳过本步、直接进冷核，并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
-
----
-
-### Step 7.5：签 G1 前 · 完成判据冷核
-
-执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G1`。派一个**全新 subagent**，喂 `iterations/vN/prd.md` + `design.md`（如有）+ `../hact-method/specs-structural/draft-prd-vN.md` 完成判据，**不喂本会话生成过程**，逐条对抗核对（每条用 PRD 原句作证据），凭证写 `iterations/vN/gate-checks/G1.md`。有 FAIL 先修产物再重核。
-
-🚫 人工抽看 `gate-checks/G1.md`（逐条带证据、非盖章）后，方可进 Step 8 签字。
+> linter 只覆盖结构/一致性判据；**语义判据**（场景5要素/三角评估/AC 是否用户真要的）由你在逐功能确认（Step 4）中把关、签字时复核——无需另派 subagent。
+> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底，并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
 
 ### Step 8：G1
 
-> **签字前置**：Step 7.5 冷核凭证 `gate-checks/G1.md` 存在、结论全 pass（人驱动项除外）、人已抽看。
+> **签字前置**：Step 7.4 linter 退出码 0（【linter】判据全过）+ 语义判据你已确认。
 
 ```
 ✅ PRD v{N} 完成：[功能数量] 个功能，开放问题已清零，视觉规格 [已/未] 输出。
@@ -280,7 +272,7 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 - 确保 `iterations.vN.gates` 块存在（v1 已由 init-project 建好；v2+ 在此新增该期 gates 块，G1–G5 全未签）
 - 将 `iterations.vN.gates.G1` 改为 `{ signed: true, date: {YYYY-MM-DD} }`
 
-执行 `git add iterations/vN/prd.md iterations/vN/gates.md iterations/vN/gate-checks/G1.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
+执行 `git add iterations/vN/prd.md iterations/vN/gates.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
 
 > **异常**：PRD 定稿后发现遗漏关键功能 → 创建 `revise-doc(target=prd)` task，不直接修改已签 G1 的 PRD。
 
@@ -295,7 +287,7 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 
 ## Subagent 使用
 
-PRD 写作本身是纯对话，无需 subagent；**唯一例外**：Step 7.5 签 G1 前的完成判据冷核派一个全新 subagent（隔离上下文逐条核判据，见 `../hact-method/skeleton/06-gates.md` §7）。
+PRD 写作全程纯对话，无需 subagent——【linter】判据由 `check-docs.js` 机械核（Step 7.4），语义判据归产品确认。（原 Step 7.5 签 G1 前的 subagent 冷核已随子计划 3 退场；**仅存量项目未铺 `check-docs.js` 时**退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底。）
 
 ---
 

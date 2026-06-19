@@ -195,36 +195,28 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 
 ---
 
-### Step 5.4：结构 linter 自检（机械先行，含交叉对账）
+### Step 5.4：结构 linter 自检（【linter】判据的最终判定，含交叉对账）
 
-冷核之前先跑确定性检查。此刻 PRD 与 TRD 都在，**交叉对账（PRD `涉及实体` ↔ TRD `### 表`）在此兑现**——这是 draft-prd-vN 阶段无法跑、留到此处的那条：
+签 G2 前跑确定性检查。此刻 PRD 与 TRD 都在，**交叉对账（PRD `涉及实体` ↔ TRD `### 表`）在此兑现**——这是 draft-prd-vN 阶段无法跑、留到此处的那条。这些是【linter】判据，机械核定，**不再派 subagent 冷核**（子计划 3 已删 TRD 的 subagent 冷核）：
 
 ```bash
 node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
 ```
 
-- 退出码 0（全 pass）→ 进 Step 5.5 冷核。
+- 退出码 0（全 pass）→【linter】判据全部通过；语义判据确认后进 Step 6 签字。
 - 退出码 1（有 FAIL）→ 按报告逐条修：
   - TRD 段落缺/槽位空/表块或接口块缺 → 修 `trd.md`。
   - 交叉对账 FAIL（PRD 实体无对应表）→ 多数是 TRD 漏建表，补 `### 表：{名}`；若确认该"实体"非持久化数据（纯前端态/外部系统），则回 `prd.md` 把该功能 `涉及实体` 改正（去掉或写"无"）。
   - 重跑直到 0。**不得手改报告、不得跳过。**
 
-> linter 只覆盖结构/一致性判据；语义判据（接口字段是否真满足画面、AC 覆盖映射是否合理）仍由 Step 5.5 冷核 + 人核。**本步不替代冷核**，也不替代 Step 3 的「AC 覆盖映射自检」。
-> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 跳过本步、直接进冷核，并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
-
----
-
-### Step 5.5：签 G2 前 · 完成判据冷核
-
-执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G2`。派一个**全新 subagent**，喂 TRD + 三份 standards + `../hact-method/specs-structural/draft-tech-design.md` 完成判据（+ `prd.md`/`ux-flows.md` 作对照源），**不喂本会话生成过程**，逐条对抗核对，凭证写 `iterations/vN/gate-checks/G2.md`。有 FAIL 先修再重核。
-
-🚫 人工抽看 `gate-checks/G2.md` 后，方可进 Step 6 签字。
+> linter 只覆盖结构/一致性判据；**语义判据**（接口字段是否真满足画面、AC 覆盖映射是否合理）由 Step 3「AC 覆盖映射自检」（已人确认）+ 后续 `pr-review` 技术保真把关，签字时复核——无需另派 subagent。
+> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底，并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
 
 ### Step 6：G2
 
-> **签字前置**：Step 5.5 冷核凭证 `gate-checks/G2.md` 存在、结论全 pass、人已抽看。
+> **签字前置**：Step 5.4 linter 退出码 0（【linter】判据全过）+ 语义判据已确认（Step 3 AC 覆盖映射自检）。
 
 ```
 ✅ TRD + standards 完成：TRD [N] 段，standards 三份（shared / frontend / backend），decisions.md 已更新。
@@ -240,7 +232,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
 
 **更新项目根 `status.yml`**（字段见 `../hact-method/skeleton/07-status-contract.md`）：将 `iterations.vN.gates.G2` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
 
-执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md iterations/vN/gate-checks/G2.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`
+执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`
 
 **feedback 检查**（签 G2 后）：
 - 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
@@ -265,7 +257,8 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
 |--------|-------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件 | 读取失败则主线单独读，不阻断 |
 | Step 4 standards 生成 | 2 个并行 subagent 各生成一份 | 失败则主线接管该份，记录原因 |
-| Step 5.5 完成判据冷核 | 全新 subagent 隔离上下文逐条核对完成判据（见 `../hact-method/skeleton/06-gates.md` §7）| 失败则主线内联核对（降级，需人工加强抽看）|
+
+> 原 Step 5.5 签 G2 前的完成判据冷核 subagent 已随子计划 3 退场——【linter】判据由 `check-docs.js` 机械核（Step 5.4），语义判据归人确认。仅存量项目未铺 `check-docs.js` 时退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底。
 
 ---
 

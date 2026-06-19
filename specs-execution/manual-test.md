@@ -228,7 +228,7 @@ git branch -d fix/mt-{desc}
 
 > **测试环境与生产环境行为不一致**：若验收中发现测试环境与生产环境行为存在差异，在验收报告中注明该差异，由用户决定是否接受或需要在生产环境复验。
 
-**签 G4 前 · 完成判据冷核**：执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G4`。派一个**全新 subagent**，喂 `iterations/vN/acceptance-report.md` + `../hact-method/specs-structural/manual-test.md` 完成判据，逐条对抗核对——其中"用户明确说验收通过""所有反馈问题已处理"等**人驱动项标 `N/A·人工`**，subagent 只核产物可查项（报告结论为"通过"、AC 表列全 PRD 每条 AC、所有 `source=manual-test` 任务 [merged]）。凭证写 `iterations/vN/gate-checks/G4.md`。
+**签 G4 前 · 完成判据冷核**：执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」G3/G4/G5 段（G4 暂无 linter，走 subagent 冷核），`Gate=G4`。派一个**全新 subagent**，喂 `iterations/vN/acceptance-report.md` + `../hact-method/specs-structural/manual-test.md` 完成判据，逐条对抗核对——其中"用户明确说验收通过""所有反馈问题已处理"等**人驱动项标 `N/A·人工`**，subagent 只核产物可查项（报告结论为"通过"、AC 表列全 PRD 每条 AC、所有 `source=manual-test` 任务 [merged]）。凭证写 `iterations/vN/gate-checks/G4.md`。
 
 🚫 人工抽看 `gate-checks/G4.md` 后，再询问签 G4。
 

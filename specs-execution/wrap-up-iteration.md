@@ -141,7 +141,7 @@
 
 ## 签 G5 前 · 完成判据冷核
 
-执行 `../hact-method/skeleton/06-gates.md` §7「完成判据冷核协议」，`Gate=G5`。派一个**全新 subagent**，喂 `backlog.md` / `feedback.md` / `project.md` 相关段 + `../hact-method/specs-structural/wrap-up-iteration.md` 完成判据，逐条对抗核对（backlog `[偏离]` 已清、feedback.md 已清空、project.md 无"开发中"标注）。凭证写 `iterations/vN/gate-checks/G5.md`。有 FAIL 先修再重核。
+执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」G3/G4/G5 段（G5 暂无 linter，走 subagent 冷核），`Gate=G5`。派一个**全新 subagent**，喂 `backlog.md` / `feedback.md` / `project.md` 相关段 + `../hact-method/specs-structural/wrap-up-iteration.md` 完成判据，逐条对抗核对（backlog `[偏离]` 已清、feedback.md 已清空、project.md 无"开发中"标注）。凭证写 `iterations/vN/gate-checks/G5.md`。有 FAIL 先修再重核。
 
 🚫 人工抽看 `gate-checks/G5.md` 后，方可签 G5。
 

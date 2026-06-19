@@ -64,7 +64,11 @@
   - 新建 `templates/prd.md` / `templates/trd.md`（结构化模板，`<待填>` 空槽 + 固定 header）+ `templates/scripts/check-docs.js`（纯 Node linter，验结构完备 + 实体↔表交叉一致）
   - 接线 5 份 spec：init-project 铺脚本；draft-prd-vN Step7.4 / draft-tech-design Step5.4 linter 自检（冷核前，不替代）；两份 structural 契约完成判据标【linter】（子计划3删冷核埋点）
   - linter 自测通过：原始模板全面 FAIL、填好全 PASS、缺表交叉 FAIL、标签后缀兼容
-- **记录**：`_meta/plans/2026-06-19-structural-review/`（findings.md 四段分析 + design.md 方向 + sub1-地基-design.md + task_plan.md 接续）。master 仅 `976a399`（方向文档）；子计划1 操作改动隔离在分支保护存量项目。
+- **子计划3·Gate 重定义 已实施**（同分支 `feat/sub1-foundation`，**未合 master、未 push，待验收**；本轮定调：**只 G1/G2**（linter 现仅覆盖 PRD/TRD）+ **不做 hook**）：
+  - `skeleton/06-gates.md` §7：「完成判据冷核协议」→「完成判据核对」两层模型——G1/G2 走 linter 退出码 + 人签语义，**删 subagent 冷核**（存量项目无脚本退回兜底）；G3/G4/G5 沿用 subagent 冷核（原协议完整保留，冠适用范围 N∈{3,4,5}）
+  - 删 G1/G2 实时路径**两个 subagent 冷核步骤**（draft-prd-vN Step7.5、draft-tech-design Step5.5），PRD 全程零 subagent；两份 structural 兑现【linter】删除埋点；commit 去 `gate-checks/G1/G2.md`；三处 G3-5 引用同步改 §7 新标题
+  - **净收缩货币**：删 2 个 AI-肉眼步骤（design §2 判据）；§7 主体彻底删除待 G3/G4/G5 建检查器后兑现
+- **记录**：`_meta/plans/2026-06-19-structural-review/`（findings.md 四段分析 + design.md 方向 + sub1-地基-design.md + sub3-gate重定义-design.md + task_plan.md 接续）。master 仅 `976a399`（方向文档）；子计划1+3 操作改动隔离在分支保护存量项目。
 
 ### 2026-06-19 方法论调整：draft-ux 整体重构（角色姿态反转）
 

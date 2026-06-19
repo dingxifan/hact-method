@@ -54,8 +54,7 @@
 
 ## 完成判据
 
-> 标 **【linter】** 的判据已可由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 5.4 跑，含 PRD↔TRD 交叉对账），不再依赖人/冷核肉眼扫。未标的是语义判据，仍留冷核 + 人核。
-> （子计划 3 把 linter 接进 Gate、确认可信后，冷核协议对【linter】项的覆盖即可删——此为删除埋点。当前软版仍由冷核兜底，双跑不冲突。）
+> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 5.4 跑，含 PRD↔TRD 交叉对账）——这就是这些判据的最终判定，TRD 不再派 subagent 冷核。未标的是**语义判据**，由 Step 3 AC 覆盖映射自检（人确认）+ pr-review 技术保真把关。
 
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] **【linter】** TRD 7 个段落全部存在，无空段
@@ -64,7 +63,7 @@
 - [ ] 三份 standards 已输出（shared / frontend / backend）
 - [ ] decisions.md 已追加本期架构决策
 - [ ] project.md 技术层已更新
-- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G2.md`，人已抽看；见 `skeleton/06-gates.md` §7）
+- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回 subagent 冷核兜底）
 - [ ] G2 已签（`gates.md` 已记录 + commit）
 
 ---

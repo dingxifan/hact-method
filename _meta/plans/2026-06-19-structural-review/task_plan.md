@@ -16,6 +16,7 @@
 | 固化设计稿 | ✅ `design.md` |
 | 用户复审 design.md | ✅ 通过 |
 | 子计划 1（地基：产物结构化） | 🔨 **实施完成**，待用户验收（分支 `feat/sub1-foundation`，未合 master、未 push） |
+| 子计划 3（Gate 重定义：G1/G2 linter 接闸 + 删冷核） | 🔨 **实施完成**，待用户验收（同分支 `feat/sub1-foundation`，未合 master、未 push）；设计稿 `sub3-gate重定义-design.md` |
 
 ---
 
@@ -44,11 +45,22 @@
 
 **净收缩账**：本子计划建能力为主，散文删除有限；【linter】项的冷核删除待子计划 3 接闸后兑现（见 design §6）。
 
+## 子计划 3 实施记录（同分支 `feat/sub1-foundation`）
+
+设计稿：`sub3-gate重定义-design.md`。本轮定调：**只 G1/G2**（linter 现仅覆盖 PRD/TRD）、**不做 hook**。已落地：
+- `skeleton/06-gates.md` §7：改「冷核协议」→「完成判据核对」两层模型——G1/G2 走 linter+人签语义（**删 subagent 冷核**，存量无脚本则退回兜底）；G3/G4/G5 沿用 subagent 冷核（原协议步骤完整保留，冠以适用范围 N∈{3,4,5}）。
+- `specs-execution/draft-prd-vN.md`：Step 7.4 升格为【linter】判据最终判定；**删 Step 7.5 冷核整步**；Step 8 签字前置改 linter 退出码 0；commit 去 `gate-checks/G1.md`；Subagent 段改"PRD 全程零 subagent"。
+- `specs-execution/draft-tech-design.md`：Step 5.4 升格（含交叉对账）；**删 Step 5.5 冷核整步**；Step 6 前置改；commit 去 `gate-checks/G2.md`；Subagent 表删冷核行。
+- 两份 structural（draft-prd-vN / draft-tech-design）：删【linter】删除埋点括注；"完成判据已冷核"行改为"linter 全绿 + 语义人签（存量退回兜底）"。
+- 三处 G3/G4/G5 引用（plan-sprint Step4.7 / manual-test 签G4前 / wrap-up 签G5前）：§7 引用标题随重命名更新为「完成判据核对」G3/G4/G5 段，功能不变。
+
+**净收缩账**：实时路径删除 **2 个 subagent 冷核步骤**（G1 Step7.5、G2 Step5.5）+ PRD 全程零 subagent；structural 删 2 行埋点括注。§7 因保留 G3-5 协议略增。全 5 关 + §7 主体的彻底删除待 G3/G4/G5 建检查器后兑现。
+
 ## 下一步
 
-1. **用户验收子计划 1**（可切到 `feat/sub1-foundation` 分支看/试跑 linter）。
+1. **用户验收子计划 1 + 子计划 3**（同分支 `feat/sub1-foundation`，可看 diff / 试跑 linter）。
 2. 验收 OK → 由用户决定是否合 master + push（推送需用户确认，master 严格）。
-3. 之后按 `design.md` §11 进**子计划 2（不可视区迁移：AC→test）**或**子计划 3（Gate 重定义：linter 接闸 + 删冷核）**。
+3. 之后按 `design.md` §11 进**子计划 2（不可视区迁移：AC→test；含 develop Step 5.5 对抗审查退场 + AC 操作化）**，或继续把 G3/G4/G5 建检查器以兑现 §7 主体的彻底删除。
 
 ---
 
