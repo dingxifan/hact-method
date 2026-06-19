@@ -57,14 +57,14 @@
 
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] TRD 每个模块都有对应的 develop 任务包
-- [ ] 所有任务包 17 字段完整，无空字段；`layers=[backend]` 且有前端消费的任务包 `api-contract` 已填写并经用户确认
-- [ ] 字段保真自检通过：`reference` 每条含行号（拒"全文"/无范围）；前端任务且 ux-flows 存在时 reference 必含 ux-flows 行号条目；后端任务 reference 必含 TRD 错误码/服务流程段行号条目
-- [ ] AC 双向对账通过：每条任务包 AC 可回链 PRD AC（或标 `(技术)`），且 PRD 每条 AC 都被至少一个任务包覆盖
+- [ ] **【linter】** 所有任务包 17 字段完整，无空字段（`check-sprint.js` 字段完备）；`layers=[backend]` 且有前端消费的任务包 `api-contract` 已填写（presence 由 linter 验，字段结构正确性经用户确认）
+- [ ] **【linter】** 字段保真自检通过：`reference` 每条含行号（拒"全文"/无范围）；前端任务 reference 含 ux-flows 行号条目；后端任务 reference 含 TRD 行号条目
+- [ ] **【linter】** AC 正向回链 + 功能级反向覆盖：每条任务包 AC 带 `(源：PRD…)` 或 `(技术)` tag，且 PRD 每个功能被某任务包 AC 引用（逐条 AC 反向覆盖留签字人确认）
 - [ ] 任务包独立对抗审查通过（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖 四类无 [阻断]，或阻断已修复 / 已转 revise-doc）
-- [ ] 依赖关系已标注（无依赖标 `—`，有依赖标被依赖的 task-id）
+- [ ] **【linter】** 依赖关系已标注（任务包 `depends_on` 在册，无依赖填 `[]`）
 - [ ] 每个任务的 `交付` 列已填（`独立` 或 `批量`），判断理由已向用户说明并确认
-- [ ] sprint.md 已写，任务列表与 queue/ 一致
-- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G3.md`，人已抽看；见 `skeleton/06-gates.md` §7）
+- [ ] **【linter】** sprint.md 已写，queue↔sprint.md↔status.yml 三方一致（`check-sprint.js` 三方一致）
+- [ ] 完成判据已核对（`check-sprint.js` 退出码 0 + `🧑` 段语义残量人签；存量项目无脚本则退回 `skeleton/06-gates.md` §7 G3 段人工逐条核对）
 - [ ] G3 已签（`gates.md` 已记录 + commit）
 
 ---

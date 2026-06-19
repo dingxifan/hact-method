@@ -1,7 +1,7 @@
 # task_plan — hact-method 结构性审查 · 2026-06-19
 
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
-**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b 均已实施并通过全局验收，会话 4 已 fast-forward 合并入本地 master（`2e6662e`）**。本地 master 领先 origin/master 10 commit（含早先未推的方向文档 `976a399`），**未 push**（待用户明确确认；master 严格）。剩：sub3c（G3 + 任务包规范化，新拆出）/ 子计划 4（可视区收口，最低优先）/ G3-5 散文大头整段拔（待 sub3c）。loop 概念关系已澄清补入 `design.md §2.5`。
+**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c 全部实施完成**（1/3/2/3b 已通过全局验收并 ff 合并入本地 master `2e6662e`；**sub3c 本会话 5 完成，已 commit 入本地 master**）。**§7 冷核协议至此整段退场**——design §2.5 点名的「散文大头」三关全清（G1/G2 sub3、G4/G5 sub3b、G3 sub3c），净收缩从「部分兑现」推到「整段拔净」。本地 master 领先 origin/master 多个 commit，**全部未 push**（待用户明确确认；master 严格）。剩：子计划 4（可视区收口，最低优先）/ loop 第二层（parked）。loop 概念关系见 `design.md §2.5`。
 
 ---
 
@@ -94,10 +94,11 @@
 ## 下一步（候选，待用户定）
 
 0. ✅ **已完成（会话 4）**：sub3b 已 commit（`2e6662e`）；全局验收通过（linter 实跑 FAIL→1/usage→2、无悬挂引用、§7 读通、spec 散文净 −14 与"及格但不漂亮"自评一致）；fast-forward 合并入本地 master。**剩 push**——本地 master 领先 origin/master 10 commit，待用户明确确认后推送（master 严格）。
-1. **sub3c（G3 + 任务包规范化）**：① 任务包格式规范化（templates/queue 模板 + 校正 develop.md §字段规范 + 存量决定）② 建 check-sprint.js ③ §7「G3」段整段拔 → **兑现 design §2.5 散文大头整段删除**。见 sub3b-design §10。
-2. **全局验收**：用户复审各块 diff（`git diff master..HEAD`）/ 试跑 linter / 决定是否合 master + push。
-3. **子计划 4（可视区收口，design §11.4，最低优先）**：frontend-checklist 可机械部分迁 lint/test，视觉明确归人走查。
-4. **loop 第二层（更狠的减规则）**：TRD shared-type-first → per-module 小循环（design §2.5 + findings §二，parked；与 sub3c 任务包规范化有协同）。
+0. ✅ **已完成（会话 5）·sub3c**：① 任务包序列化锁定 YAML frontmatter（新 `templates/queue/task-package.md` + develop.md §字段规范加锁注，存量冻结）② 建 `check-sprint.js`（自测：真 hact-app v4 解析→legacy FAIL/exit1；合成 PASS fixture exit0；api-contract/反向覆盖/三方一致/usage 各 FAIL 路径验证）③ **§7「G3」段冷核协议整段拔** + intro 塌缩成单一模型 + plan-sprint Step4.7→check-sprint + 5 处 G1/G2/G4/G5 兜底悬挂引用全部改「人工逐条核对（无 subagent）」。设计稿 `sub3c-G3任务包规范化-design.md`。
+1. **push 决定**（待用户）：本地 master 含 sub1/3/2/3b/3c 全部改动，未 push。master 严格，须用户明确点头。
+2. **子计划 4（可视区收口，design §11.4，最低优先）**：frontend-checklist 可机械部分迁 lint/test，视觉明确归人走查。
+3. **loop 第二层（更狠的减规则）**：TRD shared-type-first → per-module 小循环（design §2.5 + findings §二，parked）。
+4. **parked（sub3c 衍生）**：给 PRD AC 加稳定 id（让逐条 AC 反向覆盖机械化，当前仅功能级机械、逐条留人）；任务包 hook 闸门。
 
 ---
 

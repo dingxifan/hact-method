@@ -143,7 +143,7 @@
 
 执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」**G4/G5 段**，`Gate=G5`。在项目仓根目录跑 `node scripts/check-gate.js G5 vN`：退出码 0 = 确定性判据（feedback.md 已清空、project.md 无"开发中"标注）全过；退出码 1 → 按报告逐条修后重跑到 0，不得手改报告。脚本 `🧑 留签字人确认` 段列出的语义残量（backlog `[偏离]` 是否处理得当、feedback 分流是否准确）由你这个 management 签字人确认。
 
-（存量项目无 `scripts/check-gate.js` → 退回 §7「G3」段的 subagent 冷核协议兜底，并提示补铺。）
+（存量项目无 `scripts/check-gate.js` → 退回 §7 G4/G5 段的人工逐条核对兜底（无 subagent），并提示补铺。）
 
 ---
 

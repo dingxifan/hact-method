@@ -230,7 +230,7 @@ git branch -d fix/mt-{desc}
 
 **签 G4 前 · 完成判据核对**：执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」**G4/G5 段**，`Gate=G4`。在项目仓根目录跑 `node scripts/check-gate.js G4 vN`：退出码 0 = 确定性判据（`source=manual-test` 修复任务全 [merged]、验收报告结论为"通过"）全过；退出码 1 → 按报告逐条修后重跑到 0，不得手改报告。脚本 `🧑 留签字人确认` 段列出的语义残量（用户是否明确说验收通过、所有反馈问题是否已处理）由你这个产品职能签字人确认——可视区人工验收本就该人判（design §3）。
 
-（存量项目无 `scripts/check-gate.js` → 退回 §7「G3」段的 subagent 冷核协议兜底，并提示补铺，见 `../hact-method/specs-execution/init-project.md` Step 3。）
+（存量项目无 `scripts/check-gate.js` → 退回 §7 G4/G5 段的人工逐条核对兜底（无 subagent），并提示补铺，见 `../hact-method/specs-execution/init-project.md` Step 3。）
 
 询问签 G4：
 ```

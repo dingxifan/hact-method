@@ -64,7 +64,7 @@
 - [ ] 三份 standards 已输出（shared / frontend / backend）
 - [ ] decisions.md 已追加本期架构决策
 - [ ] project.md 技术层已更新
-- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回 subagent 冷核兜底）
+- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）
 - [ ] G2 已签（`gates.md` 已记录 + commit）
 
 ---

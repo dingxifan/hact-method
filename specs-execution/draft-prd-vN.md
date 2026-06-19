@@ -248,7 +248,7 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 
 > 交叉对账（PRD `涉及实体` ↔ TRD `### 表`）此刻无法跑——TRD 尚不存在，留到 `draft-tech-design` 阶段两文件齐备时由那边的 linter 步骤执行。
 > linter 只覆盖结构/一致性判据；**语义判据**（场景5要素/三角评估/AC 是否用户真要的；以及 linter 受限标签的括注部分：`入口` 是否明确指向触发来源、含新页面/多分支的功能 `draft-ux` 该不该是"需要"）由你在逐功能确认（Step 4）中把关、签字时复核——无需另派 subagent。
-> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底，并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
+> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
 
@@ -287,7 +287,7 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 
 ## Subagent 使用
 
-PRD 写作全程纯对话，无需 subagent——【linter】判据由 `check-docs.js` 机械核（Step 7.4），语义判据归产品确认。（原 Step 7.5 签 G1 前的 subagent 冷核已随子计划 3 退场；**仅存量项目未铺 `check-docs.js` 时**退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底。）
+PRD 写作全程纯对话，无需 subagent——【linter】判据由 `check-docs.js` 机械核（Step 7.4），语义判据归产品确认。（原 Step 7.5 签 G1 前的 subagent 冷核已随子计划 3 退场；**仅存量项目未铺 `check-docs.js` 时**退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent）。）
 
 ---
 

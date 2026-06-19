@@ -64,7 +64,7 @@
 - [ ] **【linter】** 每个功能至少 1 条 Acceptance Criteria
 - [ ] 有新页面 / 新交互 / ≥3 个状态：已在 acceptance criteria 中覆盖交互规格
 - [ ] project.md 产品层已更新
-- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回 subagent 冷核兜底）
+- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）
 - [ ] G1 已签（`gates.md` 已记录 + commit）
 
 ---

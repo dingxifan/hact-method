@@ -49,6 +49,21 @@
 
 ## 历史里程碑
 
+### 2026-06-19 结构性审查收官：子计划 3b/3c 完成 + §7 冷核协议整段退场（净收缩「整段拔净」）
+
+> 接上一条「方法论方向转变」里程碑（sub1/3/2）。本条记 sub3b/3c + 全局验收 + 合并。
+
+- **子计划 3b·G4/G5 检查器**（commit `2e6662e`）：新建 `templates/scripts/check-gate.js`（G4 核 source=manual-test 任务全 merged + 验收报告结论；G5 核 feedback 清空 + project.md 无"开发中"）；§7 部分塌缩（G4/G5 迁 check-gate，G3 暂留冷核）；manual-test/wrap-up 冷核步→check-gate。实测发现 G3 被任务包格式漂移阻断 → 拆出 sub3c。
+- **全局验收 + 合并（会话 4）**：linter 实跑确认退出码、无悬挂引用、§7 读通、spec 散文净 −14；子计划 1/3/2/3b 干净 fast-forward 合并入**本地 master**（`976a399`→`2e6662e`）。
+- **子计划 3c·G3 检查器 + 任务包规范化 + §7 整段拔**（会话 5，已 commit 入本地 master）：
+  - **三决策**：序列化锁定 YAML frontmatter（v4 实况，v1 markdown 段退役）；存量冻结（hact-app v1–v4 不回填，新 sprint 生效）；AC 反向覆盖功能级机械 + 逐条留人（PRD AC 无 id，加 id parked）。
+  - 新建 `templates/queue/task-package.md`（YAML 全 17 字段 + 条件 api-contract）+ `templates/scripts/check-sprint.js`（字段完备 / reference 行号+ux-flows·trd 链 / AC 正向 tag+功能级反向覆盖 / api-contract 条件必填 / queue↔sprint↔status 三方一致；🧑 段留人）。自测：真 hact-app v4 解析正确→legacy FAIL；合成 PASS fixture exit0；各 FAIL 路径 + usage exit2 全验证。
+  - **§7 冷核协议整段退场**：删「G3」段协议主体（为什么/软版边界/5步/凭证/🚫/与既有审查关系）；intro 塌缩成单一模型「所有 Gate = 检查器绿 + 🧑 段语义人签」；新增极简 G3（check-sprint.js）段。
+  - 接线：develop.md §字段规范加序列化锁注；plan-sprint Step3 套模板 / Step4.7→check-sprint / commit 去 gate-checks/G3.md / Subagent 表删冷核行；structural plan-sprint 标【linter】；init-project 铺 check-sprint.js。
+  - **悬挂引用大扫除**（防 5cfdedb 类静默回退）：删协议后 5 处 G1/G2/G4/G5 存量兜底原指「§7 subagent 冷核协议」全部改「人工逐条核对（无 subagent）」（draft-prd-vN/draft-tech-design/manual-test/wrap-up 的 exec+structural）。两轮 grep 扫净。
+  - **净收缩兑现**：design §2.5「散文大头」三关全清（G1/G2 sub3、G4/G5 sub3b、G3 sub3c），§7 从 ~60 行两层模型塌缩成单层；净收缩从「部分兑现」推到「整段拔净」。ADD 全是检查器代码 + 结构化模板（code≠prose）。
+- **当前 git 状态**：本地 master 含 sub1/3/2/3b/3c 全部改动，领先 origin/master 多 commit，**全部未 push**（master 严格，待用户明确确认）。
+
 ### 2026-06-19 方法论方向转变：质量模型从"规范遵循"转向"输出可测试性"（结构性审查 + 子计划1·地基）
 
 - **背景**：一轮对整套方法论的结构性审查（含独立 subagent 对抗审查），追问"无休止增加规范来规范 AI 是否可持续"。

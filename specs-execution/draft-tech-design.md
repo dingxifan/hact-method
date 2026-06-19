@@ -216,7 +216,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
   - 重跑直到 0。**不得手改报告、不得跳过。**
 
 > linter 只覆盖结构/一致性判据；**语义判据**（接口字段是否真满足画面、AC 覆盖映射是否合理）由 Step 3「AC 覆盖映射自检」（已人确认）+ 后续 `pr-review` 技术保真把关，签字时复核——无需另派 subagent。
-> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底，并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
+> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
 
@@ -264,7 +264,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
 | 会话启动 | Explore 并行读 6 份输入文件 | 读取失败则主线单独读，不阻断 |
 | Step 4 standards 生成 | 2 个并行 subagent 各生成一份 | 失败则主线接管该份，记录原因 |
 
-> 原 Step 5.5 签 G2 前的完成判据冷核 subagent 已随子计划 3 退场——【linter】判据由 `check-docs.js` 机械核（Step 5.4），语义判据归人确认。仅存量项目未铺 `check-docs.js` 时退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底。
+> 原 Step 5.5 签 G2 前的完成判据冷核 subagent 已随子计划 3 退场——【linter】判据由 `check-docs.js` 机械核（Step 5.4），语义判据归人确认。仅存量项目未铺 `check-docs.js` 时退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent）。
 
 ---
 

@@ -21,6 +21,8 @@
 
 ## 字段规范
 
+> **序列化锁定（子计划 3c）**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`。`check-sprint.js`（G3 linter）据此机械 parse——旧的「最小 frontmatter + `## markdown` 段」布局退役。下表 17 字段 + 条件 `api-contract` 是字段的**单一真相**。
+
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
 | `task-id` | string | ✅ | 唯一标识，对应 sprint.md 行或 B 类总账行 |

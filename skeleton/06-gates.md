@@ -110,10 +110,10 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 完成判据按**核对机制**分两类：
 
-- **【linter】判据**：结构完备（字段/段落在不在）+ 交叉一致（PRD↔TRD）+ 状态/文件可查（任务全 merged、报告结论、feedback 清空）这类，由确定性检查器机械核——跑一万次结果一致、不受上下文失真影响。当前覆盖：**G1/G2** 用 `scripts/check-docs.js`（PRD/TRD 结构 + 交叉）、**G4/G5** 用 `scripts/check-gate.js`（状态 + 文件薄检查）。
+- **【linter】判据**：结构完备（字段/段落在不在）+ 交叉一致（PRD↔TRD、queue↔sprint↔status）+ 状态/文件可查（任务全 merged、报告结论、feedback 清空）这类，由确定性检查器机械核——跑一万次结果一致、不受上下文失真影响。**G1–G5 全覆盖**：**G1/G2** 用 `scripts/check-docs.js`（PRD/TRD 结构 + 交叉）、**G3** 用 `scripts/check-sprint.js`（任务包字段/AC回链/三方一致）、**G4/G5** 用 `scripts/check-gate.js`（状态 + 文件薄检查）。
 - **语义判据**：如"用户故事完整""AC 是否用户真要的""用户是否真验收通过""feedback 分流对不对"，机器判不了，由**对应职能的人**在签字时确认。
 
-哪几条判据标【linter】由各 task 的 `specs-structural` 完成判据节标注。**只剩 G3 暂无检查器**（其判据需 parse 任务包，而任务包格式尚未规范化），沿用下方 subagent 冷核，待 `sub3c` 建 `check-sprint.js` 后迁出。
+哪几条判据标【linter】由各 task 的 `specs-structural` 完成判据节标注。**§7 已塌缩成单一模型**：所有 Gate = 跑对应检查器（退出码 0 = 结构判据通过）+ 脚本 `🧑` 段列出的语义残量由签字人确认。原「派 subagent 冷核」协议（曾是"用 AI 治 AI 盖章"的规范膨胀退化回路活体标本，见 `design.md §2.5`）随 G1/G2（子计划 3）、G4/G5（3b）、G3（3c）三批检查器落地**已整段退场**。
 
 ### G1 / G2（已有结构 linter）
 
@@ -121,7 +121,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 1. 跑 `node scripts/check-docs.js ...`（G1 仅 PRD；G2 含 PRD↔TRD 交叉对账）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到 0，**不得手改报告、不得跳过**。
 2. 未标【linter】的**语义判据**由签字人确认：PRD 在 `draft-prd-vN` 逐功能确认中已把关；TRD 在 `draft-tech-design` Step 3「AC 覆盖映射自检」（已人确认）+ 后续 `pr-review` 技术保真中把关。签字时复核，无需另派 subagent。
-3. **存量项目兜底**：项目仓无 `scripts/check-docs.js`（未铺）→ 退回下方 subagent 冷核协议兜底，并提示补铺（见 `specs-execution/init-project.md` Step 3）。补铺后即自动切回 linter 路。（兜底时 subagent 照 G1/G2 当前完成判据逐条核即可——G1/G2 判据已是 linter+人签形态、无"完成判据已冷核"自指条，下方步骤 2 的"不自核"豁免对其无影响。）
+3. **存量项目兜底**：项目仓无 `scripts/check-docs.js`（未铺）→ 签字人**逐条手工核对**该 task 完成判据（无 subagent），并提示补铺（见 `specs-execution/init-project.md` Step 3）。补铺后即自动切回 linter 路。
 
 ### G4 / G5（薄检查器 check-gate.js）
 
@@ -129,42 +129,17 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 1. 跑 `node scripts/check-gate.js G{N} vN`（在项目仓根目录）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到 0，**不得手改报告、不得跳过**。
 2. 脚本 `🧑 留签字人确认` 段列出的语义残量由签字人确认（G4：用户明确说验收通过、反馈问题已处理；G5：backlog `[偏离]` 处理得当、feedback 分流准确）。签字时复核，无需另派 subagent。
-3. **存量项目兜底**：项目仓无 `scripts/check-gate.js`（未铺）→ 退回下方 subagent 冷核协议兜底，并提示补铺。补铺后即自动切回 linter 路。
+3. **存量项目兜底**：项目仓无 `scripts/check-gate.js`（未铺）→ 签字人**逐条手工核对**完成判据（无 subagent），并提示补铺。补铺后即自动切回 linter 路。
 
-### G3（暂无 linter，沿用 subagent 冷核）
+### G3（检查器 check-sprint.js）
 
-> G3 的完成判据需逐条 parse 任务包（17 字段完整 / reference 行号 / AC 双向对账 / 依赖 / 交付），而任务包格式尚未规范化（实测 hact-app 任务包跨迭代漂移、与 17 字段 spec 背离，见 sub3b-design §8）。**待子计划 sub3c 先做任务包规范化、再建 `check-sprint.js`**，届时 G3 迁出冷核、本节连同下方协议一并删除。在此之前 G3 暂用此法。
+> 子计划 3c（2026-06-19，设计见 `_meta/plans/2026-06-19-structural-review/sub3c-G3任务包规范化-design.md`）：先把任务包序列化锁定为 YAML frontmatter（`templates/queue/task-package.md`，sub1 同款地基），再建 `check-sprint.js` 覆盖 G3 完成判据里**确定性可查**的部分——任务包 17 字段完备、`reference` 含行号（前端含 ux-flows / 后端含 trd 条目）、AC 带 `(源：PRD…)`/`(技术)` 回链 tag + PRD 功能级反向覆盖、`depends_on` 在册、queue↔sprint.md↔status.yml 三方一致。这一关**不再派 subagent 冷核**——§7 冷核协议至此整段退场。
 
-**为什么需要**：写产物的会话 = 签 Gate 的会话。同上下文自评易被锚定盖章；最新完成判据即便在上下文里，也常按"这类产物大概长这样"的印象填、逐条漏核。本协议用**隔离上下文的陌生 subagent** 抵消锚定，把"判据没被完整执行"挡在签字前。G3 的判据尚无确定性检查器，暂用此法。
+1. 跑 `node scripts/check-sprint.js vN`（在项目仓根目录）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到 0，**不得手改报告、不得跳过**。
+2. 脚本 `🧑 留签字人确认` 段列出的语义残量由签字人确认：疑点清单已逐条确认、TRD 每模块都有任务包、`plan-sprint` Step 3.5 独审无遗留阻断、PRD **逐条** AC（非功能级）均被覆盖。签字时复核，无需另派 subagent。
+3. **存量项目兜底**：项目仓无 `scripts/check-sprint.js`（未铺，或任务包仍是旧序列化格式）→ 签字人**逐条手工核对**完成判据（无 subagent），并提示补铺 + 新 sprint 套用 `templates/queue/task-package.md`。补铺后即自动切回 linter 路。
 
-**软版边界**：本协议是**软步骤**——靠执行规范被遵循 + 人在签字现场抽看凭证兜底，**无机械闸门**。它堵不住"主会话整步跳过"或"把 FAIL 洗成 pass"，那两种只能靠下面 🚫 的人工抽看。
-
-#### 协议步骤（签 G{N} 前执行，N ∈ {3}）
-
-1. **派一个全新 subagent**（未参与本 task 产物生成）。只喂三样：
-   - 本 task **产物**（签字 commit 将纳入的文件）；
-   - 本 task **完成判据原文**（`specs-structural/{task}.md` 的「完成判据」节）；
-   - 判据逐条对照所需的**源**（如 prd.md / trd.md / standards / ux-flows.md，按判据需要）。
-   - **不喂**：本会话生成过程、决策理由、拆分叙事——隔离上下文是冷核有效的前提。
-2. **逐条对抗核对**：对每条完成判据，尝试证伪、拿不准判 `FAIL`；每条用产物里的**具体原句 / 位置**作证据。两类判据特殊处理：
-   - "G{N} 已签"与"完成判据已冷核"这两条**不自核**（签字在本步之后、冷核即本步）；
-   - **人驱动**判据（如 G3 的"疑点清单已由用户逐条确认"）标 `N/A·人工`，subagent 不替人判定。
-3. **subagent 自写凭证**到 `iterations/vN/gate-checks/G{N}.md`（subagent 直接落盘，主会话不经手结论，杜绝"把 FAIL 洗成 pass"）：
-   ```markdown
-   # G{N} 完成判据冷核 · v{N} · {YYYY-MM-DD}
-   产物指纹：{文件名}@{git blob 或内容 hash}
-   - [pass]      判据①：{判据原文} —— 证据：{产物原句/位置}
-   - [fail]      判据②：{判据原文} —— 缺口：{具体缺什么}
-   - [N/A·人工]  判据③：{判据原文} —— 归人工确认
-   结论：{全 pass / 有 N 条 fail 待修}
-   ```
-4. **有 FAIL → 主会话修产物 → 重新派冷核**。不得自行把凭证改成 pass；不得换软措辞反复重派"刷到绿"。
-5. 🚫 **人工抽看凭证**（签字前，人做）：翻一眼 `gate-checks/G{N}.md`——是逐条带具体证据，还是空壳盖章 / 证据含糊？这是软版**唯一**兜住"假装做"的闸，不可省。人认可后才进签字。凭证随签字 commit 一并入库（供追溯）。
-
-### 与既有审查的关系（互补不合并）
-
-- `plan-sprint` Step 3.5 独审是**针对特定维度**的深审（任务包对 PRD/TRD 保真），其结论是某一条 G3 完成判据的输入；
-- 本协议（现仅 G3）是**对整张完成判据清单**的逐条核对（含"那道深审是否真跑过"）。层级不同，各自保留。
+> **与 `plan-sprint` Step 3.5 独审的关系**：Step 3.5 是针对特定维度（任务包对 PRD/TRD 保真）的语义深审，其结论是 G3 一条语义判据的输入，由上面步骤 2 的 `🧑` 段提示签字人复核——与确定性检查器互补，各自保留。
 
 ---
 

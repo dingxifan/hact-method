@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-06-19 · 会话 5（子计划 3c：G3 任务包规范化 + check-sprint.js + §7 整段拔）
+
+**起点**：用户「做 sub3c」。承 sub3b §10 待办 + design §2.5「散文大头整段拔」目标。
+
+**三个定档决策**（对齐既有 sub1/sub3/sub3b 模式，非新发明，见 `sub3c-G3任务包规范化-design.md`）：
+1. **序列化锁定 YAML frontmatter**（v4 实况，最新格式；v1 markdown 段布局退役）——linter 可靠 parse 的前提，同 sub1 给 PRD/TRD 锁固定 header。
+2. **存量冻结**：hact-app v1–v4 不回填 `depends_on`/`api-contract`/AC 回链；check-sprint 只对新 sprint 生效，存量退兜底（同 check-docs/check-gate）。真漂移（depends_on/api-contract）vs 有意前置（AC 回链/Given-When-Then）逐字段分清。
+3. **AC 反向覆盖 = 功能级机械 + 逐条留人**：正向（每条 AC 带 tag）+ 反向功能级（每个 PRD `### 功能` 被引用，check-docs 实体↔表同款）机械化；逐条 AC 反向覆盖因 PRD AC 无稳定 id 留人（加 id 是未来一桩规范化，parked）。
+
+**做了什么**（分支 = 本地 master，已 commit）：
+1. 新建 `templates/queue/task-package.md`（YAML frontmatter 全 17 字段 + 条件 api-contract，`<待填>` 空槽 + 注释提示）。
+2. 新建 `templates/scripts/check-sprint.js`（纯 Node 无依赖，自带 frontmatter 容错 parser；覆盖字段完备 / reference 行号 + ux-flows·trd 链 / AC 正向 tag + 功能级反向覆盖 / api-contract 条件必填 / 三方一致 queue↔sprint↔status；🧑 段留人）。**自测**：真 hact-app v4 正确解析→legacy FAIL/exit1；合成 PASS fixture exit0；api-contract/反向覆盖/三方一致 FAIL 路径 + usage exit2 全验证；`depends_on: []` 正确不判空。
+3. **§7 整段拔**：删「G3」段冷核协议主体（为什么需要 / 软版边界 / 5 步 / 凭证模板 / 🚫 / 与既有审查关系）；intro 塌缩成单一模型（G1–G5 全检查器覆盖）；新增极简「G3（check-sprint.js）」段同 G4/G5 形态。
+4. **接线**：develop.md §字段规范加序列化锁注 + 引模板；plan-sprint Step3 套模板、Step4.7 冷核→check-sprint、Step5 前置、commit 去 gate-checks/G3.md、Subagent 表删冷核行；structural plan-sprint 完成判据标【linter】+ 冷核行改写；init-project Step3 铺 check-sprint.js。
+5. **悬挂引用大扫除**（防 5cfdedb 类静默回退）：删协议后，5 处 G1/G2/G4/G5 存量兜底原指「§7 subagent 冷核协议」全部失效 → 改「人工逐条核对（无 subagent）」（draft-prd-vN ×2 exec + structural、draft-tech-design exec + structural、manual-test、wrap-up）。两轮 grep 扫净，仅 STATUS.md 历史日志 + check-gate.js 注释「原 §7」过去式保留。
+
+**净收缩**：删 §7「G3」段 ~35 行冷核协议 + plan-sprint Step4.7 冷核步 + Subagent 表行 + structural 冷核行 + gate-checks/G3.md 凭证产物。**§7 三关全清、整段拔净**，从 ~60 行两层模型塌缩成单层。ADD 是 check-sprint.js（真检查器，code≠prose）+ task-package 模板（结构化地基）。design §2.5 目标达成：净收缩从「部分兑现」→「整段拔净」。
+
+**下次起点**：push 决定（待用户）→ 子计划 4（可视区，最低优先）/ loop 第二层（parked）。
+
+---
+
 ## 2026-06-19 · 会话 4（全局验收 + 合并入本地 master）
 
 **起点**：用户选「全局验收 + 合并」（task_plan 下一步 #2）。sub3b 已于上轮 commit（`2e6662e`），工作树 clean。

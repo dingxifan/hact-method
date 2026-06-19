@@ -77,6 +77,8 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 - `.claude/commands/gitee-ops.md`：内容复制自 `E:\group-code\hact-method\templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
 - `scripts/check-docs.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 5.4 自检 PRD/TRD 结构与交叉一致性时调用）
 - `scripts/check-gate.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
+- `scripts/check-sprint.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
+- `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `E:\group-code\hact-method\templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）
 
 ---
 
