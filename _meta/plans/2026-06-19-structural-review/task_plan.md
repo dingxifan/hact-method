@@ -1,7 +1,9 @@
 # task_plan — hact-method 结构性审查 · 2026-06-19
 
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
-**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c / 4 全部实施完成**——**四子计划全落，本方向收口**。1/3/2/3b 已通过全局验收并 ff 合并入本地 master `2e6662e`；sub3c 会话 5 commit 入本地 master；**sub4 本会话 6 完成（frontend-checklist 11 段→三段式，视觉残量合法归人）**。§7 冷核协议整段退场（散文大头三关全清，净收缩「整段拔净」）。本地 master 领先 origin/master 多个 commit，**全部未 push**（待用户明确确认；master 严格）。剩：loop 第二层（parked）。loop 概念关系见 `design.md §2.5`。
+**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c / 4 全部实施完成 + sub5（sub3c parked 衍生：PRD AC 稳定 id）会话 7 完成**——**四子计划全落，本方向收口**。1/3/2/3b 已 ff 合并入本地 master `2e6662e`；sub3c 会话 5、sub4 会话 6、sub5 会话 7（commit `4b0f352`）均 commit 入本地 master。§7 冷核协议整段退场。本地 master 领先 origin/master 15 commit，**全部未 push**（用户明确：停本地；master 严格）。
+
+> **下一步动作（已定，2026-06-19 会话 7）**：结构性审查方向收口。**默认下一步 = TRD↔PRD AC 覆盖机械化**——复用 sub5 刚铺的 `AC-nn` id 地基，把 draft-tech-design 现留人的「覆盖映射自检」（exec L142：逐条核 PRD 每条 AC 是否都被 TRD 接口/模块/交互场景承接）升成机械（check-docs 可扩 TRD `# 满足 AC：AC-nn` ↔ PRD AC id 交叉对账）；难点 = 可视/不可视分叉（前端交互类 AC 挂 ux-flows/前端模块，无后端接口）。**下次会话先确认 scope 再建**。次选：push（待用户改口）、loop 第二层（TRD shared-type-first → per-module 小循环，parked）。hook 闸门本方向多次定「不做」、PRD AC id 跨迭代永久化优先级低。loop 概念关系见 `design.md §2.5`。
 
 ---
 
