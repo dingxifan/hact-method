@@ -121,7 +121,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 1. 跑 `node scripts/check-docs.js ...`（G1 仅 PRD；G2 含 PRD↔TRD 交叉对账）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到 0，**不得手改报告、不得跳过**。
 2. 未标【linter】的**语义判据**由签字人确认：PRD 在 `draft-prd-vN` 逐功能确认中已把关；TRD 在 `draft-tech-design` Step 3「AC 覆盖映射自检」（已人确认）+ 后续 `pr-review` 技术保真中把关。签字时复核，无需另派 subagent。
-3. **存量项目兜底**：项目仓无 `scripts/check-docs.js`（未铺）→ 退回下方「G3/G4/G5」的 subagent 冷核协议兜底，并提示补铺（见 `specs-execution/init-project.md` Step 3）。补铺后即自动切回 linter 路。
+3. **存量项目兜底**：项目仓无 `scripts/check-docs.js`（未铺）→ 退回下方「G3/G4/G5」的 subagent 冷核协议兜底，并提示补铺（见 `specs-execution/init-project.md` Step 3）。补铺后即自动切回 linter 路。（兜底时 subagent 照 G1/G2 当前完成判据逐条核即可——G1/G2 判据已是 linter+人签形态、无"完成判据已冷核"自指条，下方步骤 2 的"不自核"豁免对其无影响。）
 
 ### G3 / G4 / G5（暂无 linter，沿用 subagent 冷核）
 

@@ -247,7 +247,7 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 - 退出码 1（有 FAIL）→ 按报告逐条修 `prd.md`，重跑，直到 0。**不得手改报告、不得跳过。**
 
 > 交叉对账（PRD `涉及实体` ↔ TRD `### 表`）此刻无法跑——TRD 尚不存在，留到 `draft-tech-design` 阶段两文件齐备时由那边的 linter 步骤执行。
-> linter 只覆盖结构/一致性判据；**语义判据**（场景5要素/三角评估/AC 是否用户真要的）由你在逐功能确认（Step 4）中把关、签字时复核——无需另派 subagent。
+> linter 只覆盖结构/一致性判据；**语义判据**（场景5要素/三角评估/AC 是否用户真要的；以及 linter 受限标签的括注部分：`入口` 是否明确指向触发来源、含新页面/多分支的功能 `draft-ux` 该不该是"需要"）由你在逐功能确认（Step 4）中把关、签字时复核——无需另派 subagent。
 > 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 的 subagent 冷核兜底，并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
