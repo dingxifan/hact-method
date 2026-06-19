@@ -14,8 +14,8 @@
 | brainstorming 收敛方向 | ✅ 见下「已达成定调」 |
 | 两次迁移演练验证普适性 | ✅ backend-checklist 85% / Gate 冷核 病灶活体 |
 | 固化设计稿 | ✅ `design.md` |
-| 用户复审 design.md | ⏳ **当前卡点** |
-| 子计划 1（地基：产物结构化） | ⬜ 未开始 |
+| 用户复审 design.md | ✅ 通过 |
+| 子计划 1（地基：产物结构化） | 🔨 **实施完成**，待用户验收（分支 `feat/sub1-foundation`，未合 master、未 push） |
 
 ---
 
@@ -32,11 +32,23 @@
 
 ---
 
+## 子计划 1 实施记录（分支 `feat/sub1-foundation`）
+
+设计稿：`sub1-地基-design.md`。已落地交付物：
+- 新建 `templates/prd.md` / `templates/trd.md`（结构化模板，空槽 + 固定 header）
+- 新建 `templates/scripts/check-docs.js`（纯 Node linter，无依赖；已自测：原始模板全面 FAIL、填好全 PASS、缺表交叉 FAIL、标签后缀兼容）
+- 改 `specs-execution/init-project.md`：Step2 建 `scripts/`、Step3 铺 check-docs.js
+- 改 `specs-execution/draft-prd-vN.md`：Step4 功能块对齐模板 + 加 `涉及实体`；Step7 套模板；新增 **Step 7.4 linter 自检**（PRD-only，冷核前）；v2+ 功能 header 改兼容写法
+- 改 `specs-execution/draft-tech-design.md`：Step3 表/接口对齐固定 header + 模板符合；新增 **Step 5.4 linter 自检**（含 PRD↔TRD 交叉对账）
+- 改两份 structural 契约：完成判据标 **【linter】**（子计划 3 删冷核埋点）+ 产物引用模板 + 必含段落补字段
+
+**净收缩账**：本子计划建能力为主，散文删除有限；【linter】项的冷核删除待子计划 3 接闸后兑现（见 design §6）。
+
 ## 下一步
 
-1. 用户复审 `design.md`，确认方向。
-2. 通过后开**子计划 1 · 地基（产物结构化）**——其余子计划依赖它，必须先行。
-3. 子计划列表见 `design.md` §11。
+1. **用户验收子计划 1**（可切到 `feat/sub1-foundation` 分支看/试跑 linter）。
+2. 验收 OK → 由用户决定是否合 master + push（推送需用户确认，master 严格）。
+3. 之后按 `design.md` §11 进**子计划 2（不可视区迁移：AC→test）**或**子计划 3（Gate 重定义：linter 接闸 + 删冷核）**。
 
 ---
 

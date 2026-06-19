@@ -45,6 +45,7 @@ mkdir -p "E:/group-code/{name}/iterations/v1/queue/done"
 mkdir -p "E:/group-code/{name}/b-queue"
 mkdir -p "E:/group-code/{name}/_meta/input"
 mkdir -p "E:/group-code/{name}/_meta/sessions"
+mkdir -p "E:/group-code/{name}/scripts"
 ```
 
 > `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）；`_meta/sessions/`：各任务跨会话接续文件（`{task-type}-progress.md`）；`b-queue/`：B 类任务包（项目级，跨迭代，不依赖活跃迭代）。
@@ -74,6 +75,7 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 同时写入以下文件：
 - `CLAUDE.md`：内容复制自 `E:\group-code\hact-method\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
 - `.claude/commands/gitee-ops.md`：内容复制自 `E:\group-code\hact-method\templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
+- `scripts/check-docs.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 5.4 自检 PRD/TRD 结构与交叉一致性时调用）
 
 ---
 

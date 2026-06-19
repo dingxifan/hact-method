@@ -31,7 +31,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | [v2+] 迭代目录结构 | `iterations/vN/queue/done/` | 目录；仅 v2+ 创建，v1 由 `init-project` 预创建 |
-| PRD | `iterations/vN/prd.md` | Markdown，含 6 个固定段落 |
+| PRD | `iterations/vN/prd.md` | Markdown，套结构化模板 `templates/prd.md`（固定 6 段 header + 功能块 `### 功能：` + 槽位，供 `scripts/check-docs.js` 解析） |
 | G1 签字 | `iterations/vN/gates.md` | `- [x] G1：PRD 已确认 — YYYY-MM-DD` |
 | 视觉规格（首期必做，迭代按需） | `design.md` | 色彩 / 字体 / 间距 / 组件风格关键词 |
 | project.md 更新（产品层） | `project.md` | 追加或更新产品层内容 |
@@ -43,7 +43,7 @@
 |------|------|
 | 产品目标 | 一句话，聚焦本期价值主张 |
 | 目标用户 | 画像 + 核心痛点（对应三角 D） |
-| 核心功能 | 每个功能：场景描述 + acceptance criteria + 明确排除项 |
+| 核心功能 | 每个功能（块 header `### 功能：`）：入口 + draft-ux + 涉及实体 + 场景描述 + acceptance criteria + 明确排除 |
 | 用户故事 | 3–5 个，覆盖核心场景 |
 | MVP 边界 | 明确"不做什么"及原因 |
 | 开放问题 | 定稿前需解决的问题列表；定稿时应为空 |
@@ -52,12 +52,17 @@
 
 ## 完成判据
 
+> 标 **【linter】** 的判据已可由 `scripts/check-docs.js` 确定性机械核（draft-prd-vN Step 7.4 跑），不再依赖人/冷核肉眼扫。未标的是语义判据，仍留冷核 + 人核。
+> （子计划 3 把 linter 接进 Gate、确认可信后，冷核协议对【linter】项的覆盖即可删——此为删除埋点。当前软版仍由冷核兜底，双跑不冲突。）
+
 - [ ] 场景还原完整（5 要素齐全）
 - [ ] 三角评估已逐功能完成
-- [ ] PRD 6 个段落全部存在，无空段
-- [ ] "开放问题"段落为空（全部已解决）
-- [ ] 每个功能的场景描述含明确入口（用户从哪里触发）
-- [ ] 每个功能已标记是否需要 `draft-ux`（含新页面或多分支交互流程的功能必须标记 `需要`）
+- [ ] **【linter】** PRD 6 个段落全部存在，无空段
+- [ ] **【linter】** "开放问题"段落为空（全部已解决）
+- [ ] **【linter】** 每个功能的场景描述含明确入口（用户从哪里触发）
+- [ ] **【linter】** 每个功能已标记是否需要 `draft-ux`（取值 ∈ {需要, 不需要}；含新页面或多分支交互流程的功能必须标记 `需要`）
+- [ ] **【linter】** 每个功能已标注 `涉及实体`（读写的数据实体，逗号分隔；纯展示写"无"）
+- [ ] **【linter】** 每个功能至少 1 条 Acceptance Criteria
 - [ ] 有新页面 / 新交互 / ≥3 个状态：已在 acceptance criteria 中覆盖交互规格
 - [ ] project.md 产品层已更新
 - [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G1.md`，人已抽看；见 `skeleton/06-gates.md` §7）
