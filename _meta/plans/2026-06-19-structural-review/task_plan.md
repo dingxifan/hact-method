@@ -1,7 +1,7 @@
 # task_plan — hact-method 结构性审查 · 2026-06-19
 
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
-**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b 均已实施**，累积在分支 `feat/sub1-foundation`（**全本地、未合并、未推送**）。子计划 3b（G4/G5 检查器 + §7 部分塌缩）于会话 3 完成，**未 commit**（工作树有改动待提交）。剩：sub3c（G3 + 任务包规范化，新拆出）/ 子计划 4（可视区收口，最低优先）/ G3-5 散文大头整段拔（待 sub3c）。loop 概念关系已澄清补入 `design.md §2.5`。
+**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b 均已实施并通过全局验收，会话 4 已 fast-forward 合并入本地 master（`2e6662e`）**。本地 master 领先 origin/master 10 commit（含早先未推的方向文档 `976a399`），**未 push**（待用户明确确认；master 严格）。剩：sub3c（G3 + 任务包规范化，新拆出）/ 子计划 4（可视区收口，最低优先）/ G3-5 散文大头整段拔（待 sub3c）。loop 概念关系已澄清补入 `design.md §2.5`。
 
 ---
 
@@ -93,7 +93,7 @@
 
 ## 下一步（候选，待用户定）
 
-0. **commit 本轮 sub3b**：工作树有改动（check-gate.js + §7 + 5 spec），待提交到分支 `feat/sub1-foundation`（**推送需用户明确确认，master 严格**）。
+0. ✅ **已完成（会话 4）**：sub3b 已 commit（`2e6662e`）；全局验收通过（linter 实跑 FAIL→1/usage→2、无悬挂引用、§7 读通、spec 散文净 −14 与"及格但不漂亮"自评一致）；fast-forward 合并入本地 master。**剩 push**——本地 master 领先 origin/master 10 commit，待用户明确确认后推送（master 严格）。
 1. **sub3c（G3 + 任务包规范化）**：① 任务包格式规范化（templates/queue 模板 + 校正 develop.md §字段规范 + 存量决定）② 建 check-sprint.js ③ §7「G3」段整段拔 → **兑现 design §2.5 散文大头整段删除**。见 sub3b-design §10。
 2. **全局验收**：用户复审各块 diff（`git diff master..HEAD`）/ 试跑 linter / 决定是否合 master + push。
 3. **子计划 4（可视区收口，design §11.4，最低优先）**：frontend-checklist 可机械部分迁 lint/test，视觉明确归人走查。

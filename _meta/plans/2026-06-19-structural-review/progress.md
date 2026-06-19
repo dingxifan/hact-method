@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-06-19 · 会话 4（全局验收 + 合并入本地 master）
+
+**起点**：用户选「全局验收 + 合并」（task_plan 下一步 #2）。sub3b 已于上轮 commit（`2e6662e`），工作树 clean。
+
+**做了什么**：
+1. **验收**：实跑两个 linter 确认退出码（check-docs 空模板→17 FAIL/exit 1；check-gate 缺文件→exit 1、无参→exit 2）；grep 全 spec 确认无悬挂引用（gate-checks/G1/G2/G4/G5 删净、只剩 G3.md；Step5.5/7.5 全是墓碑注释）；读 §7 确认三段式 partial-collapse 读得通；算净收缩——**spec 散文 17 文件净 −14 行**（develop −53 / backend-checklist −32 大头，被 gates.md +27 / AC 操作化 +21 接线吃掉），ADD 567 行是 checker 代码 + 结构化模板（按 design §2 不计入反账）。与计划"及格但不漂亮"自评一致。
+2. **合并**：master 未分叉，`git merge --ff-only` 干净 fast-forward 9 commit 入本地 master（`976a399`→`2e6662e`）。
+3. **未 push**：本地 master 领先 origin/master（`89d01ff`）10 commit，按规矩待用户明确确认。
+
+**下次起点**：push 决定（待用户）→ sub3c（G3 + 任务包规范化，兑现 §7 散文大头整段拔）/ 子计划 4 / loop 第二层。
+
+---
+
 ## 2026-06-19 · 会话 3（子计划 3b：G4/G5 检查器 + §7 部分塌缩；G3 拆出 sub3c）
 
 **起点**：用户选"兑现散文大头删除"（task_plan 下一步 #3）——给 G3/G4/G5 建检查器、删 §7 冷核主体。
