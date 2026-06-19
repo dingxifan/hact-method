@@ -1,9 +1,9 @@
 # task_plan — hact-method 结构性审查 · 2026-06-19
 
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
-**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c / 4 全部实施完成 + sub5（sub3c parked 衍生：PRD AC 稳定 id）会话 7 完成**——**四子计划全落，本方向收口**。1/3/2/3b 已 ff 合并入本地 master `2e6662e`；sub3c 会话 5、sub4 会话 6、sub5 会话 7（commit `4b0f352`）均 commit 入本地 master。§7 冷核协议整段退场。本地 master 领先 origin/master 15 commit，**全部未 push**（用户明确：停本地；master 严格）。
+**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c / 4 全落 + sub5（PRD AC 稳定 id）+ sub6（TRD↔PRD AC 覆盖机械化）完成**——**本方向收口**。1/3/2/3b 已 ff 合并入本地 master `2e6662e`；sub3c 会话 5、sub4 会话 6、sub5 会话 7（`4b0f352`）、sub6 会话 8 均 commit 入本地 master。§7 冷核协议整段退场。本地 master 领先 origin/master 多 commit，**全部未 push**（用户明确：停本地；master 严格）。
 
-> **下一步动作（已定，2026-06-19 会话 7）**：结构性审查方向收口。**默认下一步 = TRD↔PRD AC 覆盖机械化**——复用 sub5 刚铺的 `AC-nn` id 地基，把 draft-tech-design 现留人的「覆盖映射自检」（exec L142：逐条核 PRD 每条 AC 是否都被 TRD 接口/模块/交互场景承接）升成机械（check-docs 可扩 TRD `# 满足 AC：AC-nn` ↔ PRD AC id 交叉对账）；难点 = 可视/不可视分叉（前端交互类 AC 挂 ux-flows/前端模块，无后端接口）。**下次会话先确认 scope 再建**。次选：push（待用户改口）、loop 第二层（TRD shared-type-first → per-module 小循环，parked）。hook 闸门本方向多次定「不做」、PRD AC id 跨迭代永久化优先级低。loop 概念关系见 `design.md §2.5`。
+> **下一步动作**：sub6 落地后，AC 链路（PRD AC-nn → TRD 回链 → 任务包回链 → 测试）三段全机械对账。**剩候选**：① push（待用户改口）② loop 第二层（TRD shared-type-first → per-module 小循环，parked）③ PRD AC id 跨迭代永久化（当前仅 PRD vN 生命周期内稳定，优先级低）。hook 闸门本方向多次定「不做」。loop 概念关系见 `design.md §2.5`。
 
 ---
 
@@ -99,6 +99,20 @@
 **阻断发现（重要）**：建 check-sprint.js（G3）前实测 hact-app 任务包——**格式未规范化、跨迭代漂移（v1: 5字段+markdown段；v3: 14键YAML）、与 develop.md 17 字段 spec 背离**（缺 depends_on/api-contract/AC回链，`layer` 单数）。G3 linter 真前置 = 任务包规范化（sub1 同款），故拆出 sub3c。详见 sub3b-design §8。
 
 **净收缩诚实账**：删 G4/G5 各 1 冷核步（-2 实时路径）+ 删 G4/G5 凭证产物 + structural 改写。**§7 未整段拔**（G3 协议主体仍在）——散文大头本轮**部分兑现**，整段拔待 sub3c。
+
+---
+
+## 子计划 6 实施记录（会话 8，本地 master）·TRD↔PRD AC 覆盖机械化
+
+承 sub5 的 `AC-nn` id 地基。把 draft-tech-design 现留人的「覆盖映射自检」（exec 旧 L142：逐条核 PRD 每条 AC 是否都被 TRD 载体承接）升成 check-docs 机械对账。
+
+- **关键认识**：scope 比预想干净——担心的「可视/不可视分叉」**不成立**。回链 tag `# 满足 AC：AC-nn` 是**载体无关**的：无论挂在后端接口、前端模块还是 ux-flows 场景，都是同一行格式。linter 全局扫 `满足 AC` 行抽 `AC-nn`，不关心载体在哪。残量 = 忠实性（载体真承接 vs 仅 id 在场），与 sub5 同款留人模型。
+- **check-docs.js**：① `checkPRD` 返回 `acIds`（已收集的 AC-nn 集）② `checkTRD` 全局扫 `# 满足 AC` 行抽 `acRefs` ③ `checkCross` 加两条：**逐条正向**（每个 TRD 回链 id 在 PRD 存在=挡悬空/打错号）+ **逐条反向**（PRD 每条 AC-nn 被 ≥1 TRD 载体回链=机械化覆盖映射）；存量兜底（PRD 无 AC-nn 形式/acBad → 退 🧑 人工）④ 新增 `human` 级别 + 🧑 段报告（对齐 check-sprint）。
+- **trd.md 模板**：接口块加 `# 满足 AC：<待填>` 行 + 注释；模块拆分段加注释（纯前端 AC 在模块/ux-flows 旁写回链）。
+- **spec 接线**：draft-tech-design exec 覆盖映射 bullet（人工逐条→回链+linter 机械核，操作化+忠实性留人）+ Step5.4（两条交叉对账）+ FAIL 处置 +1 条 + 签字前置改写；structural 完成判据 +1【linter】行 + 覆盖映射行拆分（齐全性归 linter / 忠实性留人）+ 总判据行；skeleton 06-gates G2 第 2 条（覆盖齐全性归机械、残语义留签字）。
+- **自测全过**：① 全覆盖→exit0 ② 漏覆盖(AC-02/03)+悬空(AC-99)→2 FAIL exit1 ③ 存量旧 AC1 格式→逐条覆盖退 🧑 不误报 ④ 真 hact-app v4 存量→不崩、走 🧑 兜底 ⑤ 仅 PRD 不崩 ⑥ raw trd 模板 parse 不崩。
+
+**净收缩账**：删 draft-tech-design 1 个人工逐条对照步（覆盖映射自检的「齐全性」部分）→ 升为 linter 机械 FAIL；残量收成签字人只兜忠实性。ADD 是 linter 代码（§2 code≠prose）。AC 链路三段（PRD→TRD→任务包→测试）至此全机械对账。
 
 ---
 

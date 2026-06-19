@@ -49,6 +49,16 @@
 
 ## 历史里程碑
 
+### 2026-06-19 sub6：TRD↔PRD AC 覆盖机械化 — 「覆盖映射自检」从「留人」升「机械」（AC 链路三段全机械对账）
+
+> 接 sub5（PRD AC 稳定 id）。sub5 铺好 `AC-nn` id 后，本轮把 draft-tech-design 仍留人的「覆盖映射自检」也升成机械——结构性审查方向的最后一段 AC 对账缺口。
+
+- **关键认识**：sub5 task_plan 担心的「可视/不可视分叉」（前端交互类 AC 无后端接口可挂）**实测不成立**——回链 tag `# 满足 AC：AC-nn` 是**载体无关**的，无论挂在后端接口、前端模块还是 ux-flows 场景都是同一行格式。check-docs 全局扫 `满足 AC` 行抽 `AC-nn` 即可，不必区分载体。残量 = 忠实性（载体真承接 vs 仅 id 在场），与 sub5 同款留人模型。
+- **落地**：`check-docs.js`（`checkPRD` 返 `acIds` / `checkTRD` 扫 `acRefs` / `checkCross` 加逐条正向挡悬空 + 逐条反向验覆盖 / 新增 `human` 级别 + 🧑 段，存量退兜底）；`trd.md` 模板（接口块 `# 满足 AC` 行 + 注释、模块段注释）；spec 接线 4 处（draft-tech-design exec 覆盖映射 bullet 人工→机械 + Step5.4 + FAIL 处置 + 签字前置；structural 完成判据；skeleton 06-gates G2）。
+- **净收缩**：删 1 个人工逐条对照步 → 升 linter 机械 FAIL；签字人只兜忠实性。**AC 链路三段（PRD AC-nn → TRD `# 满足 AC` 回链 → 任务包 `(源：PRD AC-nn)` 回链 → 测试）至此全机械对账**。ADD 是 linter 代码（code≠prose）。
+- **自测全过**：全覆盖 PASS / 漏覆盖+悬空 2 FAIL / 存量旧 AC1 退人工 / 真 hact-app v4 不崩走兜底 / 仅 PRD 不崩 / raw 模板 parse 不崩。
+- **当前 git 状态**：本地 master 含 sub1–6 全部改动，领先 origin/master 多 commit，**全部未 push**（master 严格，待用户明确确认）。
+
 ### 2026-06-19 sub5（sub3c parked 衍生）：PRD AC 稳定 id — 逐条 AC 反向覆盖从「留人」升「机械」
 
 > 接「结构性审查收官」里程碑。本条记四子计划收口后落地的 parked 衍生项（非原四子计划之一）。设计稿 `_meta/plans/2026-06-19-structural-review/sub5-AC-id-机械化-design.md`。

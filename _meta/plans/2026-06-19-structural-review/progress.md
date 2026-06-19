@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-19 · 会话 8（子计划 6：TRD↔PRD AC 覆盖机械化 — 复用 sub5 的 AC-nn id 地基）
+
+**起点**：用户「继续工作」→ 确认 scope 后选「建 TRD↔PRD AC 机械化」（task_plan 会话 7 定的默认下一步）。
+
+**关键认识**：摸 scope 时发现 sub5 担心的「可视/不可视分叉」**不成立**——回链 tag `# 满足 AC：AC-nn` 载体无关（接口/前端模块/ux-flows 场景同一行格式），linter 全局扫即可，不必区分载体类型。残量 = 忠实性（载体真承接 vs 仅 id 在场），与 sub5 同款留人模型。
+
+**做了什么**（本地 master）：
+1. `check-docs.js`：`checkPRD` 返回 `acIds`；`checkTRD` 全局扫 `# 满足 AC` 抽 `acRefs`；`checkCross` 加逐条正向（挡悬空）+ 逐条反向（验覆盖），存量退 🧑；新增 `human` 级别 + 🧑 段报告。
+2. `trd.md` 模板：接口块 `# 满足 AC：<待填>` + 注释；模块段注释（纯前端 AC 写回链）。
+3. spec 接线：draft-tech-design exec（覆盖映射 bullet 人工→回链+机械、Step5.4 两条交叉、FAIL 处置、签字前置）+ structural（完成判据 +1【linter】+ 覆盖映射行拆分）+ skeleton 06-gates G2。
+4. 自测 6 场景全过 + 真 hact-app v4 存量烟测不崩走兜底。
+
+**净收缩**：删 1 个人工逐条对照步→升 linter 机械 FAIL；AC 链路三段（PRD→TRD→任务包→测试）至此全机械对账。ADD 是 linter 代码（code≠prose）。
+
+**下次起点**：push 决定（待用户）；loop 第二层（parked）；PRD AC id 跨迭代永久化（低优先）。
+
+---
+
 ## 2026-06-19 · 会话 6（子计划 4：可视区收口 — frontend-checklist 迁 lint/test，视觉归人）
 
 **起点**：用户「继续子计划 4」。承 design §11.4（可视区收口，最低优先）+ §8 演练二（frontend ~50%）+ §3（可视区人是 validator）。
