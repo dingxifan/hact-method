@@ -190,15 +190,15 @@ npm run test           # 测试全绿（或项目测试命令）
 - 上报「测试基建缺失」，不可视区任务**阻塞待补**——先补 standards 测试约定 + 项目装运行器，再回来落测试；
 - 若用户判定本任务必须先推进（基建一时补不上）：明确标记本不可视区 AC **未经测试验证（降级）**，PR description「遗留问题」写明，转由 `pr-review` 路1 人工审代码对 AC 兜底——这是**临时降级、非常态**，不得当作正常完成。
 
-**【测试品类自检】**（取代旧"逐条 checklist 审代码 + AI 对抗审查"——真测试即验证）
+**【自检】**（取代旧"逐条 checklist 审代码 + AI 对抗审查"——确定性的交给工具、看不见的写测试、看得见的留人）
 
-对照 `templates/checklists/{layer}-checklist.md`（backend = 测试品类清单）确认：
+对照 `templates/checklists/{layer}-checklist.md`（backend = 测试品类清单；frontend = 三段式自检）确认：
 - 不可视区 AC 的 Given/When/Then 例子（任务包 `acceptance-criteria`，由 plan-sprint 从 TRD 操作化回链）已 **1:1 落成测试**且全绿；
 - 测试品类无空缺（backend：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试或合理标 N/A）；
 - 留人判项（N+1 / 日志隐私 / 冗余复用 / 并发竞态）逐项给结论。
-- 前端：可测部分（接口对接 / 状态 / 表单）写测试；视觉残量归 manual-test / pr-review 设计保真，不在此卡。
+- 前端：机械项交 `npm run lint`/`vue-tsc`/`stylelint`（含硬编码字面值）；可测逻辑（状态 / 边界 / 表单）写测试；视觉/交互/响应式残量留走查，归 manual-test / pr-review 设计保真，不在此硬卡。
 
-输出【{layer} 测试品类报告】（格式见 checklist 文末）。
+输出 backend【后端测试品类报告】/ frontend【前端自检报告】（格式见 checklist 文末）。
 
 > **升级（同测试反复修不好）**：同一测试修 3 次仍红 → 根因可能在 AC / TRD 设计层（AC 本身矛盾或 TRD 契约错），停止硬磨、上报用户；判断是否创建 `revise-doc` 任务，不在本会话强行刷绿。
 
@@ -400,7 +400,7 @@ context-state:
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 额外加载 | `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
-| Checklist | `templates/checklists/frontend-checklist.md` | `templates/checklists/backend-checklist.md`（**测试品类清单**：为鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
+| Checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint/vue-tsc/stylelint｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：为鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
 | 视觉决策暂停 | 有（🚫） | 无 |
 | Subagent 拆分粒度 | 按组件拆（每个组件一个 subagent） | 按模块拆（controller / service 分开）|
 

@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-06-19 · 会话 6（子计划 4：可视区收口 — frontend-checklist 迁 lint/test，视觉归人）
+
+**起点**：用户「继续子计划 4」。承 design §11.4（可视区收口，最低优先）+ §8 演练二（frontend ~50%）+ §3（可视区人是 validator）。
+
+**关键认识**：frontend 链路其实已基本建好——视觉/交互保真早在 2026-06-18 落到 pr-review 第四步 + manual-test + integration（pinchtab），类型对接落 vue-tsc，develop L199（子计划 2）已路由"视觉残量归 manual-test/pr-review"。**唯一仍停在旧「11 段逐条挑刺审代码」形态的产物 = frontend-checklist.md 本体**（design §9 窟窿2 点名的 inspect-code 长清单）。本子计划 = 只收口这一件。
+
+**三决策**（见 `sub4-可视区收口-design.md`）：
+1. **frontend 不设硬性"测试品类"强制**（区别 backend）——可视区人能当 validator + 三重兜底，取「可测则测」，渲染行为不硬卡。
+2. **最干净机械赢面 = lint/type-check**，尤其 **stylelint 禁硬编码字面值**（直击 org-krm-v2 跨 v3→v5 复发）。诚实前提：靠项目真配规则才查得出，未配落留人。
+3. **视觉/交互保真不新增 wiring**（已被覆盖），只重写 checklist。
+
+**做了什么**（本地 master）：
+1. 重写 `frontend-checklist.md`：11 段→**三段式**（一·归 lint/vue-tsc/stylelint｜二·可测逻辑写测试｜三·留人走查）+ 输出格式 + 诚实前提。旧全项映射无静默丢（design §3 映射表逐项核）。
+2. 微调 `develop.md` 5 处（L193 标题/L195 描述符/L199 三段式路由/L201 报告名 layer 化/L403 差异表）+ structural develop L77。pr-review/manual-test/integration 不动。
+3. grep 扫净：无悬挂引用（旧 11 段仅按文件名被引、无段号引用）。
+
+**净收缩**：纯 prose 收缩+重组，**无新检查器代码**——本方向最贴 §2 判据的一块。但 **frontend 净收缩 < backend**：视觉残量合法大头（§3），§9 窟窿2「降维不是清零」在此最明显。**四子计划全落，本方向收口**。
+
+**下次起点**：push 决定（待用户）；loop 第二层（parked）。
+
+---
+
 ## 2026-06-19 · 会话 5（子计划 3c：G3 任务包规范化 + check-sprint.js + §7 整段拔）
 
 **起点**：用户「做 sub3c」。承 sub3b §10 待办 + design §2.5「散文大头整段拔」目标。

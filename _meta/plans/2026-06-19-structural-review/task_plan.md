@@ -1,7 +1,7 @@
 # task_plan — hact-method 结构性审查 · 2026-06-19
 
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
-**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c 全部实施完成**（1/3/2/3b 已通过全局验收并 ff 合并入本地 master `2e6662e`；**sub3c 本会话 5 完成，已 commit 入本地 master**）。**§7 冷核协议至此整段退场**——design §2.5 点名的「散文大头」三关全清（G1/G2 sub3、G4/G5 sub3b、G3 sub3c），净收缩从「部分兑现」推到「整段拔净」。本地 master 领先 origin/master 多个 commit，**全部未 push**（待用户明确确认；master 严格）。剩：子计划 4（可视区收口，最低优先）/ loop 第二层（parked）。loop 概念关系见 `design.md §2.5`。
+**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c / 4 全部实施完成**——**四子计划全落，本方向收口**。1/3/2/3b 已通过全局验收并 ff 合并入本地 master `2e6662e`；sub3c 会话 5 commit 入本地 master；**sub4 本会话 6 完成（frontend-checklist 11 段→三段式，视觉残量合法归人）**。§7 冷核协议整段退场（散文大头三关全清，净收缩「整段拔净」）。本地 master 领先 origin/master 多个 commit，**全部未 push**（待用户明确确认；master 严格）。剩：loop 第二层（parked）。loop 概念关系见 `design.md §2.5`。
 
 ---
 
@@ -70,6 +70,15 @@
 
 **净收缩账**：删 1 个大 AI-肉眼步骤 + checklist 砍半；ADD 是"写真测试/验输出"非"堆 generator 规则"，不背叛 §2。
 
+## 子计划 4 实施记录（会话 6，本地 master）
+
+设计稿：`sub4-可视区收口-design.md`。三决策：① frontend **不设硬性"测试品类"强制**（区别 backend——可视区人能当 validator + integration/manual/pr-review 三重兜底，取"可测则测"）；② 最干净机械赢面 = lint/type-check，尤其 **stylelint 禁硬编码字面值**（直击 org-krm-v2 跨迭代复发）；③ 视觉/交互保真**不新增 wiring**（pr-review 第四步 + manual-test + integration 已覆盖），只收口 checklist 一件残留旧形态产物。已落地：
+- 重写 `templates/checklists/frontend-checklist.md`：11 段 ~40 项「逐条挑刺审代码」→ **三段式**（一·归 lint/vue-tsc/stylelint｜二·可测逻辑写测试｜三·留人走查视觉/交互/冗余）+ 输出格式 + 诚实前提（项目未配 lint 规则的项落留人）。旧 11 段全项映射无静默丢（见 design §3 映射表）。
+- 微调 `specs-execution/develop.md`（L193「测试品类自检」→「自检」措辞、L195 frontend 描述符、L199 三段式路由、L201 报告名 layer 化、L403 差异表 Checklist 列）+ `specs-structural/develop.md` L77 frontend 描述符。
+- pr-review/manual-test/integration **不动**（D3）。
+
+**净收缩账**：纯 prose 收缩+重组，**无新检查器代码**（lint/tsc/stylelint 是项目侧标准工具）——本方向最贴 §2 判据的一块。但 **frontend 净收缩 < backend**：视觉残量是合法大头（design §3 可视区人是 validator），§9 窟窿2「降维不是清零」在此最明显。
+
 ---
 
 ## 本轮总结（2026-06-19，为下次对话铺接续）
@@ -95,10 +104,10 @@
 
 0. ✅ **已完成（会话 4）**：sub3b 已 commit（`2e6662e`）；全局验收通过（linter 实跑 FAIL→1/usage→2、无悬挂引用、§7 读通、spec 散文净 −14 与"及格但不漂亮"自评一致）；fast-forward 合并入本地 master。**剩 push**——本地 master 领先 origin/master 10 commit，待用户明确确认后推送（master 严格）。
 0. ✅ **已完成（会话 5）·sub3c**：① 任务包序列化锁定 YAML frontmatter（新 `templates/queue/task-package.md` + develop.md §字段规范加锁注，存量冻结）② 建 `check-sprint.js`（自测：真 hact-app v4 解析→legacy FAIL/exit1；合成 PASS fixture exit0；api-contract/反向覆盖/三方一致/usage 各 FAIL 路径验证）③ **§7「G3」段冷核协议整段拔** + intro 塌缩成单一模型 + plan-sprint Step4.7→check-sprint + 5 处 G1/G2/G4/G5 兜底悬挂引用全部改「人工逐条核对（无 subagent）」。设计稿 `sub3c-G3任务包规范化-design.md`。
-1. **push 决定**（待用户）：本地 master 含 sub1/3/2/3b/3c 全部改动，未 push。master 严格，须用户明确点头。
-2. **子计划 4（可视区收口，design §11.4，最低优先）**：frontend-checklist 可机械部分迁 lint/test，视觉明确归人走查。
-3. **loop 第二层（更狠的减规则）**：TRD shared-type-first → per-module 小循环（design §2.5 + findings §二，parked）。
-4. **parked（sub3c 衍生）**：给 PRD AC 加稳定 id（让逐条 AC 反向覆盖机械化，当前仅功能级机械、逐条留人）；任务包 hook 闸门。
+0. ✅ **已完成（会话 6）·sub4**：frontend-checklist 11 段→三段式（机械归 lint/vue-tsc/stylelint + 可测逻辑写测试 + 视觉/交互留人走查）；硬编码字面值移交 stylelint（直击 org-krm-v2）；develop exec/structural 描述符同步；pr-review 不动。设计稿 `sub4-可视区收口-design.md`。**四子计划全落，本方向收口。**
+1. **push 决定**（待用户）：本地 master 含 sub1/3/2/3b/3c/4 全部改动，未 push。master 严格，须用户明确点头。
+2. **loop 第二层（更狠的减规则）**：TRD shared-type-first → per-module 小循环（design §2.5 + findings §二，parked）。
+3. **parked（sub3c 衍生）**：给 PRD AC 加稳定 id（让逐条 AC 反向覆盖机械化，当前仅功能级机械、逐条留人）；任务包 hook 闸门。
 
 ---
 

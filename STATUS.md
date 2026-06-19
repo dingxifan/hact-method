@@ -49,9 +49,9 @@
 
 ## 历史里程碑
 
-### 2026-06-19 结构性审查收官：子计划 3b/3c 完成 + §7 冷核协议整段退场（净收缩「整段拔净」）
+### 2026-06-19 结构性审查收官：子计划 3b/3c/4 完成 + §7 冷核协议整段退场（四子计划全落，本方向收口）
 
-> 接上一条「方法论方向转变」里程碑（sub1/3/2）。本条记 sub3b/3c + 全局验收 + 合并。
+> 接上一条「方法论方向转变」里程碑（sub1/3/2）。本条记 sub3b/3c + 全局验收 + 合并 + sub4 可视区收口。
 
 - **子计划 3b·G4/G5 检查器**（commit `2e6662e`）：新建 `templates/scripts/check-gate.js`（G4 核 source=manual-test 任务全 merged + 验收报告结论；G5 核 feedback 清空 + project.md 无"开发中"）；§7 部分塌缩（G4/G5 迁 check-gate，G3 暂留冷核）；manual-test/wrap-up 冷核步→check-gate。实测发现 G3 被任务包格式漂移阻断 → 拆出 sub3c。
 - **全局验收 + 合并（会话 4）**：linter 实跑确认退出码、无悬挂引用、§7 读通、spec 散文净 −14；子计划 1/3/2/3b 干净 fast-forward 合并入**本地 master**（`976a399`→`2e6662e`）。
@@ -62,7 +62,12 @@
   - 接线：develop.md §字段规范加序列化锁注；plan-sprint Step3 套模板 / Step4.7→check-sprint / commit 去 gate-checks/G3.md / Subagent 表删冷核行；structural plan-sprint 标【linter】；init-project 铺 check-sprint.js。
   - **悬挂引用大扫除**（防 5cfdedb 类静默回退）：删协议后 5 处 G1/G2/G4/G5 存量兜底原指「§7 subagent 冷核协议」全部改「人工逐条核对（无 subagent）」（draft-prd-vN/draft-tech-design/manual-test/wrap-up 的 exec+structural）。两轮 grep 扫净。
   - **净收缩兑现**：design §2.5「散文大头」三关全清（G1/G2 sub3、G4/G5 sub3b、G3 sub3c），§7 从 ~60 行两层模型塌缩成单层；净收缩从「部分兑现」推到「整段拔净」。ADD 全是检查器代码 + 结构化模板（code≠prose）。
-- **当前 git 状态**：本地 master 含 sub1/3/2/3b/3c 全部改动，领先 origin/master 多 commit，**全部未 push**（master 严格，待用户明确确认）。
+- **子计划 4·可视区收口**（会话 6，已 commit 入本地 master）：
+  - **关键认识**：frontend 链路其实已基本建好——视觉/交互保真早落 pr-review 第四步（2026-06-18）+ manual-test + integration（pinchtab），类型对接落 vue-tsc，develop L199（sub2）已路由"视觉残量归 manual-test/pr-review"。唯一仍停在旧「11 段逐条挑刺审代码」形态的产物 = `frontend-checklist.md` 本体（design §9 窟窿2 的 inspect-code 长清单）。
+  - **三决策**：frontend **不设硬性"测试品类"强制**（区别 backend——可视区人能当 validator + 三重兜底，取「可测则测」）；最干净机械赢面 = lint/type-check，尤其 **stylelint 禁硬编码字面值**（直击 org-krm-v2 跨 v3→v5 复发）；视觉/交互保真**不新增 wiring**（已覆盖），只收口 checklist 一件。
+  - 重写 `frontend-checklist.md`：11 段→**三段式**（一·归 lint/vue-tsc/stylelint｜二·可测逻辑写测试｜三·留人走查视觉/交互/冗余）+ 输出格式 + 诚实前提（项目未配规则的项落留人）；旧全项映射无静默丢。develop exec（5 处）/structural（L77）描述符同步；pr-review/manual-test/integration 不动。
+  - **净收缩**：纯 prose 收缩+重组、**无新检查器代码**（lint/tsc/stylelint 是项目侧标准工具）——本方向最贴 §2 判据的一块。但 **frontend 净收缩 < backend**：视觉残量合法大头（design §3 可视区人是 validator），§9 窟窿2「降维不是清零」在此最明显。**四子计划全落，本方向收口。**
+- **当前 git 状态**：本地 master 含 sub1/3/2/3b/3c/4 全部改动，领先 origin/master 多 commit，**全部未 push**（master 严格，待用户明确确认）。
 
 ### 2026-06-19 方法论方向转变：质量模型从"规范遵循"转向"输出可测试性"（结构性审查 + 子计划1·地基）
 
