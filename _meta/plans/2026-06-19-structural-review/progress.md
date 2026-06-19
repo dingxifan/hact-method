@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-06-19 · 会话 9（loop 第二层 park → 子计划 7：develop 拆分）
+
+**起点**：用户「开始 loop 第二层的工作」。读 design §2.5 + findings §二后判定 loop 第二层 ROI 被 sub1-6 摊薄（per-API 拆分是编排 ADD/不删散文；develop 模块级 loop 已被 sub2 删 Step5.5+加 npm run test 做掉）→ 向用户确认 → **正式 park loop 第二层**，火力转 **develop 拆分**（findings §三 #1，471 行 spec 是真正 generator-fat 杠杆）。
+
+**develop 拆分（方案 A，用户两次拍板：先选方向 develop 拆分，再选形状 A）**：
+- 关键认识：source 分歧集中在**边缘**（intake/handoff），核心 Step 1–7 source 无关；自然分组 **3 不是 5**（findings #1 略夸大 checklist 差异——实为 layer 驱动）。
+- 落地：`develop.md`（417 行）→ `develop-core.md`（Step 1–8 共享核心 + 会话收尾共用段）+ 3 薄壳 `develop-sprint`/`develop-repair`/`develop-b`，source 选壳，task_type（dev-frontend/backend）正交不变。10 处接线（CLAUDE.md 路由/Step1 表、skeleton/04 catalog、skeleton/07+status.yml type 枚举 12→14、structural develop 家族契约 + **顺手修 dispatch-new b-queue pre-existing bug**、plan-sprint/gen-it/manual-test/dispatch-new 的 status.yml type 补全、draft-tech-design/pr-review 执行层指针、guide 00/03/99）。
+- **诚实净收缩账**：**这不是 §2 净收缩**——reorg 不删规则，总行 +102（417→519）。我在 AskUserQuestion 误把方案 A 框成「满足 §2」，已纠正。真收益 = 结构正确性：#14 兑现（task.type 真路由）+ per-session context 降（repair 349/−68、b 354/−63；sprint 432/+15）+ 各会话不载别路径逻辑。硬红线（壳复制核心）未触发。
+- **用户拍板**：明知 +102 不是行数净收缩，仍选「接受 A，本地 commit」（结构收益 > 行数代价；raw 行数是 reorg 的错判据）。
+
+**git**：本地 master，未 push（master 严格）。
+
+---
+
 ## 2026-06-19 · 会话 8（子计划 6：TRD↔PRD AC 覆盖机械化 — 复用 sub5 的 AC-nn id 地基）
 
 **起点**：用户「继续工作」→ 确认 scope 后选「建 TRD↔PRD AC 机械化」（task_plan 会话 7 定的默认下一步）。

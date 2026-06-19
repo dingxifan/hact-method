@@ -49,6 +49,17 @@
 
 ## 历史里程碑
 
+### 2026-06-19 sub7：develop 拆分（loop 第二层先 park）— 471 行单 spec → 共享核心 + 3 薄壳，兑现决策 #14
+
+> 接 sub6（结构性审查 AC 链路收口）。会话 9 起点是「开始 loop 第二层」，但读 design §2.5 + findings §二后判定 loop 第二层 ROI 被 sub1-6 摊薄（per-API 拆分是编排 ADD/不删散文；develop 模块级 loop 已被 sub2 删 Step5.5 做掉）→ 用户确认 **park loop 第二层**，火力转 **develop 拆分**（findings §三 #1：471 行 spec 是规范膨胀根本原因，违背决策 #14「task.type 是路由键」）。
+
+- **关键认识**（校正 findings #1）：source 分歧集中在**边缘**（intake 拾取/Gate + handoff 移交/feedback），核心实现流 Step 1–7 **source 无关**；自然分组是 **3 不是 5**（integration/manual-test 组内仅移交文件名差异，bug/optimization 几乎无差异；checklist「完全不同」是 **layer** 驱动非 source，findings #1 略夸大）。
+- **方案 A（用户拍板）**：`develop.md`（417 行）→ `develop-core.md`（Step 1–8 实现核心 + 会话收尾共用段，source 无关）+ 3 薄壳 `develop-sprint`（G3 前置 + sprint.md 拾取 + 单/批量会话）/ `develop-repair`（integration·manual-test，queue/，session 移交）/ `develop-b`（bug·optimization，b-queue/，b-tasks.md + 就地分流 notes）。`source` 选壳；`task_type`（dev-frontend/backend）正交不变。
+- **接线 10 处**：templates/CLAUDE.md（路由表 + 家族说明 + Step1 推断表）、skeleton/04（catalog 拆 3 行 + §6 重写 + 属性表）、skeleton/07 + templates/status.yml（type 枚举 12→14 + 状态机行）、specs-structural/develop.md（家族共享契约 + **顺手修 dispatch-new b-queue pre-existing bug**）、plan-sprint/generate-integration-tests/manual-test/dispatch-new（status.yml tasks[] 补 type 字段）、draft-tech-design/pr-review（执行层指针改 develop-core.md）、guide 00/03/99。
+- **诚实净收缩账（≠ §2 净收缩）**：这是**结构重构、不删规则**，总行 **+102**（417→519：core 308 + sprint 124 + repair 41 + b 46）。**未达 design §7 软目标「≤471」**——原 spec line-efficient 恰因它 cram。真收益是**结构正确性**：① 决策 #14 兑现（task.type 真路由，无内部 source 分支）② per-session context 降——repair 会话 349（−68）、b 会话 354（−63）、sprint 432（+15），crammed 进来的两条路径瘦身且各会话不再载别路径逻辑。硬红线（壳复制核心）未触发，壳真薄。**CC 曾在 AskUserQuestion 误把方案 A 框成「满足 §2」，已纠正；用户明知 +102 非行数净收缩，仍判定结构收益 > 行数代价（raw 行数对 reorg 是错判据），选接受。**
+- **loop 第二层**：正式 park（非删除，地基仍在；若日后要更狠减 generator 规则可重启，前置 TRD shared-type-first）。
+- **当前 git 状态**：本地 master 含 sub1–7 全部改动，领先 origin/master 多 commit，**全部未 push**（master 严格，待用户明确确认）。
+
 ### 2026-06-19 sub6：TRD↔PRD AC 覆盖机械化 — 「覆盖映射自检」从「留人」升「机械」（AC 链路三段全机械对账）
 
 > 接 sub5（PRD AC 稳定 id）。sub5 铺好 `AC-nn` id 后，本轮把 draft-tech-design 仍留人的「覆盖映射自检」也升成机械——结构性审查方向的最后一段 AC 对账缺口。

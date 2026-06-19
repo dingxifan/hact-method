@@ -3,7 +3,7 @@
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
 **状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b / 3c / 4 全落 + sub5（PRD AC 稳定 id）+ sub6（TRD↔PRD AC 覆盖机械化）完成**——**本方向收口**。1/3/2/3b 已 ff 合并入本地 master `2e6662e`；sub3c 会话 5、sub4 会话 6、sub5 会话 7（`4b0f352`）、sub6 会话 8 均 commit 入本地 master。§7 冷核协议整段退场。本地 master 领先 origin/master 多 commit，**全部未 push**（用户明确：停本地；master 严格）。
 
-> **下一步动作**：sub6 落地后，AC 链路（PRD AC-nn → TRD 回链 → 任务包回链 → 测试）三段全机械对账。**剩候选**：① push（待用户改口）② loop 第二层（TRD shared-type-first → per-module 小循环，parked）③ PRD AC id 跨迭代永久化（当前仅 PRD vN 生命周期内稳定，优先级低）。hook 闸门本方向多次定「不做」。loop 概念关系见 `design.md §2.5`。
+> **下一步动作**：**会话 9（2026-06-19）已落 sub7·develop 拆分**（方案 A：develop-core + 3 薄壳，source 选壳，#14 兑现）。loop 第二层 **正式 park**（ROI 被 sub1-6 摊薄）。**sub7 诚实账：非 §2 净收缩**（reorg 总行 +102），收益是结构正确性（#14 + per-session context 降）；用户明知仍接受。**剩候选**：① push（待用户改口，本地 master 现领先 origin 更多 commit）② ~~loop 第二层~~ **parked** ③ ~~develop 拆分~~ ✅ **sub7 done** ④ PRD AC id 跨迭代永久化（优先级低）⑤ findings §三剩余结构问题（#6 B/A 类边界静默渗透、#7 多工作区同步漂移——未启）。hook 闸门本方向多次定「不做」。设计见 `sub7-develop拆分-design.md`。
 
 ---
 
@@ -113,6 +113,22 @@
 - **自测全过**：① 全覆盖→exit0 ② 漏覆盖(AC-02/03)+悬空(AC-99)→2 FAIL exit1 ③ 存量旧 AC1 格式→逐条覆盖退 🧑 不误报 ④ 真 hact-app v4 存量→不崩、走 🧑 兜底 ⑤ 仅 PRD 不崩 ⑥ raw trd 模板 parse 不崩。
 
 **净收缩账**：删 draft-tech-design 1 个人工逐条对照步（覆盖映射自检的「齐全性」部分）→ 升为 linter 机械 FAIL；残量收成签字人只兜忠实性。ADD 是 linter 代码（§2 code≠prose）。AC 链路三段（PRD→TRD→任务包→测试）至此全机械对账。
+
+---
+
+## 子计划 7 实施记录（会话 9，本地 master）·develop 拆分（findings §三 #1）
+
+设计稿：`sub7-develop拆分-design.md`。会话 9 先**正式 park loop 第二层**（sub1-6 已建 validator，per-API 拆分是编排 ADD/不删散文，develop 模块级 loop 已被 sub2 做掉，ROI 摊薄、不服务 §2——用户拍板），火力转 develop 拆分。用户拍板**方案 A**（3 薄壳 + 共享核心）。已落地：
+
+- **拆分形状**：`develop.md`（417 行，findings #1「规范膨胀根本原因」）→ `develop-core.md`（Step 1–8 实现核心，source 无关，含会话收尾声明共用段）+ 3 壳 `develop-sprint`（G3 前置 + sprint.md 拾取 + 单/批量会话 + Step8 sprint.md 增补）/ `develop-repair`（integration·manual-test，queue/ 单任务，session 文件移交）/ `develop-b`（bug·optimization，b-queue/，b-tasks.md 移交 + 就地分流 notes）。`source` 选壳；`task_type`（dev-frontend/backend）正交不变。
+- **关键认识**（校正 findings #1）：① source 分歧集中在**边缘**（intake/handoff），核心 Step 1–7 source 无关；② findings #1 说 checklist「完全不同」略夸大——checklist 是 **layer** 驱动非 source；③ 自然分组是 **3 不是 5**（integration/manual-test 组内仅移交文件名差异；bug/optimization 几乎无差异）。
+- **接线**（10 处）：templates/CLAUDE.md（路由表 develop→develop-sprint/repair/b + 家族说明 + Step1 推断表 develop→develop-sprint）；skeleton/04（catalog 表拆 3 行 + 家族说明 + §6 重写 + 属性表 source 选壳）；skeleton/07 + templates/status.yml（type 枚举 develop→develop-sprint/b，12→14 种 + 状态机转移行）；specs-structural/develop.md（家族共享契约头 + b-queue 路径修正【**顺手修了 pre-existing bug**：input 表 dispatch-new 误标 queue/】+ sprint.md 仅 develop-sprint + 执行层指针改 core/壳）；plan-sprint（Step4.5 type=develop-sprint）/generate-integration-tests（type=develop-repair）/manual-test（type=develop-repair）/dispatch-new（type=develop-b + 输出文案 b-queue/develop-b）的 status.yml tasks[] 追加补 type；draft-tech-design/pr-review 的执行层 develop.md 指针改 develop-core.md；guide/00·03·99 用户文档同步。
+
+**净收缩账（诚实，非 §2 净收缩——这是结构重构不是删规则）**：
+- **总行数 +102**：原 develop.md 417 → 新家族 519（core 308 + sprint 124 + repair 41 + b 46）。**未达 design §7 软目标「≤471」**。根因：原 develop.md **line-efficient 恰因它 cram**（共享 boilerplate + 紧凑 source 表）；拆成可独立加载的 4 文件，每文件付 header/framing 开销，开销 > sprint 路径省下的 source 分支。
+- **但 per-session context 改善（findings #1 真正要的）**：repair 会话 349（**−68，−16%**）、b 会话 354（**−63，−15%**）、sprint 会话 432（**+15，+4%**）。crammed 进来的两条路径（repair/b）显著瘦身，且**任何会话不再加载别路径的逻辑**（repair 永不见 sprint 批量）——决策 #14 兑现（task.type 真路由）。
+- **§7 硬红线（壳复制核心 → 退方案 C）未触发**：核心只写一遍，壳真薄。
+- **判定**：sub7 是**结构正确性**改进（#14 + per-path 隔离 + crammed 路径 context 降），**不是 raw 行数净收缩**。「总行数」对 reorg 是错判据；对的判据（per-session context + 路由正确性）对 crammed 路径成立。**这点与前 6 个子计划性质不同，已如实记账，不spin 成 §2 胜利。**
 
 ---
 
