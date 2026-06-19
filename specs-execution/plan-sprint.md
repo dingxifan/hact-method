@@ -270,7 +270,7 @@ TRD + standards（技术契约）：
 
 把本期全部任务追加进项目根 `status.yml` 的 `tasks[]`（机器侧状态契约，项目级单文件，字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
 
-每个任务一条，`source: sprint`、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / type / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
+每个任务一条，`source: sprint`、`type: develop-sprint`（由 source 推：source=sprint → `develop-sprint`）、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
 
 > 这是「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是 hact-app 取数的唯一来源；任务包正文（17 字段）不进 YAML，由 hact-app 用到时走 API 现拉。
 

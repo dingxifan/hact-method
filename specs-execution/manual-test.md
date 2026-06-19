@@ -161,7 +161,7 @@ git branch -d fix/mt-{desc}
 - `source=manual-test`
 - `task-id` 命名：`{项目缩写}-mt-{三位序号}`，如 `hact-mt-001`
 - 写入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`
-- **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: manual-test`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`）
+- **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: manual-test`、`type: develop-repair`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`）
 - 执行 commit + push，任务包对开发者可见：
   ```bash
   git add iterations/vN/queue/{task-id}.md status.yml

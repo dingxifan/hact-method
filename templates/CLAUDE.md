@@ -11,7 +11,8 @@
 - `draft-prd-vN`              → `@../hact-method/specs-execution/draft-prd-vN.md`
 - `draft-tech-design`         → `@../hact-method/specs-execution/draft-tech-design.md`
 - `plan-sprint`               → `@../hact-method/specs-execution/plan-sprint.md`
-- `develop`                   → `@../hact-method/specs-execution/develop.md`
+- `develop-sprint`            → `@../hact-method/specs-execution/develop-sprint.md`（source=sprint）
+- `develop-repair`            → `@../hact-method/specs-execution/develop-repair.md`（source=integration / manual-test）
 - `pr-review`               → `@../hact-method/specs-execution/pr-review.md`
 - `generate-integration-tests`→ `@../hact-method/specs-execution/generate-integration-tests.md`
 - `manual-test`               → `@../hact-method/specs-execution/manual-test.md`
@@ -19,9 +20,11 @@
 - `wrap-up-iteration`         → `@../hact-method/specs-execution/wrap-up-iteration.md`
 
 ### B 类 / 辅助
+- `develop-b`                 → `@../hact-method/specs-execution/develop-b.md`（source=bug / optimization）
 - `dispatch-new`              → `@../hact-method/specs-execution/dispatch-new.md`
 - `revise-doc`                → `@../hact-method/specs-execution/revise-doc.md`
 
+> **develop 家族**：`develop-sprint` / `develop-repair` / `develop-b` 三壳共享实现核心 `develop-core.md`（Step 1–8：理解 → 实现 → 自检 → commit → 推 PR → 状态落盘），由壳在会话启动拾取任务后加载。三壳只定义各自的 intake（Gate 前置 / 拾取 / 任务包路径）与 handoff（移交 / feedback 去向）。`develop-core.md` 不由本表直接路由。
 > B 类任务手动实现后、commit 前，调用 `adversarial-review` skill 做独立对抗审查（diff ≥ 15 行且改了代码文件时）。
 
 ## 个人工具（人工触发，不在主线流程）
@@ -72,16 +75,16 @@ git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{userna
 
 | sprint.md 状态分布 | PR 列 | Gate 状态 | 推断任务类型 |
 |-------------------|-------|-----------|-------------|
-| 有 `[可取]` | — | G3 已签，G4 未签 | `develop` — 列出可认领任务，等待用户拾取 |
-| 有任意 `[taken-by]` | — | — | `develop` — 继续未完成任务包 |
-| 全部 `[done]`，PR 列有 `—` | 部分未填 | G3 已签，G4 未签 | `develop` — 仍有任务尚未提 PR |
+| 有 `[可取]` | — | G3 已签，G4 未签 | `develop-sprint` — 列出可认领任务，等待用户拾取 |
+| 有任意 `[taken-by]` | — | — | `develop-sprint` — 继续未完成任务包 |
+| 全部 `[done]`，PR 列有 `—` | 部分未填 | G3 已签，G4 未签 | `develop-sprint` — 仍有任务尚未提 PR |
 | 全部 `[done]`，PR 列全部已填 | 全为 `#N` | G3 已签，G4 未签 | `pr-review` — 输出任务↔PR 对照表 |
 | 全部 `[merged]` | — | G4 未签 | `generate-integration-tests` |
 | 全部 `[merged]`，联调报告已存在 | — | G4 未签 | `manual-test` |
 | G4 已签，G5 未签 | — | G5 未签 | `wrap-up-iteration` |
 | G5 已签 | — | — | 本迭代完结，等待下一指令 |
 
-🚫 **禁止给用户贴角色标签**（如"作为前端程序员"）——执行层（frontend/backend）由 develop spec 第零步在会话内确认，不在启动阶段推断。
+🚫 **禁止给用户贴角色标签**（如"作为前端程序员"）——执行层（frontend/backend）由 `develop-core` 第零步在会话内确认，不在启动阶段推断。
 
 5. 加载对应规范，输出当前状态摘要：Gate 进度 + 任务状态分布 + 推断的下一步动作
 6. 若 Step 1 结束时处于等待状态（迭代完结、无 gates.md 等），收到用户任务指令后，**必须先加载对应 exec spec，再执行，不得跳过**。

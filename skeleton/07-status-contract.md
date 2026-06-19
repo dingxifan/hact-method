@@ -66,7 +66,7 @@ tasks:
     sprint: 1                    # int sprint 编号；B 类 / 修复任务为 null
     source: sprint               # enum，见下
     title: 用户表与权限          # string，列表显示用
-    type: develop               # enum，12 种 task type
+    type: develop-sprint        # enum，14 种 task type（develop 家族拆为 develop-sprint/develop-repair/develop-b，由 source 选壳）
     discipline: dev-backend     # enum，9 种 discipline
     layer: backend              # enum，frontend / backend / shared / null
     status: merged              # enum，可取 / taken-by / done / merged
@@ -81,7 +81,7 @@ tasks:
     sprint: null
     source: bug
     title: 登录偶发 500
-    type: develop
+    type: develop-b
     discipline: dev-backend
     layer: backend
     status: 可取
@@ -144,8 +144,8 @@ CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API
 | 签 G1 | `draft-prd-vN` | 确保 `iterations.vN.gates` 块存在（v2+ 新建）+ `gates.G1` |
 | 签 G2 | `draft-tech-design` | `gates.G2` |
 | 签 G3 + 灌 sprint 任务 | `plan-sprint` | 批量追加 sprint 任务（`source=sprint`, `iteration=vN`）+ `gates.G3` |
-| 认领任务 | `develop` | 对应 task `status: taken-by` + `assigned_to` |
-| 任务完成 / 提 PR | `develop` | 对应 task `status: done` + `pr` |
+| 认领任务 | `develop-sprint` / `develop-repair` / `develop-b` | 对应 task `status: taken-by` + `assigned_to` |
+| 任务完成 / 提 PR | `develop-sprint` / `develop-repair` / `develop-b` | 对应 task `status: done` + `pr` |
 | 合并 | `pr-review` | 对应 task `status: merged` |
 | CR 结论 | `pr-review` | `code_reviews[]` 追加一条 |
 | 联调修复任务派发 | `generate-integration-tests` | 追加 task（`source=integration`, `iteration=vN`） |

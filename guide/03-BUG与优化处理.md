@@ -23,9 +23,9 @@
 ```
 收到 bug / 优化需求
       ↓
-dispatch-new（判定 B/A + 写任务包）
+dispatch-new（判定 B/A + 写任务包入 b-queue）
       ↓
-develop（source=bug / optimization）
+develop-b（source=bug / optimization）
       ↓
 pr-review → merge
       ↓

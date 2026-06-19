@@ -24,7 +24,7 @@
 
 **批量时机**：优先等同一 sprint 的同层（frontend / backend）全部任务推 PR 后批量审查，减少 review 会话碎片。单任务紧急（urgency=hotfix）时可单独审查。
 
-> **串行依赖链例外**：批量等待仅适用于互不依赖的**并行独立任务**。若同层存在串行依赖链（A 是 B 的 `depends_on`），A 的 PR 必须单独 review 并合并到 master 后 B 才可拾取（develop.md 已在执行层强制此顺序）——不等 B 推 PR 后再批量，应立即对 A 开启 review。
+> **串行依赖链例外**：批量等待仅适用于互不依赖的**并行独立任务**。若同层存在串行依赖链（A 是 B 的 `depends_on`），A 的 PR 必须单独 review 并合并到 master 后 B 才可拾取（`develop-core.md` Step 6 分支规则已在执行层强制此顺序）——不等 B 推 PR 后再批量，应立即对 A 开启 review。
 
 读任务包，确认 `pr-links` 字段。
 

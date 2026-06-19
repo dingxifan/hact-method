@@ -193,7 +193,7 @@ git branch -d fix/it-{desc}
 
 不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `iterations/vN/queue/{task-id}.md`
   - task-id 命名：`{项目缩写}-it-{三位序号}`，如 `hact-it-001`
-  - **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: integration`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`），git add 含 `status.yml`
+  - **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: integration`、`type: develop-repair`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`），git add 含 `status.yml`
   - 更新 `_meta/sessions/generate-integration-tests-progress.md`，记录已派修复的 task-id
 
 **`[不阻断]`**（边界或视觉问题）：

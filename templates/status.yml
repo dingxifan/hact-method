@@ -24,7 +24,7 @@ tasks: []
 #    sprint: 1               # B 类 / 修复任务为 null
 #    source: sprint          # sprint / integration / manual-test / bug / optimization
 #    title: ...
-#    type: develop           # 12 种 task type
+#    type: develop-sprint    # 14 种 task type（develop→develop-sprint/develop-repair/develop-b，由 source 选壳）
 #    discipline: dev-backend # 9 种 discipline
 #    layer: backend          # frontend / backend / shared / null
 #    status: 可取            # 可取 / taken-by / done / merged
