@@ -139,8 +139,9 @@
 **§ 共享组件建议**：表格格式，引用 reusables.md 已有资产（标"已有，建议复用"），新建议标明路径。
 
 **AC 操作化 + 覆盖映射自检**（写完七段后、报告 TRD 完成前执行）：
-- **覆盖映射**：逐条核对 PRD 每条 AC 是否都被至少一个载体承接——载体不限于接口，可以是接口 / 模块 / 交互场景（纯前端交互类 AC 无后端接口可挂时，挂到对应的 `ux-flows.md` 场景或前端模块，避免被误报为"无法覆盖"）。存在无法被任何载体覆盖的 PRD AC → 列入疑点清单，向用户确认是范围调整还是设计遗漏，不静默丢弃。
+- **覆盖映射（回链 + linter 机械核）**：每条 AC 由某个载体承接时，就在该载体处写一行 `# 满足 AC：AC-nn`（用 PRD 全局 AC id 串链）——载体不限于接口，可以是接口 / 模块 / 交互场景（纯前端交互类 AC 无后端接口可挂时，把回链写在对应的 `ux-flows.md` 场景或前端模块旁，避免被误报为"无法覆盖"）。**覆盖是否齐全由 Step 5.4 的 check-docs 机械核**（逐条正向挡悬空号 + 逐条反向验 PRD 每条 AC 都被回链承接），不再人工逐条对照。linter 报"PRD AC 未被承接"时 → 补回链；若确认该 AC 本期不做 → 列入疑点清单向用户确认是范围调整还是设计遗漏，不静默丢弃。回链 tag 是载体无关的散文行，linter 全局扫 `# 满足 AC`，不进固定槽位。
 - **操作化**：每条**不可视区** AC 已写成 ≥1 个 Given/When/Then 可执行例子（输入→期望输出）。写不成例子的不可视区 AC → 回头追问该 AC 到底要验什么（多半是 AC 本身模糊），不放过。可视区 AC 只做覆盖映射，不强制例子。
+- **留人（linter 兜不住的语义残量）**：① 载体是否**真承接**该 AC（内容真覆盖，非仅 id 在场）② 操作化例子是否忠实于 AC 意图——签字时复核（见 Step 6）。
 
 ```
 ✅ TRD 完成：[接口数量] 个接口，[表数量] 张表，[模块数量] 个模块，共享组件建议 [数量] 条。
@@ -203,7 +204,7 @@ TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standa
 
 ### Step 5.4：结构 linter 自检（【linter】判据的最终判定，含交叉对账）
 
-签 G2 前跑确定性检查。此刻 PRD 与 TRD 都在，**交叉对账（PRD `涉及实体` ↔ TRD `### 表`）在此兑现**——这是 draft-prd-vN 阶段无法跑、留到此处的那条。这些是【linter】判据，机械核定，**不再派 subagent 冷核**（子计划 3 已删 TRD 的 subagent 冷核）：
+签 G2 前跑确定性检查。此刻 PRD 与 TRD 都在，**两条交叉对账在此兑现**——这是 draft-prd-vN 阶段无法跑、留到此处的：① PRD `涉及实体` ↔ TRD `### 表`；② PRD `AC-nn` ↔ TRD `# 满足 AC` 回链（逐条正向挡悬空 + 逐条反向验覆盖，机械化 AC 覆盖映射自检）。这些是【linter】判据，机械核定，**不再派 subagent 冷核**（子计划 3 已删 TRD 的 subagent 冷核）：
 
 ```bash
 node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
@@ -213,16 +214,17 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
 - 退出码 1（有 FAIL）→ 按报告逐条修：
   - TRD 段落缺/槽位空/表块或接口块缺 → 修 `trd.md`。
   - 交叉对账 FAIL（PRD 实体无对应表）→ 多数是 TRD 漏建表，补 `### 表：{名}`；若确认该"实体"非持久化数据（纯前端态/外部系统），则回 `prd.md` 把该功能 `涉及实体` 改正（去掉或写"无"）。
+  - 交叉对账 FAIL（AC 回链悬空 / PRD AC 未被承接）→ 悬空：改正 TRD 回链号或删退休号；未被承接：在对应载体补 `# 满足 AC：AC-nn`，或列疑点向用户确认本期不做。
   - 重跑直到 0。**不得手改报告、不得跳过。**
 
-> linter 只覆盖结构/一致性判据；**语义判据**（接口字段是否真满足画面、AC 覆盖映射是否合理）由 Step 3「AC 覆盖映射自检」（已人确认）+ 后续 `pr-review` 技术保真把关，签字时复核——无需另派 subagent。
+> linter 覆盖结构/一致性判据（含 AC 覆盖映射的**齐全性**机械核）；**语义判据**（接口字段是否真满足画面、载体是否**真承接**所回链的 AC 而非仅 id 在场）落 linter 🧑 段，由签字时复核 + 后续 `pr-review` 技术保真把关——无需另派 subagent。
 > 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
 
 ### Step 6：G2
 
-> **签字前置**：Step 5.4 linter 退出码 0（【linter】判据全过）+ 语义判据已确认（Step 3 AC 覆盖映射自检）。
+> **签字前置**：Step 5.4 linter 退出码 0（【linter】判据全过，含 AC 覆盖齐全性）+ 语义判据已确认（载体真承接 AC、接口字段真满足画面——linter 🧑 段逐条复核）。
 
 ```
 ✅ TRD + standards 完成：TRD [N] 段，standards 三份（shared / frontend / backend），decisions.md 已更新。

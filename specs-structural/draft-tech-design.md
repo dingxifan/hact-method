@@ -54,17 +54,18 @@
 
 ## 完成判据
 
-> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 5.4 跑，含 PRD↔TRD 交叉对账）——这就是这些判据的最终判定，TRD 不再派 subagent 冷核。未标的是**语义判据**，由 Step 3 AC 覆盖映射自检（人确认）+ pr-review 技术保真把关。
+> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 5.4 跑，含 PRD↔TRD 两条交叉对账）——这就是这些判据的最终判定，TRD 不再派 subagent 冷核。未标的是**语义判据**，由签字人复核（载体真承接 AC、操作化例子忠实 AC）+ pr-review 技术保真把关。
 
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] **【linter】** TRD 7 个段落全部存在，无空段
 - [ ] **【linter】** PRD 中每个数据实体（功能 `涉及实体`）在数据库设计中有对应 `### 表：{名}`（交叉对账）
+- [ ] **【linter】** PRD 每条 `AC-nn` 都被 TRD 某载体 `# 满足 AC` 回链承接，且无悬空回链（逐条正向+反向，交叉对账；存量旧格式退人工兜底）
 - [ ] **【linter·存在】** 测试环境约定段落存在且非空（"完整"由人核）
-- [ ] 不可视区 AC 已操作化为可执行例子（Given/When/Then），覆盖映射无遗漏（语义判据，由签字人核）
+- [ ] 不可视区 AC 已操作化为可执行例子（Given/When/Then），且回链的载体**真承接**对应 AC（内容真覆盖、非仅 id 在场）（语义判据，由签字人核）
 - [ ] 三份 standards 已输出（shared / frontend / backend）
 - [ ] decisions.md 已追加本期架构决策
 - [ ] project.md 技术层已更新
-- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）
+- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 实体↔表 + AC↔回链两条交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）
 - [ ] G2 已签（`gates.md` 已记录 + commit）
 
 ---

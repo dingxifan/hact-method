@@ -3,7 +3,10 @@
  * check-docs.js · hact-method 产物结构 linter（子计划 1 · 地基）
  *
  * 用途：机械核对 PRD / TRD 的「结构完备」+「交叉一致」完成判据。
- *      只验确定性可查的部分；语义判据（场景5要素/三角评估/AC是否用户真要的）不碰，留人。
+ *      交叉一致含两条：PRD 涉及实体↔TRD 表；PRD AC-nn↔TRD「# 满足 AC」回链
+ *      （逐条正向挡悬空 + 逐条反向验覆盖，替代 draft-tech-design 旧人工「覆盖映射自检」）。
+ *      只验确定性可查的部分；语义判据（场景5要素/三角评估/AC是否用户真要的/
+ *      载体是否真承接 AC 而非仅 id 在场）不碰，留人（🧑 段）。
  *
  * 用法：
  *   node check-docs.js <prd.md> <trd.md>   # 全量 + 交叉对账（推荐）
@@ -21,9 +24,10 @@
 const fs = require('fs');
 
 const PLACEHOLDER = '<待填>';
-const findings = []; // {level:'fail'|'pass', rule, loc, msg}
+const findings = []; // {level:'fail'|'pass'|'human', rule, loc, msg}
 function fail(rule, loc, msg) { findings.push({ level: 'fail', rule, loc, msg }); }
 function pass(rule, msg) { findings.push({ level: 'pass', rule, msg }); }
+function human(rule, msg) { findings.push({ level: 'human', rule, msg }); }
 
 function isEmptyVal(v) {
   const t = (v || '').trim();
@@ -181,7 +185,7 @@ function checkPRD(path) {
     }
     if (acIds.size && !acBad) pass('PRD AC id 唯一', `${acIds.size} 条 AC 均带全局唯一 id（append-only，允许空号）`);
   }
-  return { entities };
+  return { entities, acIds: [...acIds.keys()], acBad };
 }
 
 // ---------------- TRD ----------------
@@ -225,12 +229,26 @@ function checkTRD(path) {
       }
     }
   }
-  return { tables };
+
+  // 全局扫 `满足 AC：AC-nn` 回链 tag（载体无关：接口/模块/交互场景都可挂，统一抽 id）
+  // 见 draft-tech-design.md §接口设计 + AC 覆盖映射自检；与 PRD AC id 在 checkCross 逐条对账
+  const acRefs = new Set();
+  for (const ln of lines) {
+    if (ln.commented) continue;
+    if (!/满足\s*AC/.test(ln.text)) continue;
+    let m; const re = /AC-\d+/g;
+    while ((m = re.exec(ln.text))) acRefs.add(m[0]);
+  }
+  return { tables, acRefs: [...acRefs] };
 }
 
 // ---------------- 交叉一致 ----------------
-function checkCross(entities, tables, prdPath, trdPath) {
+function checkCross(prdRes, trdRes, prdPath, trdPath) {
+  const { entities, acIds, acBad } = prdRes;
+  const { tables, acRefs } = trdRes;
   const norm = s => s.trim().toLowerCase();
+
+  // 1. PRD 涉及实体 ↔ TRD 表
   const tableSet = new Set(tables.map(norm));
   const seen = new Set();
   for (const e of entities) {
@@ -239,6 +257,27 @@ function checkCross(entities, tables, prdPath, trdPath) {
     if (!tableSet.has(norm(e)))
       fail('交叉:实体有对应表', `${prdPath} → ${trdPath}`, `PRD 涉及实体「${e}」在 TRD 无对应「### 表：${e}」`);
     else pass('交叉:实体有对应表', `实体「${e}」↔ 表存在`);
+  }
+
+  // 2. PRD AC ↔ TRD `# 满足 AC：AC-nn` 回链（draft-tech-design 覆盖映射自检的机械化）
+  //    逐条正向：每个 TRD 回链 id 在 PRD 存在（挡悬空/打错号）
+  //    逐条反向：每个 PRD AC-nn 被 ≥1 TRD 载体回链承接（替代旧人工「覆盖映射」）
+  //    存量兜底：PRD 无 AC-nn 形式 id（旧 AC1 格式 / acBad）→ 退人工，不误报。
+  const trdRefSet = new Set(acRefs);
+  // 正向：悬空回链（无论 PRD id 是否齐——打错号本身就该挡）
+  if (acRefs.length) {
+    const prdSet = new Set(acIds);
+    const dangling = acRefs.filter(id => !prdSet.has(id));
+    if (dangling.length) fail('交叉:AC回链悬空', `${trdPath} → ${prdPath}`, `TRD「# 满足 AC」回链的 ${dangling.join('、')} 在 PRD 不存在（打错号/已退休）`);
+    else pass('交叉:AC回链悬空', `TRD ${acRefs.length} 处 AC 回链均指向 PRD 实有 AC`);
+  }
+  // 反向：PRD 每条 AC 被承接
+  if (!acIds.length || acBad) {
+    human('交叉:AC逐条覆盖', `PRD 无可靠的 AC-nn id（存量旧格式或 id 校验未过）→ 逐条 AC 覆盖映射退人工兜底：由签字人核 PRD 每条 AC 是否都被 TRD 载体（接口/模块/交互场景）承接`);
+  } else {
+    const uncovered = acIds.filter(id => !trdRefSet.has(id));
+    if (uncovered.length) fail('交叉:AC逐条覆盖', `${prdPath} → ${trdPath}`, `PRD AC 未被任何 TRD 载体「# 满足 AC」回链承接：${uncovered.join('、')}（补回链或列疑点向用户确认是范围调整还是设计遗漏，不静默丢）`);
+    else pass('交叉:AC逐条覆盖', `PRD ${acIds.length} 条 AC 均被 TRD 载体回链承接（逐条）`);
   }
 }
 
@@ -270,11 +309,12 @@ function main() {
     console.error('linter 自身出错（非产物问题）:', e.message);
     process.exit(2);
   }
-  if (prdRes && trdRes) checkCross(prdRes.entities, trdRes.tables, args.prd, args.trd);
-  else if (args.prd && args.trd === null) console.log('（仅验 PRD，未做交叉对账——补 trd 参数可对账实体↔表）');
+  if (prdRes && trdRes) checkCross(prdRes, trdRes, args.prd, args.trd);
+  else if (args.prd && args.trd === null) console.log('（仅验 PRD，未做交叉对账——补 trd 参数可对账实体↔表、AC↔回链）');
 
   const fails = findings.filter(f => f.level === 'fail');
   const passes = findings.filter(f => f.level === 'pass');
+  const humans = findings.filter(f => f.level === 'human');
   console.log(`\n=== check-docs 报告 ===`);
   console.log(`通过 ${passes.length} 项 / 失败 ${fails.length} 项\n`);
   if (fails.length) {
@@ -282,6 +322,10 @@ function main() {
     for (const f of fails) console.log(`  [${f.rule}] ${f.loc}\n      ${f.msg}`);
   } else {
     console.log('✅ 全部结构/一致性判据通过（语义判据仍需人核）');
+  }
+  if (humans.length) {
+    console.log('\n🧑 留签字人确认（脚本不判，非 FAIL）:');
+    for (const h of humans) console.log(`  [${h.rule}] ${h.msg}`);
   }
   process.exit(fails.length ? 1 : 0);
 }
