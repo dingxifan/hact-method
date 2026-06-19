@@ -74,6 +74,8 @@
   - **backend-checklist 87 行→~55 行测试品类清单**：33 项逐条审代码 → 5 测试品类（鉴权/边界/错误路径/契约/数据并发，各写测试）+ lint 项归 `npm run lint` 一句 + 4 留人判（N+1/日志隐私/冗余/并发竞态）
   - develop Step 5 加 `npm run test` + 测试品类自检 + 迁移升级逻辑（测试反复红→根因 AC/TRD→revise-doc）；4 份 structural（develop 字段+判据 / draft-tech-design 判据 / pr-review 判据）同步；修 3 处对 develop Step5.5 的悬挂引用（plan-sprint Step3.5 × 2 + revise-doc AC 漂移兜底）
   - **净收缩货币**：删 1 个大 AI-肉眼步骤 + 短化 checklist；ADD 是"写真测试/验输出"非"堆规则"，不背叛 §2。frontend-checklist 降维留子计划4
+  - **对抗审查整改（2 BLOCKER）**：① 安全覆盖洞——重写 checklist 时丢了注入/路径穿越（与 design §8 的 T 清单冲突），补「安全·注入/穿越」测试品类 + 留人判；② 测试运行器悬空——无 spec 负责建测试基建，draft-tech-design standards 生成确立「测试框架约定」owner + develop 无运行器非死锁/非静默处理
+- **loop 概念澄清**（补 `design.md §2.5`）：用户追问"lint 固化结构 / 前向信息有效性 与 loop 的关系"——钉清 loop=机制、删规则=收益、前向有效性(lint)/正确性(test)=同一 loop 两个验证维度；净收缩当前"及格但不漂亮"（删 AI/人眼步骤为主，散文大头埋点待 G3-5 检查器）；loop 第二层（per-module subagent 小循环 / TRD shared-type-first）本轮未做、仍 parked
 - **记录**：`_meta/plans/2026-06-19-structural-review/`（findings.md 四段分析 + design.md 方向 + sub1-地基-design.md + sub3-gate重定义-design.md + sub2-不可视区测试-design.md + task_plan.md 接续）。master 仅 `976a399`（方向文档）；子计划1+3+2 操作改动隔离在分支保护存量项目。
 
 ### 2026-06-19 方法论调整：draft-ux 整体重构（角色姿态反转）

@@ -1,7 +1,7 @@
 # task_plan — hact-method 结构性审查 · 2026-06-19
 
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
-**状态**：方向已收敛成 `design.md`，**待用户复审**；复审通过后进入子计划 1（地基）。
+**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 均已实施 + 各过独立对抗审查 + 整改**，全部累积在分支 `feat/sub1-foundation`（7 commit ahead of master，**全本地、未合并、未推送**）。只剩子计划 4（可视区收口，最低优先）。loop 概念关系已澄清补入 `design.md §2.5`。
 
 ---
 
@@ -59,11 +59,31 @@
 
 **净收缩账**：实时路径删除 **2 个 subagent 冷核步骤**（G1 Step7.5、G2 Step5.5）+ PRD 全程零 subagent；structural 删 2 行埋点括注。§7 因保留 G3-5 协议略增。全 5 关 + §7 主体的彻底删除待 G3/G4/G5 建检查器后兑现。
 
-## 下一步
+## 子计划 2 实施记录（同分支 `feat/sub1-foundation`）
 
-1. **用户验收子计划 1 + 子计划 3**（同分支 `feat/sub1-foundation`，可看 diff / 试跑 linter）。
-2. 验收 OK → 由用户决定是否合 master + push（推送需用户确认，master 严格）。
-3. 之后按 `design.md` §11 进**子计划 2（不可视区迁移：AC→test；含 develop Step 5.5 对抗审查退场 + AC 操作化）**，或继续把 G3/G4/G5 建检查器以兑现 §7 主体的彻底删除。
+设计稿：`sub2-不可视区测试-design.md`。定调：**AC 操作化压 draft-tech-design** + **一次全做**。已落地：
+- **AC→可运行测试**为不可视区正确性主轴：draft-tech-design 把不可视区 AC 操作化成 Given/When/Then 例子（挂 `# 满足 AC` 回链旁，散文约定不进 linter）→ plan-sprint 写进 backend 任务包 → develop 1:1 落成测试+跑绿 → pr-review 路1 兜残。
+- **删 develop Step 5.5 AI 对抗审查整步**（~64 行）；Step 5 加 `npm run test` + 测试品类自检 + 升级逻辑（测试反复红→根因 AC/TRD→revise-doc）。
+- **backend-checklist 重写**为测试品类清单（6 类：鉴权/边界/错误路径/契约/数据并发/**安全注入·穿越** + lint 归集 + 4 留人判）。
+- pr-review 路1 兜残（通过/打回条件 + 第五步测试保真核查）；4 份 structural 同步；修 3 处对已删 Step5.5 的悬挂引用。
+- **整改（对抗审查 2 BLOCKER）**：① 补回安全测试品类（注入/路径穿越，曾在重写时丢失）；② 测试框架约定 owner 落到 draft-tech-design standards 生成 + develop 无运行器非死锁处理。
+
+**净收缩账**：删 1 个大 AI-肉眼步骤 + checklist 砍半；ADD 是"写真测试/验输出"非"堆 generator 规则"，不背叛 §2。
+
+---
+
+## 本轮总结（2026-06-19，为下次对话铺接续）
+
+- **完成**：design.md 方向定稿（含 §2.5 loop 关系澄清）+ 子计划 1（地基 linter）+ 3（Gate G1/G2 重定义）+ 2（不可视区 AC→test），三块各过聚焦 diff 的独立对抗审查并整改。
+- **产物全在分支 `feat/sub1-foundation`**：7 commit ahead of master，working tree clean，**未合 master、未 push**（用户明确要求：全局未完成前全本地处理）。
+- **关键概念锚点**（详见 design.md §2.5）：lint/test = loop 的确定性验证器，不是 loop 之外的东西；前向信息有效性（lint）与正确性（test）是同一 loop 的两个验证维度；净收缩目前"及格但不漂亮"——删 AI/人眼步骤为主，散文大头（§7 主体 / develop 471 行）埋点待 G3-5 建检查器；最初 loop 的"第二层"（per-module subagent 小循环 / TRD shared-type-first）本轮未做、仍 parked。
+
+## 下一步（候选，待用户定）
+
+1. **全局验收**：用户复审三块 diff（`git diff master..HEAD`）/ 试跑 linter / 决定是否合 master + push（**推送需用户明确确认，master 严格**）。
+2. **子计划 4（可视区收口，design §11.4，最低优先）**：frontend-checklist 可机械部分迁 lint/test，视觉明确归人走查；接子计划 2 留的"前端非视觉独立审查残量"。
+3. **兑现散文大头删除**：给 G3/G4/G5 建确定性检查器，连同 §7 冷核协议主体一起删（当前埋点未拔）。
+4. **loop 第二层（更狠的减规则）**：TRD shared-type-first → 生成结构拆成 per-module 小循环（design §2.5 + findings §二，parked）。
 
 ---
 
