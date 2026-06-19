@@ -136,14 +136,16 @@
 > `files` 行号**不在此卡**：它指向本任务将要改、可能尚未存在的目标文件，无法机械核对，维持"已知则填"（见 `specs-structural/develop.md §字段规范`）。
 > `relevant-standards` 是否覆盖 files 所属强制规范，属语义判断（standards 无"文件类型→规范"映射表，机械查不了），移交 Step 3.5 独立审查第④类。
 
-**AC 回链（PRD AC 溯源）**：每个任务包的 `acceptance-criteria` 每条须标注其覆盖的 PRD AC 文本引用，格式 `(源：PRD {功能名}·{AC 关键词})`；无 PRD AC 来源的纯技术约束（加索引 / DTO 校验 / 错误码对齐等）标 `(技术)`。不得凭 TRD 派生发明无来源的 AC——任务包 AC 的权威来源是 PRD。
+**AC 回链（PRD AC 溯源）**：每个任务包的 `acceptance-criteria` 每条须标注其覆盖的 PRD AC id，格式 `(源：PRD AC-nn)`（可选人读后缀 `(源：PRD AC-nn·删除二次确认)`，check-sprint 只读 `AC-nn`）；无 PRD AC 来源的纯技术约束（加索引 / DTO 校验 / 错误码对齐等）标 `(技术)`。不得凭 TRD 派生发明无来源的 AC——任务包 AC 的权威来源是 PRD。
 
 **不可视区 AC 写成可执行例子**：对 **backend（不可视区）任务**，`acceptance-criteria` 各条以 `draft-tech-design` 在 TRD 接口段已操作化的 **Given/When/Then 例子**形式写入（输入→期望输出），供 develop 1:1 落成测试；仍带 `(源：PRD …)` 回链——**操作化是 PRD AC 的忠实翻译，不是 TRD 派生发明**（权威来源仍是 PRD，TRD 只提供可测形式）。TRD 未操作化某条不可视区 AC → 回链对不上，应在写包时发现并补（或回 `revise-doc(target=trd)`）。前端任务维持散文 AC。
 
 **AC 双向对账自检**（全部任务包写完后、生成 sprint.md 前执行，缺一不可）：
 - 纵向：每条任务包 AC 都能指回某条 PRD AC（或标 `(技术)`），无凭空发明
-- 横向：PRD 每条 AC 都至少被一个任务包 AC 覆盖，无整条遗漏
+- 横向：PRD 每条 AC 都至少被一个任务包 AC 覆盖，无整条遗漏——**现由 check-sprint 据 AC id 逐条机械核（Step 4.7 linter 步），本处自审退为辅助/早发现**
 - 不满足 → 列出失配项（漏覆盖的 PRD AC / 无来源的任务包 AC），向用户报告并补齐，不静默放过
+
+> 切分：逐条**覆盖**（PRD AC-nn 有没有被引用）已机械（check-sprint）；逐条**忠实性**（任务包 AC 内容是否真覆盖其回链的那条 PRD AC，有无偏离/缩水/夹带）仍是语义，归 Step 3.5 独立审查 + 签字人。
 
 **前端任务 reference 字段补充**：对 `layers` 含 `frontend` 的任务包，若 `ux-flows.md` 存在，`reference` 字段须补入 `ux-flows.md` 对应功能段的行号范围（格式与其他 reference 条目一致），使 develop 执行时可精确定位交互路径，不遗漏替代路径实现。
 
@@ -276,9 +278,9 @@ TRD + standards（技术契约）：
 
 ### Step 4.7：签 G3 前 · 完成判据核对
 
-执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」**G3 段**，`Gate=G3`：在项目仓根目录跑 `node scripts/check-sprint.js vN`。退出码 0 = G3 全部【linter】判据通过（任务包 17 字段完备 / `reference` 含行号（前端 ux-flows、后端 trd 条目）/ AC 带 `(源：PRD…)`/`(技术)` 回链 tag + PRD 功能级反向覆盖 / `depends_on` 在册 / queue↔sprint.md↔status.yml 三方一致）；退出码 1 → 按报告逐条修任务包、重跑到 0，**不得手改报告、不得跳过**。
+执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」**G3 段**，`Gate=G3`：在项目仓根目录跑 `node scripts/check-sprint.js vN`。退出码 0 = G3 全部【linter】判据通过（任务包 17 字段完备 / `reference` 含行号（前端 ux-flows、后端 trd 条目）/ AC 带 `(源：PRD AC-nn)`/`(技术)` 回链 tag + 逐条 id 存在性 + 逐条 AC 反向覆盖 / `depends_on` 在册 / queue↔sprint.md↔status.yml 三方一致）；退出码 1 → 按报告逐条修任务包、重跑到 0，**不得手改报告、不得跳过**。
 
-脚本 `🧑` 段列出的**语义残量**由签字人确认：疑点清单已逐条确认、TRD 每模块都有任务包、Step 3.5 独审无遗留阻断、PRD **逐条** AC（非功能级）均被覆盖。
+脚本 `🧑` 段列出的**语义残量**由签字人确认：疑点清单已逐条确认、TRD 每模块都有任务包、Step 3.5 独审无遗留阻断、任务包 AC 逐条**忠实**于其回链的 PRD AC（内容真覆盖，非仅 id 在场）。
 
 > 与 Step 3.5 独审互补：独审深查任务包对 PRD/TRD 保真（是其中一条语义判据），由上面 `🧑` 段提示复核。
 > 存量项目（无 `scripts/check-sprint.js`，或任务包仍是旧序列化格式）→ 退回 §7 G3 段人工逐条核对兜底，并提示新 sprint 套用 `templates/queue/task-package.md`。

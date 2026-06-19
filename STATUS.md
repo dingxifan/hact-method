@@ -49,6 +49,19 @@
 
 ## 历史里程碑
 
+### 2026-06-19 sub5（sub3c parked 衍生）：PRD AC 稳定 id — 逐条 AC 反向覆盖从「留人」升「机械」
+
+> 接「结构性审查收官」里程碑。本条记四子计划收口后落地的 parked 衍生项（非原四子计划之一）。设计稿 `_meta/plans/2026-06-19-structural-review/sub5-AC-id-机械化-design.md`。
+
+- **背景**：sub3c D3 只做到 AC 反向覆盖的**功能级**机械，**逐条** AC 反向覆盖因「PRD AC 无稳定 id、无法机械匹配任务包 tag 自由文本」而留人。本轮补齐。
+- **三决策**（用户拍板/授权）：① id = **全局唯一 `AC-nn`**（跨功能连续，非功能内重号）② **append-only + 允许空号**（增删不复用号，避免编辑打散已落地 tag）③ **删功能级覆盖换纯 id 匹配**（逐条严格强于功能级，check-sprint 净瘦身）。
+- **链路串 id**：PRD `AC-01` → TRD `# 满足 AC：AC-nn` → 任务包 `(源：PRD AC-nn)`（可选人读后缀 `·{关键词}`，linter 只读 id）→ check-sprint 精确串匹配。
+- **落地**：模板（prd.md AC 槽 `AC1`→`AC-01` + 注释、task-package.md tag 注释）；`check-docs.js` 加 PRD AC id 全局唯一校验；`check-sprint.js` 加 `prdAcIds`/`acRefIds` + 逐条正向（id 存在性挡悬空）+ 逐条反向（每条被引用），删功能级覆盖块 + `referencedFeatures`/`reFeatRef`/`prdFeatures`，🧑 段「逐条覆盖留人」→「逐条忠实性留人」；spec 接线 6 处（draft-prd-vN/plan-sprint exec+structural/draft-tech-design/develop structural/skeleton 06-gates）。
+- **残量切分**：逐条**覆盖**=机械 FAIL；逐条**忠实性**（内容真覆盖而非仅 id 在场）=语义，留 Step 3.5 独审 + 签字人。
+- **自测全过**：check-docs 三场景 + check-sprint 五场景 + 真 hact-app v4 存量烟测（不崩、AC 逐条覆盖走 human 兜底，存量冻结边界正确）。
+- **净收缩账**：删功能级覆盖代码 + 升 1 个 🧑 留人为机械 FAIL；逐条 AC 反向覆盖从「Step3 自审 + Step3.5 独审 + 签字人」三层人兜收成「linter 一道机械挡 + 签字人只兜忠实性」。ADD 是 linter 代码（§2 code≠prose）。
+- **当前 git 状态**：本地 master 含 sub1/3/2/3b/3c/4/**5** 全部改动，领先 origin/master 多 commit，**全部未 push**（master 严格，待用户明确确认）。
+
 ### 2026-06-19 结构性审查收官：子计划 3b/3c/4 完成 + §7 冷核协议整段退场（四子计划全落，本方向收口）
 
 > 接上一条「方法论方向转变」里程碑（sub1/3/2）。本条记 sub3b/3c + 全局验收 + 合并 + sub4 可视区收口。

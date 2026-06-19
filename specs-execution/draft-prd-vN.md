@@ -153,7 +153,7 @@ MVP 边界（不做什么）：
 **涉及实体**：{本功能读写的数据实体，逗号分隔，如 Task, Sprint；纯展示无实体写"无"。实体名须与 TRD `### 表：{名}` 同名同形，供交叉对账}
 **场景描述**：{具体使用场景}
 **Acceptance Criteria**：
-- AC1：{可独立验证的条件}（3–5 条）
+- AC-01：{可独立验证的条件}（3–5 条；id 全局唯一、跨功能连续编号 AC-01/AC-02/…，append-only 永不复用、允许空号——任务包据此 `(源：PRD AC-nn)` 回链，linter 机械核逐条覆盖）
 **明确排除**：本功能不包含 {具体排除内容}
 ```
 
@@ -237,7 +237,7 @@ MVP 边界（不做什么）：
 
 ### Step 7.4：结构 linter 自检（【linter】判据的最终判定）
 
-签 G1 前跑确定性结构检查，把【linter】判据（段落缺/槽位空/draft-ux 枚举非法/功能无 AC/开放问题未清零）一次性机械核定——这些是确定性的，**不再劳烦人或 subagent 肉眼扫**（子计划 3 已删 PRD 的 subagent 冷核）：
+签 G1 前跑确定性结构检查，把【linter】判据（段落缺/槽位空/draft-ux 枚举非法/功能无 AC/AC id 缺失或重号/开放问题未清零）一次性机械核定——这些是确定性的，**不再劳烦人或 subagent 肉眼扫**（子计划 3 已删 PRD 的 subagent 冷核）：
 
 ```bash
 node scripts/check-docs.js --prd iterations/vN/prd.md

@@ -142,6 +142,8 @@ function checkPRD(path) {
   // 2. 功能块
   const core = sectionByTitle(sections, '核心功能');
   const entities = [];
+  const acIds = new Map();   // 全 PRD 的 AC id → 首次出现行号（全局唯一校验）
+  let acBad = false;         // 任一 AC id 缺失/重号 → 跳过末尾汇总 pass
   if (core) {
     const blocks = splitBlocks(core, '功能：');
     if (blocks.length === 0) fail('PRD功能块存在', `${file}:${core.start}`, '「核心功能」段无任何「### 功能：」块');
@@ -159,16 +161,25 @@ function checkPRD(path) {
       else if (isEmptyVal(ux.val) || !DRAFT_UX_ENUM.includes(ux.val.trim()))
         fail('PRDdraftux枚举', `${file}:${ux.line}`, `${tag} draft-ux 取值「${ux.val.trim()}」非法，须 ∈ {需要,不需要}`);
       else pass('PRDdraftux枚举', `${tag} draft-ux=${ux.val.trim()}`);
-      // AC ≥1（非占位列表项）
+      // AC ≥1（非占位列表项），且每条标全局唯一 AC-nn（append-only，跨功能连续，不强制无空号）
       const acItems = b.lines.filter(ln => !ln.commented && reListItem.test(ln.text) && !ln.text.includes(PLACEHOLDER));
       if (acItems.length === 0) fail('PRD功能AC存在', where, `${tag} 无有效 Acceptance Criteria 条目`);
       else pass('PRD功能AC存在', `${tag} 有 ${acItems.length} 条 AC`);
+      for (const ln of acItems) {
+        const body = ln.text.replace(/^\s*[-*]\s+/, '');
+        const m = body.match(/^(AC-\d+)\s*[:：]/);
+        if (!m) { acBad = true; fail('PRD AC id', `${file}:${ln.n}`, `${tag} AC 条目缺全局唯一 id「AC-nn：」前缀 —— ${body.slice(0, 30)}…`); continue; }
+        const id = m[1];
+        if (acIds.has(id)) { acBad = true; fail('PRD AC id 唯一', `${file}:${ln.n}`, `AC id「${id}」重号（另见 ${file}:${acIds.get(id)}）`); }
+        else acIds.set(id, ln.n);
+      }
       // 收集实体供交叉对账
       const ent = getSlot(b.lines, '涉及实体');
       if (ent && !isEmptyVal(ent.val)) {
         ent.val.split(/[,，、]/).map(s => s.trim()).filter(Boolean).forEach(e => entities.push(e));
       }
     }
+    if (acIds.size && !acBad) pass('PRD AC id 唯一', `${acIds.size} 条 AC 均带全局唯一 id（append-only，允许空号）`);
   }
   return { entities };
 }

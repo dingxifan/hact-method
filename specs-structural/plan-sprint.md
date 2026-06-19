@@ -59,7 +59,7 @@
 - [ ] TRD 每个模块都有对应的 develop 任务包
 - [ ] **【linter】** 所有任务包 17 字段完整，无空字段（`check-sprint.js` 字段完备）；`layers=[backend]` 且有前端消费的任务包 `api-contract` 已填写（presence 由 linter 验，字段结构正确性经用户确认）
 - [ ] **【linter】** 字段保真自检通过：`reference` 每条含行号（拒"全文"/无范围）；前端任务 reference 含 ux-flows 行号条目；后端任务 reference 含 TRD 行号条目
-- [ ] **【linter】** AC 正向回链 + 功能级反向覆盖：每条任务包 AC 带 `(源：PRD…)` 或 `(技术)` tag，且 PRD 每个功能被某任务包 AC 引用（逐条 AC 反向覆盖留签字人确认）
+- [ ] **【linter】** AC 正向回链 + 逐条反向覆盖：每条任务包 AC 带 `(源：PRD AC-nn)` 或 `(技术)` tag、回链 id 在 PRD 存在，且 PRD 每条 AC（AC-nn）被某任务包 AC 引用（逐条覆盖机械核；逐条**忠实性**仍留 Step 3.5 独审 + 签字人）
 - [ ] 任务包独立对抗审查通过（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖 四类无 [阻断]，或阻断已修复 / 已转 revise-doc）
 - [ ] **【linter】** 依赖关系已标注（任务包 `depends_on` 在册，无依赖填 `[]`）
 - [ ] 每个任务的 `交付` 列已填（`独立` 或 `批量`），判断理由已向用户说明并确认

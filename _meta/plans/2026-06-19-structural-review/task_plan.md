@@ -100,6 +100,22 @@
 
 ---
 
+## 子计划 5 实施记录（会话 7，本地 master）·sub3c parked 衍生项落地
+
+设计稿：`sub5-AC-id-机械化-design.md`。sub3c D3 留下的「逐条 AC 反向覆盖留人」缺口收口（**非**原四子计划之一，本方向已 sub4 收口；这是 parked 衍生）。用户拍板：① id 方案 = **全局唯一 `AC-nn`**（非功能内编号）② append-only + 允许空号（确认）③ 删功能级覆盖换纯 id 匹配（授权 CC 建议执行）。已落地：
+- **模板**：`prd.md` AC 槽 `AC1`→`AC-01` + 注释（全局唯一/append-only/允许空号）；`task-package.md` tag 注释 `(源：PRD {功能名}·{关键词})`→`(源：PRD AC-nn)`（可选人读后缀）。
+- **check-docs.js**：新增 PRD AC id 全局唯一校验（`AC-\d+：` 形式 + 无重号，不强制连续）。
+- **check-sprint.js**：加 `prdAcIds()`/`acRefIds()`；**逐条正向**（tag 抽 `AC-nn`，验在 PRD 存在=挡悬空）+ **逐条反向**（PRD 每个 `AC-nn` 被 ≥1 任务包引用）；**删功能级覆盖块** + `referencedFeatures`/`reFeatRef`/`prdFeatures`（逐条严格强于功能级，check-sprint 净瘦身）；`🧑` 段「逐条覆盖留人」→「逐条忠实性留人」。
+- **链路串 id**：PRD `AC-01` → TRD `# 满足 AC：AC-nn`（draft-tech-design L131）→ 任务包 `(源：PRD AC-nn)`。
+- **spec 接线**：draft-prd-vN AC 模板 + Step7.4 linter 项加「AC id 唯一」；plan-sprint L139 tag 格式 + L143-146 横向对账归 linter + 切分注（覆盖机械/忠实性留人）+ Step4.7 描述 + 🧑 残量；develop structural L37；plan-sprint structural 完成判据（功能级→逐条）；skeleton 06-gates G3 段描述。
+- **自测全过**：check-docs 三场景（唯一+空号 PASS / 重号 FAIL / 旧 AC1 FAIL）；check-sprint 五场景（全覆盖 PASS / 漏覆盖反向 FAIL / AC-99 悬空 FAIL / 人读后缀正确抽 id / 无 prd.md human 兜底不崩）；真 hact-app v4 存量烟测不崩、AC 逐条覆盖走 human 兜底。
+
+**净收缩账**：删 check-sprint 功能级覆盖代码（块 + 3 正则/helper）+ 升 1 个 🧑 留人为机械 FAIL；逐条 AC 反向覆盖从「Step3 自审 + Step3.5 独审 + 签字人」三层人兜，收成「linter 一道机械挡 + 签字人只兜忠实性」。ADD 是 linter 代码（§2 code≠prose）。design §2.5「净收缩往漂亮推进」的一小步。
+
+**剩 parked**：TRD↔PRD AC 覆盖机械化（id 已铺好，未来低成本接）；PRD AC id 跨迭代永久化（当前仅 PRD vN 生命周期内稳定）；任务包 hook 闸门（本方向多次定「不做 hook」）。
+
+---
+
 ## 下一步（候选，待用户定）
 
 0. ✅ **已完成（会话 4）**：sub3b 已 commit（`2e6662e`）；全局验收通过（linter 实跑 FAIL→1/usage→2、无悬挂引用、§7 读通、spec 散文净 −14 与"及格但不漂亮"自评一致）；fast-forward 合并入本地 master。**剩 push**——本地 master 领先 origin/master 10 commit，待用户明确确认后推送（master 严格）。
@@ -107,7 +123,7 @@
 0. ✅ **已完成（会话 6）·sub4**：frontend-checklist 11 段→三段式（机械归 lint/vue-tsc/stylelint + 可测逻辑写测试 + 视觉/交互留人走查）；硬编码字面值移交 stylelint（直击 org-krm-v2）；develop exec/structural 描述符同步；pr-review 不动。设计稿 `sub4-可视区收口-design.md`。**四子计划全落，本方向收口。**
 1. **push 决定**（待用户）：本地 master 含 sub1/3/2/3b/3c/4 全部改动，未 push。master 严格，须用户明确点头。
 2. **loop 第二层（更狠的减规则）**：TRD shared-type-first → per-module 小循环（design §2.5 + findings §二，parked）。
-3. **parked（sub3c 衍生）**：给 PRD AC 加稳定 id（让逐条 AC 反向覆盖机械化，当前仅功能级机械、逐条留人）；任务包 hook 闸门。
+3. **parked（sub3c 衍生）**：~~给 PRD AC 加稳定 id（让逐条 AC 反向覆盖机械化）~~ ✅ **已完成（会话 7·sub5）**；任务包 hook 闸门（本方向多次定「不做 hook」）；TRD↔PRD AC 覆盖机械化（id 已铺好）。
 
 ---
 

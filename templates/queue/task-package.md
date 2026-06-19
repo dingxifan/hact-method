@@ -19,7 +19,7 @@ depends_on: []            # 前置 task-id 列表，无依赖填 []；与 sprint
 files:
   - <待填>                # 必改文件路径，精确到已知行号范围；不预防性列"可能"文件
 acceptance-criteria:
-  # 每条须标覆盖的 PRD AC：(源：PRD {功能名}·{AC 关键词})；纯技术约束标 (技术)
+  # 每条须标覆盖的 PRD AC：(源：PRD AC-nn)；可选人读后缀 (源：PRD AC-nn·删除二次确认)，linter 只读 AC-nn；纯技术约束标 (技术)
   # 不可视区(backend/逻辑)任务：每条以 Given/When/Then 可执行例子书写（输入→期望输出），供 develop 1:1 落成测试
   - <待填>
 relevant-standards:

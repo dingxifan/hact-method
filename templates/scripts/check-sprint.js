@@ -3,8 +3,8 @@
  * check-sprint.js · hact-method G3（plan-sprint 产物）完成判据 linter（子计划 3c）
  *
  * 用途：机械核对 G3 完成判据里**确定性可查**的部分——任务包字段完备 / reference 行号 /
- *      AC 正向 tag + 功能级反向覆盖 / depends_on / sprint↔queue↔status 三方一致。
- *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 反向覆盖）机器判不了，
+ *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致。
+ *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 忠实性——内容真覆盖、非仅 id 在场）机器判不了，
  *      留签字人确认（🧑 段），脚本只把可机械的挡在签字前。
  *
  * 用法（在项目仓根目录执行）：
@@ -114,17 +114,29 @@ function scalarText(v) { return v ? (v.text || '') : ''; }
 const reLineNum = /L\s*\d+|\d+\s*[-–~]\s*\d+|行\s*\d+/;   // 行号 / 行号区间
 const reAcTag = /[（(]\s*源\s*[:：]\s*PRD/;               // (源：PRD…)
 const reTechTag = /[（(]\s*技术\s*[)）]/;                  // (技术)
-const reFeatRef = /[（(]\s*源\s*[:：]\s*PRD\s*([^·)）]+)/g; // 抽 (源：PRD {功能名}
 
-/* ---------- PRD：抽 `### 功能：X` 功能名 ---------- */
-function prdFeatures(prdPath) {
-  if (!exists(prdPath)) return null;
-  const out = [];
-  for (const l of readLines(prdPath)) {
-    const m = l.match(/^###\s*功能\s*[:：]\s*(.+?)\s*$/);
-    if (m) out.push(m[1].trim());
-  }
+/* ---------- 任务包 AC 行：抽 (源：PRD …) 标签内的所有 AC-nn id ----------
+ * 支持单条多覆盖 (源：PRD AC-01、AC-02) 与人读后缀 (源：PRD AC-01·删除确认)。*/
+function acRefIds(ac) {
+  const tag = ac.match(/[（(]\s*源\s*[:：]\s*PRD([^)）]*)[)）]/);
+  if (!tag) return [];
+  const out = []; let m; const re = /AC-\d+/g;
+  while ((m = re.exec(tag[1]))) out.push(m[0]);
   return out;
+}
+
+/* ---------- PRD：抽核心功能各 AC 列表项的全局唯一 AC-nn id ---------- */
+function prdAcIds(prdPath) {
+  if (!exists(prdPath)) return null;
+  const ids = new Set();
+  let inCore = false;
+  for (const l of readLines(prdPath)) {
+    if (/^##\s/.test(l)) inCore = /^##\s*核心功能/.test(l);
+    if (!inCore) continue;
+    const m = l.match(/^\s*[-*]\s+(AC-\d+)\s*[:：]/);
+    if (m) ids.add(m[1]);
+  }
+  return ids;
 }
 
 /* ---------- sprint.md：抽表格首列 task-id ---------- */
@@ -205,8 +217,10 @@ function checkSprint(iteration, root) {
     if (/frontend/.test(p.layersStr)) for (const d of p.deps) consumedByFE.add(d);
   }
 
-  // 收集全部任务包 AC 引用到的功能名（功能级反向覆盖用）
-  const referencedFeatures = new Set();
+  // 收集任务包 AC tag 引用到的 PRD AC id（逐条反向覆盖用）+ 解析 PRD AC id 集
+  const referencedAcIds = new Set();
+  const prdPath = path.join(iterDir, 'prd.md');
+  const prdIds = prdAcIds(prdPath);   // Set | null（存量无 prd.md → 退人工兜底）
 
   for (const p of packages) {
     const where = p.file;
@@ -229,28 +243,33 @@ function checkSprint(iteration, root) {
       if (/backend/.test(p.layersStr) && !refs.some(r => /trd/i.test(r)))
         fail('reference trd', where, `${p.id}：后端任务 reference 未含 trd 行号条目`);
     }
-    // 3. AC 正向 tag
+    // 3. AC 正向 tag + 逐条 id 存在性
     const acs = listItems(p.fm['acceptance-criteria']);
     for (const ac of acs) {
-      if (!reAcTag.test(ac) && !reTechTag.test(ac))
+      const hasSrc = reAcTag.test(ac), hasTech = reTechTag.test(ac);
+      if (!hasSrc && !hasTech)
         fail('AC 回链 tag', where, `${p.id}：AC 缺 (源：PRD…) 或 (技术) 标注 —— ${ac.slice(0, 40)}…`);
-      let m; reFeatRef.lastIndex = 0;
-      while ((m = reFeatRef.exec(ac))) referencedFeatures.add(m[1].trim());
+      if (hasSrc) {
+        const ids = acRefIds(ac);
+        if (!ids.length) fail('AC 回链 id', where, `${p.id}：(源：PRD…) 内无 AC-nn id —— ${ac.slice(0, 40)}…`);
+        for (const id of ids) {
+          referencedAcIds.add(id);
+          if (prdIds && !prdIds.has(id)) fail('AC 正向:悬空', where, `${p.id}：AC 回链 ${id} 在 PRD 不存在（打错号/已退休）`);
+        }
+      }
     }
   }
   if (findings.filter(f => f.level === 'fail').length === 0) pass('任务包字段/AC/reference', `${packages.length} 个任务包字段完备、reference 含行号、AC 均带回链 tag`);
 
-  // 4. AC 反向·功能级覆盖（PRD 每个功能被某任务包 AC 引用）
-  const prdPath = path.join(iterDir, 'prd.md');
-  const feats = prdFeatures(prdPath);
-  if (feats === null) {
-    human('AC 反向覆盖', `未找到 ${prdPath}，功能级反向覆盖无法机械核 —— 由签字人确认 PRD 功能均有任务覆盖`);
+  // 4. AC 逐条反向覆盖：PRD 每个 AC-nn 被 ≥1 任务包 tag 引用（替代旧功能级——逐条严格强于功能级）
+  if (prdIds === null) {
+    human('AC 逐条覆盖', `未找到 ${prdPath}（存量项目），逐条 AC 反向覆盖无法机械核 —— 由签字人确认 PRD 每条 AC 均有任务覆盖`);
+  } else if (prdIds.size === 0) {
+    human('AC 逐条覆盖', `PRD 未发现 AC-nn 形式的 id（存量旧格式 AC1？）—— 逐条覆盖退人工兜底`);
   } else {
-    const norm = s => s.trim().toLowerCase();
-    const refSet = new Set([...referencedFeatures].map(norm));
-    const uncovered = feats.filter(f => ![...refSet].some(r => r.includes(norm(f)) || norm(f).includes(r)));
-    if (uncovered.length) fail('AC 反向覆盖', prdPath, `PRD 功能未被任何任务包 AC 引用：${uncovered.join('、')}`);
-    else if (feats.length) pass('AC 反向覆盖', `PRD ${feats.length} 个功能均被任务包 AC 引用（功能级）`);
+    const uncovered = [...prdIds].filter(id => !referencedAcIds.has(id));
+    if (uncovered.length) fail('AC 逐条覆盖', prdPath, `PRD AC 未被任何任务包引用：${uncovered.join('、')}`);
+    else pass('AC 逐条覆盖', `PRD ${prdIds.size} 条 AC 均被任务包 AC 引用（逐条）`);
   }
 
   // 5. 三方一致：queue ↔ sprint.md ↔ status.yml
@@ -279,7 +298,7 @@ function checkSprint(iteration, root) {
   }
 
   // 语义残量（留人签）
-  human('G3:人签', '疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / PRD 逐条 AC（非功能级）均被覆盖 —— 语义判断，由签字人确认');
+  human('G3:人签', '疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / 任务包 AC 逐条忠实于其回链的 PRD AC（内容真覆盖，非仅 id 在场）—— 语义判断，由签字人确认');
 }
 
 /* ---------------- 主流程 ---------------- */
