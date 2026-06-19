@@ -49,6 +49,23 @@
 
 ## 历史里程碑
 
+### 2026-06-19 方法论方向转变：质量模型从"规范遵循"转向"输出可测试性"（结构性审查 + 子计划1·地基）
+
+- **背景**：一轮对整套方法论的结构性审查（含独立 subagent 对抗审查），追问"无休止增加规范来规范 AI 是否可持续"。
+- **两个全局结构性错误**（findings §四）：
+  - **A · 质量模型方向错**——规范/Gate/冷核都在验"指令是否被遵循"，不是"产物是否真的正确"；真正验输出的只有末端 integration-tests + manual-test，"在最便宜处验最便宜的事、在最贵处发现最贵的问题"。
+  - **B · AI 不可靠性被当成规范写作问题**——规则塞进 spec = 塞进 context = 越长越失真，正反馈退化回路（活体证据：2026-06-18 加的 Gate 冷核协议本身就是"用 AI 治 AI 盖章"的反模式）。
+- **方向定案**（design.md）：正确性维度从"散文/AI 肉眼核"迁成"确定性检查（test+linter+一致性检查器）"，**每迁一条删一条散文**，成功判据 = **spec 净收缩**（非"新增验证"）。
+  - **分区**：火力集中**不可视区**（后端/数据/逻辑——人没法兜，非技术管理者 Gate 本是橡皮章）；可视区（前端视觉）留人走查。演练实证：backend-checklist 85% 可机械 vs frontend ~50%。
+  - **核心抓手 A**：AC→可运行测试（验正确性）；保真走路2（AC 操作化/spec-by-example）主干 + pr-review 兜残。
+  - **Gate 重定义**：确定性检查器全绿 + 语义人签。
+- **拆解**（design §11）：子计划1 地基（产物结构化，先行）→ 子计划2 不可视区 AC→test → 子计划3 Gate 重定义（删冷核兑现净收缩）。
+- **子计划1·地基 已实施**（分支 `feat/sub1-foundation`，**未合 master、未 push，待验收**）：
+  - 新建 `templates/prd.md` / `templates/trd.md`（结构化模板，`<待填>` 空槽 + 固定 header）+ `templates/scripts/check-docs.js`（纯 Node linter，验结构完备 + 实体↔表交叉一致）
+  - 接线 5 份 spec：init-project 铺脚本；draft-prd-vN Step7.4 / draft-tech-design Step5.4 linter 自检（冷核前，不替代）；两份 structural 契约完成判据标【linter】（子计划3删冷核埋点）
+  - linter 自测通过：原始模板全面 FAIL、填好全 PASS、缺表交叉 FAIL、标签后缀兼容
+- **记录**：`_meta/plans/2026-06-19-structural-review/`（findings.md 四段分析 + design.md 方向 + sub1-地基-design.md + task_plan.md 接续）。master 仅 `976a399`（方向文档）；子计划1 操作改动隔离在分支保护存量项目。
+
 ### 2026-06-19 方法论调整：draft-ux 整体重构（角色姿态反转）
 
 - **背景**：用户对当前 draft-ux 方法的痛点为「面对 36 条场景文字 + mermaid 流程图 + ASCII 线框时，信息消耗太大、文字→画面转换负担过重」；案例素材来自 `E:\design-t\`（hact 产出 vs Claude Design 产出对比）。本轮起点 `findings.md`（"导航架构/屏幕组成/组件细节"三层模型）在讨论中被用户判为过期、不沿用。
