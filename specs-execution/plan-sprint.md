@@ -276,7 +276,7 @@ TRD + standards（技术契约）：
 
 ### Step 4.7：签 G3 前 · 完成判据冷核
 
-执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」G3/G4/G5 段（G3 暂无 linter，走 subagent 冷核），`Gate=G3`。派一个**全新 subagent**，喂 queue 任务包 + sprint.md + `../hact-method/specs-structural/plan-sprint.md` 完成判据（+ `prd.md`/`trd.md`/standards 作对照源），**不喂本会话生成过程**，逐条对抗核对（含"Step 3.5 独审是否真跑过且无遗留阻断"），凭证写 `iterations/vN/gate-checks/G3.md`。有 FAIL 先修再重核。
+执行 `../hact-method/skeleton/06-gates.md` §7「完成判据核对」**G3 段**（G3 暂无 linter、沿用 subagent 冷核，待子计划 sub3c 先做任务包规范化、再建 `check-sprint.js` 后迁出），`Gate=G3`。派一个**全新 subagent**，喂 queue 任务包 + sprint.md + `../hact-method/specs-structural/plan-sprint.md` 完成判据（+ `prd.md`/`trd.md`/standards 作对照源），**不喂本会话生成过程**，逐条对抗核对（含"Step 3.5 独审是否真跑过且无遗留阻断"），凭证写 `iterations/vN/gate-checks/G3.md`。有 FAIL 先修再重核。
 
 > 与 Step 3.5 独审**互补不重复**：独审深查任务包对 PRD/TRD 保真（是完成判据之一），本步核**整张**完成判据清单。
 

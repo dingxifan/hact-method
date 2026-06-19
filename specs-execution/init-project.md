@@ -76,6 +76,7 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 - `CLAUDE.md`：内容复制自 `E:\group-code\hact-method\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
 - `.claude/commands/gitee-ops.md`：内容复制自 `E:\group-code\hact-method\templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
 - `scripts/check-docs.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 5.4 自检 PRD/TRD 结构与交叉一致性时调用）
+- `scripts/check-gate.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
 
 ---
 

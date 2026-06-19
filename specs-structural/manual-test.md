@@ -64,9 +64,9 @@
 
 - [ ] 用户明确说「验收通过」（不得由 AI 自行判断）
 - [ ] 所有用户反馈问题已处理：修复或有明确结论（记入 backlog 的须已分级）
-- [ ] 所有 develop(source=manual-test) 任务已 [merged]
-- [ ] 验收报告已写，结论为"通过"
-- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G4.md`，人已抽看；见 `skeleton/06-gates.md` §7）
+- [ ] 【linter】所有 develop(source=manual-test) 任务已 [merged]（`check-gate.js G4` 核 status.yml）
+- [ ] 【linter】验收报告已写，结论为"通过"（`check-gate.js G4` 核）
+- [ ] 完成判据已核对（`check-gate.js G4` 退出码 0 + 语义残量人签；存量无脚本退回 `skeleton/06-gates.md` §7「G3」段 subagent 兜底）
 - [ ] G4 已签（`gates.md` 已记录 + commit）
 
 ---

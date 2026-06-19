@@ -1,7 +1,7 @@
 # task_plan — hact-method 结构性审查 · 2026-06-19
 
 **性质**：方法论方向性转变（质量模型：规范遵循 → 输出可测试性）
-**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 均已实施 + 各过独立对抗审查 + 整改**，全部累积在分支 `feat/sub1-foundation`（7 commit ahead of master，**全本地、未合并、未推送**）。只剩子计划 4（可视区收口，最低优先）。loop 概念关系已澄清补入 `design.md §2.5`。
+**状态**：方向 `design.md` 已复审通过。**子计划 1 / 3 / 2 / 3b 均已实施**，累积在分支 `feat/sub1-foundation`（**全本地、未合并、未推送**）。子计划 3b（G4/G5 检查器 + §7 部分塌缩）于会话 3 完成，**未 commit**（工作树有改动待提交）。剩：sub3c（G3 + 任务包规范化，新拆出）/ 子计划 4（可视区收口，最低优先）/ G3-5 散文大头整段拔（待 sub3c）。loop 概念关系已澄清补入 `design.md §2.5`。
 
 ---
 
@@ -78,12 +78,26 @@
 - **产物全在分支 `feat/sub1-foundation`**：7 commit ahead of master，working tree clean，**未合 master、未 push**（用户明确要求：全局未完成前全本地处理）。
 - **关键概念锚点**（详见 design.md §2.5）：lint/test = loop 的确定性验证器，不是 loop 之外的东西；前向信息有效性（lint）与正确性（test）是同一 loop 的两个验证维度；净收缩目前"及格但不漂亮"——删 AI/人眼步骤为主，散文大头（§7 主体 / develop 471 行）埋点待 G3-5 建检查器；最初 loop 的"第二层"（per-module subagent 小循环 / TRD shared-type-first）本轮未做、仍 parked。
 
+## 子计划 3b 实施记录（同分支 `feat/sub1-foundation`，会话 3）
+
+设计稿：`sub3b-G345检查器-design.md`（含 §8 阻断发现 + §9 定档 + §10 sub3c 待办）。用户定调：**拆分**（选项 2）——本轮 G4/G5，G3 另起 sub3c。已落地：
+- 新建 `templates/scripts/check-gate.js`（G4：status.yml 核 manual-test 任务全 merged + 验收报告结论；G5：feedback 清空 + project.md 无开发中；语义残量留人）。自测 6 场景全过 + 真 hact-app 烟测（G5 PASS、G4 走存量兜底）。
+- `skeleton/06-gates.md` §7 **部分塌缩**：新增「G4/G5 薄检查器」段（check-gate，linter+人签）；原「G3/G4/G5 冷核」收窄为「G3」段（待 sub3c）；协议 N∈{3}；修 draft-ux Step3.5 悬挂引用。
+- 3 exec（manual-test/wrap-up 冷核步→check-gate + 删 G4/G5 凭证 commit；plan-sprint §7 引用改 G3 段 + 标注 sub3c；init-project 铺 check-gate.js）+ 2 structural（manual-test/wrap-up 完成判据改写 + 标【linter】）。
+
+**阻断发现（重要）**：建 check-sprint.js（G3）前实测 hact-app 任务包——**格式未规范化、跨迭代漂移（v1: 5字段+markdown段；v3: 14键YAML）、与 develop.md 17 字段 spec 背离**（缺 depends_on/api-contract/AC回链，`layer` 单数）。G3 linter 真前置 = 任务包规范化（sub1 同款），故拆出 sub3c。详见 sub3b-design §8。
+
+**净收缩诚实账**：删 G4/G5 各 1 冷核步（-2 实时路径）+ 删 G4/G5 凭证产物 + structural 改写。**§7 未整段拔**（G3 协议主体仍在）——散文大头本轮**部分兑现**，整段拔待 sub3c。
+
+---
+
 ## 下一步（候选，待用户定）
 
-1. **全局验收**：用户复审三块 diff（`git diff master..HEAD`）/ 试跑 linter / 决定是否合 master + push（**推送需用户明确确认，master 严格**）。
-2. **子计划 4（可视区收口，design §11.4，最低优先）**：frontend-checklist 可机械部分迁 lint/test，视觉明确归人走查；接子计划 2 留的"前端非视觉独立审查残量"。
-3. **兑现散文大头删除**：给 G3/G4/G5 建确定性检查器，连同 §7 冷核协议主体一起删（当前埋点未拔）。
-4. **loop 第二层（更狠的减规则）**：TRD shared-type-first → 生成结构拆成 per-module 小循环（design §2.5 + findings §二，parked）。
+0. **commit 本轮 sub3b**：工作树有改动（check-gate.js + §7 + 5 spec），待提交到分支 `feat/sub1-foundation`（**推送需用户明确确认，master 严格**）。
+1. **sub3c（G3 + 任务包规范化）**：① 任务包格式规范化（templates/queue 模板 + 校正 develop.md §字段规范 + 存量决定）② 建 check-sprint.js ③ §7「G3」段整段拔 → **兑现 design §2.5 散文大头整段删除**。见 sub3b-design §10。
+2. **全局验收**：用户复审各块 diff（`git diff master..HEAD`）/ 试跑 linter / 决定是否合 master + push。
+3. **子计划 4（可视区收口，design §11.4，最低优先）**：frontend-checklist 可机械部分迁 lint/test，视觉明确归人走查。
+4. **loop 第二层（更狠的减规则）**：TRD shared-type-first → per-module 小循环（design §2.5 + findings §二，parked；与 sub3c 任务包规范化有协同）。
 
 ---
 

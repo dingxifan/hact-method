@@ -42,10 +42,10 @@
 
 ## 完成判据
 
-- [ ] 第一步：backlog `[偏离]` 条目全部处理（创建 revise-doc 或记入 decisions.md）
-- [ ] 第二步：feedback.md 每条已分流，文件已清空
-- [ ] 第三步：project.md 反映本期最终状态，无"开发中"标注
-- [ ] 完成判据已冷核（陌生 subagent 逐条核对，凭证存于 `iterations/vN/gate-checks/G5.md`，人已抽看；见 `skeleton/06-gates.md` §7）
+- [ ] 第一步：backlog `[偏离]` 条目全部处理（创建 revise-doc 或记入 decisions.md）—— 处理是否得当人签
+- [ ] 【linter】第二步：feedback.md 每条已分流，**文件已清空**（`check-gate.js G5` 核「已清空」；分流是否准确人签）
+- [ ] 【linter】第三步：project.md 反映本期最终状态，**无"开发中"标注**（`check-gate.js G5` 核「无开发中」；是否真反映最终状态人签）
+- [ ] 完成判据已核对（`check-gate.js G5` 退出码 0 + 语义残量人签；存量无脚本退回 `skeleton/06-gates.md` §7「G3」段 subagent 兜底）
 - [ ] G5 已签（`gates.md` 已记录 + commit）
 
 ---
