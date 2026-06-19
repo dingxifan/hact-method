@@ -49,6 +49,18 @@
 
 ## 历史里程碑
 
+### 2026-06-20 pipeline-reshape 开启 + 测试脊柱前置（乙-1+乙-2）— 流水线从「末端验证瀑布」转「贯穿脊柱」，HOOK 待跨会话续
+
+> 承 loop-layer2 §十四「流水线形状之疑」。第 0 层决策（用户拍板）：**先重定形状**（垂直切片 + 测试脊柱前置），非现形状内打补丁。loop 第二层 / hook / 蒸馏交接 / DRY 降为形状内杠杆。记录见 `_meta/plans/2026-06-20-pipeline-reshape/`（design.md + subB-测试脊柱前置-design.md + task_plan.md）。
+
+- **第一步选乙先行**：甲（竖片演练）因「hact-app 不重要、随时可停」出局；丙（draft-tech-design shared-type-first）经重启纪律量出删不动散文（sub7 同源）且不推进形状本体 → 用户改选乙（测试脊柱前置）。
+- **Q3 两幕脊柱**：幕1 AC 行为例子前移 PRD（CC 起草 / 产品验证，坏 AC 最便宜处暴露）+ 幕2 draft-tech-design 精化为技术精确规格。「非技术产品写不了例子」是伪障碍（CC 起草 + 产品验证同性质）。
+- **幕2 硬纠正**：原稿「编译成可运行红测试文件」撞 2026-06-16 决策（TRD 无运行代码、预写测试是空中建筑，org-krm v5 联调 15 条全废）→ 改「只精化例子规格，runnable 物化守 develop」。
+- **乙-1 立脊柱（11 处）+ 乙-2 末端收口（4 处）** 已落（commit `d83e722` feat + `892be13` docs，本地 master，未 push）。乙-2 摘 manual-test「人在末端逐条手验不可视区正确性」冗余，改脊柱+联调测试结果机械带过；顺修 sub3c 遗留悬挂引用（manual-test structural §7「G3」→ G4/G5 人工兜底）。
+- **两次诚实账纠偏**：乙 的货币是**结构收益**（反馈环短 / 坏 AC 早暴露 / 验证归属清晰 / 脊柱给蒸馏一个机器盯得住的锚），**非 spec 净收缩**——主体是「搬」（操作化 TRD→PRD）+ 摘人冗余，非删大段散文。**真净收缩货币在 hook（forcing function）+ DRY 仪式去重，不在脊柱**（findings 地图 §七-九）。
+- **乙-3（linter presence）parked；下一步 = HOOK**，待跨会话（上下文预算），起点种子见 pipeline-reshape/task_plan.md。
+- **git**：本地 master 含 sub1-7 + 本轮，领先 origin 十几 commit，**全部未 push**（master 严格，待用户明确）。
+
 ### 2026-06-19 sub7：develop 拆分（loop 第二层先 park）— 471 行单 spec → 共享核心 + 3 薄壳，兑现决策 #14
 
 > 接 sub6（结构性审查 AC 链路收口）。会话 9 起点是「开始 loop 第二层」，但读 design §2.5 + findings §二后判定 loop 第二层 ROI 被 sub1-6 摊薄（per-API 拆分是编排 ADD/不删散文；develop 模块级 loop 已被 sub2 删 Step5.5 做掉）→ 用户确认 **park loop 第二层**，火力转 **develop 拆分**（findings §三 #1：471 行 spec 是规范膨胀根本原因，违背决策 #14「task.type 是路由键」）。
