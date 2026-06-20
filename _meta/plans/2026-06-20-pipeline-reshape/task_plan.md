@@ -130,8 +130,17 @@
   - **中间段=两级循环（讨论清、方向未拍）**：Level1 遍历任务(依赖序)、Level2 遍历模块(subagent)。spec 已有一半雏形（"对集合每任务" + Step4 subagent 策略）。三边界：subagent 隔离划算才派（小而连贯主线做）/ 集成留主线 / 自检+交付留主线且**批次级**（subagent 管造、主线管验+交）。**联动**：subagent 隔离越好→批次可越大→B 阈值可放宽，**定标与循环要一起设计**。**历史诚实账**：per-module subagent 循环正式化 = 旧"loop 第二层"，park 过（加编排 ADD、ROI 摊薄、sub7 同源）；要清醒分"结构强化"vs"又一次 ADD"。
   - **诚实账（②整体）**：定标是 **ADD（~+6-8 行）**，货币=正确性/健壮性（主动定标替代被动重置），**非净缩**；重置协议仍留（单任务爆仍需）。
   - **待拍清单（下一轮先决）**：(a) 命名方案最终选（倾向1）；(b) 两级循环显式化程度——轻澄清 vs 重编排骨架；(c) Level1 独立任务是否并行（无依赖可并行/依赖链串行）vs 一律串行保简单；(d) status.yml/sprint.md 的 PR 列怎么对应到批次（提过未展开）。
-- **更早的候选（仍在，排后）**：换语气 pass（整 356 行教学体→指令体，主净缩杠杆）；续薄外挂（Step9 vs status.yml pr 冗余）；parked（终点并入 merge？PR 模板外置？——用户对多文件有戒心）。
-- **纪律**：develop 无检查器=门卫无可跑；换语气=纯净缩，外挂结构改=简化，定标/循环=ADD（正确性货币），三者别混账。
+- **③执行模型翻转：执行 subagent + 独立审查 loop + 前端设计门（全自动）✅ 已实现**（develop.md 360→270/−90，新建 develop-review.md +39，本地 commit→见 git）：
+  - **用户拍板的设计**（多轮讨论收敛）：全程自洽全自动跑，用**独立对抗审查 loop** 取代逐步 🚫 人工门，人工只守**一个** upfront 门=「前端设计是否到位」。
+  - **执行模型**：主线只编排（定标/设计门/浮决策/末端全量/提交）；每任务「读懂→计划→写→自绿」下沉到**执行 subagent**（隔离上下文 → 批次可放大，容量被 subagent 数解耦）；每任务质量由**独立审查 subagent**（对抗式、自读权威原文、绝不收执行体自评）把关，有阻断 finding 即回炉，3 轮超界升级 revise-doc/escape-hatch。
+  - **独审输入源（用户核心问题的答案）**：权威原文——任务包 / git diff / standards 章节 / 测试代码+结果，**绝不喂执行 subagent 的自评**（否则自己批自己作业、独立性归零）。推广 review-briefs/ pattern 新建 `develop-review.md`（自包含、自读、逐类检查 AC忠实/do-not越界/标准合规/测试品类/留人判，存疑即阻断）。
+  - **三层质量防线**：deterministic 绿（build/type/lint/test）先过 → 独审做语义 top-up（接管 sub5/sub6 留人的「逐条忠实性」）→ 人工只守前端设计到位。独审站绿之上、非唯一线（防「AI 判 AI 盖章」教训）。
+  - **🚫 门收敛到 3**：①会话定标 ②前端设计到位（backend-only 跳过；把视觉决策从执行中途前移到开跑前一次，预堵无据可依视觉决策）③escape-hatch（执行/审查返 blocked 浮给用户）。其余全自动 loop。
+  - **3 个待拍定案**：审查粒度=per-task 审为主 + 末端只全量绿+偏离（cross-task 一致性留 generate-integration-tests 不重复重审）；前端设计门=upfront 一次性确认/backend-only 跳过；审查员=先单个跑顺（不上多 lens）。风险 1（盖章）解法=对抗式 prompt（存疑即打回）+ 有界 loop；风险 2（执行体优雅 blocked 返回）复用现失败/重置协议。
+  - **取代 ①②的 Level1/Level2 轻澄清**（结构翻转：subagent 升 per-task 执行体、模块拆分降为 subagent 内部事）。
+  - **诚实账**：这是 develop **结构重写**，主货币=① 质量模型升级（独立对抗审查 loop 取代逐步人工自检门）② 上下文经济（per-task 载入下沉 → 批次可放大）。**净缩 −90 是真实附带结果**（逐步 🚫 叙述/路径分支/「继续?」骨架被自动 loop 取代），但 +39 是新 brief（ADD、按需读不占主 context）——不把整件框成「减肥」，是模型改动顺带压缩。所有 delta 已逐项核对保留。外部引用 2 处更新（pr-review Step6→末端 commit 分支规则 / draft-tech-design Step5→阶段 A 测试基建缺失）；structural 完成判据 +2（独立审查通过 / 全量检测全绿）。
+- **更早的候选（多被 ③ 吸收）**：换语气 pass（③ 重写时已大量指令体化）；续薄外挂（③ 已重整末端）；parked（终点并入 merge？PR 模板外置？）。
+- **纪律**：develop 无 linter 检查器（门卫无可跑）；③ 是模型重写，质量升级 + 上下文经济为主货币、净缩为附带，别只盯行数。
 
 **plan-sprint 站本轮**（致密化，本地 master，未 push）：
 - `specs-execution/plan-sprint.md` **340→275 行（−65/−19%）**。四象限拆账：① Step 3 折叠重抄（depends_on写法 / reference行号要求 / AC格式 / api-contract平铺等已在 `task-package.md` 模板 + check-sprint + structural完成判据三处，正文停止重抄、只留判断与跨文件来源）≈ 真减肥主力 ② 门卫散文收薄（Step 4.7「不得手改报告、不得跳过」+ Step 5「退出码0才签」前置 → 门卫 commit 时跑 check-sprint 强制兜底，同 PRD Step 7.4/8）③ 全文换指令体。
