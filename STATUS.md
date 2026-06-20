@@ -34,11 +34,16 @@
 
 ## 仓库拓扑
 
-| 仓库 | 路径 | 用途 | 远端 |
-|------|------|------|------|
-| hact-method | `E:\group-code\hact-method\` | 纯方法论（skeleton + specs + templates） | gitee.com/dingxifan/hact-method |
-| hact-app | `E:\group-code\hact-app\` | hact-app 代码 + 协调文件 | 用户自行推送 |
-| human-ai-col | `E:\group-code\human-ai-col\` | v1 方法论（冻结） | gitee.com/dingxifan/human-ai-col |
+`hact-method` 与 `hact-method-lab` 是**同一 git 仓库（gitee.com/dingxifan/hact-method）的两个 worktree**，共享对象库、检出不同分支，用于新旧方法**并行对比测试**：
+
+| Worktree | 路径 | 分支 | 当前 tip | 角色 |
+|------|------|------|---------|------|
+| hact-method（旧版基线） | `E:\group-code\hact-method\` | `master` | `89d01ff` draft-ux 重构 | **旧方法**对照基线（已 reset 到 origin/master，2026-06-20） |
+| hact-method-lab（最新） | `E:\group-code\hact-method-lab\` | `method-lab` | `ba9dce8` | **新方法**，含 loop-layer2 起的全部大改；与 `origin/method-lab` 同步 |
+| hact-app | `E:\group-code\hact-app\` | — | — | hact-app 代码 + 协调文件（用户自行推送） |
+| human-ai-col | `E:\group-code\human-ai-col\` | — | — | v1 方法论（冻结，gitee.com/dingxifan/human-ai-col） |
+
+> 备注：`method-lab` 完整包含旧 master 的 51 个 commit（领先 17）。reset 前的本地 master tip `8304136` 已用 tag `master-pre-reset-8304136` 钉住，`git reset --hard master-pre-reset-8304136`（在 hact-method worktree 内）可完全还原。两 worktree 勿同时 checkout 同一分支。
 
 ## 已知风险
 
