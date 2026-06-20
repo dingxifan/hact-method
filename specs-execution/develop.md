@@ -3,14 +3,7 @@
 > CC 加载本文时，当前任务是从 queue 拾取任务包，实现代码，推 PR。
 > 三层顺序：**骨架**（理解任务 + 拆分计划）→ **结构层**（逐模块实现）→ **执行层**（自检 + PR）
 
-**上下文密度**：高。本 spec 支持两种会话模式，由 sprint.md 的 `交付` 列决定：
-
-| 会话模式 | 触发条件 | 会话边界 | PR 粒度 |
-|---------|---------|---------|---------|
-| **单任务会话** | 拾取 `交付=独立` 的任务 | 一次会话 = 一个任务包 | 一个任务一个 PR |
-| **批量会话** | 拾取同 layer 所有 `交付=批量` 的任务 | 一次会话 = 同 layer 全部批量任务 | 同 layer 所有批量任务共用一个 PR |
-
-Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「批量会话步骤」章节，Steps 1–4 在批量会话中对每个任务依次执行。
+**上下文密度**：高。本 spec 处理**一个任务集**（size ≥ 1）：`交付=独立` 任务形成单元素集（自己一个 PR），同层 `交付=批量` 任务形成多元素集（共一个 PR）。单任务即 N=1 特例，全流程统一——**Steps 1–4 对集合每个任务依次执行（按依赖序），Steps 5–8 一次覆盖整个集合**。
 
 ---
 
@@ -36,35 +29,20 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 - `source=sprint` → 读 `iterations/vN/gates.md`，确认 G3 已签。未签则阻断：「⚠️ G3 未通过，Sprint 尚未规划，请先完成 plan-sprint。」
 - `source=integration` / `source=manual-test` / `source=bug` / `source=optimization` → 无 Gate 前置，直接继续
 
-**拾取任务（source=sprint）**：
+**拾取任务（source=sprint）：形成任务集**
 
-读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按以下顺序决定会话模式：
+读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按以下规则形成本次会话的**任务集**（后续全流程统一处理，单元素集即单任务）：
 
-**第一优先：处理 `交付=独立` 的任务**
+- **优先独立**：若存在 `[可取]` 且 `交付=独立` 的任务 → 任务集 = {task-id 最小的那个独立任务}（单元素，自己一个 PR）。
+- **否则批量**：本 layer 无 `[可取]` 独立任务 → 任务集 = 本 layer 全部 `[可取]` 且 `交付=批量` 的任务（多元素，共一个 PR）。
+- **阻断**：本 layer 有 `交付=独立` 任务处于 `[done]`（PR 已推未合并）且有 `批量` 任务依赖它 → 停止：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 pr-review 合并。」（独立 PR 合并到 master 前，依赖它的批量任务不可拾取。）
 
-若存在 `[可取]` 且 `交付=独立` 的任务 → 拾取 task-id 最小的那个，进入**单任务会话**。
-- 将该任务包状态改为 `[taken-by: {user}]`；同步在项目根 `status.yml` 将该 task 的 `status` 改为 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）。立即执行认领 commit：
-  ```bash
-  git add iterations/vN/sprint.md status.yml
-  git commit -m "chore(sprint): 认领 {task-id} [taken-by: {user}]"
-  ```
-  （push 随首次代码 commit 一起推送，无需单独 push）
-- Steps 1–10 正常执行，最终推独立 PR
-- ⚠️ 该 PR 合并到 master 之前，sprint.md 中 `依赖` 列引用该任务的所有 `批量` 任务均不可拾取
-
-**第二优先：批量会话（所有 `独立` 任务已 `[merged]` 或本 layer 无 `独立` 任务）**
-
-若本 layer 无 `[可取]` 的 `独立` 任务 → 拾取本 layer 全部 `[可取]` 且 `交付=批量` 的任务，进入**批量会话**。
-- 将所有拾取任务的状态改为 `[taken-by: {user}]`；同步在项目根 `status.yml` 把每个拾取 task 的 `status` 改为 `taken-by`、`assigned_to` 填 `{user}`。立即执行认领 commit：
-  ```bash
-  git add iterations/vN/sprint.md status.yml
-  git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
-  ```
-  （push 随首次代码 commit 一起推送，无需单独 push）
-- Steps 1–4 对每个任务依次执行（按依赖顺序：被依赖的任务先实现）
-- Steps 5–9 执行「批量会话步骤」（见文末），一次自检、一个 PR 覆盖所有任务
-
-**阻断情形**：本 layer 有 `交付=独立` 任务且状态为 `[done]`（PR 已推但未合并），同时有 `批量` 任务依赖该 `独立` 任务 → 停止，输出：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 pr-review 合并。」
+**认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`），立即认领 commit（单任务时 `{task-id-list}` 即一个 id）：
+```bash
+git add iterations/vN/sprint.md status.yml
+git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
+```
+（push 随首次代码 commit 一起推送，无需单独 push）
 
 ---
 
@@ -79,6 +57,8 @@ Steps 1–10 适用于单任务会话；批量会话的 Steps 5–9 见文末「
 ---
 
 ## 第一层：骨架（理解 + 计划）
+
+> 任务集多元素时，Step 1–4 对每个任务**依次执行**（按依赖序：被依赖的先实现）；单元素集即执行一次。
 
 ### Step 1：理解任务
 
@@ -175,6 +155,8 @@ hotfix 模式：最小化修复路径，直接开始实现，不等用户确认�
 
 ### Step 5：自检（写测试 + 跑绿 + 偏离核查）
 
+> 任务集多元素时，以下各项跑**一次**、覆盖集合全部改动文件与所有任务包的 AC 测试；偏离核查对比所有任务包 `files` 的合集。
+
 **【机械验证】**（先跑命令，有报错先修，再进入测试与偏离核查）
 
 ```bash
@@ -222,12 +204,15 @@ git diff --stat
 
 ### Step 6：commit
 
-**分支规则**：分支必须从 `master` 切，禁止从其他任务分支切（禁止 stacked PR）。
-唯一例外：任务包 `depends_on` 字段明确标注了前置任务且该任务尚未合并到 master。
+**分支规则**：分支必须从 `master` 切，禁止从其他任务分支切（禁止 stacked PR）。唯一例外：任务包 `depends_on` 明确标注前置任务且其尚未合并到 master。
+
+**分支命名 / message（按集合大小）**：
+- 单元素集 → 分支 `{task-id}`，message `{type}({task-id}): {改动描述}`
+- 多元素集 → 分支 `{layer}-batch-v{N}`，message `feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]`
 
 ```bash
 git add {改动的文件列表}
-git commit -m "{type}({task-id}): {改动描述}"
+git commit -m "{见上分支命名}"
 ```
 
 ---
@@ -238,23 +223,21 @@ git commit -m "{type}({task-id}): {改动描述}"
 git push origin {task-id}
 ```
 
-PR description 是本任务的唯一交付记录，需完整填写：
+PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
 
 ```markdown
-## {task-id}：{任务标题}
+## {单元素集：task-id：任务标题 ／ 多元素集：v{N} {layer}层批量实现，含 task-id-1 / task-id-2 …}
 
-### 改动摘要
-{2–3 句话}
-
-### Acceptance Criteria 验证
+### {task-id}：{任务标题}      ← 每任务一节，多元素集逐任务重复本节
+**改动摘要**：{2–3 句}
+**AC 验证**：
 - [x] {AC 1}：{验证方式}
-- [x] {AC 2}：{验证方式}
 
 ### 偏离说明
-{无 / 有哪些改动超出了 files 清单，或哪条 AC 未能实现及原因}
+{无 / 多任务分别列出：哪些改动超出 files 清单，或哪条 AC 未实现及原因}
 
 ### 遗留问题
-{无 / 已记入 backlog 的问题列表}
+{无 / 多任务分别列出，有则确认已记入 backlog}
 ```
 
 禁止在 PR description 中包含凭据。若推 PR 前发现凭据（PAT / token / 密码 / 私钥 / API key）已被写入代码或 commit：立即从 commit 中移除、通知相关人撤销该凭据，在凭据清理干净前不推 PR。
@@ -263,14 +246,14 @@ PR description 是本任务的唯一交付记录，需完整填写：
 
 ### Step 8：更新状态
 
-- 将任务包状态改为 `[done]`（A 类：`iterations/vN/queue/{task-id}.md`；B 类：`b-queue/{task-id}.md`）
-- 在 `iterations/vN/sprint.md` 对应行：状态列改为 `[done]`，**PR 列填入 `#N`**（N 为 Step 7 创建的 PR 编号）
-- 在项目根 `status.yml` 将该 task 的 `status` 改为 `done`、`pr` 填入 `{N}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）
-- 执行 commit + push，将状态更新随 feature 分支推送（合并到已开的 PR）：
+- 集合内**每个**任务包状态改为 `[done]`（A 类：`iterations/vN/queue/{task-id}.md`；B 类：`b-queue/{task-id}.md`）
+- **仅 source=sprint**：在 `iterations/vN/sprint.md` 集合内每任务对应行，状态列改 `[done]`、**PR 列填同一个 `#N`**（N 为 Step 7 的 PR 编号）；其余 source 任务不在 sprint.md，跳过此条
+- 在项目根 `status.yml` 把集合内每个 task 的 `status` 改为 `done`、`pr` 全填同一个 `{N}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）
+- 执行 commit + push，状态更新随 feature 分支推送（合并到已开的 PR）：
   ```bash
-  git add iterations/vN/queue/{task-id}.md iterations/vN/sprint.md status.yml
-  git commit -m "chore(sprint): {task-id} 标记 [done]，PR #{N}"
-  git push origin {task-id}
+  git add {集合内任务包文件} iterations/vN/sprint.md status.yml   # sprint.md 仅 source=sprint 时含
+  git commit -m "chore(sprint): {task-id-list} 标记 [done]，PR #{N}"
+  git push origin {分支名}
   ```
 
 ---
@@ -283,7 +266,7 @@ PR description 是本任务的唯一交付记录，需完整填写：
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"已推 PR#{N}，等待合并后复测"
 
 ```
-✅ develop 完成：task-{id}（{layer}）已 commit，PR 已推，等待 pr-review。
+✅ develop 完成：{task-id-list}（{layer}）已 commit，PR #{N} 已推，等待 pr-review。
 本会话到此结束。后续动作（复测 / 联调继续）在 PR 合并后由上游会话触发，不在此处建议。
 ```
 
@@ -306,50 +289,6 @@ PR description 是本任务的唯一交付记录，需完整填写：
 | `bug` / `optimization`（B 类） | **就地分流**——B 类无 wrap-up，不能堆 `feedback.md` 干等。当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
 > B 类就地分流后，个人 notes 的可上提条目同样由管理者的 `harvest-notes` 收割上提，与 A 类殊途同归。
-
----
-
-## 批量会话步骤（交付=批量 时使用，替代单任务会话的 Steps 5–9）
-
-> 前提：所有 `交付=独立` 的任务已 `[merged]`，当前 layer 的全部 `[可取]` 批量任务已拾取。
-
-批量会话的 Steps 5–9 与单任务**逻辑一致，只是一次覆盖本 layer 全部批量任务、共用一个 PR**。差异如下，其余照单任务执行：
-
-| 步骤 | 与单任务的差异 |
-|------|---------------|
-| 批量 Step 5 自检 | 机械验证 / 测试（全绿）/ 测试品类自检 / 偏离核查各跑**一次**，覆盖本次所有改动文件与所有任务包的不可视区 AC 测试；偏离对比所有任务包 `files` 字段的合集 |
-| 批量 Step 6 commit | 分支名 `{layer}-batch-v{N}`（如 `backend-batch-v3`）；message：`feat({layer}-batch-v{N}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]` |
-| 批量 Step 7 推 PR | `git push origin {layer}-batch-v{N}`；PR description **按任务分节**（模板见下），偏离 / 遗留问题各任务分别列出或统一写"无"；同样禁止凭据 |
-| 批量 Step 8 更新状态 | 所有批量任务包 + sprint.md 对应行 → `[done]`，PR 列**全部填同一个 PR 号**；同步在项目根 `status.yml` 把这批 task 的 `status` 全改 `done`、`pr` 全填同一个 `{N}`；git add 含 `status.yml`；`chore(sprint): 批量标记 [done]，PR #{N}` 推 `{layer}-batch-v{N}` |
-| 批量 Step 9 移交 | `✅ develop 批量完成：{layer}层 {N} 个任务已 commit，PR #{N} 已推，等待 pr-review。本会话到此结束。` 同样 🚫 会话硬边界，输出后立即停止 |
-
-**批量 PR description 模板**（批量 Step 7）：
-
-```markdown
-## v{N} {layer}层批量实现
-
-包含任务：{task-id-1} / {task-id-2} / {task-id-3}
-
----
-
-### {task-id-1}：{任务标题}
-**改动摘要**：{2–3 句}
-**AC 验证**：
-- [x] {AC 1}：{验证方式}
-
-### {task-id-2}：{任务标题}
-**改动摘要**：{2–3 句}
-**AC 验证**：
-- [x] {AC 1}：{验证方式}
-
----
-
-### 偏离说明
-{各任务分别列出，或统一写"无"}
-
-### 遗留问题
-{各任务分别列出，或统一写"无"；有则确认已记入 backlog}
-```
 
 ---
 
