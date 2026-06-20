@@ -45,8 +45,7 @@
 - `draft-tech-design`（含 G2 签字；出 TRD + 3 份 standards）
 - `revise-doc`（修订归项目根）
 - `plan-sprint`（含 G3 签字）
-- `develop`（写代码 + 推 PR）
-- `pr-review`（PR 复核）
+- `develop`（写代码 + per-task 独立审查 + 推 PR 并合并到 master）
 - `generate-integration-tests`（联调脚本）
 - `manual-test`（含 G4 签字）
 - `deploy`（部署归项目根）

@@ -11,8 +11,7 @@
 - `draft-prd-vN`              → `@../hact-method/specs-execution/draft-prd-vN.md`
 - `draft-tech-design`         → `@../hact-method/specs-execution/draft-tech-design.md`
 - `plan-sprint`               → `@../hact-method/specs-execution/plan-sprint.md`
-- `develop`                   → `@../hact-method/specs-execution/develop.md`
-- `pr-review`               → `@../hact-method/specs-execution/pr-review.md`
+- `develop`                   → `@../hact-method/specs-execution/develop.md`（含 per-task 独立审查 + 自合并到 master，无独立 pr-review）
 - `generate-integration-tests`→ `@../hact-method/specs-execution/generate-integration-tests.md`
 - `manual-test`               → `@../hact-method/specs-execution/manual-test.md`
 - `deploy`                    → `@../hact-method/specs-execution/deploy.md`
@@ -73,9 +72,7 @@ git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{userna
 | sprint.md 状态分布 | PR 列 | Gate 状态 | 推断任务类型 |
 |-------------------|-------|-----------|-------------|
 | 有 `[可取]` | — | G3 已签，G4 未签 | `develop` — 列出可认领任务，等待用户拾取 |
-| 有任意 `[taken-by]` | — | — | `develop` — 继续未完成任务包 |
-| 全部 `[done]`，PR 列有 `—` | 部分未填 | G3 已签，G4 未签 | `develop` — 仍有任务尚未提 PR |
-| 全部 `[done]`，PR 列全部已填 | 全为 `#N` | G3 已签，G4 未签 | `pr-review` — 输出任务↔PR 对照表 |
+| 有任意 `[taken-by]` 或 `[done]` | — | G3 已签，G4 未签 | `develop` — 继续未完成任务包（`[done]` = 上次会话推 PR 后未及合并，续做至自合并 `[merged]`）|
 | 全部 `[merged]` | — | G4 未签 | `generate-integration-tests` |
 | 全部 `[merged]`，联调报告已存在 | — | G4 未签 | `manual-test` |
 | G4 已签，G5 未签 | — | G5 未签 | `wrap-up-iteration` |

@@ -1,7 +1,8 @@
 # exec: develop
 
-> CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR。
-> **执行模型**：主线只**编排**（定标 / 设计门 / 浮决策 / 末端全量 / 提交）；每个任务的「读懂→计划→写→自绿」由**执行 subagent** 跑、隔离上下文；每个任务的质量由**独立审查 subagent**（对抗式、自读权威原文）把关，不通过即回炉。人工只守一个门：**前端设计是否到位**。
+> CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
+> **执行模型**：主线只**编排**（定标 / 设计门 / 浮决策 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由**执行 subagent** 跑、隔离上下文；每个任务的质量由**独立审查 subagent**（对抗式、自读权威原文）把关，不通过即回炉。人工只守一个门：**前端设计是否到位**。
+> **无独立 pr-review 环节**（2026-06-20 砍除）：代码质量由 per-task 独立对抗审查 + 全量绿把关，develop 自审自合并。**治理代价已被接受**：master 写入无第二人工门——仅**安全敏感改动**（权限 / 认证 / 数据隔离）保留一道人工裁决（见末端·合并）。
 
 **上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到执行 subagent，故**批次可放大**（容量被 subagent 数量解耦，会话定标软锚点随之放宽）。本 spec 处理**一个任务集**（size ≥ 1）：`交付=独立` 任务形成单元素集（自己一个 PR），同层 `交付=批量` 任务形成多元素集（共一个 PR）。单任务即 N=1 特例。
 
@@ -10,11 +11,11 @@
 > **质量模型（三层防线，独审站在绿之上、不是唯一质量线）**：deterministic 绿（build / type / lint / test）先过 → 独立审查做**语义 top-up**（AC 忠实 / do-not 越界 / 标准合规 / 测试忠实）→ 人工只守前端设计到位。
 
 > **🚫 人工门（全自动模型下只剩三处，其余全自动 loop、不逐步等人）**：
-> ① **会话定标**——确认本轮吃哪几个任务（Fast Mode 自动取提议子集）。
+> ① **会话定标**——确认本轮吃哪几个任务。
 > ② **前端设计到位**——frontend 批次开跑前一次性确认（backend-only 跳过）。
 > ③ **escape-hatch**——执行 subagent 撞 do-not 拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红时返回 blocked，主线浮给用户。
-
-> **Fast Mode**：声明 "fast mode" 时，**确认型**阻断（第零步 layer、会话定标取提议子集、前端设计到位若 design.md 已覆盖）自动通过；**决策型**阻断（escape-hatch：do-not 边界 / 缺信息）不受影响，必须等用户。
+>
+> 这三处都是**真需要人**的决策（吃哪些任务 / 视觉品味 / 真阻塞），无快进意义——故不设 Fast Mode；其余「读懂→计划→写→绿→审」本就全自动 loop。
 
 ---
 
@@ -26,7 +27,7 @@
 当前执行层：frontend / backend？
 ```
 
-🚫 等用户确认（或从任务包 `layer` 字段自动判断后向用户确认；Fast Mode 自动通过）
+🚫 等用户确认（或从任务包 `layer` 字段自动判断后向用户确认）
 
 **G3 前置检查（source=sprint 时必做）**
 
@@ -43,8 +44,8 @@
   ```
   会话定标：本层 [可取] 批量任务 [id...]（依赖序），本轮提议吃前 {k} 个 [子集 id...]（files 合集约 {N} 处改动），剩余 [id...] 留下轮。
   ```
-  🚫 等用户确认子集（Fast Mode 自动取提议子集）。确认后该子集 = 本轮任务集 = 一个 PR（一批次=一分支=一 PR，见末端 commit 命名）。
-- **阻断**：本 layer 有 `交付=独立` 任务处于 `[done]`（PR 已推未合并）且有 `批量` 任务依赖它 → 停止：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 pr-review 合并。」
+  🚫 等用户确认子集。确认后该子集 = 本轮任务集 = 一个 PR（一批次=一分支=一 PR，见末端 commit 命名）。
+- **阻断**：本 layer 有 `交付=独立` 任务处于 `[done]`（PR 已推未合并到 master）且有 `批量` 任务依赖它 → 停止：「⚠️ {task-id}（独立）PR 尚未合并到 master，依赖它的批量任务暂不可拾取，请先完成该独立任务的 develop 会话（含合并）。」
 
 **认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`），立即认领 commit：
 ```bash
@@ -60,7 +61,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
   ```
   前端设计到位检查：本批次 frontend 任务涉及画面 [...]，design.md [已覆盖全部 / 缺 {X} 的视觉规格]，prototype.html [有对应交互路径 / 缺 {Y}]。
   ```
-  🚫 等用户确认「设计到位、可全自动跑」（Fast Mode：design.md 已覆盖则自动通过）。design.md 有缺口 → 用户补 design / 或起 `revise-doc`，**缺口补齐前不开跑**。
+  🚫 等用户确认「设计到位、可全自动跑」。design.md 有缺口 → 用户补 design / 或起 `revise-doc`，**缺口补齐前不开跑**。
   > **为何独留这一门**：把"视觉决策"从执行中途前移到开跑前一次——design.md 若开跑前就覆盖齐全，执行中就不会冒出"无据可依的视觉决策"。视觉/交互的"到位、是否用户真要的"无权威原文可机械 / 独立核（design §10「是否用户真要的」归用户），这是 AI 自洽 loop 唯一兜不住的，故留人，且只此一处、只在开跑前。
 
 ---
@@ -93,7 +94,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
    blocked: { reason: "do-not 边界拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红 / 测试基建缺失", detail: "..." }  # status=blocked 时填
    ```
 
-> **测试基建缺失**（项目无测试运行器）：执行 subagent 返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、转 `pr-review` 路1 人工审代码兜底——**临时降级、非常态**。
+> **测试基建缺失**（项目无测试运行器）：执行 subagent 返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 独立审查 subagent 按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
 
 ### 阶段 B · 独立审查 subagent（对抗式，自读权威原文）
 
@@ -143,13 +144,13 @@ git add {改动的文件列表}
 git commit -m "{见上分支命名}"
 ```
 
-### 推 PR
+### 推 PR + 合并到 master
 
 ```bash
 git push origin {分支名}
 ```
 
-PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
+用 `/gitee-ops` 创建 PR（远端为 Gitee，禁止 gh CLI）。PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
 
 ```markdown
 ## {单元素集：task-id：任务标题 ／ 多元素集：v{N} {layer}层批量实现，含 task-id-1 / task-id-2 …}
@@ -168,31 +169,37 @@ PR description 是本次交付的唯一记录，需完整填写。**每任务一
 
 禁止在 PR description 中包含凭据。若推 PR 前发现凭据（PAT / token / 密码 / 私钥 / API key）已被写入代码或 commit：立即从 commit 中移除、通知相关人撤销该凭据，清理干净前不推 PR。
 
-### 更新状态
+**安全敏感预检（合并前唯一人工门）**：本批次任一任务改动触及**权限 / 认证 / 数据隔离**，且当前 develop 执行人无 `architecture` discipline 授权 → **不自动合并**，escape-hatch 浮给用户：等有 `architecture` discipline 的人裁决后再合并。这是砍除 pr-review 后保留的唯一治理门（其余代码质量已由 per-task 独审兜）。非安全敏感 → 直接合并。
 
-- 集合内**每个**任务包状态改为 `[done]`（A 类：`iterations/vN/queue/{task-id}.md`；B 类：`b-queue/{task-id}.md`）
-- **仅 source=sprint**：在 `iterations/vN/sprint.md` 集合内每任务对应行，状态列改 `[done]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 在项目根 `status.yml` 把集合内每个 task 的 `status` 改 `done`、`pr` 全填同一个 `{N}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）
-- commit + push，状态更新随 feature 分支推送（合并到已开的 PR）：
+**合并**：用 `/gitee-ops` 调 merge API 把 PR 合并到 master（develop 自审自合并，无独立 pr-review）。合并失败（冲突等）→ 报告用户，不强合。
+
+### 更新状态（合并后写在 master）
+
+merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
+- 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
+- **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
+- 项目根 `status.yml`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）：集合内每个 task 的 `status` 改 `merged`、`pr` 全填同一个 `{N}`；并向 `code_reviews[]` **每任务追加一条审计留痕**（替代旧 pr-review 写入）——`conclusion: 通过`（独审已通过才合并），`issues` 填独审剩下的「建议」级 finding（映射 `severity: 建议`），无则 `[]`
   ```bash
+  git checkout master && git pull
   git add {集合内任务包文件} iterations/vN/sprint.md status.yml   # sprint.md 仅 source=sprint 时含
-  git commit -m "chore(sprint): {task-id-list} 标记 [done]，PR #{N}"
-  git push origin {分支名}
+  git commit -m "chore(sprint): {task-id-list} 标记 [merged]，PR #{N}"
+  git push origin master
   ```
+> ⚠️ 此处 push master 是 develop 自合并模型的一部分（治理代价已接受）——指**项目仓** master，与 hact-method 仓的 master 推送纪律无关。
 
 ### 移交
 
 按 `source` 更新对应追踪文件：
-- `source=sprint` → 无需额外操作（PR 号已写入 sprint.md）；同层全部推完后 devmgr 可开启批量 pr-review
-- `source=bug / optimization` → 在 `b-tasks.md` 对应行追加 `PR#{N} 待审`
-- `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"已推 PR#{N}，等待合并后复测"
+- `source=sprint` → 无需额外操作（PR 号 + `[merged]` 已写入 sprint.md）；同层全部 `[merged]` 后，下游 `generate-integration-tests` 前置即满足
+- `source=bug / optimization` → 在 `b-tasks.md` 对应行追加 `PR#{N} 已合并`
+- `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"PR#{N} 已合并，可复测"
 
 ```
-✅ develop 完成：{task-id-list}（{layer}）已 commit，PR #{N} 已推，等待 pr-review。
-本会话到此结束。后续动作（复测 / 联调继续）在 PR 合并后由上游会话触发，不在此处建议。
+✅ develop 完成：{task-id-list}（{layer}）已实现、独立审查通过、PR #{N} 已合并到 master。
+本会话到此结束。后续动作（联调 / 复测 / 验收）由对应上游会话触发，不在此处继续。
 ```
 
-🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续 pinchtab / 复测 / 联调"等后续动作——develop 只负责到 PR 推出，PR 合并权在 pr-review 手里，测试阶段的恢复取决于合并结果，不由 develop 会话判断。
+🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续 pinchtab / 复测 / 联调"等后续动作——develop 只负责到代码合并到 master；测试 / 联调 / 验收是独立 task，由对应会话触发，不由 develop 会话延续。
 
 ### feedback 检查 / 就地分流
 
@@ -200,6 +207,7 @@ PR description 是本次交付的唯一记录，需完整填写。**每任务一
 - 遇到 standards 未覆盖的决策（视觉 / 接口边界等）且反复出现
 - 上下文重置协议被触发（记录触发原因，供后续调整任务拆分粒度 / **会话定标软锚点**参考——定标降低触发概率但不消除，单任务做爆仍走重置）
 - 独立审查反复揪出同类问题（可能 standards / checklist 有空缺）
+- 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）→ 入 `backlog.md`（格式：`- [ ] {日期} | [独审-建议] {描述} | {文件路径} | 待后续处理`）
 - 无发现 → 跳过
 
 **反馈去向按 `source` 分**：

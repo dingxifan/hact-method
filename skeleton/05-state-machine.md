@@ -31,7 +31,7 @@
 |---|---|---|---|
 | `可取` | `taken-by` | 用户拉任务（软锁，详见 §3）| 任何符合 discipline 的 user |
 | `taken-by` | `done` | 推 PR / 产物提交 | 持有者 |
-| `done` | `merged` | CR 通过（develop）/ 系统判定（无 CR 的 task）| reviewer / 系统 |
+| `done` | `merged` | develop 内置独立审查通过 + 全量绿 + 自合并到 master / 系统判定（无 PR 的 task）| develop 持有者 / 系统 |
 | `taken-by` | `merged` | 直接判定完成（无 PR 的 task，如 init-project）| 系统 |
 | 任意非 `merged` | `可取` | 异常转移（详见 §4）| 持有者 / dispatch user |
 
@@ -107,9 +107,9 @@ v2 早期阶段——团队小，沟通成本低——所有"非主流"情况用
 
 | 触发 | 影响 |
 |---|---|
-| `develop` 推 PR（→ `done`）| 系统创建 `pr-review` 任务（status=`可取`，target-pr 指向该 PR）|
-| `pr-review → merged`（CR 通过） | 关联的 `develop` task → `merged`；PR 实际合并 |
-| `pr-review` 打回（CR 评论 / 不通过）| 关联的 `develop` 仍 `status=done`；持有者根据 CR 评论继续提 commit；CR 重审；严重时走异常转移（§4） |
+| `develop` 推 PR（→ `done`）| 同会话内即跑 per-task 独立对抗审查 + 全量绿；无独立 pr-review 任务 |
+| `develop` 独立审查通过 + 全量绿 → 自合并到 master（→ `merged`）| 无独立 review task；安全敏感改动留 architecture 人工裁决后再合并 |
+| `develop` 独立审查出阻断 finding | 同会话内回炉重做 + 重审（有界 loop）；3 轮超界 → 起 `revise-doc` 或 escape-hatch，严重时异常转移（§4） |
 | 任意 `develop(source=X)` → `merged` | 检查是否触发下游 task 的前置条件（详见 04 §"任务前置检查"） |
 
 具体**任务前置检查表**见 `04-task-catalog.md`。

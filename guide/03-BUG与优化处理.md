@@ -25,9 +25,7 @@
       ↓
 dispatch-new（判定 B/A + 写任务包入 b-queue）
       ↓
-develop（source=bug / optimization）
-      ↓
-pr-review → merge
+develop（source=bug / optimization；含独立审查 + 自合并到 master）
       ↓
 deploy（合并部署 / hotfix 快速通道）
 ```
@@ -114,7 +112,7 @@ task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`。
 | 创建功能分支，推送 Gitee | — |
 | 创建 PR，写 PR 描述 | — |
 
-代码审查（pr-review）流程同 A 类，通过后合并。
+代码审查内化进 develop（per-task 独立对抗审查）同 A 类，通过后由 develop 自合并到 master。
 
 **hact-app 里**：任务从「进行中」变为「已合并」，`b-tasks.md` 状态同步。
 

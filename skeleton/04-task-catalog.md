@@ -20,8 +20,7 @@
 | 准备 | `draft-tech-design` | architecture | G2 |
 | 准备 | `plan-sprint` | dispatch | G3 |
 | 跨段 | `revise-doc` | product / architecture（按 target 派生） | — |
-| 开发循环 | `develop` | dev-frontend / dev-backend（按 layers 派生） | — |
-| 开发循环 | `pr-review` | review | — |
+| 开发循环 | `develop` | dev-frontend / dev-backend（按 layers 派生）；自审自合并到 master | — |
 | 开发循环 | `generate-integration-tests` | integration-testing | — |
 | 开发循环 | `manual-test` | product | G4 |
 | 收尾 | `deploy` | deploy | — |
@@ -37,19 +36,18 @@
 | 属性 | 取值 | 出现于 |
 |---|---|---|
 | `urgency` | `normal` (默认) / `hotfix`（紧急） | `develop` |
-| `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop`, `pr-review`（从 PR 派生） |
+| `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop` |
 | `task_type` | `dev-frontend` / `dev-backend`（单值路由键；layers 跨层时由分配者指定主） | `develop` |
 | `source` | `sprint` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
 | `target` | `prd` / `trd` / `standards` | `revise-doc` |
 | `target-source` | `bug` / `optimization` | `dispatch-new` |
 | `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-tech-design`, `wrap-up-iteration` |
-| `pr-links` | URL[] | `pr-review` |
 
 `layers` 和 `source` 的组合决定 `develop` 任务加载哪份 standards 和如何理解任务上下文（详见 §6 develop 条目）。
 
 ---
 
-## 13 task 完整定义
+## 12 task 完整定义
 
 ### 1. `init-project`
 
@@ -138,8 +136,8 @@
   - `layers=[frontend]` → `dev-frontend`
   - `layers=[backend]` → `dev-backend`
   - `layers=[shared]` → 由分配者在任务包中指定 task_type
-- **完成判据**: 代码完成 + 通过 pr-review + PR `[merged]`
-- **主要产物**: PR + 代码改动 + （可选）新增/更新单元测试
+- **完成判据**: 代码完成 + per-task 独立对抗审查通过 + 全量绿 + PR `[merged]`（develop 自审自合并到 master，无独立 pr-review；安全敏感改动留 architecture 人工裁决）
+- **主要产物**: PR（已合并）+ 代码改动 + 测试 + `code_reviews[]` 审计留痕
 - **关联 Gate**: —
 - **属性**:
   - `source`：sprint / integration / manual-test / bug / optimization（决定上下文加载）
@@ -157,21 +155,7 @@
 
 ---
 
-### 7. `pr-review`
-
-> 复核 PR：按 standards 评判代码质量，给反馈或批准。
-
-- **discipline**: `review`
-- **完成判据**: CR 反馈写完 + 决定（通过 / 打回）记录在 PR
-- **主要产物**: CR 反馈 + 决定（通过 / 打回）
-- **关联 Gate**: —
-- **属性**: `pr-links`（URL[]）+ `layers`（从 PR 改动文件派生，决定加载哪份 standards）
-
-详见 `specs-structural/pr-review.md`。
-
----
-
-### 8. `generate-integration-tests`
+### 7. `generate-integration-tests`
 
 > 设计联调测试场景 + 写脚本（pinchtab + curl）+ 跑测试 + 把失败转 develop(source=integration)。
 
@@ -186,7 +170,7 @@
 
 ---
 
-### 9. `manual-test`
+### 8. `manual-test`
 
 > 人工验收：对照 PRD acceptance criteria 验证系统，发现问题转 develop(source=manual-test)。
 
@@ -201,7 +185,7 @@
 
 ---
 
-### 10. `deploy`
+### 9. `deploy`
 
 > 部署代码到服务器。
 
@@ -216,7 +200,7 @@
 
 ---
 
-### 11. `wrap-up-iteration`
+### 10. `wrap-up-iteration`
 
 > Gate 5 三步收尾：偏离对账 / feedback 审阅 / project.md 合并。机械化分流，1 分钟内可完成。
 
@@ -235,7 +219,7 @@
 
 ---
 
-### 12. `dispatch-new`
+### 11. `dispatch-new`
 
 > 派新 BUG 任务或新优化任务（B 类入口）。
 
@@ -249,7 +233,7 @@
 
 ---
 
-### 13. `harvest-notes`
+### 12. `harvest-notes`
 
 > 收割成员个人积累，把验证有效的规范 / checklist / 方法论建议上提到公共层。
 

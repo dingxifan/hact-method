@@ -24,7 +24,9 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ---
 
-## 9 个 discipline
+## 8 个 discipline
+
+> 注：原 `review`（代码审查）discipline 于 2026-06-20 随 `pr-review` task 砍除——代码审查不再是独立任务/学科，而是 `develop` 内置的**独立对抗审查 subagent**（per-task、自读权威原文）；审查知识落 `templates/review-briefs/develop-review.md`，归 `dev-frontend`/`dev-backend` 的执行流。
 
 ### `management`
 
@@ -76,27 +78,12 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 **边界**：
 
-- 不包含代码审查（→ `review`）
+- 不包含代码审查（→ develop 内置独立审查 subagent）
 - 不包含测试设计（→ `integration-testing`）
 - 不包含技术设计（→ `architecture`）
 - 只覆盖"任务如何被组织、被分发"层面的事
 
 **典型工作**：规划 sprint 拆出 dev 任务、把 BUG/优化包装成新任务入队列。
-
----
-
-### `review`
-
-**范围**：代码审查——读 PR、按 standards 评判代码质量、给反馈或批准。
-
-**边界**：
-
-- 不包含写代码（→ `dev-`*）
-- 不包含派任务（→ `dispatch`）
-- 不包含设计审查（PRD / TRD 的审查在 draft 时即时发生，不另开 review 任务）
-- 只是审视和判断（不动笔写新代码）
-
-**典型工作**：拉 pr-review 任务，读 PR，对照 standards 写 CR 反馈或批准合并。
 
 ---
 
@@ -122,9 +109,9 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 - 不包含后端 API 设计（→ `architecture`）
 - 不包含联调测试设计（→ `integration-testing`）
-- 不审 PR（→ `review`）
+- 代码审查由 `develop` 内置独立审查 subagent 承担（非独立 discipline）
 
-**典型工作**：拉 `develop(layer=frontend)` 任务，按 `standards-frontend.md` 写 Vue 代码，推 PR。
+**典型工作**：拉 `develop(layer=frontend)` 任务，按 `standards-frontend.md` 写 Vue 代码，per-task 独立审查通过后推 PR 并合并。
 
 ---
 
@@ -136,9 +123,9 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 - 不包含前端 UI（→ `dev-frontend`）
 - 不包含 API 设计（→ `architecture`）
-- 不审 PR（→ `review`）
+- 代码审查由 `develop` 内置独立审查 subagent 承担（非独立 discipline）
 
-**典型工作**：拉 `develop(layer=backend)` 任务，按 `standards-backend.md` 写代码，推 PR。
+**典型工作**：拉 `develop(layer=backend)` 任务，按 `standards-backend.md` 写代码，per-task 独立审查通过后推 PR 并合并。
 
 ---
 
@@ -180,8 +167,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 | discipline                           | 上下文密度 | 主要消耗源                             |
 | ------------------------------------ | ----- | --------------------------------- |
-| `dev-frontend` / `dev-backend`       | 高     | dispatch 循环里的多次读/写/调试             |
-| `review`                             | 高     | 每次 CR 要读 PR + 相关上下文文件 + standards |
+| `dev-frontend` / `dev-backend`       | 高     | 主线编排 + 末端全量（per-task 实现/审查下沉 subagent，含内置独立审查） |
 | `integration-testing`                | 高     | 写脚本时探索系统行为                        |
 | `architecture`                       | 中     | 设计 TRD 时探索现有代码                    |
 | `product`                            | 中     | PRD 写作的资料整理                       |

@@ -54,7 +54,7 @@
 
 ## 完成判据
 
-> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 4 跑，含 PRD↔TRD 两条交叉对账）——机械判据的最终判定。未标的是**语义判据**（载体真承接 AC、精化例子忠实 PRD 行为例子），由 Step 5 末端内容审查（陌生视角 subagent）+ 签字人复核 + pr-review 技术保真把关。
+> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 4 跑，含 PRD↔TRD 两条交叉对账）——机械判据的最终判定。未标的是**语义判据**（载体真承接 AC、精化例子忠实 PRD 行为例子），由 Step 5 末端内容审查（陌生视角 subagent）+ 签字人复核 + develop 内置独立审查的技术保真把关。
 
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] **【linter】** TRD 7 个段落全部存在，无空段

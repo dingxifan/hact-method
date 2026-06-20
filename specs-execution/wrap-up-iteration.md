@@ -92,7 +92,7 @@
 | feedback 内容 | 目的地 | 操作 |
 |---|---|---|
 | 开发踩的坑、禁止事项、项目编码规范（原则级） | 执行人 hact-notes（标签 `[规范]`） | 誊入个人 notes，由 harvest-notes 后续上提公共层 |
-| 某个验证动作被漏掉，code review 才发现（能写成 `[ ]` checkbox） | 执行人 hact-notes（标签 `[checklist]`） | 誊入个人 notes，由 harvest-notes 后续上提 |
+| 某个验证动作被漏掉，独立审查 / 联调才发现（能写成 `[ ]` checkbox） | 执行人 hact-notes（标签 `[checklist]`） | 誊入个人 notes，由 harvest-notes 后续上提 |
 | 角色工作流 / 规范结构 / 方法论有问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes，由 harvest-notes 后续进待议清单 |
 | 跨项目通用机制问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes |
 | 项目架构决策有遗漏 | `decisions.md`（项目仓，不变） | 追加条目 |

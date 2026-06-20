@@ -65,7 +65,8 @@ api-contract:
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | PR | 代码仓库 | PR description 含 5 段：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 |
-| sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[done]`，PR 列 → `#N` |
+| sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[merged]`，PR 列 → `#N` |
+| code_reviews[] 审计留痕 | 项目根 `status.yml` | 每 task 一条（conclusion + 建议级 issues），替代旧 pr-review 写入 |
 | 上下文重置记录（触发时写入） | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：已完成文件 / 阻塞点 / 关键决策 |
 
 ---
@@ -75,10 +76,11 @@ api-contract:
 - [ ] 所有 `acceptance-criteria` 均已满足
 - [ ] **不可视区 AC 已 1:1 落成测试且全绿**（backend/逻辑任务：AC 的 Given/When/Then 例子各有对应测试，`npm run test` 全绿）
 - [ ] layer 对应 checklist 自检通过（backend = `backend-checklist.md` 测试品类清单：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试，留人判项有结论；frontend = `frontend-checklist.md` 三段式：机械归 lint/vue-tsc/stylelint + 可测逻辑写测试 + 视觉/交互留人走查）
-- [ ] **集合内每个任务已通过独立审查 subagent**（对抗式、自读权威原文，brief = `templates/review-briefs/develop-review.md`；无阻断级 finding）
+- [ ] **集合内每个任务已通过独立审查 subagent**（对抗式、自读权威原文，brief = `templates/review-briefs/develop-review.md`；无阻断级 finding；frontend 含设计保真比对）
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
-- [ ] `pr-review` 通过（PR 状态 [merged]）
+- [ ] **安全敏感改动**（权限/认证/数据隔离）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门）
+- [ ] **PR 已合并到 master**（develop 自审自合并，无独立 pr-review；task 状态 `[merged]`，`code_reviews[]` 已追加审计留痕）
 
 ---
 
@@ -98,7 +100,9 @@ api-contract:
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `pr-review` | PR（代码改动 + description） | 代码仓库 PR |
+| `generate-integration-tests`（source=sprint 全 [merged]） | 已合并到 master 的代码 | master 分支 |
+| `manual-test` / 上游复测会话（source=integration/manual-test） | 已合并的修复代码 | master 分支 |
+| `deploy`（hotfix [merged]） | 已合并的 hotfix | master 分支 |
 
 ---
 

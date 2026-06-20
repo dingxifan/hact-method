@@ -165,7 +165,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
   - 交叉对账 FAIL（AC 回链悬空 / PRD AC 未被承接）→ 悬空：改正 TRD 回链号或删退休号；未被承接：在对应载体补 `# 满足 AC：AC-nn`，或列疑点向用户确认本期不做。
   - 重跑到绿（Step 9 签字 commit 的 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷签"机制上做不到，故不写强制散文；本步到签字之间若再改 TRD，门卫兜住结构漂移）。
 
-> linter 覆盖结构/一致性判据（含 AC 覆盖映射的**齐全性**机械核）；**语义判据**（接口字段是否真满足画面、载体是否**真承接**所回链的 AC 而非仅 id 在场）落 linter 🧑 段，由 Step 5 末端审查 + 签字时复核 + 后续 `pr-review` 技术保真把关。
+> linter 覆盖结构/一致性判据（含 AC 覆盖映射的**齐全性**机械核）；**语义判据**（接口字段是否真满足画面、载体是否**真承接**所回链的 AC 而非仅 id 在场）落 linter 🧑 段，由 Step 5 末端审查 + 签字时复核 + 后续 `develop` 内置独立审查的技术保真把关。
 > 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
@@ -211,7 +211,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
   - 与现有 standards 同项但建议不同 → 保留现有版本，把不同建议记入 `feedback.md` 走分流，不当场覆盖
   - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 `decisions.md` 说明冲突和理由
 
-> **适用前提（设计甲）**：当前架构 / 开发高度重叠，draft-tech-design 执行人 ≈ 本期真实开发者，故在生成端注入本人 notes 即覆盖实际写代码的人。团队分化后是否扩展到 develop / pr-review 加载端（设计乙），见 `../hact-method/_meta/plans/方法论待议.md`。
+> **适用前提（设计甲）**：当前架构 / 开发高度重叠，draft-tech-design 执行人 ≈ 本期真实开发者，故在生成端注入本人 notes 即覆盖实际写代码的人。团队分化后是否扩展到 develop 加载端（设计乙），见 `../hact-method/_meta/plans/方法论待议.md`。
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
 - 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目

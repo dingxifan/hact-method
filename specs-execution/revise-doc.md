@@ -124,7 +124,7 @@ git commit -m "fix(doc): {修订内容摘要} [{项目名}]"
 读任务包的 `source` 或 `context` 字段，确认本次 revise-doc 是否由 `wrap-up-iteration` 偏离对账创建：
 
 - **是**：通知 wrap-up-iteration 执行人：「revise-doc {task-id}（target={target}）已完成，可继续偏离对账」
-- **否**（由 pr-review / manual-test / develop / 用户触发）：无需额外交接，直接完成
+- **否**（由 develop 独立审查 / manual-test / 用户触发）：无需额外交接，直接完成
 
 ---
 

@@ -1,7 +1,7 @@
 # 前端自检清单
 
 > 前端模块完成后，对照本清单确认**机械项已交给 lint/type-check、可测逻辑已写测试、视觉/交互残量已走查**，输出【前端自检报告】。
-> 与 backend 的分区差异：可视区**人能当 validator**（看原型 / 看真应用），渲染行为另有 integration（pinchtab）+ manual-test + pr-review 设计保真三重兜底——所以前端**不强制"测试品类"**，但纯逻辑能机械验的不该留给肉眼。
+> 与 backend 的分区差异：可视区**人能当 validator**（看原型 / 看真应用），渲染行为另有 develop 内置独立审查（设计保真比对）+ integration（pinchtab）+ manual-test 三重兜底——所以前端**不强制"测试品类"**，但纯逻辑能机械验的不该留给肉眼。
 > 目标不是"逐条肉眼审代码挑刺"，是"确定性的交给工具、看不见的逻辑写测试、看得见的品味留人走查"。
 
 ---
@@ -32,7 +32,7 @@
 
 - **视觉**：字号 / 行高 / 字重观感与 `design.md` 字体系统一致、未自造字号；控件尺寸（按钮高度 / 输入框宽度）符 design.md；列表空态/长文本截断的视觉表现（不撑破布局、不空白区域）。
 - **响应式移动端**：弹窗 `95vw`/抽屉 `100%`、输入框 `font-size ≥ 16px`（iOS 放大）、表格 `overflow-x` wrapper、Flex/Grid 多列移动端单列降级、点击区 `≥ 44px`——真机视觉判断（固定阈值如 `font-size ≥ 16px` 若项目配了 stylelint 可上移到「一、lint」）。
-- **交互保真**：删除等破坏性操作有二次确认；失败 / 取消 / 空态分支可走通、入口明确、操作成功后列表刷新；与 `prototype.html` 一致（`source=sprint` 由 pr-review 第四步对照 + manual-test 兜）。
+- **交互保真**：删除等破坏性操作有二次确认；失败 / 取消 / 空态分支可走通、入口明确、操作成功后列表刷新；与 `prototype.html` 一致（`source=sprint` 由 develop 内置独立审查的设计保真比对 + manual-test 兜）。
 - **新增视觉元素** `design.md` 未覆盖时，已暂停向用户确认而非自行决定（🚫）。
 - **冗余复用**：无与已有 composable / store action 重复的实现，已直接复用；跨组件复用逻辑已提为 composable；跨组件类型已提取到 `api/*.ts` / `types/enums.ts`，无组件内重复定义或冗余中间变量（品味）。
 
