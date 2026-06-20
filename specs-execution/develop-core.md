@@ -139,7 +139,7 @@ npm run test           # 测试全绿（或项目测试命令）
 
 任意一条报错/红 → 先修复，不进入下一步。
 `build`/`type-check`/`lint` 项目无对应命令 → 跳过该条，不阻断。
-`test` 项目无测试运行器 → 测试基建缺失（`standards-backend.md`「测试框架约定」由 `draft-tech-design` 确立；存量项目迁移时补建——见该 spec Step 4）。**不静默跳过、不假装通过**：
+`test` 项目无测试运行器 → 测试基建缺失（`standards-backend.md`「测试框架约定」由 `draft-tech-design` 确立；存量项目迁移时补建——见该 spec Step 7 维护项目 Standards）。**不静默跳过、不假装通过**：
 - 上报「测试基建缺失」，不可视区任务**阻塞待补**——先补 standards 测试约定 + 项目装运行器，再回来落测试；
 - 若用户判定本任务必须先推进（基建一时补不上）：明确标记本不可视区 AC **未经测试验证（降级）**，PR description「遗留问题」写明，转由 `pr-review` 路1 人工审代码对 AC 兜底——这是**临时降级、非常态**，不得当作正常完成。
 

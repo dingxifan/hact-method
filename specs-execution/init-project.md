@@ -66,7 +66,7 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 - `project.md`
 - `decisions.md`
 - `design.md`
-- `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`：**项目根跨迭代活文档**，此处建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 4 填入、之后每期原地增补（与 `design.md` 同模式：init 建桩、后续 task 填）
+- `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`：**项目根跨迭代活文档**，此处建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 7 填入、之后每期原地增补（与 `design.md` 同模式：init 建桩、后续 task 填）
 - `reusables.md`
 - `backlog.md`
 - `feedback.md`
@@ -76,7 +76,7 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 同时写入以下文件：
 - `CLAUDE.md`：内容复制自 `E:\group-code\hact-method\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
 - `.claude/commands/gitee-ops.md`：内容复制自 `E:\group-code\hact-method\templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
-- `scripts/check-docs.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 5.4 自检 PRD/TRD 结构与交叉一致性时调用）
+- `scripts/check-docs.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
 - `scripts/check-gate.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
 - `scripts/check-sprint.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
 - `scripts/pre-commit-hook.sh`：内容复制自 `E:\group-code\hact-method\templates\scripts\pre-commit-hook.sh`（**门卫**——commit 时按 staged 文件路由跑对应 check-\*.js，红则拦 commit；脚本/node 缺失 no-op 放行。作为 tracked 文件入仓使其随 clone 存活；实际生效需装进 `.git/hooks/`，见 Step 4.1）
