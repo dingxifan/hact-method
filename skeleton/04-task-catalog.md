@@ -10,7 +10,7 @@
 
 ## 总览
 
-**13 个 task type**，按生命周期段分布：
+**12 个 task type**，按生命周期段分布：
 
 | 段 | task | discipline | Gate |
 |---|---|---|---|
