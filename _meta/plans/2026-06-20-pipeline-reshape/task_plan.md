@@ -189,3 +189,13 @@
 - **AC 链审结论**：g-i-t 的 AC→场景覆盖是**软核对**（脚本索引「覆盖 AC」列 + prototype 软核对），**不该机械化**——集成测试按设计只测端到端路径 + 跨模块集成点（15 条上限、不测回归），机械要求「每条 AC 被集成覆盖」会过严错判。本站无 AC 链 bug。
 - **诚实账**：净缩 −15 小；真货币 = 2 个 ④ 遗留 bug（结果格式漂移 + backlog tag 断链）+ 防漂移外置。再次印证「行数对 consistency 修复是错判据」。
 - **下一站**：`manual-test`(289)。
+
+## manual-test 站（2026-06-20，commit `f7a576b`，method-lab 领先 master 3）
+
+用户洞察：「人主动触发、实际中很多规则效果不大」——重点压教学体/依据（人主导会话里 CC 才是读者，要指令非教案）。**本站与 g-i-t 不同：有检查器**（check-gate.js G4，门卫路由覆盖 gates.md G4），故门卫机制适用。exec 289→265/−24，structural 96→69/−27，新建 `templates/acceptance-report.md`(28)：
+- **验收报告外置** → `templates/acceptance-report.md`，exec/structural 双处指针化。**修漂移 bug**：exec 含两段 blockquote、structural 只一段且措辞不同——统一进 template 注释。
+- **门卫接管**：Step 5 签 G4 删 forcing 散文（"退出码1→重跑到0、不得手改报告"），门卫 commit 时自动跑 check-gate.js G4、红拦（同 PRD/plan-sprint），存量 no-op 兜底保留。
+- **压乙-2 末端收口依据**：~25 行格式+blockquote 教学体 → 4 行过程判断（完备性对账 / 验证来源 / 环境差异），知识不丢。
+- **AC 链审结论**：验收报告完备性对账（列全 PRD 每条 AC、抓 plan-sprint 双向对账漏网）保留人工兜底，正确性来源机械标注（不可视区=脊柱+联调、可视区=人工）。无 bug。
+- **诚实账**：货币 = 去重 + 修漂移 + 门卫 forcing + 换指令体。
+- **管线收官**：draft-prd ✅→draft-ux ✅→draft-tech-design ✅→plan-sprint ✅→develop ✅(①②③④)→generate-integration-tests ✅→manual-test ✅。剩 deploy / wrap-up-iteration / init-project / dispatch-new / revise-doc / harvest-notes（非主开发管线核心站）。
