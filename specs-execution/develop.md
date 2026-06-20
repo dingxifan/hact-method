@@ -1,19 +1,24 @@
 # exec: develop
 
-> CC 加载本文时，当前任务是从 queue 拾取任务包，实现代码，推 PR。
-> 三层顺序：**骨架**（理解任务 + 拆分计划）→ **结构层**（逐模块实现）→ **执行层**（自检 + PR）
+> CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR。
+> **执行模型**：主线只**编排**（定标 / 设计门 / 浮决策 / 末端全量 / 提交）；每个任务的「读懂→计划→写→自绿」由**执行 subagent** 跑、隔离上下文；每个任务的质量由**独立审查 subagent**（对抗式、自读权威原文）把关，不通过即回炉。人工只守一个门：**前端设计是否到位**。
 
-**上下文密度**：高。本 spec 处理**一个任务集**（size ≥ 1）：`交付=独立` 任务形成单元素集（自己一个 PR），同层 `交付=批量` 任务形成多元素集（共一个 PR）。单任务即 N=1 特例，全流程统一——**Steps 1–4 对集合每个任务依次执行（按依赖序），Steps 5–8 一次覆盖整个集合**。
-
----
-
-> **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
-
-> **Fast Mode**：用户在会话开头声明 "fast mode" 时，以下**确认型**阻断自动通过（CC 展示结论后直接继续，不等回应）：第零步（layer 从任务包自动判断）、会话定标（取提议子集）、Step 1（AC 理解）、Step 2 路径 B（拆分计划）、Step 5（继续？）。以下**决策型**阻断不受影响：Step 4 遇到 `do-not` 约束边界、Step 4 前端视觉未覆盖决策（CC 缺信息，必须等用户）。
+**上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到执行 subagent，故**批次可放大**（容量被 subagent 数量解耦，会话定标软锚点随之放宽）。本 spec 处理**一个任务集**（size ≥ 1）：`交付=独立` 任务形成单元素集（自己一个 PR），同层 `交付=批量` 任务形成多元素集（共一个 PR）。单任务即 N=1 特例。
 
 ---
 
-## 会话启动
+> **质量模型（三层防线，独审站在绿之上、不是唯一质量线）**：deterministic 绿（build / type / lint / test）先过 → 独立审查做**语义 top-up**（AC 忠实 / do-not 越界 / 标准合规 / 测试忠实）→ 人工只守前端设计到位。
+
+> **🚫 人工门（全自动模型下只剩三处，其余全自动 loop、不逐步等人）**：
+> ① **会话定标**——确认本轮吃哪几个任务（Fast Mode 自动取提议子集）。
+> ② **前端设计到位**——frontend 批次开跑前一次性确认（backend-only 跳过）。
+> ③ **escape-hatch**——执行 subagent 撞 do-not 拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红时返回 blocked，主线浮给用户。
+
+> **Fast Mode**：声明 "fast mode" 时，**确认型**阻断（第零步 layer、会话定标取提议子集、前端设计到位若 design.md 已覆盖）自动通过；**决策型**阻断（escape-hatch：do-not 边界 / 缺信息）不受影响，必须等用户。
+
+---
+
+## 会话启动（主线）
 
 **第零步：确认执行层**
 
@@ -21,192 +26,111 @@
 当前执行层：frontend / backend？
 ```
 
-🚫 等用户确认（或从任务包 layer 字段自动判断后向用户确认）
+🚫 等用户确认（或从任务包 `layer` 字段自动判断后向用户确认；Fast Mode 自动通过）
 
 **G3 前置检查（source=sprint 时必做）**
 
 拾取任务包后，确认 `source` 字段：
 - `source=sprint` → 读 `iterations/vN/gates.md`，确认 G3 已签。未签则阻断：「⚠️ G3 未通过，Sprint 尚未规划，请先完成 plan-sprint。」
-- `source=integration` / `source=manual-test` / `source=bug` / `source=optimization` → 无 Gate 前置，直接继续
+- `source=integration` / `manual-test` / `bug` / `optimization` → 无 Gate 前置，直接继续
 
 **拾取任务（source=sprint）：形成任务集（会话定标）**
 
-读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务。**两个正交维度别混**：「一个 PR 装几个任务」是 **PR 粒度**（依赖驱动，plan-sprint 的 `交付=独立/批量` 已定）；「一轮会话做几个任务」是 **会话容量**（上下文驱动，在此定标）。按 `交付` 字段分两路形成本次会话的**任务集**（后续全流程统一处理，单元素集即单任务）：
+读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务。**两个正交维度别混**：「一个 PR 装几个任务」是 **PR 粒度**（依赖驱动，plan-sprint 的 `交付=独立/批量` 已定）；「一轮会话做几个任务」是 **会话容量**（上下文驱动，在此定标）。按 `交付` 字段分两路形成本次会话的**任务集**：
 
 - **交付=独立**：若存在 `[可取]` 独立任务 → 任务集 = {task-id 最小的那个独立任务}（单元素，自己一个 PR）。独立任务永远单做，不定标。
-- **交付=批量**：本 layer 无 `[可取]` 独立任务 → 候选 = 本 layer 全部 `[可取]` 批量任务，**按依赖序排列**。**会话定标**：按各任务 `files` 估改动面，提议一个"装得下一轮"的**依赖序前缀子集**作为本轮任务集（前缀天然依赖闭合）。软锚点：「子集 > ~3–4 个任务 / files 合集预估大 → 提议截断分轮」（软参考，可按实际改动面判断偏离，同 Step 2「≤3 文件」风格）。剩余批量任务留 `[可取]`、下轮拾取（跨会话依赖靠 Step 6 `depends_on` 分支例外兜，不新增机制）。
+- **交付=批量**：本 layer 无 `[可取]` 独立任务 → 候选 = 本 layer 全部 `[可取]` 批量任务，**按依赖序排列**。**会话定标**：按各任务 `files` 估改动面，提议一个"装得下一轮"的**依赖序前缀子集**作为本轮任务集（前缀天然依赖闭合）。软锚点：因 per-task 上下文已下沉到执行 subagent、主线只编排，批次可比从前放宽——以「主线编排 + 末端全量检测装得下」为准判断（files 合集过大 / 任务数明显偏多 → 提议截断分轮），软参考可按实际偏离。剩余批量任务留 `[可取]`、下轮拾取（跨会话依赖靠末端 commit 的 `depends_on` 分支例外兜，不新增机制）。
   ```
-  会话定标：本层 [可取] 批量任务 [id...]（依赖序），本轮提议吃前 {k} 个 [子集 id...]（files 合集约 {N} 处改动，装得下一轮），剩余 [id...] 留下轮。
+  会话定标：本层 [可取] 批量任务 [id...]（依赖序），本轮提议吃前 {k} 个 [子集 id...]（files 合集约 {N} 处改动），剩余 [id...] 留下轮。
   ```
-  🚫 等用户确认子集（Fast Mode 自动取提议子集）。确认后该子集 = 本轮任务集 = 一个 PR（一批次=一分支=一 PR，见 Step 6 命名）。
-- **阻断**：本 layer 有 `交付=独立` 任务处于 `[done]`（PR 已推未合并）且有 `批量` 任务依赖它 → 停止：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 pr-review 合并。」（独立 PR 合并到 master 前，依赖它的批量任务不可拾取。）
+  🚫 等用户确认子集（Fast Mode 自动取提议子集）。确认后该子集 = 本轮任务集 = 一个 PR（一批次=一分支=一 PR，见末端 commit 命名）。
+- **阻断**：本 layer 有 `交付=独立` 任务处于 `[done]`（PR 已推未合并）且有 `批量` 任务依赖它 → 停止：「⚠️ {task-id}（独立）PR 尚未合并，依赖它的批量任务暂不可拾取，请先完成 pr-review 合并。」
 
-**认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`），立即认领 commit（单任务时 `{task-id-list}` 即一个 id）：
+**认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`），立即认领 commit：
 ```bash
 git add iterations/vN/sprint.md status.yml
 git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 ```
 （push 随首次代码 commit 一起推送，无需单独 push）
 
----
+**前端设计到位确认（frontend 批次的唯一人工门）**
 
-**精确加载上下文**（不全量加载）：
-- 读拾取的所有任务包全文（`source=sprint/integration/manual-test` → `iterations/vN/queue/{task-id}.md`；`source=bug/optimization` → `b-queue/{task-id}.md`）
-- 只读 `relevant-standards` 字段指向的具体章节，不读整份 standards 文件（`standards-{layer}.md` 在**项目根**——跨迭代活文档，非 `iterations/vN/`）
-- 只读 `reference` 字段列出的文件行号范围，不读全文
-- **frontend 任务：必读项目根 `design.md` 全文**——视觉规格唯一参照，文件短、无条件加载，不再凭"是否涉及视觉"自行判断（堵住"改个样式类名觉得不涉及视觉→硬编码字号/间距"的泄漏）
-- frontend 任务：若 `reference` 字段已含 `ux-flows.md` 相关段落则直接读；若未含但 `ux-flows.md` 存在，则按任务包 title 匹配功能名补读对应段落
-- frontend 任务：若 `iterations/vN/prototype.html` 存在，按任务包 title 匹配对应交互路径读取，作为交互实现基准（happy path 之外的分支照原型走通）
-
----
-
-## 第一层：骨架（理解 + 计划）
-
-> **任务级遍历（Level 1）**：任务集多元素时，Step 1–4 对每个任务按依赖序**串行**依次执行（被依赖的先实现，**不并行**——一律串行保简单，会话定标已约束本轮任务量）；单元素集即执行一次。每个任务内部的模块实现是 **Level 2**（模块级 subagent，见 Step 4 Subagent 策略）。
-
-### Step 1：理解任务
-
-复述 `acceptance-criteria`：
-```
-我理解本次任务需要：
-1. {AC 1}
-2. {AC 2}
-...
-理解有误请纠正。
-```
-
-🚫 等用户确认理解正确
+- **backend-only 任务集** → 跳过，直接进主循环。
+- **含 frontend 任务** → 主线读项目根 `design.md` +（若存在）`iterations/vN/prototype.html`，对照本批次各 frontend 任务的画面 / 交互，确认设计规格已覆盖齐全：
+  ```
+  前端设计到位检查：本批次 frontend 任务涉及画面 [...]，design.md [已覆盖全部 / 缺 {X} 的视觉规格]，prototype.html [有对应交互路径 / 缺 {Y}]。
+  ```
+  🚫 等用户确认「设计到位、可全自动跑」（Fast Mode：design.md 已覆盖则自动通过）。design.md 有缺口 → 用户补 design / 或起 `revise-doc`，**缺口补齐前不开跑**。
+  > **为何独留这一门**：把"视觉决策"从执行中途前移到开跑前一次——design.md 若开跑前就覆盖齐全，执行中就不会冒出"无据可依的视觉决策"。视觉/交互的"到位、是否用户真要的"无权威原文可机械 / 独立核（design §10「是否用户真要的」归用户），这是 AI 自洽 loop 唯一兜不住的，故留人，且只此一处、只在开跑前。
 
 ---
 
-### Step 2：规模评估 + 拆分计划
+## 主循环：逐任务「执行 → 独立审查」（per task，依赖序串行）
 
-按 `files` 字段改动范围评估：
+> 任务集多元素时，对每个任务**按依赖序串行**走「执行 subagent → 独立审查 subagent」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突、会话定标已约束本轮量）；单元素集即走一次。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
 
-**路径 A：≤ 3 个文件且逻辑简单**
-```
-✅ 规模评估：改动范围小（[N] 个文件），直接开始实现。
-→ 下一步：复用检查
-继续？
-```
+### 阶段 A · 执行 subagent（读懂 → 计划 → 写 → 自绿）
 
-**路径 B：> 3 个文件或跨模块**
-输出拆分计划：
-```markdown
-## 拆分计划
+主线派一个 general-purpose subagent，告知 `{task-id}` + layer + 迭代 vN，令其自治完成（隔离上下文）：
 
-### 模块 1：{模块名}
-- 涉及文件：{文件路径}
-- 实现要点：{一句话}
-- 预计改动行数：~{N} 行
+1. **自读上下文**（精确加载，不全量）：
+   - 任务包全文（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
+   - 只读 `relevant-standards` 指向章节（`standards-{layer}.md` / `standards-shared.md` 在**项目根**——跨迭代活文档，非 `iterations/vN/`）
+   - 只读 `reference` 列出的文件行号范围，不读全文
+   - **frontend 额外**：必读项目根 `design.md` 全文（视觉规格唯一参照）；`ux-flows.md` 对应功能段（若存在，按 title 匹配）；`prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
+2. **读懂**：对照 `acceptance-criteria` 明确本任务要做什么（不再向用户复述确认——理解忠实性由阶段 B 独审兜）。
+3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块；用 Explore 读 `reusables.md`，已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
+4. **写**：逐模块实现并**落盘**。>5 文件 / 跨模块可再派子 subagent 分模块（frontend 按组件、backend 按 controller/service 拆；属 subagent 内部的事，主线不介入）。
+5. **自绿（增量，共享工作树）**：跑 `build` / `type-check` / `lint` / `test`；不可视区 AC 的 Given/When/Then 例子规格（测试脊柱：行为源自 PRD 幕 1、技术精度源自 TRD 幕 2）**1:1 物化成可运行测试**且全绿——这是脊柱例子第一次落成 runnable 形态（守 2026-06-16：runnable 物化在代码存在后；测试随分支携带、不蒸馏）。`build/type/lint` 项目无对应命令 → 跳过该条不阻断。同一测试修 3 次仍红 → 不硬磨，返回 `blocked`（根因疑在 AC / TRD）。
+6. **返回结构**给主线：
+   ```yaml
+   status: done | blocked
+   task-id: {id}
+   changed-files: [...]
+   tests: { added: [...], result: "X passed" }
+   deviations: [...]    # 超出 files 的多改 + 原因
+   unmet-ac: [...]      # 未实现的 AC + 原因
+   blocked: { reason: "do-not 边界拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红 / 测试基建缺失", detail: "..." }  # status=blocked 时填
+   ```
 
-### 模块 2：{模块名}
-...
+> **测试基建缺失**（项目无测试运行器）：执行 subagent 返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、转 `pr-review` 路1 人工审代码兜底——**临时降级、非常态**。
 
-执行顺序：模块 1 → 模块 2 → 模块 3（理由：{依赖关系}）
-```
+### 阶段 B · 独立审查 subagent（对抗式，自读权威原文）
 
-🚫 等用户确认拆分计划
+执行 subagent 返回 `done` 后，主线派**全新隔离** subagent 读 `../hact-method/templates/review-briefs/develop-review.md`，只告知 `{task-id}` + layer + vN。该审查员**自读权威原文**（任务包 / `git diff` / standards 章节 / 测试代码+结果），**绝不接收执行 subagent 的自评 / 总结**（喂自评即丧失独立性，等于自己批自己的作业），对抗式找问题、存疑即判阻断。
 
-**路径 C：urgency=hotfix**
-跳过规模评估和拆分计划，直接输出：
-```
-hotfix 模式：最小化修复路径，直接开始实现，不等用户确认拆分计划。
-```
-然后直接进入 Step 3（不经过 🚫 阻断）。
+**审查 loop（有界）**：
+- 审查输出 `findings: []` 或全为「建议」级 → 本任务**通过**，进下一任务（建议项记入 PR「遗留问题」或当场顺手改）。
+- 有「阻断」级 finding → 主线把问题清单回传、**重派执行 subagent** 整改 → 整改后**重派审查**。
+- 同一任务「审查—整改」loop 3 轮仍有阻断 finding → 不再硬磨，**升级**：根因疑在 AC / TRD 设计层 → 起 `revise-doc`；否则走 escape-hatch 浮给用户。
 
----
+### escape-hatch（执行 / 审查返回 blocked 时）
 
-### Step 3：复用检查
+执行 subagent 返回 `status: blocked`，或审查 loop 超界 → 主线**浮给用户**该 blocked 结构，等用户指示后带答案**重派**该任务；用户判定无解 → 走「上下文重置协议」（任务回 `[可取]`）。视觉缺口理论上已被前端设计门预堵，仍冒出则说明 design.md 有漏 → 回补 design / `revise-doc`。
 
-用 Explore subagent 读 `reusables.md`，标记与本任务相关的已有资产：
-
-```
-可复用资产：
-- {资产名}（路径：{path}）→ 用于：{本任务哪个部分}
-无可复用资产：{说明}
-```
-
-已有资产必须复用，不重新实现。
+> 每任务通过审查后主线报一行：`✅ {task-id} 完成（{changed-files 数} 文件，{tests} 测试，审查通过）`。集合全部通过后进末端。
 
 ---
 
-## 第二层：结构层（逐模块实现）
+## 末端（主线，batch-level，集合全部任务通过审查后跑一次）
 
-### Step 4：实现
+### 全量检测
 
-按拆分计划逐模块实现，**每个模块完成后报告**：
-
-```
-✅ 模块 [{模块名}] 完成：改动了 {文件名} 的 {行范围}，实现了 {一句话}。
-```
-
-实现过程中：
-- 遇到 `do-not` 约束边界 → 立即停止，报告，等用户指示
-- 前端视觉实现先对照 `design.md`：字号/行高/字重、颜色/间距/圆角/阴影、控件尺寸一律用对应 SCSS 变量，禁止硬编码字面值；遇到 `design.md` 与 standards **均未覆盖**的视觉决策 → 暂停，输出 2–3 个选项，等用户确认
-- 发现 sprint 范围外的功能缺口（非禁止，只是本次未规划）→ 评估规模，≤3 文件且依赖层已就绪则建议走 B 类 dispatch，不直接记 backlog
-
-🚫 遇到以上两种情况时阻断，不自行绕过
-
-**Subagent 实现策略（模块级遍历，Level 2）**（>5 个文件或跨模块）：
-- 主线协调，每个模块派独立 subagent 实现
-- subagent 返回代码内容，主线负责写文件
-- subagent 失败处理见"Subagent 使用"
-
----
-
-## 第三层：执行层（自检 + 交付）
-
-### Step 5：自检（写测试 + 跑绿 + 偏离核查）
-
-> 任务集多元素时，以下各项跑**一次**、覆盖集合全部改动文件与所有任务包的 AC 测试；偏离核查对比所有任务包 `files` 的合集。
-
-**【机械验证】**（先跑命令，有报错先修，再进入测试与偏离核查）
-
+整合后跑**一次**全量验证（覆盖集合全部改动文件 + 所有任务 AC 测试）：
 ```bash
-npm run build          # 构建通过
-npm run type-check     # 类型检查（或 npx tsc --noEmit）
-npm run lint           # lint 通过（含 no-any / console.log / 未用 import / TODO 等机械项）
-npm run test           # 测试全绿（或项目测试命令）
+npm run build && npm run type-check && npm run lint && npm run test
 ```
+- 任一红 → 多为 **cross-task 集成问题**（单任务自测在阶段 A 已绿）；定位是哪个任务的改动引入，回该任务阶段 A 修。`build/type/lint` 无命令 → 跳过该条不阻断。`test` 无运行器 → 见阶段 A「测试基建缺失」处置。
+- **偏离核查**：`git diff --stat` 对比所有任务包 `files` 合集；汇总各任务返回的 `deviations` / `unmet-ac`，分别记入 PR description「偏离说明」/「遗留问题」。
 
-任意一条报错/红 → 先修复，不进入下一步。
-`build`/`type-check`/`lint` 项目无对应命令 → 跳过该条，不阻断。
-`test` 项目无测试运行器 → 测试基建缺失（`standards-backend.md`「测试框架约定」由 `draft-tech-design` 确立；存量项目迁移时补建——见该 spec Step 7 维护项目 Standards）。**不静默跳过、不假装通过**：
-- 上报「测试基建缺失」，不可视区任务**阻塞待补**——先补 standards 测试约定 + 项目装运行器，再回来落测试；
-- 若用户判定本任务必须先推进（基建一时补不上）：明确标记本不可视区 AC **未经测试验证（降级）**，PR description「遗留问题」写明，转由 `pr-review` 路1 人工审代码对 AC 兜底——这是**临时降级、非常态**，不得当作正常完成。
-
-**【自检】**（取代旧"逐条 checklist 审代码 + AI 对抗审查"——确定性的交给工具、看不见的写测试、看得见的留人）
-
-对照 `templates/checklists/{layer}-checklist.md`（backend = 测试品类清单；frontend = 三段式自检）确认：
-- 不可视区 AC 的 Given/When/Then 例子规格（任务包 `acceptance-criteria`，测试脊柱：行为源自 PRD 幕 1、技术精度源自 TRD 幕 2）已在此 **1:1 物化成可运行测试**且全绿——这是脊柱例子规格第一次落成 runnable 形态（守 2026-06-16：runnable 物化在代码存在后）；落成后测试代码随分支携带，不蒸馏；
-- 测试品类无空缺（backend：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试或合理标 N/A）；
-- 留人判项（N+1 / 日志隐私 / 冗余复用 / 并发竞态）逐项给结论。
-- 前端：机械项交 `npm run lint`/`vue-tsc`/`stylelint`（含硬编码字面值）；可测逻辑（状态 / 边界 / 表单）写测试；视觉/交互/响应式残量留走查，归 manual-test / pr-review 设计保真，不在此硬卡。
-
-输出 backend【后端测试品类报告】/ frontend【前端自检报告】（格式见 checklist 文末）。
-
-> **升级（同测试反复修不好）**：同一测试修 3 次仍红 → 根因可能在 AC / TRD 设计层（AC 本身矛盾或 TRD 契约错），停止硬磨、上报用户；判断是否创建 `revise-doc` 任务，不在本会话强行刷绿。
-
-**【偏离核查】**：
-
-```bash
-git diff --stat
-```
-
-对比任务包 `files` 字段：
-- 有多改的文件 → 记入 PR description「偏离说明」
-- 有 AC 未能实现 → 记入 PR description「遗留问题」
+> cross-task 一致性（接口对接、跨任务数据流）只在此跑全量绿验是否冲突，**不重复重审**——端到端正确性留下游 `generate-integration-tests`。
 
 ```
-✅ 自检完成：机械验证 + 测试全绿（[X] passed），测试品类无空缺，[无偏离 / 偏离已记录]。
+✅ 全量检测完成：build/type/lint/test 全绿（[X] passed），[无偏离 / 偏离已记录]。集合 {task-id-list} 全部通过独立审查。
 → 下一步：commit + PR
-继续？
 ```
 
----
-
-### Step 6：commit
+### commit
 
 **分支规则**：分支必须从 `master` 切，禁止从其他任务分支切（禁止 stacked PR）。唯一例外：任务包 `depends_on` 明确标注前置任务且其尚未合并到 master。
 
@@ -219,12 +143,10 @@ git add {改动的文件列表}
 git commit -m "{见上分支命名}"
 ```
 
----
-
-### Step 7：推 PR
+### 推 PR
 
 ```bash
-git push origin {task-id}
+git push origin {分支名}
 ```
 
 PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
@@ -235,37 +157,33 @@ PR description 是本次交付的唯一记录，需完整填写。**每任务一
 ### {task-id}：{任务标题}      ← 每任务一节，多元素集逐任务重复本节
 **改动摘要**：{2–3 句}
 **AC 验证**：
-- [x] {AC 1}：{验证方式}
+- [x] {AC 1}：{验证方式（测试名 / 手段）}
 
 ### 偏离说明
 {无 / 多任务分别列出：哪些改动超出 files 清单，或哪条 AC 未实现及原因}
 
 ### 遗留问题
-{无 / 多任务分别列出，有则确认已记入 backlog}
+{无 / 多任务分别列出：未验证降级项 / 审查建议级项 / 已记 backlog 项}
 ```
 
-禁止在 PR description 中包含凭据。若推 PR 前发现凭据（PAT / token / 密码 / 私钥 / API key）已被写入代码或 commit：立即从 commit 中移除、通知相关人撤销该凭据，在凭据清理干净前不推 PR。
+禁止在 PR description 中包含凭据。若推 PR 前发现凭据（PAT / token / 密码 / 私钥 / API key）已被写入代码或 commit：立即从 commit 中移除、通知相关人撤销该凭据，清理干净前不推 PR。
 
----
-
-### Step 8：更新状态
+### 更新状态
 
 - 集合内**每个**任务包状态改为 `[done]`（A 类：`iterations/vN/queue/{task-id}.md`；B 类：`b-queue/{task-id}.md`）
-- **仅 source=sprint**：在 `iterations/vN/sprint.md` 集合内每任务对应行，状态列改 `[done]`、**PR 列填同一个 `#N`**（N 为 Step 7 的 PR 编号）；其余 source 任务不在 sprint.md，跳过此条
-- 在项目根 `status.yml` 把集合内每个 task 的 `status` 改为 `done`、`pr` 全填同一个 `{N}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）
-- 执行 commit + push，状态更新随 feature 分支推送（合并到已开的 PR）：
+- **仅 source=sprint**：在 `iterations/vN/sprint.md` 集合内每任务对应行，状态列改 `[done]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
+- 在项目根 `status.yml` 把集合内每个 task 的 `status` 改 `done`、`pr` 全填同一个 `{N}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）
+- commit + push，状态更新随 feature 分支推送（合并到已开的 PR）：
   ```bash
   git add {集合内任务包文件} iterations/vN/sprint.md status.yml   # sprint.md 仅 source=sprint 时含
   git commit -m "chore(sprint): {task-id-list} 标记 [done]，PR #{N}"
   git push origin {分支名}
   ```
 
----
-
-### Step 9：移交
+### 移交
 
 按 `source` 更新对应追踪文件：
-- `source=sprint` → 无需额外操作（PR 号已在 Step 8 写入 sprint.md）；同层全部推完后 devmgr 可开启批量 pr-review
+- `source=sprint` → 无需额外操作（PR 号已写入 sprint.md）；同层全部推完后 devmgr 可开启批量 pr-review
 - `source=bug / optimization` → 在 `b-tasks.md` 对应行追加 `PR#{N} 待审`
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"已推 PR#{N}，等待合并后复测"
 
@@ -276,13 +194,12 @@ PR description 是本次交付的唯一记录，需完整填写。**每任务一
 
 🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续 pinchtab / 复测 / 联调"等后续动作——develop 只负责到 PR 推出，PR 合并权在 pr-review 手里，测试阶段的恢复取决于合并结果，不由 develop 会话判断。
 
----
-
-### Step 10：feedback 检查 / 就地分流
+### feedback 检查 / 就地分流
 
 回顾本次实现，识别值得沉淀的发现：
-- 遇到 standards 未覆盖的决策（视觉/接口边界等）且反复出现
+- 遇到 standards 未覆盖的决策（视觉 / 接口边界等）且反复出现
 - 上下文重置协议被触发（记录触发原因，供后续调整任务拆分粒度 / **会话定标软锚点**参考——定标降低触发概率但不消除，单任务做爆仍走重置）
+- 独立审查反复揪出同类问题（可能 standards / checklist 有空缺）
 - 无发现 → 跳过
 
 **反馈去向按 `source` 分**：
@@ -298,34 +215,26 @@ PR description 是本次交付的唯一记录，需完整填写。**每任务一
 
 ## Subagent 使用
 
-| 触发点 | Subagent 任务 | 失败处理 |
-|--------|-------------|---------|
-| Step 3 复用检查 | Explore 读 reusables.md | 失败则主线直接读 |
-| Step 4 代码探索（reference 不足时）| Explore 扫描周边文件（返回 ≤20 行摘要）| 失败则主线读文件 |
-| Step 4（> 5 文件跨模块）| general-purpose subagent 实现单个模块 | 见下方失败协议 |
+| 角色 | 触发 | 任务 | 失败处理 |
+|------|------|------|---------|
+| **执行 subagent** | 主循环每任务阶段 A | 自读上下文 → 读懂 → 计划+复用 → 写+自绿，返回结构化结果 | 见下方失败协议 |
+| **独立审查 subagent** | 主循环每任务阶段 B | 读 `develop-review.md`、自读权威原文、对抗式审，返回问题清单 | 失败则主线重派；连续失败按审查 loop 超界处置 |
+| 子模块 subagent | 阶段 A 内（>5 文件 / 跨模块） | 实现单个模块，返回代码 | 由执行 subagent 内部处理 |
+| Explore | 阶段 A 复用检查 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 失败则执行 subagent 直接读 |
 
-**Subagent 失败协议**：
-1. 同一问题同一 subagent 三次失败 → subagent 返回失败结构：
-```yaml
-status: failed
-attempts: 3
-last-error: "{错误描述}"
-context-state:
-  completed-files: [...]
-  blocked-at: "{卡在哪里}"
-  key-decisions: [...]
-```
-2. 主线带上 `context-state` 重新 spawn subagent（给更多上下文）
+**执行 subagent 失败协议**：
+1. 同一问题三次失败 → 执行 subagent 返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策）
+2. 主线带上更多上下文重派一次
 3. 再次失败 → 触发**上下文重置协议**
 
 **上下文重置协议**（出现以下任一情况触发）：
-- subagent 二次重 spawn 后仍失败
+- 执行 subagent 二次重派后仍失败 / 审查 loop 超界且 escape-hatch 无解
 - 实际改动文件超出 `files` 清单 3 个以上
 - 调试轮次 > 20 轮
 - 用户临时追加新需求
 
 重置流程：
-1. 在 `_meta/sessions/develop-{task-id}-progress.md` 写 context-state 记录：
+1. 在 `_meta/sessions/develop-{task-id}-progress.md` 写 context-state：
 ```yaml
 context-state:
   task-id: {task-id}
@@ -333,8 +242,8 @@ context-state:
   blocked-at: "{卡在哪里}"
   key-decisions: [...]
 ```
-2. 将任务包回 [可取]，写阻塞原因
-3. 告知用户：「遇到阻塞，任务已回到 [可取]，建议开新会话重新拾取」
+2. 将该任务包回 `[可取]`，写阻塞原因（其余已通过审查的任务保留进度）
+3. 告知用户：「{task-id} 遇到阻塞，已回到 [可取]，建议后续开新会话重新拾取」
 
 ---
 
@@ -342,19 +251,20 @@ context-state:
 
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
-| 额外加载 | `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
-| Checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint/vue-tsc/stylelint｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：为鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
-| 视觉决策暂停 | 有（🚫） | 无 |
-| Subagent 拆分粒度 | 按组件拆（每个组件一个 subagent） | 按模块拆（controller / service 分开）|
+| 开跑前人工门 | **前端设计到位确认**（design.md / prototype 覆盖本批次画面） | 无（backend-only 跳过） |
+| 执行 subagent 额外加载 | `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
+| 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint/vue-tsc/stylelint｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
+| 子模块 subagent 拆分粒度 | 按组件拆 | 按模块拆（controller / service 分开）|
+| 独立审查侧重 | AC 忠实 + 机械保真（变量非硬编码）；视觉到位归人工门 | AC 忠实 + 测试品类齐全 + 标准合规 |
 
 ---
 
 ## 上下文管理
 
-**断点续做**：
-1. 读任务包，确认任务内容和 AC
-2. 读 `git diff --stat` 确认已改动文件
-3. 读 `progress.md` 的 context-state 记录（如有）了解上次停在哪里
-4. 从断点继续，不重做已完成改动
+**断点续做**（主循环中途恢复）：
+1. 读任务集各任务包，确认 AC
+2. 读 `git diff --stat` + 各任务 `[done]/[taken-by]` 状态，确认哪些任务已通过审查、哪些未完成（以**工作区实际文件为准**）
+3. 读 `_meta/sessions/develop-{task-id}-progress.md` 的 context-state（如有）了解卡点
+4. 从未完成任务继续，不重做已通过审查的任务
 
-**阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 `progress.md` 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。
+**阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 progress.md 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。
