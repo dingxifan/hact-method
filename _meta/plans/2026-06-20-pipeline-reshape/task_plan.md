@@ -95,3 +95,24 @@
 
 - 本会话：乙-1+乙-2 spec（`d83e722` feat）+ pipeline-reshape 设计稿/前序记录（`892be13` docs）已 commit 本地 master，**未 push**。
 - 注：structural-review sub1-7 + 本轮仍全在**本地 master**、领先 origin 十几 commit、**从未 push**（master 严格，待用户明确）。
+
+---
+
+## 管线行走进展 + 下一轮起点（2026-06-20 末次更新；上面「HOOK 起点种子」已兑现，勿当待办）
+
+**形态**：pipeline-reshape 后期收敛为「**单环节致密化方法沿开发管线一站站走**」+「**同步审 AC 链有效性**」。两件货币不同：致密化=净行数收缩；AC 链审=结构正确性（常 ADD）。方法本体见 `单环节致密化方法.md`（四件机制：linter 判官 + 门卫 hook + template + 末端 agent，外加一把语言刀=换指令体）。
+
+**已建地基（勿重做）**：门卫（HOOK）已建成（`templates/scripts/pre-commit-hook.sh`，init-project 装，按 staged 路由 check-docs/check-sprint/check-gate，红拦 commit，无脚本/无 node→no-op）。判官三件 + 结构化模板早就位。**上面 HOOK 起点种子那段是已完成记录，不是待办。**
+
+**管线站点**（用户定序，非按行数 ROI）：
+`draft-prd-vN`✅ → `draft-ux`✅(确认无改) → **`draft-tech-design`✅(本轮)** → `plan-sprint`(下一站) → develop 家族 → pr-review → generate-integration-tests → manual-test。
+
+**draft-tech-design 站本轮三件**（本地 master，未 push）：
+1. 致密化 + Step 5 末端内容审查（`b090a2d`）——283→307 净 ADD（cram 单行拆 bullet + 验内容 ADD，非减肥）。
+2. standards 归位项目级活文档（`e83fb53`，决策#17 修订，18 文件）——见 `findings.md` F1。
+3. 步骤重排 + 整数重编号（`fb9fa9f`）——验证（linter+内容审查）前移到写完 TRD 后、用户确认前；Step 1–9 干净整数。
+4. STATUS 里程碑 + 方法文档候选更新（`55223e6`）。
+
+**下一轮起点 = `plan-sprint` 站**（最胖 ~340 行）。照方法文档 §五「6 步」：拆四象限（格式→已有 task-package 模板 + check-sprint｜验证→门卫已接管｜内容→是否需末端 agent｜过程→换指令体）。**先量账**：哪些是给人读的教学体冗余（换语气主力、零 sub7）、哪些是 sub7 陷阱（导航知识伪装成仪式、抽即掏空）。AC 链在 plan-sprint 的落点：任务包 `(源：AC-nn)` 回链 → check-sprint 逐条正反向已机械（sub5/sub6），残量=逐条忠实性留人。
+
+**纪律**：行数对 reorg/结构修正是错判据（draft-tech-design 净 + 仍对）；sub7 每删先答删哪条；保护 hact-app v1–v4；**master 领先 origin 二十余 commit、从未 push，待用户明确才推**。
