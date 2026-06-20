@@ -172,3 +172,20 @@
 **下一轮起点 = `develop 家族` 站**（develop-core ~308 + 3 薄壳）。注意：**develop 家族 sub7 刚重构（2026-06-19），先评估再动**——方法文档 §六明示「develop 家族 sub7 刚重构，先放」。develop 无检查器（门卫无可跑、退 no-op），末端是 npm test/lint 实测而非 spec 内审，四象限里"验证→门卫"这格对它不适用。**先量账**：develop-core 哪些是教学体冗余（换语气主力）、哪些是 sub7 导航知识（抽即掏空）。若 develop 家族判定先放，则跳到 `pr-review` / `manual-test`（~289）。**入手前先问用户走哪站**（develop 家族刚重构，可能用户想先放）。
 
 **纪律**：行数对 reorg/结构修正是错判据（draft-tech-design 净 + 仍对）；sub7 每删先答删哪条；保护 hact-app v1–v4；**master 领先 origin 二十余 commit、从未 push，待用户明确才推**。
+
+---
+
+## 分支合并（2026-06-20，用户拍板）
+
+- develop 站四连改在 `method-lab` worktree 完成（10 commit）。用户选「先合并 method-lab→master」。
+- 在 master worktree（`E:/group-code/hact-method`，干净）`git merge --ff-only method-lab`：`f3f3dbb..8304136` 干净 fast-forward，54 文件、+1139/−1309。两 worktree 现同步在 `8304136`。**未 push**（master 领先 origin 36 commit、待用户明确）。
+- **develop 站收口**。管线剩余站点：`generate-integration-tests`(282) → `manual-test`(289)。下一轮入手前先问用户走哪站。
+
+## generate-integration-tests 站（2026-06-20，commit `87c10a1`，method-lab 领先 master 1）
+
+用户定「develop 不再致密化（已 post-③ 致密、四件机制 N/A 或已用），直接走 g-i-t」。**本站主货币是 consistency 修复，非大减肥**（exec 282→267/−15，structural 79→71）：
+- **致密化**：结果格式 `result-{日期}.md` 外置 → `templates/integration-result.md`（沿 sprint.md/review-briefs pattern）；exec/structural 双处指针化。**顺带修漂移 bug**：exec 结果表含「模块」列、structural 缺，外置统一以完整版为准。删 Step 3 重复行。「为何在此生成」依据 4 行→1 行（保留知识 + org-krm v5 教训锚点）。
+- **修 ④ 遗留断链（关键）**：develop.md backlog tag `[独审-建议]` → `[CR-建议]`，与 `code_reviews[]` / adversarial-review skill / g-i-t Step 1.5 读者统一。病根：④ 砍 pr-review 时改了 develop backlog tag，漏了 g-i-t Step 1.5 这个消费者——sprint develop 产的建议级条目原本 g-i-t 读不到。`独审-建议` 全仓已清零。
+- **AC 链审结论**：g-i-t 的 AC→场景覆盖是**软核对**（脚本索引「覆盖 AC」列 + prototype 软核对），**不该机械化**——集成测试按设计只测端到端路径 + 跨模块集成点（15 条上限、不测回归），机械要求「每条 AC 被集成覆盖」会过严错判。本站无 AC 链 bug。
+- **诚实账**：净缩 −15 小；真货币 = 2 个 ④ 遗留 bug（结果格式漂移 + backlog tag 断链）+ 防漂移外置。再次印证「行数对 consistency 修复是错判据」。
+- **下一站**：`manual-test`(289)。
