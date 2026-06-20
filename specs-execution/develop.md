@@ -45,7 +45,23 @@
   🚫 等用户确认子集。确认后该子集 = 本轮任务集 = 一个 PR（一批次=一分支=一 PR，见末端 commit 命名）。
 - **阻断**：本 layer 有 `交付=独立` 任务处于 `[done]`（PR 已推未合并到 master）且有 `批量` 任务依赖它 → 停止：「⚠️ {task-id}（独立）PR 尚未合并到 master，依赖它的批量任务暂不可拾取，请先完成该独立任务的 develop 会话（含合并）。」
 
-**认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`），立即认领 commit：
+**认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）。
+
+**分支锁定（认领时立即建立，push 时唯一来源）**：
+
+按任务集推导分支名：
+- 单元素集 → `{task-id}`
+- 多元素集 → `{layer}-batch-v{N}-{id1}/{id2}/...`（依赖序，末元素后无尾斜杠，git 拒绝以 `/` 结尾）
+
+```bash
+git checkout -b {分支名}   # 从 master 切，禁止从其他任务分支切（禁止 stacked PR）
+                           # 唯一例外：depends_on 指向尚未合并到 master 的前置任务时，从该前置分支切
+```
+
+> 多会话并行时同名分支已存在 → git 立即报错：停止，告知用户另一会话已认领同批任务，澄清后再继续。
+
+把 `branch: {分支名}` 写入 status.yml 集合内**每个** task 条目，随认领 commit 落定：
+
 ```bash
 git add iterations/vN/sprint.md status.yml
 git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
@@ -130,21 +146,21 @@ npm run build && npm run type-check && npm run lint && npm run test
 
 ### commit
 
-**分支规则**：分支必须从 `master` 切，禁止从其他任务分支切（禁止 stacked PR）。唯一例外：任务包 `depends_on` 明确标注前置任务且其尚未合并到 master。
+**分支**：已在认领时锁定（`status.yml tasks[*].branch`），当前工作树即在该分支上。
 
-**分支命名 / message（按集合大小）**：
-- 单元素集 → 分支 `{task-id}`，message `{type}({task-id}): {改动描述}`
-- 多元素集 → 分支 `{layer}-batch-v{N}-{id1}/{id2}/...`（集合内各 task 序号按依赖序用 `/` 连接），**批次名携带本次任务 id 集**（如 frontend v3 含 F3-003 / F3-005 / F3-010 → `frontend-batch-v3-003/005/010`）——无状态、跨会话唯一（同层不同轮吃不同子集，名必不同，破 `{layer}-batch-v{N}` 撞车）、可追溯。注：分支名不得以 `/` 结尾（git 拒绝），末元素后无尾斜杠。message `feat({同分支名}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]`
+**commit message 格式（按集合大小）**：
+- 单元素集 → `{type}({task-id}): {改动描述}`
+- 多元素集 → `feat({分支名}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]`
 
 ```bash
 git add {改动的文件列表}
-git commit -m "{见上分支命名}"
+git commit -m "{见上}"
 ```
 
 ### 推 PR + 合并到 master
 
 ```bash
-git push origin {分支名}
+git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领时已锁定
 ```
 
 用 `/gitee-ops` 创建 PR（远端为 Gitee，禁止 gh CLI）。PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
@@ -272,6 +288,7 @@ context-state:
 
 **断点续做**（主循环中途恢复）：
 1. 读任务集各任务包，确认 AC
+1a. 读 `status.yml` 中本批任务的 `branch` 字段，执行 `git checkout {分支名}` 恢复到正确分支
 2. 读 `git diff --stat` + 各任务 `[done]/[taken-by]` 状态，确认哪些任务已通过审查、哪些未完成（以**工作区实际文件为准**）
 3. 读 `_meta/sessions/develop-{task-id}-progress.md` 的 context-state（如有）了解卡点
 4. 从未完成任务继续，不重做已通过审查的任务
