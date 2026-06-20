@@ -210,6 +210,15 @@
 - F5：删依据 commit 逐行核 diff，零误删承重行为（反向结论）。
 - 另记：README line 38 `├── projects/`（2026-05-08 已移除）+ line 43「6 份文档（01-06）」（实 7 份）是 pre-existing stale，与本 review 无关，未处理。
 
+## wrap-up-iteration 站（2026-06-20，门卫接管 + 修 stale 引用）
+
+用户定「现在在 wrap-up」。wrap-up 与 manual-test 同型——**有检查器**（check-gate.js G5，门卫路由 gates.md G5）。四象限：template N/A（无独立产物格式块可外置，产物是 decisions/project.md/notes 誊入）、末端 agent N/A（语义残量归 management 签字人）、门卫✅、换指令体✅。exec 190→185（−5）/ structural 74→73（−1）：
+- **门卫接管「签 G5 前」forcing 散文**：删"退出码1→按报告逐条修后重跑到0、不得手改报告"+"执行 §7 G4/G5 段 Gate=G5"框架——签字 commit（line 162 把 gates.md+status.yml+... 一次暂存，无 F4 分提交问题）时门卫自动跑 check-gate.js G5、红拦。措辞对齐 manual-test post-门卫。存量 no-op 兜底保留。
+- **修 stale 引用（consistency bug）**：structural 行 48「存量退回 §7『G3』段 subagent 兜底」→「§7 G4/G5 段人工逐条核对兜底，无 subagent」。病根同 manual-test 站修过的——sub3c 整段拔 G3 冷核协议后，G5 兜底误指已删的 G3 subagent。全仓 grep 验「§7『G3』段 subagent」现零残留。
+- **删三重重复注**：第一步尾「注意：若创建 revise-doc 需等全部完成才签 G5」与红线 line 12 + 签 G5 line 152 重复 → 删。
+- **诚实账**：小幅（净 −6），wrap-up 本就精简（机械分流 + 选项菜单 + 生产安全 🚫 门不可压）。主货币 = 门卫 forcing + consistency 修复 + 去重，非减肥。无 AC 链（收尾不涉 AC）。
+- **剩余站**：init-project / dispatch-new / revise-doc / harvest-notes。
+
 ## deploy 站（2026-06-20，致密化 + 漂移修复）
 
 用户定「继续往 deploy 站走」。deploy 是运行时运维 runbook——四象限里**门卫 N/A**（无检查器、无 Gate，验证=运行时健康检查非 spec 内审）、**末端 agent N/A**（机械序列无内容可审）、**🚫 生产安全人工门合法留人**（部署触生产，与 develop 全自动相反）。可动只有 template 外置 + 换指令体。exec 174→161（−13）/ structural 75→65（−10）/ 新建 `templates/deploy-log.md`(13)：
