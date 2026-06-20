@@ -49,6 +49,16 @@
 
 ## 历史里程碑
 
+### 2026-06-20 单环节续走 draft-tech-design：致密化 + standards 归位 + 步骤重排（三件依次落，沿管线往下走）
+
+> 接「门卫样本建成 + 致密化方法成稿」。用户定调"沿整个开发管线一个个往下走，同时审 AC 链有效性"。管线顺序 draft-prd✅→draft-ux✅(无改)→**draft-tech-design 本轮**→plan-sprint→develop→…。本会话把 draft-tech-design 三件依次做掉，三个独立 commit（本地 master，未 push）。
+
+- **件 3·致密化 + Step 5.5 末端内容审查**（commit `b090a2d`）：接口设计段从 cram 单行拆三 bullet（回链承接/幕2精化/字段对画面）；新增独立内容审查（陌生视角 subagent 派发 brief，验 linter 兜不住的内容有效性）。**诚实账**：283→307 净 ADD——§接口设计原为行高效 cram 单行，拆 bullet 增物理行但降阅读密度；Step 5.5 是"验内容"的 ADD 非堆规则。印证方法文档"单看行数会误判"。
+- **件 1·standards 归位为项目级活文档**（commit `e83fb53`，18 文件，决策#17 修订）：`standards-{shared,frontend,backend}.md` 从 `iterations/vN/` 移到**项目根**，与 decisions/reusables/design 同级。生命周期从"每期从上期副本重生"→"v1 播种、vN+1 原地增补"的单一真相源。**病根**：standards 是代码库级编码约定、本质跨迭代，per-iteration 重生成产生副本链 + 真相源含糊 + **并行迭代约定漂移**（v2/v3 各持副本可不一致，错的）。`iterations/vN/` 混了真·迭代内容（PRD/TRD/gates/sprint）与错放的项目内容（standards）。历史基线靠 git，per-iteration 冻结快照无活消费者（review 永远用当前）。接线：draft-tech-design Step4 重生→增补 + 双源去重对照现有 standards；plan-sprint/develop-core/pr-review/manual-test/revise-doc/generate-integration-tests 加载路径改项目根；init-project 建三份空桩（与 design.md 同模式）；templates/standards 头注 + skeleton/04 + guide/02 + CLAUDE.md 结构图 + BRIEF #17/#23 同步。
+- **件 2·步骤重排 + 整数重编号**（commit `fb9fa9f`）：把 TRD 验证（linter + 内容审查）从"签字前最末端"前移到"写完 TRD 立即"，排在用户确认与 standards 之前——**在最便宜处（机器/陌生视角）先验，用户看到的是已过两关的稿**。门卫在 Step9 签字 commit 复跑 linter 兜结构漂移（早验之所以安全正因门卫兜底）。去小数重编号：1 疑点 / 2 骨架 / 3 写TRD / **4 linter / 5 内容审查 / 6 TRD确认** / 7 维护standards / 8 知识沉淀 / 9 G2 签字。外部引用同步（structural / develop-core Step4→7 / init-project）。
+- **AC 链审查结论（draft-tech-design 段）**：链路本身机械化已收口（check-docs 逐条正反向 + 门卫路由 trd→check-docs），无 bug；残量 = 精化忠实 + 载体真承接（固有语义），现由新 Step 5 末端审查 + 签字人 + pr-review 三层兜。本段不是减肥（致密化）就是结构修正（standards/重排），货币各异。
+- **git**：本地 master 含 sub1-7 + 乙 + PRD/门卫 + 本轮三 commit，领先 origin 二十余 commit，**全部未 push**（master 严格）。
+
 ### 2026-06-20 门卫（HOOK）样本建成 + 单环节致密化方法成稿 — PRD 阶段四件机制凑齐，配方可复制
 
 > 接 HOOK/DRY 双 park。用户定调：**HOOK 全局 rollout 仍不划算，但把 PRD 阶段当样本做"全套"再总结方法**。补齐 PRD 样本缺的第 4 件机制（findings §七-3 forcing function，唯一没碰过的），从完整样本抽出可复制配方。commit 本地 master，未 push。
