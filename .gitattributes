@@ -1,0 +1,2 @@
+# shell 脚本强制 LF——CRLF 会让 `#!/bin/sh\r` 在 git hook / POSIX sh 下报 bad interpreter
+*.sh text eol=lf
