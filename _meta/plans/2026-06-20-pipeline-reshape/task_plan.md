@@ -199,3 +199,13 @@
 - **AC 链审结论**：验收报告完备性对账（列全 PRD 每条 AC、抓 plan-sprint 双向对账漏网）保留人工兜底，正确性来源机械标注（不可视区=脊柱+联调、可视区=人工）。无 bug。
 - **诚实账**：货币 = 去重 + 修漂移 + 门卫 forcing + 换指令体。
 - **管线收官**：draft-prd ✅→draft-ux ✅→draft-tech-design ✅→plan-sprint ✅→develop ✅(①②③④)→generate-integration-tests ✅→manual-test ✅。剩 deploy / wrap-up-iteration / init-project / dispatch-new / revise-doc / harvest-notes（非主开发管线核心站）。
+
+## 全管线删纯人用依据声明（2026-06-20，commit `081064c` + `e7b1273`，新原则）
+
+用户洞察：runtime spec 里**纯"为什么"依据声明只对人有解释价值、CC 执行不需要，却每次加载耗 token**——应整句删（非压缩）。沉淀 memory `project_cut_human_only_rationale.md`。判据=**删掉是否改变 CC 做什么**：否=人用→删，是=行为→留。
+- **先删 g-i-t 孤例**（`081064c`）：「为何在此生成」整段（决策已在 STATUS 2026-06-16）。
+- **再全管线扫**（7 subagent 并行扫 specs-execution，回收 PURE 23 / MIXED 42）+ 我过滤：
+  - **只做干净 PURE 档**（用户选）：删整段/整句纯依据 + 纯历史括注，6 文件 net −12 行（更大价值在行内括注剥离降每行 token）。develop 纳入（用户同意，删人用文字非改逻辑）。
+  - **否决 subagent 误判 PURE 的定向纲领**（保留）：develop L11 质量模型框架 / L127 不重复重审(行为) / L188 push 消歧(防误用 hact-method master 纪律) / L85 守2026-06-16物化时机(行为) / draft-ux L5 角色姿态 / manual-test L4+L192 / tech-design L168 覆盖分工。
+  - **跳过 42 条 MIXED**（动机行为交织、外科剥离低 ROI 高风险）。
+- **诚实账**：货币 = token/load 降低（删人用解释）+ 知识零损失（决策都在 STATUS/BRIEF，不每次加载）。非大减肥（净 −12 行），但每次执行管线都省。
