@@ -22,9 +22,9 @@
 **必读文件**（Explore subagent 并行读取）：
 - `iterations/vN/prd.md`（AC 来源——任务包 AC 须能回链到此，G2 后开发链中段唯一回看 PRD 的窗口）
 - `iterations/vN/trd.md`
-- `iterations/vN/standards-shared.md`
-- `iterations/vN/standards-frontend.md`
-- `iterations/vN/standards-backend.md`
+- 项目根 `standards-shared.md`
+- 项目根 `standards-frontend.md`
+- 项目根 `standards-backend.md`
 - `reusables.md`
 - `decisions.md`
 - `iterations/vN/ux-flows.md`（若存在，用于写前端任务包的 `reference` 字段）

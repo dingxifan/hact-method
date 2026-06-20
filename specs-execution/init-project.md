@@ -66,6 +66,7 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 - `project.md`
 - `decisions.md`
 - `design.md`
+- `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`：**项目根跨迭代活文档**，此处建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 4 填入、之后每期原地增补（与 `design.md` 同模式：init 建桩、后续 task 填）
 - `reusables.md`
 - `backlog.md`
 - `feedback.md`

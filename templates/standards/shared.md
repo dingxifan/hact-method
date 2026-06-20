@@ -1,6 +1,6 @@
 # 跨层通用规范（shared）
 
-> 由 draft-tech-design 基于 TRD 生成，写入 `iterations/vN/standards-shared.md`。
+> 由 draft-tech-design 基于 TRD 播种到**项目根** `standards-shared.md`（跨迭代活文档，vN+1 原地增补）。
 > 本模板提供骨架和常见约定，项目启动时按实际填写。
 > 不重复 standards-frontend.md / standards-backend.md 中已有的单层约束。
 

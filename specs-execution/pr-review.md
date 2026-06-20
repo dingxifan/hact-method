@@ -29,8 +29,8 @@
 读任务包，确认 `pr-links` 字段。
 
 按 PR 改动文件路径推断总体 layer（`frontend` / `backend` / 混合 / `null`），精确加载对应 standards 章节——不全量加载，只读与本批 PR **直接相关**的部分：
-- `layer` 含 `backend` → `iterations/vN/standards-backend.md` + `standards-shared.md` 相关章节
-- `layer` 含 `frontend` → `iterations/vN/standards-frontend.md` + `standards-shared.md` 相关章节；**额外加载项目根 `design.md` 全文**（视觉保真基准，对全部 frontend PR）；`iterations/vN/prototype.html` 对应交互路径（**仅当被审 PR 对应 develop task `source=sprint` 时加载**，作交互保真基准——联调/人工/B 类派生的修复 PR 原型已可能旧，不加载）
+- `layer` 含 `backend` → 项目根 `standards-backend.md` + `standards-shared.md` 相关章节
+- `layer` 含 `frontend` → 项目根 `standards-frontend.md` + `standards-shared.md` 相关章节；**额外加载项目根 `design.md` 全文**（视觉保真基准，对全部 frontend PR）；`iterations/vN/prototype.html` 对应交互路径（**仅当被审 PR 对应 develop task `source=sprint` 时加载**，作交互保真基准——联调/人工/B 类派生的修复 PR 原型已可能旧，不加载）
 - `layer=null` → 跳过 standards
 
 ```

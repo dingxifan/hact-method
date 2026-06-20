@@ -39,7 +39,7 @@
 |--------|---------|
 | `prd` | `iterations/vN/prd.md` |
 | `trd` | `iterations/vN/trd.md` |
-| `standards` | `iterations/vN/standards-{backend\|frontend\|shared}.md`（由 reason 决定具体文件） |
+| `standards` | 项目根 `standards-{backend\|frontend\|shared}.md`（跨迭代活文档，由 reason 决定具体文件） |
 
 定位 `reason` 所指的具体段落，输出：
 ```

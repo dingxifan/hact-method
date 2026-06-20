@@ -14,7 +14,7 @@
 - **文件**：
   - `iterations/vN/prd.md`（AC 来源，任务包 AC 须能回链到此）
   - `iterations/vN/trd.md`
-  - `iterations/vN/standards-shared.md` / `standards-frontend.md` / `standards-backend.md`
+  - 项目根 `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`（跨迭代活文档）
   - `reusables.md`（了解可复用资产，避免任务包重复指派已有实现）
 
 ---

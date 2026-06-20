@@ -23,7 +23,7 @@
 ## 精确加载上下文（不全量加载）
 
 - 读壳已拾取的任务包全文（路径由壳的会话启动确定：`develop-sprint` / `develop-repair` → `iterations/vN/queue/{task-id}.md`；`develop-b` → `b-queue/{task-id}.md`）
-- 只读 `relevant-standards` 字段指向的具体章节，不读整份 standards 文件
+- 只读 `relevant-standards` 字段指向的具体章节，不读整份 standards 文件（`standards-{layer}.md` 在**项目根**——跨迭代活文档，非 `iterations/vN/`）
 - 只读 `reference` 字段列出的文件行号范围，不读全文
 - **frontend 任务：必读项目根 `design.md` 全文**——视觉规格唯一参照，文件短、无条件加载，不再凭"是否涉及视觉"自行判断（堵住"改个样式类名觉得不涉及视觉→硬编码字号/间距"的泄漏）
 - frontend 任务：若 `reference` 字段已含 `ux-flows.md` 相关段落则直接读；若未含但 `ux-flows.md` 存在，则按任务包 title 匹配功能名补读对应段落

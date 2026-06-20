@@ -14,7 +14,7 @@
 - **文件**：
   - `iterations/vN/trd.md`（接口定义）
   - `iterations/vN/prd.md`（acceptance criteria，测试场景来源）
-  - `iterations/vN/standards-shared.md`（测试环境约定段落）
+  - 项目根 `standards-shared.md`（测试环境约定段落）
 
 ---
 

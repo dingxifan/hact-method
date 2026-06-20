@@ -90,10 +90,10 @@
 - **discipline**: `architecture`
 - **完成判据**: TRD 完整 + 3 份 standards 完整 + 在任务尾部询问"要不要签 G2"
 - **主要产物**: 4 份文件——
-  - `iterations/vN/trd.md`
-  - `iterations/vN/standards-shared.md`
-  - `iterations/vN/standards-frontend.md`
-  - `iterations/vN/standards-backend.md`
+  - `iterations/vN/trd.md`（迭代内）
+  - 项目根 `standards-shared.md`（跨迭代活文档，v1 播种 / vN+1 增补）
+  - 项目根 `standards-frontend.md`（同上）
+  - 项目根 `standards-backend.md`（同上）
 - **关联 Gate**: **G2**（可选签于任务尾部）
 - **前置条件**: G1 已签
 - **属性**: `version`（vN）

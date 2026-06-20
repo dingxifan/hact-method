@@ -1,7 +1,7 @@
 # 前端编码规范（通用模板）
 
-> 项目启动时由 draft-tech-design 挑选本期相关项，写入 `iterations/vN/standards-frontend.md`。
-> 通用规则在此维护；项目特有规则（色彩变量、断点值、业务状态枚举）写在项目 standards-frontend.md 末尾，不要改这里。
+> 项目启动时由 draft-tech-design 挑选本期相关项，播种到**项目根** `standards-frontend.md`（跨迭代活文档，vN+1 原地增补）。
+> 通用规则在此维护；项目特有规则（色彩变量、断点值、业务状态枚举）写在项目根 standards-frontend.md 末尾，不要改这里。
 
 ---
 

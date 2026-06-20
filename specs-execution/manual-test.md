@@ -49,12 +49,12 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 
 🚫 等用户选择后再继续
 
-用户选 [1] → 继续下方（精确读取 prd.md + standards-shared.md）
+用户选 [1] → 继续下方（精确读取 prd.md + 项目根 standards-shared.md）
 用户选其他 → 按用户描述判断，加载对应 exec spec 执行
 
 三条件满足 → 精确读取：
 - `iterations/vN/prd.md`（acceptance criteria 段落）
-- `iterations/vN/standards-shared.md`（测试环境约定段落）
+- 项目根 `standards-shared.md`（测试环境约定段落）
 
 ---
 
@@ -65,7 +65,7 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 - [ ] 数据库指向测试库（非生产库）
 - [ ] 前端页面可打开
 
-**任一未就绪** → 引导用户逐步建立（参照 `iterations/vN/standards-shared.md` 测试环境约定段落），就绪后继续。
+**任一未就绪** → 引导用户逐步建立（参照项目根 `standards-shared.md` 测试环境约定段落），就绪后继续。
 
 ```
 ✅ 测试环境确认：{服务地址} 可访问，数据库为测试库。

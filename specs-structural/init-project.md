@@ -34,6 +34,7 @@
 | b-tasks.md | `{name}/b-tasks.md` | 见下方模板 |
 | decisions.md | `{name}/decisions.md` | 空表格（含表头） |
 | design.md | `{name}/design.md` | 空文件，待首期产品阶段填写 |
+| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 空桩（标题 + 待播种注），项目根跨迭代活文档；首期 draft-tech-design 播种、vN+1 原地增补 |
 | backlog.md | `{name}/backlog.md` | 空文件 |
 | feedback.md | `{name}/feedback.md` | 空文件 |
 | _meta/input/ | `{name}/_meta/input/` | 空目录，存放背景材料和上下文文档 |

@@ -30,9 +30,9 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | TRD | `iterations/vN/trd.md` | Markdown，套结构化模板 `templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位，供 `scripts/check-docs.js` 解析与交叉对账） |
-| 共享规范 | `iterations/vN/standards-shared.md` | Markdown；v1 源于 `templates/standards/`，vN+1 源于上期同文件增量更新 |
-| 前端规范 | `iterations/vN/standards-frontend.md` | 同上 |
-| 后端规范 | `iterations/vN/standards-backend.md` | 同上 |
+| 共享规范 | 项目根 `standards-shared.md` | Markdown；**项目级跨迭代活文档**（非迭代内产物）；v1 播种自 `templates/standards/`，vN+1 在同文件原地增补 |
+| 前端规范 | 项目根 `standards-frontend.md` | 同上 |
+| 后端规范 | 项目根 `standards-backend.md` | 同上（含「测试框架约定」节） |
 | G2 签字 | `iterations/vN/gates.md` | `- [x] G2：TRD 已确认 — YYYY-MM-DD` |
 | decisions.md 更新 | `decisions.md` | 表格追加：决策 / 原因 / 日期 |
 | project.md 更新（技术层） | `project.md` | 追加或更新技术层内容 |
@@ -84,7 +84,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `plan-sprint` | TRD + 三份 standards，G2 已签 | `iterations/vN/trd.md` + `standards-*.md` |
+| `plan-sprint` | TRD + 三份 standards，G2 已签 | `iterations/vN/trd.md` + 项目根 `standards-*.md` |
 | `revise-doc`（如有修订） | TRD / standards 被标记为待修订 | backlog `[修订]` 条目 |
 
 ---

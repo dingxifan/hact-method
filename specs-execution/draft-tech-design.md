@@ -158,27 +158,27 @@
 
 ## 第三层：执行层（Standards）
 
-### Step 4：生成三份 Standards
+### Step 4：维护项目 Standards（首期播种 / 迭代增补）
 
-TRD 确认后，启动 **2 个并行 subagent** 生成 frontend / backend standards；主线同时生成 shared。
+三份 `standards-{shared,frontend,backend}.md` 是**项目根的跨迭代活文档**（非迭代内产物，与 `decisions.md` / `reusables.md` / `design.md` 同级），单一真相源——首期播种、之后每期原地增补，并行迭代共享同一份保全库约定一致。TRD 确认后，启动 **2 个并行 subagent** 处理 frontend / backend；主线同时处理 shared。
 
 **Standards 来源规则**（双源：公共模板 + 执行人个人 notes）：
-- 首期：从 `../hact-method/templates/standards/{layer}.md` 挑选本期 TRD 相关项，不全量复制
-- 迭代：以上期 `iterations/vN-1/standards-*.md` 为基础，按本期 TRD 增量追加或修订
-- **双源补充**：再取执行人个人 notes（`../hact-notes-{name}/notes.md`）中 `[规范]` 标签、与本 layer 相关的条目并入本期 standards——让本人已积累、尚未经 harvest-notes 上提的规范当期即生效
-  - **去重**：并入前对照公共模板 + 上期 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
-  - notes 不存在 / 无 `[规范]` 条目 → 仅用公共模板 + 上期 standards
-  - 与上期 standards 同项但建议不同 → 保留上期版本，把不同建议记入 `feedback.md` 走分流，不当场覆盖
-  - 与公共模板 `templates/standards/` 某条冲突（区别于上期 standards 冲突）→ 以本期 TRD 决策为准，在 `decisions.md` 说明冲突和理由
+- **首期播种**（项目根 `standards-*.md` 仍是 init 空桩）：从 `../hact-method/templates/standards/{layer}.md` 挑选本期 TRD 相关项写入，不全量复制
+- **迭代增补**：直接在项目根现有 `standards-*.md` 上**原地**追加 / 修订本期 TRD 新增的约定，不复制整份、不另起迭代副本
+- **双源补充**：再取执行人个人 notes（`../hact-notes-{name}/notes.md`）中 `[规范]` 标签、与本 layer 相关的条目并入项目 standards——让本人已积累、尚未经 harvest-notes 上提的规范当期即生效
+  - **去重**：并入前对照公共模板 + 项目根现有 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
+  - notes 不存在 / 无 `[规范]` 条目 → 仅用公共模板 + 现有 standards
+  - 与现有 standards 同项但建议不同 → 保留现有版本，把不同建议记入 `feedback.md` 走分流，不当场覆盖
+  - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 `decisions.md` 说明冲突和理由
 
 > **适用前提（设计甲）**：当前架构 / 开发高度重叠，draft-tech-design 执行人 ≈ 本期真实开发者，故在生成端注入本人 notes 即覆盖实际写代码的人。团队分化后是否扩展到 develop / pr-review 加载端（设计乙），见 `../hact-method/_meta/plans/方法论待议.md`。
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
-- 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 上期 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
-- 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型；并入 notes 条目前先对照公共模板 / 上期 standards 去重
-- 主线负责写文件，不让 subagent 直接写文件
+- 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
+- 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型；并入 notes 条目前先对照公共模板 / 现有 standards 去重
+- 主线负责写文件（项目根 `standards-{layer}.md` 原地播种 / 增补），不让 subagent 直接写文件
 
-主线生成 `standards-shared.md`（命名规范 / 错误码 / API 响应格式 / 权限模型）。
+主线处理项目根 `standards-shared.md`（命名规范 / 错误码 / API 响应格式 / 权限模型），首期播种 / 迭代增补同上规则。
 
 **测试基建约定（不可视区测试的地基，不可省）**：`standards-backend.md` 必含「测试框架约定」一节——测试框架选型 + `npm run test`（或等价）命令 + 测试文件位置约定。这是 develop 把不可视区 AC（Given/When/Then 例子）落成可运行测试的前提（核心抓手 A）；没有它，develop 的 `npm run test` 步无处落地。
 - 首期项目：在此确立框架，写入 standards-backend 与 `project.md` 技术层。
@@ -264,7 +264,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 **更新项目根 `status.yml`**（字段见 `../hact-method/skeleton/07-status-contract.md`）：将 `iterations.vN.gates.G2` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
 
-执行 `git add iterations/vN/trd.md iterations/vN/standards-shared.md iterations/vN/standards-frontend.md iterations/vN/standards-backend.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`
+执行 `git add iterations/vN/trd.md standards-shared.md standards-frontend.md standards-backend.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`（standards 在项目根，非 iterations/vN/）
 
 **feedback 检查**（签 G2 后）：
 - 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
@@ -302,6 +302,6 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 **断点续做**：
 - 读 `iterations/vN/trd.md` 判断写到哪一段（按 7 段结构对照）
-- 读 `iterations/vN/standards-*.md` 判断哪几份已完成
+- 读项目根 `standards-*.md` 判断本期增补是否已落（活文档，看是否含本期 TRD 新约定）
 - 读 `iterations/vN/gates.md` 判断 G2 是否已签
 - 从未完成的段落或文件继续
