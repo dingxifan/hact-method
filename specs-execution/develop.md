@@ -207,7 +207,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 - 遇到 standards 未覆盖的决策（视觉 / 接口边界等）且反复出现
 - 上下文重置协议被触发（记录触发原因，供后续调整任务拆分粒度 / **会话定标软锚点**参考——定标降低触发概率但不消除，单任务做爆仍走重置）
 - 独立审查反复揪出同类问题（可能 standards / checklist 有空缺）
-- 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）→ 入 `backlog.md`（格式：`- [ ] {日期} | [独审-建议] {描述} | {文件路径} | 待后续处理`）
+- 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）→ 入 `backlog.md`（格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径} | 待后续处理`；与 B 类 adversarial-review 同 tag，下游 generate-integration-tests Step 1.5 统一清理）
 - 无发现 → 跳过
 
 **反馈去向按 `source` 分**：

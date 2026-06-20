@@ -104,10 +104,7 @@ G3 签署时已确认环境可达，此处快速复核：
 3. 写脚本索引 `integration-tests/scripts-v{N}.md`：按功能模块分段（`## {模块名}`），每段一张表（字段：序号 / 场景描述 / 覆盖 AC）
 4. `git add integration-tests/ && git commit -m "test(it): v{N} 集成测试脚本生成" && git push`
 
-> **为什么在这里而不是 draft-tech-design 阶段生成**：
-> 前端 pinchtab 脚本依赖实际运行的应用（路由结构、元素可访问性、工具 API 行为、DB 数据状态）。
-> 这些在 develop 合并前无法验证，预生成等于"空中建筑"——会引入大量错误假设，联调时需要多轮修正。
-> 后端 curl 脚本相对稳定（只依赖 API 契约），但也可能因实现偏离 TRD 而需要修正，统一在此阶段生成更易维护。
+> **为何在此生成、不在 draft-tech-design 预生成**（守 2026-06-16 决策）：前端 pinchtab 脚本依赖实际运行的应用（路由 / 元素可访问性 / 工具 API 行为 / DB 数据状态），develop 合并前无法验证，预生成是"空中建筑"（org-krm v5 联调 15 条全废的教训）。后端 curl 虽只依赖 API 契约较稳，仍可能因实现偏离 TRD 需修正——统一在此生成更易维护。
 
 **脚本存在** → 读所有已合并 PR description 的「偏离说明」段落：
 - 无偏离 → 脚本直接可用，跳过校准
@@ -132,19 +129,7 @@ G3 签署时已确认环境可达，此处快速复核：
 - 前端：调用 `Skill(pinchtab)` 执行该模块的 pinchtab 场景
 - 返回：每条场景的结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要 + 失败现象及复现步骤
 
-全部 subagent 返回后，汇总写入 `integration-tests/result-{日期}.md`：
-
-```markdown
-# 联调测试结果 · vN · {日期}
-
-| # | 模块 | 场景描述 | 结果 | 现象（失败时填写） | 级别 |
-|---|------|---------|------|-----------------|------|
-| 1 | {模块名} | {场景描述} | ✅ | — | — |
-| 2 | {模块名} | {场景描述} | ❌ | {具体现象 + 复现步骤} | [阻断] |
-| 3 | {模块名} | {场景描述} | ❌ | {现象} | [不阻断] |
-```
-
-结果写入 `integration-tests/result-{日期}.md`。
+全部 subagent 返回后，汇总写入 `integration-tests/result-{日期}.md`（格式见 `../hact-method/templates/integration-result.md`）。
 
 **同步写项目根 `status.yml` 的 `integration_tests[]`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`；hact-app 直接取数驱动 F6 联调清单）：每条场景一项
 ```yaml

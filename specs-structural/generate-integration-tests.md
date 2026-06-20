@@ -33,22 +33,11 @@
 |------|------|------|
 | 测试脚本（后端） | `integration-tests/backend/{场景名}.http` 或 `.sh` | HTTP 请求文件 / curl 脚本 |
 | 测试脚本（前端） | `integration-tests/frontend/{场景名}.pinchtab` | pinchtab 脚本 |
-| 测试结果记录 | `integration-tests/result-{日期}.md` | 见下方格式 |
+| 测试结果记录 | `integration-tests/result-{日期}.md` | 见 `../hact-method/templates/integration-result.md` |
 | 修复任务包（[阻断] 失败时） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（[不阻断] 失败时） | `backlog.md` | `- [ ] {日期} \| [不阻断] {描述} \| 联调发现` |
 | 进度断点（compact 时写入） | `_meta/sessions/generate-integration-tests-progress.md` | 场景清单 + 已跑场景结论 + 已派修复 task-id |
 | feedback.md 条目（发现共性问题时） | `feedback.md` | `{日期} \| {发现} \| 建议更新到 {standards/trd 哪节}` |
-
-**测试结果记录格式：**
-
-```markdown
-# 联调测试结果 · vN · {日期}
-
-| # | 场景 | 结果 | 现象（失败时填写） | 级别 |
-|---|------|------|-----------------|------|
-| 1 | {场景描述} | ✅ | — | — |
-| 2 | {场景描述} | ❌ | {具体现象} | [阻断] |
-```
 
 ---
 
