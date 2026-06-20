@@ -107,17 +107,22 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后，按 `specs-structural/develop.md §字段规范` 套 `../hact-method/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整 17 字段包。**模板注释已含字段格式 / AC 回链 tag / 例子写法 / reference 行号规则——本文只讲模板讲不了的判断与跨文件来源**：
+骨架确认后套 `../hact-method/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整 17 字段包（字段权威见 `specs-structural/develop.md §字段规范`）；**字段格式 / AC tag / 例子写法 / reference 行号规则模板已带**。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
 
-- **数量策略**：≤4 个主线逐个写；>4 个启动并行 subagent（每个 2–3 包，见 Subagent 使用）。每包写入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
-- **depends_on 来源**：填 Step 2 已确认的依赖（与 sprint.md 依赖列、status.yml `depends_on` 三处一致）。共享资产消费（多任务共用同一表/枚举/共享类型）也走 `depends_on`——消费方指向 source-of-truth 任务，不另存消费方列表（反查得出）。
-  > 团队期加固（暂不做，记 `_meta/plans/方法论待议.md`）：Step 3.5 独审增「共享资产依赖完备性」一类——交叉比对各包 `files`，≥2 任务碰同一共享文件/表/枚举则校验 `depends_on` 边是否标全。单人串行本人有全局上下文，暂靠 Step 2.5 + 拾取顺序兜。
-- **AC 回链 + 测试脊柱**：每条 `acceptance-criteria` 标覆盖的 PRD AC id `(源：PRD AC-nn)`（纯技术约束标 `(技术)`）；**不得凭 TRD 派生发明无来源 AC**——权威来源是 PRD。**backend（不可视区）任务**各条携带**精化后的 Given/When/Then 例子规格**——行为源 PRD 幕 1、技术精度（状态码/错误码/断言）源 TRD 幕 2 接口段精化，供 develop 物化成可运行测试（任务包只携例子规格文本，**不预写 runnable**，物化点在 develop）；前端任务维持散文 AC。某条 backend AC 回链对不上（PRD 缺幕 1 / TRD 缺幕 2）→ 写包时即发现，回 `revise-doc(target=prd / trd)` 补，不在本会话硬造。
-- **reference 跨文件锚点**：前端任务 reference 链 `ux-flows.md` 对应场景段、后端任务 reference 链 TRD **错误码清单段 + `# 服务流程：{场景名}` 段**（后端失败回退/状态分支/校验分支的权威来源是 TRD，不是 ux-flows——draft-ux 红线把后端校验排除在外）。**前后端用同一场景名对齐**：前端 UI 反馈与后端校验/状态对同一条分支不重不漏。（行号格式由模板规定、`check-sprint` 机械卡。）
-  > 机械卡边界：`files` 行号"已知则填"（目标文件尚未写出，不机械核）；`relevant-standards` 是否覆盖 `files` 所属强制规范属语义判断（standards 无"文件类型→规范"映射表，机械查不了），移交 Step 3.5 第④类。
-- **api-contract 推导**（每个 `layers=[backend]` 且被前端依赖的任务）：来源 = `trd.md`（数据模型）+ `standards-frontend.md`（组件字段需求）+ 已写前端任务包草稿（表格列/表单字段）；request 侧取 TRD query/body，response 侧取前端实际消费字段（平铺规则在模板）。**确认节点**：所有后端包写完后，列全部 api-contract 统一向用户确认「字段结构是否符合预期」，确认后再继续。
+下表只列**模板讲不了的判断 / 跨文件来源**（中）+ **该字段验证归属**（右，显式标谁机械、谁留人）：
 
-**写包自检**（linter 兜底，此处提前自查、早发现）：17 字段无空（`api-contract` 仅 backend 且有前端消费时填）；AC 双向对账（纵向每条回链某 PRD AC / 横向 PRD 每条 AC 被某包覆盖）**已由 check-sprint 逐条机械核（Step 4.7）**，此处顺手早发现失配即补、不静默放过；逐条**忠实性**（内容真覆盖回链的那条 PRD AC，非仅 id 在场）是语义，留 Step 3.5 + 签字人。
+| 字段 | 怎么填（判断 / 来源，模板之外） | 验证归属 |
+|------|------|------|
+| `depends_on` | Step 2 已确认依赖（与 sprint.md 依赖列、status.yml 三处一致）；共享资产消费（共用表/枚举/类型）消费方→source-of-truth 任务（反查得出，不另存消费方列表） | check-sprint·在册 ¹ |
+| `acceptance-criteria` | 不发明无来源 AC（权威=PRD）；**backend** 携精化例子 = 行为·PRD 幕1 / 精度（状态码·错误码·断言）·TRD 幕2，缺幕→`revise-doc(prd/trd)`，只携文本不预写 runnable（物化在 develop）；**frontend** 散文 AC | check-sprint·回链正反向；Step 3.5+签字人·忠实性 |
+| `reference` | **前端**链 ux-flows 场景段、**后端**链 TRD 错误码段 + `# 服务流程:{场景名}` 段（后端失败/状态/校验分支权威在 TRD，draft-ux 红线把后端校验排除在 ux-flows 外）；前后端**同场景名对齐**（UI 反馈 vs 校验/状态对同一分支不重不漏） | check-sprint·行号 ² |
+| `relevant-standards` | 覆盖 `files` 所属强制规范（语义判断，standards 无"文件→规范"映射表） | Step 3.5 第④类 |
+| `api-contract`（`layers=[backend]` 且被前端依赖） | 来源 = TRD 数据模型 + `standards-frontend` 字段需求 + 已写前端任务包草稿（表格列/表单字段）；request 取 TRD query/body，response 取前端实际消费字段（平铺规则在模板）；**全部后端包写完统一向用户确认字段结构** | Step 3.5·推导正确性；用户确认 |
+
+¹ 团队期加固（暂不做，记 `_meta/plans/方法论待议.md`）：Step 3.5 独审增「共享资产依赖完备性」——交叉比对各包 `files`，≥2 任务碰同一共享文件/表/枚举则验 `depends_on` 边标全；单人串行本人有全局上下文，暂靠 Step 2.5 + 拾取顺序兜。
+² 机械卡边界：`relevant-standards` 属语义、`files` 行号指向尚未写出的目标文件（"已知则填"）→ 均机械查不了，不在 check-sprint。
+
+> 写包自检（提前跑、门卫兜底）：17 字段无空（`api-contract` 仅 backend 且有前端消费时填）+ AC 双向对账（纵向每条回链某 PRD AC / 横向 PRD 每条 AC 被某包覆盖）由 `check-sprint` 逐条机械核（Step 4.7）——此处早发现失配即补、不静默放过；逐条**忠实性**（内容真覆盖、非仅 id 在场）留 Step 3.5 + 签字人。
 
 ```
 ✅ 任务包写完：共 [N] 个，全部入 queue。

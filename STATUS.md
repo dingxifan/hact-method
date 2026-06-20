@@ -66,6 +66,7 @@
   - **#2 Step 4 sprint.md 格式 → `templates/sprint.md`**（与 prd.md/trd.md 同级 root）。顺带消掉 exec↔structural 的 sprint.md 重复（structural 改指针）。
   - **命名规范（本次定）**：产物格式模板 `templates/{产物名}.md`（root，镜像 iterations/vN/{产物}）；subagent 审查 brief `templates/review-briefs/{被审产物}-review.md`（live 引用、不入项目仓、不改 init-project）。
   - **plan-sprint exec 275→226（−49）**。**pattern 已立**：PRD Step 7.5 / draft-tech-design Step 5 的 brief 后续按 `prd-review.md` / `trd-review.md` 同规收入 `templates/review-briefs/`（样本跑顺后做）。
+- **后续·Step 3 结构化（同站第三刀，用户提议）**：Step 3 那段"写包判断核"（depends_on / acceptance-criteria / reference / relevant-standards / api-contract 五字段的判断与跨文件来源）从 5 个 prose bullet → **逐字段表**（字段 | 怎么填 | **验证归属**）。**货币是理解 + surface「验证归属」模型（谁 check-sprint 机械、谁 Step 3.5/签字人留人）——非减肥，226→231（+5）**。结构化值当**仅因内容天然逐字段并行**（表格主场）+ 验证归属本散在各处、提成一列正好把"质量控制 not 规范控制"画进 spec。AC 行最富（五件事），全表版可读、未撑爆。残留格式重抄（AC tag、例子写法）已推回模板。如实记成"结构改进"不误框净收缩。
 - **下一站**：`develop 家族`（develop-core ~308 + 3 薄壳），但 sub7 刚重构（2026-06-19）、且无检查器（门卫无可跑），**入手前先问用户走哪站**（可能先放，跳 pr-review/manual-test）。或先把 review-briefs/ pattern 推广到 PRD/tech-design。
 - **git**：本地 master 含 sub1-7 + 乙 + PRD/门卫 + draft-tech-design 三件 + 本轮 plan-sprint（致密化 + brief/格式外置），领先 origin 二十余 commit，**全部未 push**（master 严格）。
 
