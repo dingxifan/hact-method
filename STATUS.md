@@ -60,8 +60,14 @@
 - **不可动部分（解释 −19% 弱于 PRD −44%）**：Step 3.5 sub-agent mandate ~36 行 brief 逐条保留（方法 §五 第 4 点：末端 agent 指令必须固化进 brief，否则退化泛扫+盖章）+ 选项菜单/骨架表/交付方式表/sprint.md 格式等功能输出模板是结构非散文。真可压散文集中在 Step 3 + 语言两处。
 - **末端 agent 与 AC 链均为既存资产、非本轮 ADD**：Step 3.5 独立对抗审查 = PRD Step 7.5 的同款机制（plan-sprint 早有）；AC 链落点（任务包 `(源：AC-nn)` 回链 → check-sprint 逐条正反向）sub5/sub6 已机械，残量忠实性留 Step 3.5 + 签字人——**本站无 AC 链 bug 可修**。
 - **诚实账**：货币 = 致密语言（真净缩，零 sub7）+ 搬运到模板（单一来源防漂移）+ 门卫接管（forcing）。不据某一件宣称总净收缩。
-- **下一站**：`develop 家族`（develop-core ~308 + 3 薄壳），但 sub7 刚重构（2026-06-19）、且无检查器（门卫无可跑），**入手前先问用户走哪站**（可能先放，跳 pr-review/manual-test）。
-- **git**：本地 master 含 sub1-7 + 乙 + PRD/门卫 + draft-tech-design 三件 + 本轮 plan-sprint，领先 origin 二十余 commit，**全部未 push**（master 严格）。
+- **后续·brief/格式外置（同站第二刀，用户提的 loop 思想延伸）**：把"用即弃的成品文本"从 spec 正文搬到独立文件、消费时按需读——**货币是主 context 减负（机制 #1）+ 去重，非净收缩（总量是"搬"）**。
+  - **抽离三判据**：①是"成品"非"过程散文" ②单点/靠后/条件用（全程驻留是死重）③消费者能按需读（subagent 隔离读=最优 / 主线到那步才读）。判断散文、生成-map、主线逻辑一律留。
+  - **#1 Step 3.5 审查 brief（~36 行）→ `templates/review-briefs/task-package-review.md`**（新建目录+类）。brief 改**自包含**（subagent 自读 prd/trd/standards/queue，不再靠主线注入占位符）；主 context 全程不再持有 brief、3.5 时也不再转手喂（消除主+子双份）；固化更强（subagent 读权威原文，无转手失真）。Step 3.5 从 ~50 行塌到 ~22（留引子 + 派发 1 行 + 四类摘要 1 行 + loop 表）。
+  - **#2 Step 4 sprint.md 格式 → `templates/sprint.md`**（与 prd.md/trd.md 同级 root）。顺带消掉 exec↔structural 的 sprint.md 重复（structural 改指针）。
+  - **命名规范（本次定）**：产物格式模板 `templates/{产物名}.md`（root，镜像 iterations/vN/{产物}）；subagent 审查 brief `templates/review-briefs/{被审产物}-review.md`（live 引用、不入项目仓、不改 init-project）。
+  - **plan-sprint exec 275→226（−49）**。**pattern 已立**：PRD Step 7.5 / draft-tech-design Step 5 的 brief 后续按 `prd-review.md` / `trd-review.md` 同规收入 `templates/review-briefs/`（样本跑顺后做）。
+- **下一站**：`develop 家族`（develop-core ~308 + 3 薄壳），但 sub7 刚重构（2026-06-19）、且无检查器（门卫无可跑），**入手前先问用户走哪站**（可能先放，跳 pr-review/manual-test）。或先把 review-briefs/ pattern 推广到 PRD/tech-design。
+- **git**：本地 master 含 sub1-7 + 乙 + PRD/门卫 + draft-tech-design 三件 + 本轮 plan-sprint（致密化 + brief/格式外置），领先 origin 二十余 commit，**全部未 push**（master 严格）。
 
 ### 2026-06-20 单环节续走 draft-tech-design：致密化 + standards 归位 + 步骤重排（三件依次落，沿管线往下走）
 

@@ -129,50 +129,12 @@
 
 ### Step 3.5：任务包独立对抗审查
 
-任务包是 develop 唯一消费的工单、杠杆最大的产物，但前面字段自检 / AC 对账都是 CC 自审。此处补一道**独立眼睛**——派从未参与写作的 sub-agent 对抗审查，在源头堵"任务包 AC 偏离 PRD"，确保下游 develop 据任务包 AC 写的测试在验**正确的东西**（不可视区 AC 的 Given/When/Then 例子忠于 PRD，测试才不会"测得很对却测错了需求"）。
+任务包是 develop 唯一消费的工单、杠杆最大的产物，但前面字段自检 / AC 对账都是 CC 自审。此处补一道**独立眼睛**——派从未参与写作的 sub-agent 对抗审查，在源头堵"任务包 AC 偏离 PRD"，确保下游 develop 据任务包 AC 写的测试在验**正确的东西**（不可视区 AC 的例子忠于 PRD，测试才不会"测得很对却测错了需求"）。
 
-**独立性约束**：审查 sub-agent **只从 `queue/*.md` 读最终产物**，传入全部任务包（本期所有 `[可取]` 包）+ PRD 全文（`iterations/vN/prd.md`）+ TRD + 三份 standards；**禁传**写包中间叙事 / "为什么这么拆"的推导 / 骨架讨论（只对照"需求事实 vs 产物"，不被规划思路带偏）。任务包 >4 个**按包分批审**，不一次性全量塞入，利于 loop 收敛。
+**派发**：派一个全新 subagent，令其读 `../hact-method/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读** prd.md / trd.md / standards / queue（隔离上下文，不传写包叙事与拆分理由）。任务包 >4 个**按包分批**派，利于 loop 收敛。
+> brief 查四类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
 
-**【sub-agent mandate】**（下列即 subagent 指令，逐条原样喂）
-
-```
-你是一名独立审查员，从未参与这批任务包的拆分与写作。
-
-【输入】
-PRD（用户 G1 签字认可的需求事实，含各功能 Acceptance Criteria）：
-{prd.md 全文}
-
-TRD + standards（技术契约）：
-{trd.md + standards 摘要}
-
-任务包（待审产物）：
-{queue 内全部任务包}
-
-【默认假设】
-任务包存在问题。你的任务是找出所有"产物不忠于需求事实"的地方，不是确认它对。
-
-【逐类检查】（每类必须有明确结论，不允许跳过）
-
-1. AC 忠实性：每条任务包 `acceptance-criteria` 是否忠实覆盖其回链的 PRD AC（`(源：PRD ...)`）？逐条比对两段文本——有无偏离、缩水、夹带 PRD 没有的要求、或把 PRD 一条 AC 实现成另一回事。标 `(技术)` 的无 PRD 来源条目，确认它确实是技术约束而非漏标的需求。
-2. AC 完备性：PRD 每条 AC 是否都被至少一个任务包覆盖？逐条核对，找出整条遗漏的 PRD AC。
-3. api-contract 推导正确性：`layers=[backend]` 且被前端消费的任务包，其 `api-contract` 的 response 字段是否覆盖了前端任务包 / standards 描述的全部消费字段？有无漏字段、类型错配、该平铺却嵌套。
-4. relevant-standards 覆盖：每个任务包的 `relevant-standards` 是否覆盖了其 `files` 涉及文件应当适用的强制规范？按文件用途语义判断（如 controller 应含响应格式 / 入参验证规范，.vue 应含设计系统 / 组件规范等）。漏列会导致 develop 静默不加载该规范——逐包核对，指出漏列项。
-
-【边界 — 不审以下，这些归用户确认 / 留下游】
-- 任务拆分粒度、依赖方向、交付方式（独立/批量）——这是用户在 Step2/2.5 的决策权，你不得否决。
-- `files` 字段行号是否精确——目标文件此刻尚未写出，无法核对，留 develop 阶段。
-
-【输出格式】
-每条 finding：
-- 类别：{AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖}
-- 位置：{任务包 task-id / PRD 功能名}
-- 问题：{具体描述，一句话}
-- 严重程度：{阻断 / 建议}
-
-某类无发现时明确写「{类别}：无发现」；全部无发现输出 findings: []。禁止输出「整体看起来不错」等总结性正面评价。
-```
-
-**【loop 逻辑】**
+**【loop 逻辑】**（主线拿到 subagent findings 后的处置）
 
 | sub-agent 输出 | 动作 |
 |---|---|
@@ -193,18 +155,7 @@ TRD + standards（技术契约）：
 
 ### Step 4：写 sprint.md
 
-```markdown
-# Sprint v{N} · {项目名}
-
-| task-id | title | layers | 依赖 | 状态 | PR | 交付 |
-|---------|-------|--------|------|------|----|------|
-| {id} | {标题} | backend | — | [可取] | — | 独立 |
-| {id} | {标题} | backend | — | [可取] | — | 批量 |
-| {id} | {标题} | frontend | {依赖 id} | [可取] | — | 批量 |
-
-## 依赖说明
-- {task-id}（批量）blocked-by {task-id}（独立）：{原因一句话，为何必须先合并}
-```
+套模板 `../hact-method/templates/sprint.md` 汇总生成 `iterations/vN/sprint.md`——每行对应 queue/ 一个任务包（task-id / title / layers / 依赖 / 状态 `[可取]` / PR `—` / 交付），附「## 依赖说明」段（批量任务 blocked-by 独立任务 + 一句话原因）。
 
 > 多迭代并行（vN 与 vN+1 同时有任务）时各迭代各写自己的 `iterations/vN/sprint.md`，queue 天然隔离于各自迭代目录，互不干扰。
 
@@ -260,7 +211,7 @@ TRD + standards（技术契约）：
 |--------|-------------|------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件 | — | 读取失败则主线单独读 |
 | Step 3（任务 >4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 17 字段 YAML | 失败则主线接管该包 |
-| Step 3.5 独立审查 | 独立 sub-agent 审任务包对 PRD/TRD/standards 保真（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖） | **只读 queue 最终产物 + PRD/TRD/standards**，禁传写包叙事与拆分理由；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
+| Step 3.5 独立审查 | 独立 sub-agent 审任务包保真，维度见 brief `../hact-method/templates/review-briefs/task-package-review.md` | 令 subagent 读该 brief 自执行（自读 prd/trd/standards/queue），只告知 vN；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
 **重要**：subagent 只返回任务包内容，**由主线写入文件**，不让 subagent 直接操作文件系统。
 

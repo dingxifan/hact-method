@@ -113,6 +113,13 @@
 - **AC 链**：plan-sprint 落点（任务包 `(源：AC-nn)` 回链 → check-sprint 逐条正反向）sub5/sub6 已机械，残量忠实性留 Step 3.5 + 签字人——**本站纯致密化、无 AC 链 bug**。
 - **诚实账**：货币是致密语言（真净缩）+ 搬运到模板（防漂移）+ 门卫接管（forcing）；Step 3.5 是既存资产（=PRD Step 7.5），非本轮 ADD。无 structural 改动（契约字段/产物/判据未变，只动 exec 正文散文）。
 
+**plan-sprint 站第二刀·brief/格式外置**（用户提的 loop 思想延伸；上一轮我误把 brief 框成"不可动地板"，用户点破"逐字保留≠必须在本文件"）：
+- **抽离三判据**（本次定）：①成品非过程散文 ②单点/靠后/条件用 ③消费者按需读（subagent 隔离=最优 / 主线到那步才读）。判断散文/生成-map/主线逻辑一律留。
+- **#1**：Step 3.5 brief → `templates/review-briefs/task-package-review.md`（新目录+类），改自包含（subagent 自读输入）；货币=主 context 减负（机制#1）+ 固化更强，**非净收缩（搬）**。Step 3.5 ~50→~22 行。
+- **#2**：Step 4 sprint.md 格式 → `templates/sprint.md`，顺带去重 structural（指针化）。
+- **命名规范**：产物格式 `templates/{产物名}.md`（root）；审查 brief `templates/review-briefs/{被审产物}-review.md`。live 引用、不入仓、不改 init-project。
+- plan-sprint exec **275→226（−49）**。**review-briefs/ pattern 已立**——PRD 7.5 / tech-design 5 的 brief 待推广（`prd-review.md` / `trd-review.md`）。
+
 **draft-tech-design 站本轮三件**（本地 master，未 push）：
 1. 致密化 + Step 5 末端内容审查（`b090a2d`）——283→307 净 ADD（cram 单行拆 bullet + 验内容 ADD，非减肥）。
 2. standards 归位项目级活文档（`e83fb53`，决策#17 修订，18 文件）——见 `findings.md` F1。

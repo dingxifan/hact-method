@@ -30,24 +30,9 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范（17 字段） |
-| sprint.md | `iterations/vN/sprint.md` | 见下方格式说明 |
+| sprint.md | `iterations/vN/sprint.md` | 套模板 `templates/sprint.md`（7 列汇总表 + 「## 依赖说明」段；人看的视图，机器侧状态以 status.yml 为准） |
 | G3 签字 | `iterations/vN/gates.md` | `- [x] G3：开发包就绪 — YYYY-MM-DD` |
 | 进度断点（compact 时写入） | `_meta/sessions/plan-sprint-progress.md` | 任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单答案摘要 |
-
-**sprint.md 格式：**
-
-```markdown
-# Sprint vN · {项目名}
-
-| task-id | title | layer | 依赖 | 状态 | PR | 交付 |
-|---------|-------|-------|------|------|----|------|
-| task-001 | {标题} | backend | — | [可取] | — | 独立 |
-| task-002 | {标题} | backend | — | [可取] | — | 批量 |
-| task-003 | {标题} | frontend | task-001 | [可取] |
-
-## 依赖说明
-- task-003 blocked-by task-001：{原因}
-```
 
 **任务包命名规则**：`{task-id}` 格式为 `{项目缩写}-{vN}-{序号}`，如 `auth-v1-001`。
 
