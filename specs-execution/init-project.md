@@ -80,6 +80,7 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 - `scripts/check-sprint.js`：内容复制自 `E:\group-code\hact-method\templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
 - `scripts/pre-commit-hook.sh`：内容复制自 `E:\group-code\hact-method\templates\scripts\pre-commit-hook.sh`（**门卫**——commit 时按 staged 文件路由跑对应 check-\*.js，红则拦 commit；脚本/node 缺失 no-op 放行。作为 tracked 文件入仓使其随 clone 存活；实际生效需装进 `.git/hooks/`，见 Step 4.1）
 - `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `E:\group-code\hact-method\templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）
+- `.gitattributes`：写入一行 `*.sh text eol=lf`（**必须**——Windows `core.autocrlf=true` 下 .sh 会被 checkout 成 CRLF，门卫脚本 `#!/bin/sh\r` 在 POSIX sh / git hook 下报 bad interpreter；锁 LF 才能跨平台跑）
 
 ---
 
