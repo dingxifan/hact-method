@@ -212,7 +212,7 @@ git diff --stat
 
 **分支命名 / message（按集合大小）**：
 - 单元素集 → 分支 `{task-id}`，message `{type}({task-id}): {改动描述}`
-- 多元素集 → 分支 `{layer}-batch-v{N}-{集合内各 task 序号按依赖序连字符连接}`，**批次名携带本次任务 id 集**（如 frontend v3 含 F3-003 / F3-005 / F3-010 → `frontend-batch-v3-003-005-010`）——无状态、跨会话唯一（同层不同轮吃不同子集，名必不同，破 `{layer}-batch-v{N}` 撞车）、可追溯。message `feat({同分支名}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]`
+- 多元素集 → 分支 `{layer}-batch-v{N}-{id1}/{id2}/...`（集合内各 task 序号按依赖序用 `/` 连接），**批次名携带本次任务 id 集**（如 frontend v3 含 F3-003 / F3-005 / F3-010 → `frontend-batch-v3-003/005/010`）——无状态、跨会话唯一（同层不同轮吃不同子集，名必不同，破 `{layer}-batch-v{N}` 撞车）、可追溯。注：分支名不得以 `/` 结尾（git 拒绝），末元素后无尾斜杠。message `feat({同分支名}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]`
 
 ```bash
 git add {改动的文件列表}
