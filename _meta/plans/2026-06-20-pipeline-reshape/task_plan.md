@@ -210,6 +210,14 @@
 - F5：删依据 commit 逐行核 diff，零误删承重行为（反向结论）。
 - 另记：README line 38 `├── projects/`（2026-05-08 已移除）+ line 43「6 份文档（01-06）」（实 7 份）是 pre-existing stale，与本 review 无关，未处理。
 
+## deploy 站（2026-06-20，致密化 + 漂移修复）
+
+用户定「继续往 deploy 站走」。deploy 是运行时运维 runbook——四象限里**门卫 N/A**（无检查器、无 Gate，验证=运行时健康检查非 spec 内审）、**末端 agent N/A**（机械序列无内容可审）、**🚫 生产安全人工门合法留人**（部署触生产，与 develop 全自动相反）。可动只有 template 外置 + 换指令体。exec 174→161（−13）/ structural 75→65（−10）/ 新建 `templates/deploy-log.md`(13)：
+- **deploy-log 格式外置 + 修漂移 bug**：格式在 exec Step 7 + structural 主要产物**两处定义且漂移**（exec 硬编码「成功/通过」单成功路径，structural「成功/失败」完整版）→ 外置 `templates/deploy-log.md`，以完整版为准，双处指针化。完全对应 g-i-t（integration-result）/ manual-test（acceptance-report）先例。
+- **换指令体**：会话启动「触发来源」三 bullet（A/B/hotfix provenance，与 structural 前置条件逐字重复 + hotfix 授权已在红线）→ 1 行交叉引用。按「删纯人用依据」判据（触发来路不改变本会话动作）。
+- **诚实账**：与 g-i-t 同型——主货币 = consistency 修复（格式漂移）+ 防漂移外置，**非大减肥**（净 −23 行小，deploy 已精简、大量 bash + 失败处理 + 生产安全门不可压）。无 AC 链（deploy 不涉 AC）。
+- **剩余站**：wrap-up-iteration / init-project / dispatch-new / revise-doc / harvest-notes。
+
 ## 全管线删纯人用依据声明（2026-06-20，commit `081064c` + `e7b1273`，新原则）
 
 用户洞察：runtime spec 里**纯"为什么"依据声明只对人有解释价值、CC 执行不需要，却每次加载耗 token**——应整句删（非压缩）。沉淀 memory `project_cut_human_only_rationale.md`。判据=**删掉是否改变 CC 做什么**：否=人用→删，是=行为→留。

@@ -22,12 +22,7 @@
 
 ## 会话启动
 
-读任务包，确认：
-- `target` 字段（目标环境，如 `prod` / `staging`）
-- 触发来源（任务包 `target` 字段说明触发方式）：
-  - **A 类**：G4 由 manual-test 签署后，由有 `dispatch` discipline 的用户主动创建本 deploy 任务并触发
-  - **B 类**：B 类 [merged] 任务积累到一定数量，由有 `dispatch` discipline 的用户主动触发
-  - **hotfix 快速通道**：`urgency=hotfix` 的 develop 任务 [merged] 后，有 `dispatch` discipline 的用户授权后立即触发
+读任务包，确认 `target`（目标环境，如 `prod` / `staging`）。触发前置（A 类 G4 已签 / B 类积累批量 / hotfix 须 `dispatch` 授权）见 structural `前置条件` + 红线。
 
 **首次部署（`deployment.config` 不存在）**：先建 `deployment.config`，填入以下字段，commit 后继续：
 ```
@@ -124,15 +119,7 @@ curl -f {health-check-url}
 
 ## Step 7：记录部署结果
 
-在 `deploy-log.md` **追加**（不覆盖）：
-
-```markdown
-## {YYYY-MM-DD HH:MM} · {target} · {部署人}
-- 包含内容：{A 类 vN / B 类 {task-id 列表} / hotfix {task-id}}
-- 构建结果：成功
-- 健康检查：通过
-- 备注：{有则填，无则省略}
-```
+按 `../hact-method/templates/deploy-log.md` 格式在项目根 `deploy-log.md` **追加**一条（不覆盖）：包含内容 / 构建结果 / 健康检查 / 备注。
 
 ```
 ✅ deploy 完成：{target} 部署成功，健康检查通过。

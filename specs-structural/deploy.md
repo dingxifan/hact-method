@@ -29,18 +29,8 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 部署日志 | `deploy-log.md` | 见下方格式（追加，不覆盖） |
+| 部署日志 | `deploy-log.md` | 格式见 `../hact-method/templates/deploy-log.md`（追加，不覆盖） |
 | deployment.config（首次） | `deployment.config` | 键值对配置文件，含四个字段：`server-address` / `build-command` / `health-check-url` / `restart-command` |
-
-**deploy-log.md 追加格式：**
-
-```markdown
-## {YYYY-MM-DD HH:MM} · {target} · {部署人}
-- 包含内容：{A 类 vN / B 类 {task-id 列表} / hotfix {task-id}}
-- 构建结果：成功 / 失败（{原因}）
-- 健康检查：通过 / 失败（{现象}）
-- 备注：{有则填}
-```
 
 ---
 
