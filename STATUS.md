@@ -49,6 +49,18 @@
 
 ## 历史里程碑
 
+### 2026-06-20 review-briefs/ pattern 推广到 PRD + tech-design — 三个末端审查 brief 全部外置，spec 正文只留派发指针
+
+> 接 plan-sprint 站 brief 外置（建成 `templates/review-briefs/task-package-review.md` + 命名规范）。本轮把同款 pattern 推广到管线另两个末端内容审查：PRD Step 7.5、draft-tech-design Step 5。本地 master，未 push。
+
+- **新建两份自包含 brief**（与 `task-package-review.md` 同结构：HTML 注释头 = 命名规范/派发/独立性 + 「你是独立审查员」+ 【自读输入】+ 【默认假设】+ 【逐类检查】+ 【边界】+ 【输出格式】）：
+  - `templates/review-briefs/prd-review.md`：审 `iterations/vN/prd.md`，subagent **自读**定稿 prd.md（+ background.md），三维度（内部一致性 / AC 可验性 / 覆盖完整）。
+  - `templates/review-briefs/trd-review.md`：审 `iterations/vN/trd.md`，subagent **自读** trd.md + prd.md（+ ux-flows / prototype），四维度（内部一致性 / AC 真承接 / 字段满足画面 / 覆盖完整）。
+- **spec 正文塌缩为派发指针**：draft-prd-vN Step 7.5、draft-tech-design Step 5 各把 ~10 行 inline brief（逐条喂 subagent 的指令）→ 1 行「派全新 subagent 读该 brief、自读输入、输出问题清单」。两份 exec spec 共 **−17 行**。
+- **货币（同 plan-sprint brief 外置，诚实账）**：主 context 减负 + 单一来源防漂移，**非净收缩**——内容是「搬」到 brief 文件（subagent 隔离按需读，主线全程不再持有审查维度清单）+ 升固化（subagent 自读权威原文，无主线转手失真）。新增两文件不进主 context。
+- **pattern 钉死**：管线三个末端审查 brief（task-package / prd / trd）现全部入 `templates/review-briefs/`，命名 `{被审产物}-review.md`，live 引用、不入项目仓、不改 init-project；审查维度改动改 brief 单一来源、spec 正文不重述。
+- **git**：本地 master 含此前全部 + 本轮，领先 origin 二十余 commit，**全部未 push**（master 严格）。
+
 ### 2026-06-20 管线续走 plan-sprint 站：致密化（340→275 / −19%）— Step 3 折叠重抄 + 门卫散文收薄 + 换指令体
 
 > 接 draft-tech-design 站。沿管线往下到 `plan-sprint`（实测最胖 ~340 行）。照「单环节致密化方法」§五 6 步走四象限。**纯致密化、无结构改动**（契约字段/产物/判据未变，只动 exec 正文散文）；本地 master，未 push。
