@@ -49,6 +49,18 @@
 
 ## 历史里程碑
 
+### 2026-06-20 门卫（HOOK）样本建成 + 单环节致密化方法成稿 — PRD 阶段四件机制凑齐，配方可复制
+
+> 接 HOOK/DRY 双 park。用户定调：**HOOK 全局 rollout 仍不划算，但把 PRD 阶段当样本做"全套"再总结方法**。补齐 PRD 样本缺的第 4 件机制（findings §七-3 forcing function，唯一没碰过的），从完整样本抽出可复制配方。commit 本地 master，未 push。
+
+- **门卫建成**：`templates/scripts/pre-commit-hook.sh`——签字 commit 时按 staged 文件路由跑对应 check-\*.js（prd/trd→check-docs、sprint/queue→check-sprint、gates.md 新增 G4/G5→check-gate），红则拦 commit。**四场景实测全过**：红 PRD 拦 / 绿 PRD 放 / 无脚本 no-op 放行（存量仓兼容）/ gate 路由正确抽 `G4 v2`。
+- **判官+门卫模型钉死**（findings §八）：linter 是判官（查产物对不对），但"记得跑判官、退0才签"若只写散文仍会在 context 失真；门卫自动跑判官、红拦 commit，那句散文才能整段删——强制它的不再是文字、是闸门。这是本方向**唯一没碰过的第三机制**（地基✓判官✓早就位，缺门卫）。
+- **接线**：init-project（Step3 hook 源 tracked 入仓 + Step4.1 git init 后装 `.git/hooks/` + clone 重装一行说明）；删 draft-prd-vN Step7.4 强制散文（降提前自查+门卫兜底）/Step8 签字前置；06-gates §7 加「判官+门卫」段 + 三处「不得手改报告、不得跳过」→门卫接管。
+- **暗礁全兑现**：存量无脚本/无 node → no-op 放行（不拦死 hact-app v1-4）；跨平台 Git Bash（POSIX sh 实测）；护栏非密码锁（`--no-verify` 可绕、`.git/hooks` 不随 clone、队友须重装）已明示为**合作者强制出路、非安全边界**（Goodhart 接受）。
+- **方法成稿** `_meta/plans/2026-06-20-pipeline-reshape/单环节致密化方法.md`：**四件机制 + 一把语言刀**的职责分工矩阵——格式→linter+门卫｜填写说明→template｜内容有效性→末端 agent｜过程判断→spec 正文（且换指令体）。正文只剩第四象限 → 自然致密。含**诚实账**（各机制货币不同：致密语言=真净收缩主力且零 sub7 陷阱；template/门卫=搬+forcing；末端 agent=ADD 但验内容非堆规则）+ **套下一份 spec 的 6 步**。
+- **诚实账**：门卫删的强制散文小（~3-5 行/份），ADD 是脚本（不进 context）；真减肥主力仍是致密语言。四件凑齐才是完整样本，单看行数误判。
+- **git**：本地 master 含 sub1-7 + 乙 + PRD 致密化 + 本轮门卫，领先 origin 十几 commit，**全部未 push**（master 严格）。
+
 ### 2026-06-20 HOOK/DRY 量账后双 park + 单环节 loop 试点（PRD 致密化）— 点破「换语气」是最高 ROI 减肥杠杆
 
 > 接乙-1+乙-2。本会话先量 HOOK/DRY 两杠杆的账（防 sub7 陷阱），均判净收缩不划算 park；用户改提「单环节 loop」试点，拿最熟的 PRD 试三思维同走。commit `72902eb` feat + `50fc5bc` docs（本地 master，未 push）。

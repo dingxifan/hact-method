@@ -1,7 +1,15 @@
 # task_plan — 流水线重定形状 · 2026-06-20
 
 **性质**：承 `../2026-06-19-loop-layer2/findings.md §十四`。第 0 层决策已定——**先重定形状**（垂直切片 + 测试脊柱前置 + 走路骨架），而非在现形状内打补丁。loop 第二层 / hook / 蒸馏交接 / DRY 全部降为"形状定下后再排优先级"的形状内杠杆。
-**状态**：🟢 乙-1+乙-2 已 commit 本地 master（`d83e722`+`892be13`，未 push）。**HOOK 量账后 park**（见「HOOK 存档」）。**DRY 量账后亦 park**（真净收缩仅 ~130-155、per-session 不动、大头是陷阱——见「DRY 存档」）。**当前活线 = 单环节 loop 试点（致密化 treatment）**：PRD 已落（见「## 单环节 loop 试点」），待用户定是否推 draft-tech-design 等其余 spec。
+**状态**：🟢 乙-1+乙-2 + PRD 致密化已 commit 本地 master（未 push）。**HOOK 全局 rollout 仍 park**（净收缩量小，见「HOOK 存档」）；但**样本范围已重启并建成**——用户定调「把 PRD 阶段当样本做全套，再总结方法」。**DRY 量账后 park**（见「DRY 存档」）。**当前活线 = 单环节致密化方法（PRD 样本已收）**：四件机制（template✓/linter判官✓/门卫✓新建/末端agent✓）+ 致密语言全部到位，配方写入 `单环节致密化方法.md`。待用户定是否套到 plan-sprint/manual-test/draft-tech-design。
+
+> ## 门卫（HOOK）样本建成（2026-06-20）
+> 承用户「PRD 阶段当样本全部做完」定调——HOOK 不是全局铺，是补齐 PRD 样本缺的第 4 件机制（findings §七-3 forcing function，唯一没碰过的）。
+> - **建** `templates/scripts/pre-commit-hook.sh`：按 staged 文件路由（prd/trd→check-docs、sprint/queue→check-sprint、gates.md 新增 G4/G5→check-gate）；脚本/node 缺失 no-op 放行；红拦 commit。**四场景实测全过**（红拦/绿放/无脚本放行/gate路由）。
+> - **接线** init-project（Step3 hook 源入仓 tracked + Step4.1 git init 后装进 `.git/hooks/` + clone 重装说明）。
+> - **删散文** draft-prd-vN Step7.4（降为提前自查+门卫兜底）/Step8（删"退出码0才签"前置）；06-gates §7 加「判官+门卫」模型段 + 三处「不得手改报告、不得跳过」→门卫接管。
+> - **暗礁兑现**：存量 no-op ✓ / 跨平台 Git Bash（POSIX sh 实测）✓ / 护栏非密码锁（--no-verify 可绕、.git/hooks 不随 clone）已明示，是范围限制非拦路石。
+> - **诚实账**：门卫删的强制散文 ~3–5 行/份（小净缩），ADD 是脚本（code 不进 context）；真减肥主力仍是致密语言（换语气，PRD 311→165）。四件凑齐 = 完整样本，单看行数会误判（见方法文 §四）。
 
 > ## DRY 存档（2026-06-20 量账后 park）
 > 测绘账（subagent 全读 16 份 specs-execution）：全语料仪式 ~520-580 行，可净删 ~80-90（近逐字）+ 参数化 ~110-125，**真净收缩上限 ~130-155 行**（回填引用后），**per-session context 几乎不动**（仍按需载共享段）。占大头的 **#2 会话启动/断点续做 ~240 行是 sub7 陷阱**（各 task 实质导航知识伪装成仪式，抽即掏空）+ #7 红线 ~70（task 专属）。clean top-3 = #6 快速通道直修（净删~55，近逐字 3 份仅 1 变量）/#3 选项菜单（参数化~55）/#4 签字三件套（参数化+净删~55）。结论：DRY 货币是「单一来源防漂移」非行数；用户判性价比不如换打法 → park，转单环节 loop 试点。
