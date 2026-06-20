@@ -30,7 +30,7 @@
 
 | 产物 | 路径 | 说明 |
 |------|------|------|
-| 上提的编码规范 | `templates/standards/{backend\|frontend}.md` | 来自成员 `[规范]` |
+| 上提的编码规范 | `templates/standards/{backend\|frontend\|shared}.md` | 来自成员 `[规范]`（跨层条目入 `shared.md`） |
 | 上提的自检项 | `templates/checklists/{backend\|frontend}-checklist.md` | 来自成员 `[checklist]` |
 | 新增方法论待议 | `_meta/plans/方法论待议.md` | 来自成员 `[方法论]`，留待方法论调整会话处理 |
 | 推进的收割游标 | `_meta/hact-config.md` | 各成员上次收割点 |

@@ -219,6 +219,13 @@
 - **诚实账**：小幅（净 −6），wrap-up 本就精简（机械分流 + 选项菜单 + 生产安全 🚫 门不可压）。主货币 = 门卫 forcing + consistency 修复 + 去重，非减肥。无 AC 链（收尾不涉 AC）。
 - **剩余站**：init-project / dispatch-new / revise-doc / harvest-notes。
 
+## revise-doc + harvest-notes 站（2026-06-20，用户「用得少，扫一下」）
+
+用户定「做 revise-doc 和 harvest，用得非常少，扫一下」——重点扫一致性/漂移/悬挂，非强行减肥。结论：**两站都维护良好，几乎无需动**。
+- **revise-doc：零改**。全程干净、已对齐 post-④（「develop 内置独立审查 loop」「已 [merged] PR」「source=sprint」无 pr-review 残留）；AC 漂移兜底（Step 5）正确引用 post-sub5/sub6 AC 链（`(源：PRD ...)` / Given-When-Then）；已较精简（exec 151 行，多为程序步）。无漂移、无悬挂、无可观致密化 ROI。诚实记成「扫过无问题」，不制造改动。
+- **harvest-notes：一处漂移修复**。exec Step 3（line 91）`[规范]` 目的地 `templates/standards/{backend|frontend|shared}.md`（跨层入 shared.md，且 shared.md 实存），但 structural 主要产物（line 33）只列 `{backend|frontend}.md`、漏 shared → 补全为 `{backend|frontend|shared}.md`。其余一致（checklists 两份齐全、exec/structural 一致；ux-checklist 全仓零残留，draft-ux 重构已清）。
+- **诚实账**：本轮货币 = 扫一致性 + 修 1 处 structural 漂移；净行数近零。**管线全站收官**。
+
 ## init-project 站（2026-06-20，孤儿 templates/ + 内联漂移修复，用户拍 Option A）
 
 用户定「继续走 init-project」。**本站主问题不是减肥、是结构性漂移**——四象限里 template/门卫/末端 agent 对 bootstrap 均 N/A（init 是 templates/ 的播种者非消费者、无 Gate/检查器、机械序列），换指令体空间也小（大量 bash/API + 安全护栏注多为行为性，删不得）。真发现：
