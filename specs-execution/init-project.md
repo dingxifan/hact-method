@@ -61,17 +61,14 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 
 ### Step 3：写入占位文件
 
-按 `specs-structural/init-project.md §主要产物` 写入各文件初始结构。每个文件写完确认内容正确，不留空文件：
+**复制自 `E:\group-code\hact-method\templates\{产物名}.md`**，把文件内 `{项目名}` 替换为实际项目名，写完确认非空（templates/ 是格式单一真相源，structural §主要产物 只列指针）：
 
-- `project.md`
-- `decisions.md`
-- `design.md`
-- `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`：**项目根跨迭代活文档**，此处建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 7 填入、之后每期原地增补（与 `design.md` 同模式：init 建桩、后续 task 填）
-- `reusables.md`
-- `backlog.md`
-- `feedback.md`
-- `b-tasks.md`
-- `status.yml`：内容复制自 `E:\group-code\hact-method\templates\status.yml`，将 `{项目名}` 替换为实际项目名（机器侧状态契约，hact-app 取数源，项目级单文件，建一次永远存在；字段见 `../hact-method/skeleton/07-status-contract.md`）
+- `project.md` / `reusables.md` / `b-tasks.md` / `decisions.md` / `backlog.md` / `feedback.md`
+- `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
+- `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，hact-app 取数源，项目级单文件，建一次永远存在；字段见 `../hact-method/skeleton/07-status-contract.md`）
+
+**特殊桩（不走 templates/）**：
+- `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`：**项目根跨迭代活文档**，建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 7 填入、之后每期原地增补
 
 同时写入以下文件：
 - `CLAUDE.md`：内容复制自 `E:\group-code\hact-method\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充

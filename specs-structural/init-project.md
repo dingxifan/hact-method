@@ -27,74 +27,22 @@
 
 ## 主要产物
 
+> 多数占位文件**复制自 `../hact-method/templates/{产物名}.md`**（单一真相源），把文件内 `{项目名}` 占位替换为实际项目名。templates/ 是格式真相源，本契约不再内联重抄。
+
 | 产物 | 路径 | 初始内容 |
 |------|------|---------|
-| project.md | `{name}/project.md` | 见下方模板 |
-| reusables.md | `{name}/reusables.md` | 见下方模板 |
-| b-tasks.md | `{name}/b-tasks.md` | 见下方模板 |
-| decisions.md | `{name}/decisions.md` | 空表格（含表头） |
-| design.md | `{name}/design.md` | 空文件，待首期产品阶段填写 |
-| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 空桩（标题 + 待播种注），项目根跨迭代活文档；首期 draft-tech-design 播种、vN+1 原地增补 |
-| backlog.md | `{name}/backlog.md` | 空文件 |
-| feedback.md | `{name}/feedback.md` | 空文件 |
+| project.md | `{name}/project.md` | 复制自 `templates/project.md` |
+| reusables.md | `{name}/reusables.md` | 复制自 `templates/reusables.md` |
+| b-tasks.md | `{name}/b-tasks.md` | 复制自 `templates/b-tasks.md` |
+| decisions.md | `{name}/decisions.md` | 复制自 `templates/decisions.md` |
+| backlog.md | `{name}/backlog.md` | 复制自 `templates/backlog.md` |
+| feedback.md | `{name}/feedback.md` | 复制自 `templates/feedback.md` |
+| design.md | `{name}/design.md` | 复制自 `templates/design.md`（空模板，`draft-ux` Step 1.3 填变量） |
+| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 空桩（标题 + 待播种注），项目根跨迭代活文档；首期 draft-tech-design 播种、vN+1 原地增补（**不**走 templates/） |
 | _meta/input/ | `{name}/_meta/input/` | 空目录，存放背景材料和上下文文档 |
 | _meta/sessions/ | `{name}/_meta/sessions/` | 空目录，存放跨会话接续文件 |
 | hact-notes 仓（每成员） | `gitee.com/{notes-org}/hact-notes-{姓名}` | 私有仓 + 登记入 `_meta/hact-config.md`（决策#21） |
 | hact-app 注册 | project_id + Gitee Webhook | 注册并验证 webhook 链路 |
-
-**project.md 初始模板：**
-
-```markdown
-# {name}
-
-## 产品层
-> 由 draft-prd-vN 填写
-
-## 技术层
-> 由 draft-tech-design 填写
-
-## 当前状态
-未开始
-```
-
-**reusables.md 初始模板：**
-
-```markdown
-# 可复用资产 · {name}
-
-> draft-tech-design 前读取，了解已有资产再做共享组件建议。
-> develop 过程中发现新资产随时追加。
-
-## 已落地资产
-
-| 资产 | 性质 | 路径 | 适用场景 |
-|------|------|------|---------|
-|（首期为空）| | | |
-
-## 建议已拒绝
-
-| 资产建议 | 拒绝原因 | 日期 |
-|---------|---------|------|
-|（首期为空）| | |
-```
-
-**b-tasks.md 初始模板：**
-
-```markdown
-# B 类任务总账 · {name}
-
-| task-id | target-source | urgency | title | 状态 | 日期 |
-|---------|--------------|---------|-------|------|------|
-```
-
-**decisions.md 初始模板：**
-
-```markdown
-# 架构决策记录 · {name}
-
-| # | 决策 | 原因 | 日期 |
-|---|------|------|------|
-```
 
 ---
 

@@ -219,6 +219,15 @@
 - **诚实账**：小幅（净 −6），wrap-up 本就精简（机械分流 + 选项菜单 + 生产安全 🚫 门不可压）。主货币 = 门卫 forcing + consistency 修复 + 去重，非减肥。无 AC 链（收尾不涉 AC）。
 - **剩余站**：init-project / dispatch-new / revise-doc / harvest-notes。
 
+## init-project 站（2026-06-20，孤儿 templates/ + 内联漂移修复，用户拍 Option A）
+
+用户定「继续走 init-project」。**本站主问题不是减肥、是结构性漂移**——四象限里 template/门卫/末端 agent 对 bootstrap 均 N/A（init 是 templates/ 的播种者非消费者、无 Gate/检查器、机械序列），换指令体空间也小（大量 bash/API + 安全护栏注多为行为性，删不得）。真发现：
+- **病根**：`templates/{project,reusables,b-tasks,decisions,backlog,feedback,design}.md` 7 个文件**全是孤儿**（无 spec 引用）；init-project 从 **structural §主要产物内联模板**播种这些文件，templates/ 版从未消费、且已漂移——reusables（templates 4 子分层 vs structural 扁平单表）/ backlog（templates 有格式注 vs 空文件）/ design（templates 166 行富模板 vs 空文件，且 draft-ux Step 1.3 明确期望「空模板」填变量）/ 占位符（templates `{项目名}` vs structural `{name}`）。与整个 pipeline-reshape「templates/ 单一真相源」方向冲突。
+- **用户拍 Option A（改从 templates/ 播种）**：① structural §主要产物 删 ~50 行内联模板 → 指针化（复制自 templates/{产物名}.md）② exec Step 3 统一播种方式——project/reusables/b-tasks/decisions/backlog/feedback/design/status.yml 全「复制自 templates/，{项目名}→实际名」（与 CLAUDE.md/scripts 已有方式一致）；standards-*.md 仍特殊空桩（不走 templates/，draft-tech-design 播种）。
+- **效果**：kill 7 孤儿（templates/ 成为被消费的真相源）+ 修 3 处漂移 + 占位符统一 + design.md 对齐 draft-ux「空模板」期望 + 真实项目获得更全的 reusables/backlog/design 播种。**structural 130→77（−53）**、exec 330→326（−4），且 templates/ 文件早已存在、无新增——**净 −57 真实收缩 + 消重 + 修漂移**，比 deploy 更干净。
+- **诚实账**：货币 = consistency 修复（孤儿 + 漂移 + 双真相源）+ 单一真相源 + 行为改进（更全播种）。净 −57 是真实附带（删纯重复内联）。再次印证「行数对 consistency 修复是错判据」——但本站恰好净收缩与修复同向。
+- **剩余站**：dispatch-new / revise-doc / harvest-notes。
+
 ## deploy 站（2026-06-20，致密化 + 漂移修复）
 
 用户定「继续往 deploy 站走」。deploy 是运行时运维 runbook——四象限里**门卫 N/A**（无检查器、无 Gate，验证=运行时健康检查非 spec 内审）、**末端 agent N/A**（机械序列无内容可审）、**🚫 生产安全人工门合法留人**（部署触生产，与 develop 全自动相反）。可动只有 template 外置 + 换指令体。exec 174→161（−13）/ structural 75→65（−10）/ 新建 `templates/deploy-log.md`(13)：
