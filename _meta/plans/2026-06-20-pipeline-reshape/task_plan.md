@@ -112,7 +112,15 @@
 - **已落（本会话，未 commit→见下）**：① `git show 755d04a:specs-execution/develop.md` 还原单文件 develop.md（417）② 补回 3 个 post-sub7 delta（standards 归位路径 / 测试脊柱 Step5 例子规格 / fb9fa9f 步号引用 Step7）③ `git rm` 四个家族文件 ④ **外科式反转**14 处接线（非整体 restore——这些文件都有 pipeline-reshape 后续工作必须保留）：structural develop.md（家族契约→单 task，**保 b-queue 修复 + 测试脊柱 AC 行**）/ CLAUDE.md 路由+Step1 表 / status.yml+skeleton07 type 枚举 14→12 / skeleton04 catalog+属性+§6 / dispatch-new+gen-it+manual-test+plan-sprint 的 status.yml `type: develop` / draft-tech-design+pr-review 执行层指针 develop-core→develop / guide 00·03·99。
 - **保 delta 纪律（关键）**：sub7「顺手修 dispatch-new b-queue pre-existing bug」+「status.yml type 补全」+ d83e722 测试脊柱 + e83fb53 standards 归位 + fb9fa9f 重号——这些都**不回退**。反转规则=「develop-sprint/repair/b/core → develop；b-queue 保留；type 字段保留值改 develop」。
 - **验证**：grep 全仓 live 文件零 `develop-core|sprint|repair|b` 残留（仅 STATUS.md 历史里程碑保留为日志）；develop.md 零 shell 引用、3 delta 在场、无 iterations/vN standards 残留。
-- **下一步 = 在单文件 develop.md(417) 基础上"展开"**：用户要的是「在现有方法（四件机制+换语气）基础上再次讨论致密化方案」。develop 站特殊性（见原下一轮起点）：**无检查器（门卫无可跑）**、末端是 npm test/lint 实测非 spec 内审，四象限"验证→门卫"格不适用；真正可压的是教学体冗余（换语气）vs sub7 导航知识（抽即掏空）要分清。**先和用户讨论打法再动手。**
+- **"展开"打法（讨论定）**：develop 站特殊——四件机制只两件适用（**linter/门卫❌**无检查器、**末端 agent❌**末端是真测试非内容审；**template⚠️**部分、**换语气✅**主力）。沿"最短路径"梳理：任务包→PR 的不可再省骨架=**读懂→写→跑绿→交付**4 步；其余 ~半部 spec 是三类外挂（多人协调/把关 Gate/容错）。审外挂后唯一真减负靶子=**会话模式单/批量分叉**（其余外挂或内在 develop、或太小、或 failure-only）。
+
+### Phase 2 进度（develop 站展开）
+- **①单/批量合一✅**（commit `4a8aeda`，develop.md 417→356/−61）：单任务=批量 N=1 特例，处理对象抬成「任务集 size≥1」，删头部模式表+批量会话整章+双认领块，PR 模板并一套，Step6/8 按集合泛化，顺修 Step8 sprint.md「仅 source=sprint」。货币=结构简化(消分叉+去重)非换语气。与 sub7 相反(消分叉 vs 加分叉)。
+- **下一步候选**（未定，待用户）：
+  - **换语气 pass**（主净缩杠杆，作用于整 356 行）：压教学体冗余——历史沿革注解(L"取代旧…")、测试脊柱解释尾、design.md/会话硬边界的括号理由等。零 sub7 陷阱。
+  - **续薄外挂**：Step9 移交 vs status.yml `pr` 字段冗余（status.yml 已记 pr 后，b-tasks.md/进度文件那笔还需要吗）——小。
+  - **parked 待议**：终点是否并入 merge（用户暂放）；PR 模板是否外置 templates/（用户对"多文件"有戒心，倾向不外置）。
+- **纪律**：develop 无检查器=门卫无可跑；换语气是纯净缩，外挂结构改是简化，二者货币不同别混账。
 
 **plan-sprint 站本轮**（致密化，本地 master，未 push）：
 - `specs-execution/plan-sprint.md` **340→275 行（−65/−19%）**。四象限拆账：① Step 3 折叠重抄（depends_on写法 / reference行号要求 / AC格式 / api-contract平铺等已在 `task-package.md` 模板 + check-sprint + structural完成判据三处，正文停止重抄、只留判断与跨文件来源）≈ 真减肥主力 ② 门卫散文收薄（Step 4.7「不得手改报告、不得跳过」+ Step 5「退出码0才签」前置 → 门卫 commit 时跑 check-sprint 强制兜底，同 PRD Step 7.4/8）③ 全文换指令体。
