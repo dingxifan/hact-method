@@ -166,7 +166,13 @@ git push origin {分支名}
 
 禁止在 PR description 中包含凭据。若推 PR 前发现凭据（PAT / token / 密码 / 私钥 / API key）已被写入代码或 commit：立即从 commit 中移除、通知相关人撤销该凭据，清理干净前不推 PR。
 
-**安全敏感预检（合并前唯一人工门）**：本批次任一任务改动触及**权限 / 认证 / 数据隔离**，且当前 develop 执行人无 `architecture` discipline 授权 → **不自动合并**，escape-hatch 浮给用户：等有 `architecture` discipline 的人裁决后再合并。这是砍除 pr-review 后保留的唯一治理门（其余代码质量已由 per-task 独审兜）。非安全敏感 → 直接合并。
+**安全敏感预检（合并前唯一人工门）**：本批次任一任务改动触及下列**高风险类别**之一，且当前 develop 执行人无 `architecture` discipline 授权 → **不自动合并**，escape-hatch 浮给用户：等有 `architecture` discipline 的人裁决后再合并。判据 = 这类改动若 AI 独审与测试同时漏判，将零人工审入 master，且后果不可逆 / 无权威原文可机械验：
+> - **权限 / 认证 / 数据隔离**（越权、鉴权绕过、租户串数据）
+> - **不可逆数据操作**（数据迁移 / 批量删除 / schema 破坏性变更——错了无法回滚）
+> - **金额 / 计费计算**（价格、扣费、对账——算错直接亏钱）
+> - **对外不可撤销副作用**（扣款 / 发信 / 短信 / 第三方写入——发出去收不回）
+>
+> 这是砍除 pr-review 后保留的唯一治理门（其余代码质量已由 per-task 独审兜）。改动不触及上述任一类别 → 直接合并。
 
 **合并**：用 `/gitee-ops` 调 merge API 把 PR 合并到 master（develop 自审自合并，无独立 pr-review）。合并失败（冲突等）→ 报告用户，不强合。
 

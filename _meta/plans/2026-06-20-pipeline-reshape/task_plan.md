@@ -200,6 +200,16 @@
 - **诚实账**：货币 = 去重 + 修漂移 + 门卫 forcing + 换指令体。
 - **管线收官**：draft-prd ✅→draft-ux ✅→draft-tech-design ✅→plan-sprint ✅→develop ✅(①②③④)→generate-integration-tests ✅→manual-test ✅。剩 deploy / wrap-up-iteration / init-project / dispatch-new / revise-doc / harvest-notes（非主开发管线核心站）。
 
+## 主链路对抗性审查 + F1 修复（2026-06-20，commit `e701019` brief / 报告归档 + `c1d4be7` 修复）
+
+独立审查员（新窗口 CC、自读权威原文、拒采信 STATUS/task_plan 自评）按三北极星（质审前移 / 质量控制≠规范控制 / 上下文+精准输入）对主链路全套修订做对抗式审查。**总分 7/10，未发现阻断级背离**，4 条建议级 finding：
+- **F1（已修，`c1d4be7`）**：砍 pr-review 漏网计数 stale——04 catalog + README 写「13 task / 9 discipline」→ 改 12 / 8（03-disciplines.md、BRIEF #24 早正确）。坐实"全仓 grep 验零悬挂"自评不可信。
+- **F2（已修）**：develop.md 末端安全门取值集从"权限/认证/数据隔离"扩到 4 类高风险（+不可逆数据操作 / 金额计费 / 对外不可撤销副作用），判据=AI+测试同漏即零人工入 master 且后果不可逆/无权威原文可机械验。不动 merge-on-push 原则。
+- **F3（已修）**：design §5 路1 加 2026-06-20 记账 blockquote——保真兜底原是人工 pr-review、#24 后降为 AI 独审，§5「人工判断只付一次」前提在 backend 单条 AC→test 链上不再成立，显式记账防误判。
+- **F4（已修）**：pre-commit-hook.sh 注释加「触发条件依赖共暂存」段——签 G1/G2/G3 须把产物与 gates.md 同次暂存，否则 check-docs/check-sprint 漏跑（G4/G5 例外）。属"护栏非密码锁"范围。
+- F5：删依据 commit 逐行核 diff，零误删承重行为（反向结论）。
+- 另记：README line 38 `├── projects/`（2026-05-08 已移除）+ line 43「6 份文档（01-06）」（实 7 份）是 pre-existing stale，与本 review 无关，未处理。
+
 ## 全管线删纯人用依据声明（2026-06-20，commit `081064c` + `e7b1273`，新原则）
 
 用户洞察：runtime spec 里**纯"为什么"依据声明只对人有解释价值、CC 执行不需要，却每次加载耗 token**——应整句删（非压缩）。沉淀 memory `project_cut_human_only_rationale.md`。判据=**删掉是否改变 CC 做什么**：否=人用→删，是=行为→留。

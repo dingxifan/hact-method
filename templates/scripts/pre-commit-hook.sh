@@ -11,6 +11,12 @@
 #   iterations/vN/sprint.md|queue/  → check-sprint.js vN
 #   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
 #
+# 触发条件依赖共暂存（暗礁）：linter 按 staged 的**产物文件**路由——check-docs 看
+#   prd/trd、check-sprint 看 sprint/queue。签 Gate 时若把产物与 gates.md 分两次 commit
+#   （产物先入、单独 commit 签字），签字那次只 stage gates.md → check-docs/check-sprint
+#   不重跑（G4/G5 例外：check-gate 看 gates.md 自身新增行，照跑）。故签 G1/G2/G3 时须把
+#   产物与 gates.md **同次暂存**，门卫才在签字点复验结构。属「护栏非密码锁」范围。
+#
 # 兼容（暗礁，见 hact-method HOOK 存档）：
 #   - 脚本缺失（存量仓未铺 scripts/check-*.js）→ 该检查 no-op 放行，绝不拦死。
 #   - node 不在 PATH → 警告并放行（不因环境差异 brick 提交）。

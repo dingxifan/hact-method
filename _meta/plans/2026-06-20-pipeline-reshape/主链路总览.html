@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hact-method 主链路总览（A 类完整迭代）</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb;
+    --det:#2563eb; --gate-c:#d97706; --review:#7c3aed; --human:#059669; --gate:#dc2626;
+    --spine:#0891b2;
+    --shadow:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.04);
+    --shadow-lg:0 10px 30px rgba(16,24,40,.12);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:14px}
+  header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:14px 24px}
+  header h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.2px}
+  header .sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 24px 60px}
+  h2.sec{font-size:14px;font-weight:700;color:#374151;margin:30px 0 12px;text-transform:none;
+    display:flex;align-items:center;gap:8px}
+  h2.sec::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--ink)}
+
+  /* north stars */
+  .stars{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .star{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+  .star b{display:block;font-size:13.5px;margin-bottom:4px}
+  .star span{color:var(--muted);font-size:12.5px}
+  .star .n{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;
+    background:var(--ink);color:#fff;font-size:11px;margin-right:6px;font-weight:700}
+
+  /* legend / filters */
+  .legend{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:6px 13px;cursor:pointer;font-size:12.5px;font-weight:600;user-select:none;
+    transition:.15s;white-space:nowrap}
+  .chip:hover{border-color:#cbd5e1}
+  .chip .dot{width:10px;height:10px;border-radius:50%}
+  .chip.active{color:#fff}
+  .chip[data-f="det"].active{background:var(--det);border-color:var(--det)}
+  .chip[data-f="gate"].active{background:var(--gate-c);border-color:var(--gate-c)}
+  .chip[data-f="review"].active{background:var(--review);border-color:var(--review)}
+  .chip[data-f="human"].active{background:var(--human);border-color:var(--human)}
+  .chip[data-f="spine"].active{background:var(--spine);border-color:var(--spine)}
+  .chip[data-f="all"].active{background:var(--ink);border-color:var(--ink)}
+  .dot.det{background:var(--det)} .dot.gate{background:var(--gate-c)}
+  .dot.review{background:var(--review)} .dot.human{background:var(--human)} .dot.spine{background:var(--spine)}
+  .hint{color:var(--muted);font-size:12px;margin-top:8px}
+
+  /* pipeline */
+  .flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:6px 2px 18px}
+  .flow::-webkit-scrollbar{height:8px}.flow::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+  .col{display:flex;align-items:center;flex:0 0 auto}
+  .node{width:172px;min-height:150px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px;cursor:pointer;box-shadow:var(--shadow);transition:.18s;position:relative;display:flex;flex-direction:column}
+  .node:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:#cbd5e1}
+  .node.optional{border-style:dashed;background:#fbfbfd}
+  .node.dim{opacity:.32;filter:saturate(.4)}
+  .node.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink),var(--shadow-lg)}
+  .node.hit{border-color:transparent;box-shadow:0 0 0 2px var(--hl,#000),var(--shadow-lg)}
+  .node .disc{font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+  .node .nm{font-size:13.5px;font-weight:700;margin:3px 0 2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .node .desc{font-size:11.5px;color:#4b5563;flex:1}
+  .node .opt-tag{position:absolute;top:-9px;right:8px;background:#94a3b8;color:#fff;font-size:9.5px;
+    padding:1px 7px;border-radius:6px;font-weight:700}
+  .qa-icons{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+  .qa-icons i{width:9px;height:9px;border-radius:2px;display:inline-block}
+  .qa-icons i.det{background:var(--det)}.qa-icons i.gate{background:var(--gate-c)}
+  .qa-icons i.review{background:var(--review)}.qa-icons i.human{background:var(--human)}
+  .arrow{flex:0 0 auto;width:34px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:18px}
+  .gateb{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;width:54px;gap:2px}
+  .gate-badge{width:38px;height:38px;background:var(--gate);color:#fff;font-weight:800;font-size:13px;
+    border-radius:9px;display:flex;align-items:center;justify-content:center;transform:rotate(45deg);box-shadow:var(--shadow)}
+  .gate-badge span{transform:rotate(-45deg)}
+  .gate-lbl{font-size:9.5px;color:var(--gate);font-weight:700;text-align:center;max-width:54px;line-height:1.2}
+
+  /* detail */
+  .detail{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+    padding:0;overflow:hidden;margin-top:4px}
+  .dhead{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .dhead .nm{font-size:16px;font-weight:800;font-family:ui-monospace,Menlo,monospace}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px}
+  .badge.disc{background:#eef2ff;color:#4338ca}
+  .badge.g{background:#fef2f2;color:var(--gate)}
+  .badge.nog{background:#f1f5f9;color:#64748b}
+  .badge.spine{background:#ecfeff;color:var(--spine)}
+  .dbody{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .dcell{padding:16px 20px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .dcell:nth-child(2n){border-right:none}
+  .dcell.full{grid-column:1/-1;border-right:none}
+  .dcell h4{margin:0 0 9px;font-size:12px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px}
+  .dcell h4 .ic{font-size:13px}
+  .io-list{list-style:none;margin:0;padding:0}
+  .io-list li{padding:5px 0 5px 16px;position:relative;font-size:13px;border-bottom:1px dashed #f0f2f5}
+  .io-list li:last-child{border-bottom:none}
+  .io-list li::before{content:"";position:absolute;left:0;top:12px;width:6px;height:6px;border-radius:50%;background:#cbd5e1}
+  .io-list code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:12px;color:#0f172a}
+  .qa-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed #f0f2f5;align-items:flex-start}
+  .qa-row:last-child{border-bottom:none}
+  .qa-tag{flex:0 0 auto;font-size:10.5px;font-weight:800;color:#fff;padding:3px 8px;border-radius:6px;margin-top:1px;white-space:nowrap}
+  .qa-tag.det{background:var(--det)}.qa-tag.gate{background:var(--gate-c)}
+  .qa-tag.review{background:var(--review)}.qa-tag.human{background:var(--human)}
+  .qa-txt{font-size:12.8px;color:#374151}
+  .qa-txt code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:11.5px}
+  .empty{color:var(--muted);font-size:12.5px;font-style:italic}
+
+  /* spine banner */
+  .spine-banner{background:linear-gradient(90deg,#ecfeff,#f0fdfa);border:1px solid #a5f3fc;border-radius:12px;
+    padding:14px 18px;display:none}
+  .spine-banner.show{display:block}
+  .spine-banner b{color:var(--spine)}
+  .spine-banner .steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+  .spine-banner .st{background:#fff;border:1px solid #a5f3fc;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600}
+  .spine-banner .ar{color:var(--spine);font-weight:800}
+
+  .threelayer{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .tl{border-radius:12px;padding:14px 16px;color:#fff}
+  .tl.l1{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+  .tl.l2{background:linear-gradient(135deg,#7c3aed,#8b5cf6)}
+  .tl.l3{background:linear-gradient(135deg,#059669,#10b981)}
+  .tl b{font-size:13.5px;display:block;margin-bottom:4px}
+  .tl span{font-size:12px;opacity:.94}
+  .foot{color:var(--muted);font-size:12px;margin-top:30px;border-top:1px solid var(--line);padding-top:16px}
+  @media(max-width:820px){
+    .stars,.threelayer{grid-template-columns:1fr}
+    .dbody{grid-template-columns:1fr}
+    .dcell{border-right:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>hact-method · 主链路总览（A 类完整迭代）</h1>
+  <div class="sub">每个环节做什么 · 入线 / 出线 · 质检怎么做 ｜ 点击环节看详情，点图例高亮对应质检机制</div>
+</header>
+
+<div class="wrap">
+
+  <h2 class="sec">原点 · 三条北极星（质检设计的判据）</h2>
+  <div class="stars">
+    <div class="star"><b><span class="n">1</span>质审前移</b><span>在最便宜、最早处验证质量。坏 AC 应在需求阶段暴露，而非拖到联调 / 验收。</span></div>
+    <div class="star"><b><span class="n">2</span>质量控制 ≠ 规范控制</b><span>验"产物是否真的正确"，靠确定性检查（test / linter / 一致性检查器）+ 精准输入，不靠再加散文规范。</span></div>
+    <div class="star"><b><span class="n">3</span>优化上下文 + 精准输入</b><span>更小上下文、确定性验证器、喂 subagent 权威原文（非自评 / 转述）——能真正改变 AI 行为的三个杠杆。</span></div>
+  </div>
+
+  <h2 class="sec">质检机制图例（点击高亮｜可多选）</h2>
+  <div class="legend" id="legend">
+    <span class="chip active" data-f="all"><span class="dot" style="background:#1f2430"></span>全部</span>
+    <span class="chip" data-f="det"><span class="dot det"></span>🔧 确定性检查器（linter / test）</span>
+    <span class="chip" data-f="gate"><span class="dot gate"></span>🚪 门卫（pre-commit hook）</span>
+    <span class="chip" data-f="review"><span class="dot review"></span>🔍 独立对抗审查（subagent）</span>
+    <span class="chip" data-f="human"><span class="dot human"></span>🧑 人工门（签字 / 品味）</span>
+    <span class="chip" data-f="spine"><span class="dot spine"></span>🧵 测试脊柱（贯穿）</span>
+  </div>
+  <div class="hint" id="hint">提示：「确定性检查器」由 <code>check-docs.js</code> / <code>check-sprint.js</code> / <code>check-gate.js</code> + <code>build·type·lint·test</code> 承担；「门卫」红则拦 commit，让"跑判官"成为提交唯一出路；「独立审查」全新隔离上下文、自读权威原文、拒收自评、存疑即阻断。</div>
+
+  <div class="spine-banner" id="spineBanner">
+    🧵 <b>测试脊柱</b>：一条不可视区 AC 的行为例子，无损穿过四个环节，最终物化成可运行测试——把"坏 AC"逼到最便宜处暴露。
+    <div class="steps">
+      <span class="st">PRD 幕1：写 <code>Given/When/Then</code> 行为例子</span><span class="ar">→</span>
+      <span class="st">TRD 幕2：精化为技术精确规格（状态码/错误码）</span><span class="ar">→</span>
+      <span class="st">任务包：写进 <code>acceptance-criteria</code> + 回链 tag</span><span class="ar">→</span>
+      <span class="st">develop：1:1 物化成 runnable 测试并跑绿</span>
+    </div>
+  </div>
+
+  <h2 class="sec">主链路流程（点击任一环节查看详情）</h2>
+  <div class="flow" id="flow"></div>
+
+  <div class="detail" id="detail"></div>
+
+  <h2 class="sec">develop 的三层质量防线（merge-on-push 后无独立 pr-review）</h2>
+  <div class="threelayer">
+    <div class="tl l1"><b>① 确定性绿（硬底）</b><span>build / type-check / lint / test 全绿。执行 subagent 增量自绿 + 末端全量检测，不受上下文失真影响。</span></div>
+    <div class="tl l2"><b>② 独立对抗审查（语义 top-up）</b><span>全新隔离 subagent 自读权威原文（任务包 / diff / standards / 测试），对抗式找问题、拒收自评、存疑即阻断、3 轮升级。</span></div>
+    <div class="tl l3"><b>③ 人工门（仅 2 处）</b><span>前端设计到位（开跑前）+ 安全敏感改动（权限/认证/数据隔离）合并前 architecture 裁决。其余全自动合并到 master。</span></div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const QA = {det:'确定性检查器',gate:'门卫',review:'独立审查',human:'人工门'};
+const stages = [
+  {
+    id:'init', nm:'init-project', disc:'management', gate:null, optional:false, spine:false,
+    desc:'创建项目仓、铺检查器脚本与门卫、建状态契约（前置基建）。',
+    what:'创建 <code>E:\\group-code\\{项目}\\</code> 独立仓；把 <code>check-*.js</code> + <code>pre-commit-hook.sh</code> 铺入仓并装进 <code>.git/hooks/</code>；建 <code>status.yml</code> / <code>gates.md</code> 空桩、standards 空桩；登记成员个人 notes 仓。',
+    in:['<code>_meta/input/background.md</code>（需求背景）','hact-method 模板（prd/trd/sprint/scripts/...）'],
+    out:['项目仓骨架（含代码区 + iterations/）','<code>status.yml</code>（机器侧状态契约）','门卫 <code>.git/hooks/pre-commit</code> 已装'],
+    qa:[{t:'det',x:'本身是基建任务，无 Gate；但它<b>铺设</b>了后续所有环节的确定性检查器与门卫——质检能力的源头。'}]
+  },
+  {
+    id:'prd', nm:'draft-prd-vN', disc:'product', gate:'G1', gl:'PRD 通过', optional:false, spine:true,
+    desc:'三层渐进写 PRD；每条有行为的 AC 紧跟行为例子（测试脊柱·幕1）。',
+    what:'骨架（方向对齐：场景还原→三角筛→功能清单）→ 结构层（逐功能写契约，每条有行为 AC 紧跟 <code>例：Given/When/Then</code>）→ 收尾（开放问题清零）。红线：写不出行为例子的"有行为"AC = 坏 AC，当场澄清。',
+    in:['<code>background.md</code>（首期）/ <code>project.md</code>（迭代）','模板 <code>templates/prd.md</code>'],
+    out:['<code>iterations/vN/prd.md</code>（含 <code>AC-nn</code> id + 行为例子）','<code>gates.md</code> G1 + <code>status.yml</code> gates.G1'],
+    qa:[
+      {t:'det',x:'<code>check-docs.js --prd</code>（Step 7.4）：6 段齐 / 功能槽（入口·涉及实体·draft-ux 枚举）/ 每功能 ≥1 AC / <code>AC-nn</code> 全局唯一 / 开放问题段已清空。'},
+      {t:'gate',x:'签 G1 的 commit 暂存 <code>prd.md</code> → 门卫自动跑 check-docs、红则拦 commit。"跳过 linter 偷签"机制上做不到。'},
+      {t:'review',x:'Step 7.5 派全新 subagent 读 <code>prd-review.md</code>，<b>自读</b>定稿 prd.md（陌生视角），查内部一致性 / AC 可验性 / 覆盖完整，输出问题清单（禁 pass 盖章）。'},
+      {t:'human',x:'逐功能确认（增量锚定）+ G1 签字——"是否用户真要的"产品语义只有人能判。'}
+    ]
+  },
+  {
+    id:'ux', nm:'draft-ux', disc:'dev-frontend', gate:null, optional:true, spine:false,
+    desc:'（可选）CC 当交互工程师，内部消化后出 HTML 原型，用户走查。',
+    what:'角色姿态反转：CC = 交互工程师，用户 = 客户。业务沟通（多轮文字）→ 内部消化（场景拆解+流程穿线+画面构思，不外露）→ 出 HTML 原型（落实 design.md）→ 用户走查反馈。',
+    in:['<code>prd.md</code>（功能标 <code>draft-ux: 需要</code>）','<code>design.md</code>（视觉规格，Step 1.3 顺手生成初稿）'],
+    out:['<code>iterations/vN/prototype.html</code>','<code>ux-flows.md</code>（场景命名表 + mermaid 流程图）'],
+    qa:[{t:'human',x:'用户直接看原型 = <b>真陌生视角</b>，故去掉 subagent 冷审（模拟反而冗余）。红线 6 条（含禁死路 / 禁让用户审过程产物 / 禁视觉创新）。'}],
+    note:'条件环节：PRD 全部功能标 <code>draft-ux: 不需要</code> 时整段跳过。'
+  },
+  {
+    id:'trd', nm:'draft-tech-design', disc:'architecture', gate:'G2', gl:'TRD + standards 通过', optional:false, spine:true,
+    desc:'写 TRD + 三份 standards；不可视区 AC 幕2 精化为技术精确规格。',
+    what:'骨架（架构轮廓）→ 完整 TRD（数据库/接口/模块，每接口挂 <code># 满足 AC：AC-nn</code> 回链）→ standards 三份（项目根活文档，双源：公共模板 + 本人 notes）。幕2：不可视区 AC 的行为例子<b>就地精化</b>为状态码/错误码/断言——只精化不创造，runnable 守 develop。',
+    in:['<code>prd.md</code>（G1 已签）','<code>ux-flows.md</code> / <code>prototype.html</code>','standards 模板 + 个人 notes <code>[规范]</code>','模板 <code>templates/trd.md</code>'],
+    out:['<code>iterations/vN/trd.md</code>','项目根 <code>standards-{shared,frontend,backend}.md</code>（含测试框架约定）','<code>decisions.md</code> + G2'],
+    qa:[
+      {t:'det',x:'<code>check-docs.js prd trd</code>（Step 4）：TRD 7 段 + 表块/接口块结构；<b>交叉对账</b>——PRD 涉及实体 ↔ TRD 表；PRD <code>AC-nn</code> ↔ TRD 回链（逐条正向挡悬空 + 逐条反向验覆盖）。'},
+      {t:'gate',x:'签 G2 commit 暂存 trd.md → 门卫复跑 check-docs 兜结构漂移、红则拦。'},
+      {t:'review',x:'Step 5 派 subagent 读 <code>trd-review.md</code>，自读 trd+prd，查内部一致性 / AC 真承接（非仅 id 在场）/ 字段满足画面 / 覆盖完整。'},
+      {t:'human',x:'Step 6 用户确认 TRD + G2 签字；语义残量（载体真承接、精化忠实）由签字人复核。'}
+    ]
+  },
+  {
+    id:'sprint', nm:'plan-sprint', disc:'dispatch', gate:'G3', gl:'开发包就绪', optional:false, spine:true,
+    desc:'拆 develop 任务，写 17 字段任务包入 queue，AC 携精化例子 + 回链。',
+    what:'骨架（任务清单 + 依赖 + 交付方式）→ 逐个写 17 字段任务包（套模板，backend AC 携幕2 精化例子 + <code>(源：PRD AC-nn)</code> 回链 tag）→ sprint.md 汇总视图 + 填 status.yml tasks[]。',
+    in:['<code>prd.md</code>/<code>trd.md</code>/standards（G2 已签）','模板 <code>templates/queue/task-package.md</code>'],
+    out:['<code>iterations/vN/queue/*.md</code>（任务包，状态 [可取]）','<code>sprint.md</code> + <code>status.yml</code> tasks[] + G3'],
+    qa:[
+      {t:'det',x:'<code>check-sprint.js vN</code>（Step 4.7）：17 字段完备 / <code>reference</code> 含行号（前端 ux-flows、后端 trd）/ AC 回链 tag + 逐条 id 存在性 + 逐条反向覆盖 / <code>depends_on</code> 在册 / queue↔sprint↔status <b>三方一致</b>。'},
+      {t:'gate',x:'签 G3 commit 暂存 queue/ + sprint.md → 门卫跑 check-sprint、红则拦。'},
+      {t:'review',x:'Step 3.5 派 subagent 读 <code>task-package-review.md</code>，自读 prd/trd/standards/queue，查 AC 忠实性 / AC 完备性 / api-contract 推导 / relevant-standards 覆盖；阻断即修、3 轮升级 revise-doc。'},
+      {t:'human',x:'确认拆分粒度 / 依赖 / 交付方式 + G3 签字；逐条 AC 忠实性（内容真覆盖）由签字人确认。'}
+    ]
+  },
+  {
+    id:'develop', nm:'develop', disc:'dev-frontend / dev-backend', gate:null, gl:'终态 [merged] 自落定', optional:false, spine:true,
+    desc:'拾任务集，执行 subagent 写+自绿 → 独立审查 → 自合并到 master。',
+    what:'主线只<b>编排</b>（定标/设计门/浮决策/末端全量/提交+合并）。每任务两阶段：<b>阶段 A 执行 subagent</b>（隔离上下文：读懂→计划+复用→写→自绿，AC 例子 1:1 物化成 runnable 测试）→ <b>阶段 B 独立审查 subagent</b>（对抗式自读权威原文）。整批通过 + 末端全量绿 → 推 PR → <b>自合并到 master</b>。',
+    in:['<code>sprint.md</code> [可取] 任务（G3 已签）','任务包 + standards + <code>reference</code>','frontend：<code>design.md</code> 全文 + <code>prototype.html</code>'],
+    out:['代码 + 测试（合并入 master）','PR <code>[merged]</code>','<code>status.yml</code> status=merged + <code>code_reviews[]</code> 审计留痕'],
+    qa:[
+      {t:'det',x:'<b>三层防线①</b>：build / type-check / lint / test 全绿——阶段 A 增量自绿 + 末端全量检测（覆盖集合全部改动 + 所有 AC 测试）。'},
+      {t:'review',x:'<b>三层防线②</b>：per-task 独立审查 subagent 读 <code>develop-review.md</code>，6 类（AC 忠实/do-not 越界/标准合规/测试品类空缺/留人判项/设计保真），拒收执行体自评、存疑即阻断、3 轮回炉超界升级。'},
+      {t:'human',x:'<b>三层防线③（仅 2 处人工门）</b>：① 前端设计到位（frontend 开跑前一次性确认）；② 安全敏感改动（权限/认证/数据隔离）合并前 architecture 裁决。其余直接自动合并。'}
+    ],
+    note:'无 Gate：砍除独立 pr-review 后，代码质量由 per-task 独审 + 全量绿把关，终态 <code>[merged]</code> 由 develop 自落定。'
+  },
+  {
+    id:'it', nm:'generate-integration-tests', disc:'integration-testing', gate:null, gl:'G4 前置之一', optional:false, spine:false,
+    desc:'所有 sprint 任务合并后，生成脚本、跑端到端、处理失败。',
+    what:'生成脚本（后端 curl/.http + 前端 pinchtab，≤15 条前端场景）→ 按模块并行执行端到端 → 处理失败（[阻断] 走 develop 修复或快速通道直修；[不阻断] 记 backlog）→ 复测重跑全部 → 三条件确认。',
+    in:['<code>sprint.md</code> 全 <code>[merged]</code>','PRD AC / TRD 接口 / ux-flows / prototype','<code>backlog.md</code> <code>[CR-建议]</code>'],
+    out:['<code>integration-tests/scripts-vN.md</code> + <code>result-{日期}.md</code>','<code>status.yml</code> integration_tests[]'],
+    qa:[
+      {t:'det',x:'端到端真实全栈跑（curl + pinchtab）——这是连接"不可视区"与"可视区"的桥，让后端正确性通过可视表面变得可观测。'},
+      {t:'human',x:'三条件确认：所有场景有结论 / 主流程无 [阻断] / [不阻断] 已记 backlog 分级。'}
+    ]
+  },
+  {
+    id:'mt', nm:'manual-test', disc:'product', gate:'G4', gl:'开发完成 + 验收通过', optional:false, spine:false,
+    desc:'提供环境，引导用户验收可视区，明确"验收通过"才签 G4。',
+    what:'提供测试环境 → 告知验收范围（<b>聚焦可视区 + 业务可接受性</b>；不可视区 AC 已由测试脊柱 + 联调机械验过、不重复手验）→ 收集反馈派修复（快速通道直修 / develop 任务包）→ 用户明确"验收通过" → 写验收报告 + 签 G4。',
+    in:['<code>result-{日期}.md</code>（联调三条件满足）','<code>prd.md</code> acceptance criteria 段'],
+    out:['<code>iterations/vN/acceptance-report.md</code>','修复任务（source=manual-test）+ G4'],
+    qa:[
+      {t:'det',x:'<code>check-gate.js G4 vN</code>：source=manual-test 修复任务全 <code>merged</code> + 验收报告结论="通过"。'},
+      {t:'gate',x:'签 G4 commit 暂存 gates.md（新增 G4）→ 门卫跑 check-gate、红则拦。'},
+      {t:'human',x:'用户<b>人工验收可视区</b>（design 钉死"可视区留人走查"）+ 明确说"验收通过" + G4 签字——CC 不替用户判通过。'}
+    ]
+  },
+  {
+    id:'wrap', nm:'deploy + wrap-up-iteration', disc:'deploy / management', gate:'G5', gl:'迭代收尾', optional:false, spine:false,
+    desc:'（并行）合并部署上线 + 偏离对账 / feedback 分流 / project.md 合并。',
+    what:'<b>deploy</b>：master 上"已验过"commit 一次性合并部署（pm2 重启后端 + nginx 前端，SSH MCP 执行）。<b>wrap-up</b>：偏离对账（backlog [偏离]）+ feedback 分流（誊入成员个人 notes）+ project.md 跨迭代合并。两者并行、无强依赖。',
+    in:['G4 已签（开发 + 验收完成）','<code>feedback.md</code> / <code>backlog.md</code>','<code>deployment.config</code>'],
+    out:['部署上线 + <code>deploy-log.md</code>','<code>project.md</code> 合并 + feedback 清空 + G5'],
+    qa:[
+      {t:'det',x:'<code>check-gate.js G5 vN</code>：<code>feedback.md</code> 已清空 + <code>project.md</code> 无"开发中"标注。'},
+      {t:'gate',x:'签 G5 commit 暂存 gates.md（新增 G5）→ 门卫跑 check-gate、红则拦。'},
+      {t:'human',x:'G5 签字；语义残量（backlog [偏离] 处理是否得当、feedback 分流是否准确）由签字人确认。deploy 失败 / 纯文档迭代不阻断 G5。'}
+    ]
+  }
+];
+
+// ---------- render pipeline ----------
+const flow = document.getElementById('flow');
+stages.forEach((s,i)=>{
+  const col = document.createElement('div'); col.className='col';
+  const node = document.createElement('div');
+  node.className='node'+(s.optional?' optional':'');
+  node.dataset.id=s.id;
+  node.innerHTML = `
+    ${s.optional?'<span class="opt-tag">可选</span>':''}
+    <div class="disc">${s.disc}</div>
+    <div class="nm">${s.nm.replace(' + ',' +<br>').replace(' / ','/')}</div>
+    <div class="desc">${s.desc}</div>
+    <div class="qa-icons">${[...new Set(s.qa.map(q=>q.t))].map(t=>`<i class="${t}" title="${QA[t]}"></i>`).join('')}</div>`;
+  node.addEventListener('click',()=>select(s.id));
+  col.appendChild(node);
+  flow.appendChild(col);
+
+  // gate badge OR arrow after node
+  if(s.gate){
+    const gb=document.createElement('div'); gb.className='gateb';
+    gb.innerHTML=`<div class="gate-badge"><span>${s.gate}</span></div><div class="gate-lbl">${s.gl||''}</div>`;
+    flow.appendChild(gb);
+  }
+  if(i<stages.length-1){
+    const ar=document.createElement('div'); ar.className='arrow'; ar.textContent='➜';
+    flow.appendChild(ar);
+  }
+});
+
+// ---------- detail ----------
+const detail=document.getElementById('detail');
+function ioList(arr){return `<ul class="io-list">${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`;}
+function qaRows(arr){return arr.map(q=>`<div class="qa-row"><span class="qa-tag ${q.t}">${({det:'🔧 确定性',gate:'🚪 门卫',review:'🔍 独审',human:'🧑 人工'})[q.t]}</span><span class="qa-txt">${q.x}</span></div>`).join('');}
+function select(id){
+  const s=stages.find(x=>x.id===id);
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('sel',n.dataset.id===id));
+  detail.innerHTML=`
+    <div class="dhead">
+      <span class="nm">${s.nm}</span>
+      <span class="badge disc">${s.disc}</span>
+      ${s.gate?`<span class="badge g">Gate ${s.gate} · ${s.gl}</span>`:`<span class="badge nog">无 Gate · ${s.gl||'终态自落定'}</span>`}
+      ${s.spine?`<span class="badge spine">🧵 测试脊柱环节</span>`:''}
+      ${s.optional?`<span class="badge nog">可选环节</span>`:''}
+    </div>
+    <div class="dbody">
+      <div class="dcell full"><h4><span class="ic">📌</span>做什么</h4><div class="qa-txt" style="font-size:13.5px">${s.what}</div>
+        ${s.note?`<div class="hint" style="margin-top:10px">⚑ ${s.note}</div>`:''}</div>
+      <div class="dcell"><h4><span class="ic">⬇️</span>入线（输入）</h4>${ioList(s.in)}</div>
+      <div class="dcell"><h4><span class="ic">⬆️</span>出线（产物）</h4>${ioList(s.out)}</div>
+      <div class="dcell full"><h4><span class="ic">🛡️</span>质检怎么做</h4>${qaRows(s.qa)}</div>
+    </div>`;
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ---------- legend filter (multi-select) ----------
+const active=new Set(['all']);
+const spineBanner=document.getElementById('spineBanner');
+document.querySelectorAll('#legend .chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    const f=chip.dataset.f;
+    if(f==='all'){active.clear();active.add('all');}
+    else{active.delete('all'); active.has(f)?active.delete(f):active.add(f); if(active.size===0)active.add('all');}
+    syncChips(); applyFilter();
+  });
+});
+function syncChips(){document.querySelectorAll('#legend .chip').forEach(c=>c.classList.toggle('active',active.has(c.dataset.f)));}
+const HL={det:'#2563eb',gate:'#d97706',review:'#7c3aed',human:'#059669',spine:'#0891b2'};
+function applyFilter(){
+  const all=active.has('all');
+  const spineOn=active.has('spine');
+  spineBanner.classList.toggle('show',spineOn);
+  document.querySelectorAll('.node').forEach(n=>{
+    const s=stages.find(x=>x.id===n.dataset.id);
+    const types=new Set(s.qa.map(q=>q.t));
+    let hit=false, color=null;
+    if(!all){
+      for(const f of active){
+        if(f==='spine'){ if(s.spine){hit=true;color=HL.spine;} }
+        else if(types.has(f)){hit=true;color=HL[f];}
+      }
+    }
+    n.classList.remove('hit','dim');
+    if(all){ /* normal */ }
+    else if(hit){ n.classList.add('hit'); n.style.setProperty('--hl',color); }
+    else { n.classList.add('dim'); }
+  });
+}
+
+// footer + default
+document.getElementById('foot').innerHTML=
+  '数据来源：自读 6 份 specs-execution + skeleton/06-gates.md §7 + templates/scripts/（check-docs / check-sprint / check-gate / pre-commit-hook）+ 4 份 review-briefs + BRIEF #24。'+
+  '<br>关键模型：<b>Gate = 检查器全绿 + 语义人签</b>；<b>门卫</b>让"跑判官"成为提交唯一出路；<b>独立审查</b>自读权威原文、拒收自评（非"AI 治 AI 盖章"）。 · 生成于 2026-06-20。';
+select('prd');
+</script>
+</body>
+</html>
