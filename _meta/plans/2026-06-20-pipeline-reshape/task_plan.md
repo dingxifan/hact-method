@@ -139,7 +139,15 @@
   - **3 个待拍定案**：审查粒度=per-task 审为主 + 末端只全量绿+偏离（cross-task 一致性留 generate-integration-tests 不重复重审）；前端设计门=upfront 一次性确认/backend-only 跳过；审查员=先单个跑顺（不上多 lens）。风险 1（盖章）解法=对抗式 prompt（存疑即打回）+ 有界 loop；风险 2（执行体优雅 blocked 返回）复用现失败/重置协议。
   - **取代 ①②的 Level1/Level2 轻澄清**（结构翻转：subagent 升 per-task 执行体、模块拆分降为 subagent 内部事）。
   - **诚实账**：这是 develop **结构重写**，主货币=① 质量模型升级（独立对抗审查 loop 取代逐步人工自检门）② 上下文经济（per-task 载入下沉 → 批次可放大）。**净缩 −90 是真实附带结果**（逐步 🚫 叙述/路径分支/「继续?」骨架被自动 loop 取代），但 +39 是新 brief（ADD、按需读不占主 context）——不把整件框成「减肥」，是模型改动顺带压缩。所有 delta 已逐项核对保留。外部引用 2 处更新（pr-review Step6→末端 commit 分支规则 / draft-tech-design Step5→阶段 A 测试基建缺失）；structural 完成判据 +2（独立审查通过 / 全量检测全绿）。
-- **更早的候选（多被 ③ 吸收）**：换语气 pass（③ 重写时已大量指令体化）；续薄外挂（③ 已重整末端）；parked（终点并入 merge？PR 模板外置？）。
+- **④ 砍除 pr-review + merge-on-push ✅ 已实现**（27 文件改 + 删 2 spec ~324 行；BRIEF 决策 #24；本地 commit→见 git）：
+  - **用户拍板路 A**：彻底砍 pr-review task + `review` discipline，develop 提交 PR 后立即自合并到 master；治理缺口（master 写入无第二人工门）用户明确接受。
+  - **依据（CC 研究结论）**：新 develop 内置独立对抗审查后，pr-review 的内容复审（standards 合规 / 测试保真 / AC 忠实 / CR根因→revise-doc）全冗余；surviving 价值仅治理 + 跨PR视角 + 留痕 + 设计保真比对——前三个 rehome、第四个升进独审。
+  - **3 缺口安置**：①安全敏感（权限/认证/数据隔离）→ develop 末端合并前 escape-hatch（architecture 授权者裁决）②设计保真比对（实现 vs design.md/prototype）→ 升进 develop-review.md brief 第 6 类（taste 仍留人）③ code_reviews[] 审计留痕 + backlog 建议项 → develop 末端写；跨 PR feedback → wrap-up。
+  - **Fast Mode 一并删除**（用户提）：全自动模型下仅剩 3 个真人工门（定标/设计门/escape-hatch），无快进意义。
+  - **状态流转变**：`[done]` 退为瞬态（同会话即审即合并），终态 `[merged]` 由 develop 自落定；无 develop→pr-review 联动。
+  - **改动面**：删 specs-execution/structural pr-review.md；develop exec（merge-on-push + 安全预检 + code_reviews + 移交/硬边界改）+ structural（判据/产物/输出给）；brief 加设计保真；skeleton 01/02/03(discipline 9→8)/04(task 13→12 + 重号)/05(状态机联动)/06/07(CR owner)；templates CLAUDE 路由+推断表 / status.yml / 两 checklist；下游 revise-doc/plan-sprint/draft-tech-design/wrap-up 引用；guide 00/02/03/04/99；BRIEF #1/#17/#23 + 新 #24。全仓 grep 验残留=仅"记录砍除"的有意表述 + _meta/STATUS 历史日志。
+  - **诚实账**：结构精简（删一个冗余 task + 一个 discipline），货币=去冗余（独审已扛质量）+ 流程缩短（merge-on-push）；净删 ~324（删文件）+ 各处 -32。治理是减法、明确接受。
+- **更早的候选（多被 ③④ 吸收）**：换语气 pass（③ 重写时已大量指令体化）；parked（PR 模板外置？）。
 - **纪律**：develop 无 linter 检查器（门卫无可跑）；③ 是模型重写，质量升级 + 上下文经济为主货币、净缩为附带，别只盯行数。
 
 **plan-sprint 站本轮**（致密化，本地 master，未 push）：

@@ -49,6 +49,16 @@
 
 ## 历史里程碑
 
+### 2026-06-20 develop 站「展开」四连改 — 单/批量合一 → 会话定标 → 执行模型翻转（独立审查 loop）→ 砍除 pr-review（merge-on-push）
+
+> 接「撤销 sub7、单文件 develop.md(417)」。本会话沿 develop 站连做四步，把 develop 从「逐步人工门的线性 spec」改成「主线编排 + 执行 subagent + 独立对抗审查 loop + 自合并」的全自动模型，并连带砍除独立 pr-review。本地 `method-lab` 分支，**未 push**。
+
+- **① 单/批量会话合一**（`4a8aeda`，417→356）：单任务=批量 N=1 特例，处理对象抬成「任务集 size≥1」，删头部模式表 + 批量会话整章 + 双认领块。货币=结构简化（消分叉），与 sub7 相反方向。
+- **② 会话定标 + 批次名带 id 集 + 两级循环轻澄清**（`92fda1e`/`77b4c21`，356→360）：拆开 **PR 粒度**（依赖/plan-sprint 已管）与 **会话容量**（上下文/develop 拾取时定标）两个正交维度（findings F2）；批量按 files 估改动面提议依赖序前缀子集 + 软锚点 + 🚫确认。批次分支名 `{layer}-batch-v{N}-{id1}/{id2}/...` 携任务 id 集破撞车。Level1 任务级串行 / Level2 模块级 subagent 轻澄清。货币=正确性（主动定标替被动重置），ADD。
+- **③ 执行模型翻转：主线编排 + 执行 subagent + 独立审查 loop**（`1f7b463`，360→270，新建 `templates/review-briefs/develop-review.md`）：全自动 loop 取代逐步 🚫 人工门，人工只守一个 upfront 门=前端设计到位。主线编排（定标/设计门/浮决策/末端全量/提交）；每任务「读懂→计划→写→自绿」下沉执行 subagent（隔离上下文→批次可放大）；每任务质量由**独立对抗审查 subagent**（自读权威原文=任务包/diff/standards/测试，绝不收执行体自评）把关，阻断即回炉、3 轮超界升级。三层防线（deterministic 绿 → 独审语义 top-up → 人工守设计品味）防「AI 判 AI 盖章」。findings F3：独审输入必须权威原文、唯一留人门是无权威原文的设计品味。诚实账：结构重写，主货币=质量升级 + 上下文经济，净缩 −90 为附带、+39 brief 是 ADD。
+- **④ 砍除 pr-review + merge-on-push（BRIEF 决策 #24）**（27 文件改 + 删 2 spec ~324 行）：用户拍板路 A——新 develop 内置独立审查后，pr-review 的内容复审全冗余 → 废除 `pr-review` task + `review` discipline（discipline 9→8、task 13→12），develop 提交 PR 后自合并到 master。**治理代价明确接受**（master 写入无第二人工门），仅安全敏感改动（权限/认证/数据隔离）保留 architecture 人工裁决（develop 末端 escape-hatch）。3 缺口安置：安全→escape-hatch、设计保真比对→升进独审 brief 第 6 类、code_reviews[] 留痕→develop 末端写。Fast Mode 一并删（全自动下无快进意义）。`[done]` 退瞬态、终态 `[merged]` 由 develop 自落定。改动遍及 skeleton 01-07 / templates / 下游 specs / guide / BRIEF；全仓 grep 验零悬挂引用（残留均为「记录砍除」的有意表述）。
+- **git**：本地 `method-lab` 含 ①②③④ 全部，领先 origin，**未 push**（master/推送严格，待用户明确）。
+
 ### 2026-06-20 develop 站：撤销 sub7 家族拆分 — 取回单文件 develop.md，灭掉 core+3 壳，在原基础上重启致密化
 
 > 管线走到 develop 站。用户复盘 sub7（2026-06-19 把 develop 拆成 `develop-core`+3 薄壳）**判为负收益**，拍板「取回 sub7 之前的原文件、灭掉家族、在单文件基础上重新讨论致密化方案」。本轮只做**撤销 + 接线反转**（致密化"展开"留下一轮，先和用户讨论打法）。本地 master，未 push。
