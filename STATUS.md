@@ -49,6 +49,20 @@
 
 ## 历史里程碑
 
+### 2026-06-20 管线续走 plan-sprint 站：致密化（340→275 / −19%）— Step 3 折叠重抄 + 门卫散文收薄 + 换指令体
+
+> 接 draft-tech-design 站。沿管线往下到 `plan-sprint`（实测最胖 ~340 行）。照「单环节致密化方法」§五 6 步走四象限。**纯致密化、无结构改动**（契约字段/产物/判据未变，只动 exec 正文散文）；本地 master，未 push。
+
+- **`specs-execution/plan-sprint.md` 340→275 行（−65/−19%）**。四象限拆账：
+  - **格式→模板/linter（真减肥主力）**：Step 3 原把 `depends_on` 写法 / `reference` 行号要求 / AC 回链格式 / api-contract 平铺规则**逐字重抄**进正文，而这些已在 `templates/queue/task-package.md` 模板注释 + `check-sprint.js` + structural 完成判据**三处**存在。正文停止重抄，只留「模板讲不了的判断与跨文件来源」（数量策略 / AC 例子来源 PRD幕1·TRD幕2 + revise-doc 路由 / reference 前后端同场景名对齐锚点 / api-contract 推导来源 + 确认节点）。
+  - **验证→门卫接管**：Step 4.7「不得手改报告、不得跳过」+ Step 5「退出码 0 才签」前置散文删——签字 commit（stage queue/+sprint.md+gates.md）时 pre-commit 门卫按路由跑 `check-sprint.js`、红则拦 commit，「跳过 linter 偷签」机制上做不到（同 PRD Step 7.4/8）。
+  - **过程判断→换指令体**：全文教学体→指令体。
+- **不可动部分（解释 −19% 弱于 PRD −44%）**：Step 3.5 sub-agent mandate ~36 行 brief 逐条保留（方法 §五 第 4 点：末端 agent 指令必须固化进 brief，否则退化泛扫+盖章）+ 选项菜单/骨架表/交付方式表/sprint.md 格式等功能输出模板是结构非散文。真可压散文集中在 Step 3 + 语言两处。
+- **末端 agent 与 AC 链均为既存资产、非本轮 ADD**：Step 3.5 独立对抗审查 = PRD Step 7.5 的同款机制（plan-sprint 早有）；AC 链落点（任务包 `(源：AC-nn)` 回链 → check-sprint 逐条正反向）sub5/sub6 已机械，残量忠实性留 Step 3.5 + 签字人——**本站无 AC 链 bug 可修**。
+- **诚实账**：货币 = 致密语言（真净缩，零 sub7）+ 搬运到模板（单一来源防漂移）+ 门卫接管（forcing）。不据某一件宣称总净收缩。
+- **下一站**：`develop 家族`（develop-core ~308 + 3 薄壳），但 sub7 刚重构（2026-06-19）、且无检查器（门卫无可跑），**入手前先问用户走哪站**（可能先放，跳 pr-review/manual-test）。
+- **git**：本地 master 含 sub1-7 + 乙 + PRD/门卫 + draft-tech-design 三件 + 本轮 plan-sprint，领先 origin 二十余 commit，**全部未 push**（master 严格）。
+
 ### 2026-06-20 单环节续走 draft-tech-design：致密化 + standards 归位 + 步骤重排（三件依次落，沿管线往下走）
 
 > 接「门卫样本建成 + 致密化方法成稿」。用户定调"沿整个开发管线一个个往下走，同时审 AC 链有效性"。管线顺序 draft-prd✅→draft-ux✅(无改)→**draft-tech-design 本轮**→plan-sprint→develop→…。本会话把 draft-tech-design 三件依次做掉，三个独立 commit（本地 master，未 push）。

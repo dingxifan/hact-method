@@ -105,7 +105,13 @@
 **已建地基（勿重做）**：门卫（HOOK）已建成（`templates/scripts/pre-commit-hook.sh`，init-project 装，按 staged 路由 check-docs/check-sprint/check-gate，红拦 commit，无脚本/无 node→no-op）。判官三件 + 结构化模板早就位。**上面 HOOK 起点种子那段是已完成记录，不是待办。**
 
 **管线站点**（用户定序，非按行数 ROI）：
-`draft-prd-vN`✅ → `draft-ux`✅(确认无改) → **`draft-tech-design`✅(本轮)** → `plan-sprint`(下一站) → develop 家族 → pr-review → generate-integration-tests → manual-test。
+`draft-prd-vN`✅ → `draft-ux`✅(确认无改) → `draft-tech-design`✅ → **`plan-sprint`✅(本轮)** → develop 家族(下一站) → pr-review → generate-integration-tests → manual-test。
+
+**plan-sprint 站本轮**（致密化，本地 master，未 push）：
+- `specs-execution/plan-sprint.md` **340→275 行（−65/−19%）**。四象限拆账：① Step 3 折叠重抄（depends_on写法 / reference行号要求 / AC格式 / api-contract平铺等已在 `task-package.md` 模板 + check-sprint + structural完成判据三处，正文停止重抄、只留判断与跨文件来源）≈ 真减肥主力 ② 门卫散文收薄（Step 4.7「不得手改报告、不得跳过」+ Step 5「退出码0才签」前置 → 门卫 commit 时跑 check-sprint 强制兜底，同 PRD Step 7.4/8）③ 全文换指令体。
+- **不可动部分**（解释为何 −19% 弱于 PRD −44%）：Step 3.5 sub-agent mandate ~36 行 brief 逐条保留（方法 §五 第 4 点：末端 agent 指令必须固化进 brief）+ 多个功能输出模板（选项菜单 / 骨架表 / 交付方式表 / sprint.md 格式）是结构非散文。真可压散文集中在 Step 3 + 语言。
+- **AC 链**：plan-sprint 落点（任务包 `(源：AC-nn)` 回链 → check-sprint 逐条正反向）sub5/sub6 已机械，残量忠实性留 Step 3.5 + 签字人——**本站纯致密化、无 AC 链 bug**。
+- **诚实账**：货币是致密语言（真净缩）+ 搬运到模板（防漂移）+ 门卫接管（forcing）；Step 3.5 是既存资产（=PRD Step 7.5），非本轮 ADD。无 structural 改动（契约字段/产物/判据未变，只动 exec 正文散文）。
 
 **draft-tech-design 站本轮三件**（本地 master，未 push）：
 1. 致密化 + Step 5 末端内容审查（`b090a2d`）——283→307 净 ADD（cram 单行拆 bullet + 验内容 ADD，非减肥）。
@@ -113,6 +119,6 @@
 3. 步骤重排 + 整数重编号（`fb9fa9f`）——验证（linter+内容审查）前移到写完 TRD 后、用户确认前；Step 1–9 干净整数。
 4. STATUS 里程碑 + 方法文档候选更新（`55223e6`）。
 
-**下一轮起点 = `plan-sprint` 站**（最胖 ~340 行）。照方法文档 §五「6 步」：拆四象限（格式→已有 task-package 模板 + check-sprint｜验证→门卫已接管｜内容→是否需末端 agent｜过程→换指令体）。**先量账**：哪些是给人读的教学体冗余（换语气主力、零 sub7）、哪些是 sub7 陷阱（导航知识伪装成仪式、抽即掏空）。AC 链在 plan-sprint 的落点：任务包 `(源：AC-nn)` 回链 → check-sprint 逐条正反向已机械（sub5/sub6），残量=逐条忠实性留人。
+**下一轮起点 = `develop 家族` 站**（develop-core ~308 + 3 薄壳）。注意：**develop 家族 sub7 刚重构（2026-06-19），先评估再动**——方法文档 §六明示「develop 家族 sub7 刚重构，先放」。develop 无检查器（门卫无可跑、退 no-op），末端是 npm test/lint 实测而非 spec 内审，四象限里"验证→门卫"这格对它不适用。**先量账**：develop-core 哪些是教学体冗余（换语气主力）、哪些是 sub7 导航知识（抽即掏空）。若 develop 家族判定先放，则跳到 `pr-review` / `manual-test`（~289）。**入手前先问用户走哪站**（develop 家族刚重构，可能用户想先放）。
 
 **纪律**：行数对 reorg/结构修正是错判据（draft-tech-design 净 + 仍对）；sub7 每删先答删哪条；保护 hact-app v1–v4；**master 领先 origin 二十余 commit、从未 push，待用户明确才推**。
