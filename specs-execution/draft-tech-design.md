@@ -222,7 +222,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 **测试基建约定（不可视区测试的地基，不可省）**：`standards-backend.md` 必含「测试框架约定」一节——测试框架选型 + `npm run test`（或等价）命令 + 测试文件位置约定。这是 develop 把不可视区 AC（Given/When/Then 例子）落成可运行测试的前提（核心抓手 A）；没有它，develop 的 `npm run test` 步无处落地。
 - 首期项目：在此确立框架，写入 standards-backend 与 `project.md` 技术层。
-- 存量项目首次迁移到本规范：若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop-core.md` Step 5 无运行器处理）。
+- 存量项目首次迁移到本规范：若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop.md` Step 5 无运行器处理）。
 
 三份汇总后检查：无重复条目 / 无相互矛盾 / 覆盖 TRD 提到的所有关键约束。
 

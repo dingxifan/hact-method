@@ -105,7 +105,14 @@
 **已建地基（勿重做）**：门卫（HOOK）已建成（`templates/scripts/pre-commit-hook.sh`，init-project 装，按 staged 路由 check-docs/check-sprint/check-gate，红拦 commit，无脚本/无 node→no-op）。判官三件 + 结构化模板早就位。**上面 HOOK 起点种子那段是已完成记录，不是待办。**
 
 **管线站点**（用户定序，非按行数 ROI）：
-`draft-prd-vN`✅ → `draft-ux`✅(确认无改) → `draft-tech-design`✅ → **`plan-sprint`✅(本轮)** → develop 家族(下一站) → pr-review → generate-integration-tests → manual-test。
+`draft-prd-vN`✅ → `draft-ux`✅(确认无改) → `draft-tech-design`✅ → `plan-sprint`✅ → **develop 站：先撤销 sub7 家族拆分✅(本轮) → 待在单文件基础上致密化** → pr-review → generate-integration-tests → manual-test。
+
+**⚠️ develop 站本轮：撤销 sub7 家族拆分（用户拍板，2026-06-20）**
+- **判定**：sub7（2026-06-19）把 `develop.md`(417) 拆成 `develop-core`(308)+3 薄壳(124/41/46)=519，**净 +102 行、1→4 文件、跨文件步号耦合、三倍 intake/handoff 样板**。用户判**负收益**，决定「取回原文件、灭掉家族、在单文件基础上重新讨论致密化方案」。（注：sub7 当初的 per-session context 收益只对 repair/b 会话省 ~40 行，远抵不过维护代价。structural 侧当初就以"拆则复制共享判据"为由**没拆**，exec 与它矛盾。）
+- **已落（本会话，未 commit→见下）**：① `git show 755d04a:specs-execution/develop.md` 还原单文件 develop.md（417）② 补回 3 个 post-sub7 delta（standards 归位路径 / 测试脊柱 Step5 例子规格 / fb9fa9f 步号引用 Step7）③ `git rm` 四个家族文件 ④ **外科式反转**14 处接线（非整体 restore——这些文件都有 pipeline-reshape 后续工作必须保留）：structural develop.md（家族契约→单 task，**保 b-queue 修复 + 测试脊柱 AC 行**）/ CLAUDE.md 路由+Step1 表 / status.yml+skeleton07 type 枚举 14→12 / skeleton04 catalog+属性+§6 / dispatch-new+gen-it+manual-test+plan-sprint 的 status.yml `type: develop` / draft-tech-design+pr-review 执行层指针 develop-core→develop / guide 00·03·99。
+- **保 delta 纪律（关键）**：sub7「顺手修 dispatch-new b-queue pre-existing bug」+「status.yml type 补全」+ d83e722 测试脊柱 + e83fb53 standards 归位 + fb9fa9f 重号——这些都**不回退**。反转规则=「develop-sprint/repair/b/core → develop；b-queue 保留；type 字段保留值改 develop」。
+- **验证**：grep 全仓 live 文件零 `develop-core|sprint|repair|b` 残留（仅 STATUS.md 历史里程碑保留为日志）；develop.md 零 shell 引用、3 delta 在场、无 iterations/vN standards 残留。
+- **下一步 = 在单文件 develop.md(417) 基础上"展开"**：用户要的是「在现有方法（四件机制+换语气）基础上再次讨论致密化方案」。develop 站特殊性（见原下一轮起点）：**无检查器（门卫无可跑）**、末端是 npm test/lint 实测非 spec 内审，四象限"验证→门卫"格不适用；真正可压的是教学体冗余（换语气）vs sub7 导航知识（抽即掏空）要分清。**先和用户讨论打法再动手。**
 
 **plan-sprint 站本轮**（致密化，本地 master，未 push）：
 - `specs-execution/plan-sprint.md` **340→275 行（−65/−19%）**。四象限拆账：① Step 3 折叠重抄（depends_on写法 / reference行号要求 / AC格式 / api-contract平铺等已在 `task-package.md` 模板 + check-sprint + structural完成判据三处，正文停止重抄、只留判断与跨文件来源）≈ 真减肥主力 ② 门卫散文收薄（Step 4.7「不得手改报告、不得跳过」+ Step 5「退出码0才签」前置 → 门卫 commit 时跑 check-sprint 强制兜底，同 PRD Step 7.4/8）③ 全文换指令体。

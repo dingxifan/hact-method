@@ -20,17 +20,13 @@
 | 准备 | `draft-tech-design` | architecture | G2 |
 | 准备 | `plan-sprint` | dispatch | G3 |
 | 跨段 | `revise-doc` | product / architecture（按 target 派生） | — |
-| 开发循环 | `develop-sprint` | dev-frontend / dev-backend（按 layers 派生） | — |
-| 开发循环 | `develop-repair` | dev-frontend / dev-backend（按 layers 派生） | — |
+| 开发循环 | `develop` | dev-frontend / dev-backend（按 layers 派生） | — |
 | 开发循环 | `pr-review` | review | — |
 | 开发循环 | `generate-integration-tests` | integration-testing | — |
 | 开发循环 | `manual-test` | product | G4 |
 | 收尾 | `deploy` | deploy | — |
 | 收尾 | `wrap-up-iteration` | management | G5 |
 | B 类入口 | `dispatch-new` | dispatch | — |
-| B 类 | `develop-b` | dev-frontend / dev-backend（按 layers 派生） | — |
-
-> **develop 家族（`develop-sprint` / `develop-repair` / `develop-b`）**：三者共享实现核心 `specs-execution/develop-core.md`（Step 1–8），由 `source` 决定加载哪个壳——`sprint`→develop-sprint、`integration`/`manual-test`→develop-repair、`bug`/`optimization`→develop-b。task.type 拆分兑现决策 #14（路由键决定所属 Gate / 完成判据 / feedback 去向），核心不复制（见 `_meta/plans/2026-06-19-structural-review/sub7-develop拆分-design.md`）。`task_type` 字段（dev-frontend/dev-backend）是正交的 layer 路由键，不受本拆分影响。
 
 ---
 
@@ -40,16 +36,16 @@
 
 | 属性 | 取值 | 出现于 |
 |---|---|---|
-| `urgency` | `normal` (默认) / `hotfix`（紧急） | `develop-b`（hotfix 归 BUG 会期，决策 #7） |
-| `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | develop 家族, `pr-review`（从 PR 派生） |
-| `task_type` | `dev-frontend` / `dev-backend`（单值路由键；layers 跨层时由分配者指定主） | develop 家族 |
-| `source` | `sprint`（→develop-sprint）/ `integration` · `manual-test`（→develop-repair）/ `bug` · `optimization`（→develop-b） | develop 家族（选壳路由键） |
+| `urgency` | `normal` (默认) / `hotfix`（紧急） | `develop` |
+| `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop`, `pr-review`（从 PR 派生） |
+| `task_type` | `dev-frontend` / `dev-backend`（单值路由键；layers 跨层时由分配者指定主） | `develop` |
+| `source` | `sprint` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
 | `target` | `prd` / `trd` / `standards` | `revise-doc` |
 | `target-source` | `bug` / `optimization` | `dispatch-new` |
 | `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-tech-design`, `wrap-up-iteration` |
 | `pr-links` | URL[] | `pr-review` |
 
-`source` 决定加载哪个 develop 壳（sprint/repair/b）；`layers` / `task_type` 决定加载哪份 standards 和 checklist。二者组合决定 develop 任务如何理解任务上下文（详见 §6 develop 家族条目）。
+`layers` 和 `source` 的组合决定 `develop` 任务加载哪份 standards 和如何理解任务上下文（详见 §6 develop 条目）。
 
 ---
 
@@ -134,35 +130,30 @@
 
 ---
 
-### 6. `develop` 家族（`develop-sprint` / `develop-repair` / `develop-b`）
+### 6. `develop`
 
 > 拿任务包写代码 + 推 PR。涵盖原 feature / fix / fix-integration / fix-acceptance / fix-bug / optimization。
-> 三者**共享实现核心** `specs-execution/develop-core.md`（Step 1–8：理解 → 实现 → 自检 → commit → 推 PR → 状态落盘），各自的壳只定义 intake（Gate 前置 / 拾取 / 任务包路径）与 handoff（移交 / feedback 去向）。`source` 选壳。
 
-| task.type | source | Gate 前置 | 任务包路径 | 会话模式 | feedback 去向 |
-|-----------|--------|:---:|-----------|---------|--------------|
-| `develop-sprint` | sprint | **G3** | `iterations/vN/queue/` | 单任务 / 批量 | feedback.md（wrap-up 分流） |
-| `develop-repair` | integration · manual-test | 无 | `iterations/vN/queue/` | 单任务 | feedback.md（wrap-up 分流） |
-| `develop-b` | bug · optimization | 无 | `b-queue/` | 单任务 | **就地分流**个人 notes（B 类无 wrap-up） |
-
-- **discipline**（三壳同）: 由 `task_type` 决定（task_type 由 layers 派生）——
-  - `layers=[frontend]` → `dev-frontend`；`layers=[backend]` → `dev-backend`；`layers=[shared]` → 由分配者在任务包中指定 task_type
-- **完成判据**（三壳同）: 代码完成 + 通过 pr-review + PR `[merged]`
-- **主要产物**（三壳同）: PR + 代码改动 + （可选）新增/更新单元测试
-- **关联 Gate**: develop-sprint 拾取前置 G3；develop-repair / develop-b 无
+- **discipline**: 由 `task_type` 决定（task_type 由 layers 派生）——
+  - `layers=[frontend]` → `dev-frontend`
+  - `layers=[backend]` → `dev-backend`
+  - `layers=[shared]` → 由分配者在任务包中指定 task_type
+- **完成判据**: 代码完成 + 通过 pr-review + PR `[merged]`
+- **主要产物**: PR + 代码改动 + （可选）新增/更新单元测试
+- **关联 Gate**: —
 - **属性**:
-  - `source`：sprint / integration / manual-test / bug / optimization（**选壳路由键**）
+  - `source`：sprint / integration / manual-test / bug / optimization（决定上下文加载）
   - `layers`：[frontend] / [backend] / [shared]（数组，可多值）
-  - `task_type`：dev-frontend / dev-backend（layer 路由键；layers=[shared] 或跨层时由分配者指定）
-  - `urgency`：normal / hotfix（仅 develop-b）
-- **加载规范分支**（壳内）:
+  - `task_type`：dev-frontend / dev-backend（单值路由键；layers=[shared] 或跨层时由分配者指定）
+  - `urgency`：normal / hotfix
+- **加载规范分支**:
   - source=sprint → 引用 PRD + sprint.md
   - source=integration → 引用失败的联调脚本场景
   - source=manual-test → 引用人工验收报告条目
   - source=bug → 引用 bug 报告 + 复现步骤
   - source=optimization → 引用改进目标 + 基线指标
 
-详见 `specs-structural/develop.md`（develop 家族共享结构层契约）。
+详见 `specs-structural/develop.md`。
 
 ---
 

@@ -25,7 +25,7 @@
       ↓
 dispatch-new（判定 B/A + 写任务包入 b-queue）
       ↓
-develop-b（source=bug / optimization）
+develop（source=bug / optimization）
       ↓
 pr-review → merge
       ↓

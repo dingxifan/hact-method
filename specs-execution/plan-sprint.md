@@ -170,7 +170,7 @@
 
 把本期全部任务追加进项目根 `status.yml` 的 `tasks[]`（机器侧状态契约，项目级单文件，字段见 `../hact-method/skeleton/07-status-contract.md`；不存在则先从 `../hact-method/templates/status.yml` 补建）。
 
-每任务一条：`source: sprint`、`type: develop-sprint`（source=sprint 推得）、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
+每任务一条：`source: sprint`、`type: develop`、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
 
 > 「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是 hact-app 取数唯一来源；任务包正文（17 字段）不进 YAML，hact-app 用到时走 API 现拉。
 

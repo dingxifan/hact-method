@@ -49,6 +49,17 @@
 
 ## 历史里程碑
 
+### 2026-06-20 develop 站：撤销 sub7 家族拆分 — 取回单文件 develop.md，灭掉 core+3 壳，在原基础上重启致密化
+
+> 管线走到 develop 站。用户复盘 sub7（2026-06-19 把 develop 拆成 `develop-core`+3 薄壳）**判为负收益**，拍板「取回 sub7 之前的原文件、灭掉家族、在单文件基础上重新讨论致密化方案」。本轮只做**撤销 + 接线反转**（致密化"展开"留下一轮，先和用户讨论打法）。本地 master，未 push。
+
+- **诊断（数据 wc -l 校正）**：sub7 是 `develop.md`(417) → 家族 519（core 308 + sprint 124 + repair 41 + b 46），**净 +102 / 1→4 文件 / 跨文件步号耦合 / 三倍 intake·handoff 样板**。唯一收益（repair·b 会话少载 ~40 行批量逻辑）远抵不过维护代价。**佐证**：structural 侧当初就以「拆则复制共享判据、反 §2 净收缩」为由**没拆**（保持单契约 79 行），exec 拆分与它自相矛盾——本轮让两侧重新一致。
+- **撤销动作**：① `git show 755d04a:specs-execution/develop.md` 还原单文件（417）② 补回 3 个 post-sub7 delta（standards 归位路径 / 测试脊柱 Step5 例子规格 / fb9fa9f 步号 Step7）③ `git rm` 四家族文件 ④ 外科式反转 14 处接线（**非整体 git restore**——这些文件多承载 pipeline-reshape 后续大改，整体还原会抹掉）：structural 契约 / CLAUDE.md 路由+Step1 表 / status.yml+skeleton07 type 枚举 14→12 / skeleton04 catalog+属性+§6 / dispatch-new·gen-it·manual-test·plan-sprint 的 `type: develop` / draft-tech-design·pr-review 执行层指针 / guide 00·03·99。
+- **保 delta 纪律（关键，没回退）**：sub7「顺手修 dispatch-new b-queue pre-existing bug」+「status.yml type 补全」+ d83e722 测试脊柱 + e83fb53 standards 归位 + fb9fa9f 重号——全部**保留**。反转规则=「`develop-sprint/repair/b/core → develop`；`b-queue` 保留；`type` 字段保留、值改 `develop`」。
+- **验证**：grep 全仓 live 文件零家族残留（仅本 STATUS 历史里程碑保留为日志）；develop.md 零 shell 引用 / 3 delta 在场 / 无 iterations/vN standards 残留。`git diff` 净 −519 家族 + 反转接线、新增 develop.md 417 = 回到 ~原始 + 保留改进。
+- **诚实账**：这是**撤销一次结构 reorg**、不是减肥也不是加规则——回到 sub7 前的单文件结构正确性（决策#14 的"task.type 真路由"本就不该靠拆 exec 文件实现：task.type 仍是 dev-frontend/dev-backend，source 是属性）。**真正的致密化（换语气那把刀）留"展开"轮**。
+- **下一步**：在单文件 develop.md(417) 上致密化，但 develop 站特殊——**无检查器（门卫无可跑）**、末端 npm test/lint 实测非 spec 内审，四象限"验证→门卫"格不适用；可压的是教学体冗余 vs sub7 导航知识（抽即掏空）要分清。**先与用户定打法。**
+
 ### 2026-06-20 review-briefs/ pattern 推广到 PRD + tech-design — 三个末端审查 brief 全部外置，spec 正文只留派发指针
 
 > 接 plan-sprint 站 brief 外置（建成 `templates/review-briefs/task-package-review.md` + 命名规范）。本轮把同款 pattern 推广到管线另两个末端内容审查：PRD Step 7.5、draft-tech-design Step 5。本地 master，未 push。

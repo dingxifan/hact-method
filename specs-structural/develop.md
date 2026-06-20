@@ -1,12 +1,10 @@
-# task: develop 家族（`develop-sprint` / `develop-repair` / `develop-b`）
+# task: develop
 
-> 本契约是 develop 三个 task.type 的**共享结构层契约**——字段 / 产物 / 完成判据 / 接口三壳一致，故不拆三份（拆则复制共享判据，反 §2 净收缩；见 `_meta/plans/2026-06-19-structural-review/sub7-develop拆分-design.md`）。差异仅在 intake（Gate 前置 / 任务包路径）与 handoff（feedback 去向），由 `source` 选壳，下文逐处标注。
+**discipline**: `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）
+**Gate**: —
+**属性**: `source` · `layers` · `task_type` · `urgency`
 
-**discipline**（三壳同）: `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）
-**Gate**: `develop-sprint` 拾取前置 G3；`develop-repair` / `develop-b` 无
-**属性**: `source`（选壳路由键）· `layers` · `task_type` · `urgency`
-
-> 从任务包写代码到推 PR：覆盖 sprint 功能开发（develop-sprint）、联调/验收修复（develop-repair）、bug/优化（develop-b）。
+> 从任务包写代码到推 PR：覆盖 sprint 功能开发、联调修复、验收修复、bug 修复、优化。
 
 ---
 
@@ -37,7 +35,7 @@
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
 | `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |
 | `acceptance-criteria` | string[] | ✅ | 3–5条，每条可独立验证；"功能正常"不算；每条须标注覆盖的 PRD AC id `(源：PRD AC-nn)`（可选人读后缀 `·{关键词}`，linter 只读 `AC-nn`），纯技术约束标 `(技术)`（由 plan-sprint 回链写入；check-sprint 据 id 机械核逐条覆盖）。**不可视区（backend/逻辑）任务的 AC 以可执行例子规格（Given/When/Then：输入→期望输出）书写**，供 develop 物化成可运行测试——测试脊柱：行为源自 PRD 幕 1、技术精度源自 `draft-tech-design` 幕 2，由 plan-sprint 回链写入；前端任务维持散文 AC |
-| `relevant-standards` | string[] | ✅ | 精确指向 `standards-{layer}.md` / `standards-shared.md` 的章节（§ 章节名）。注：`design.md` 现为 frontend 任务的**无条件必读项**（见 `specs-execution/develop-core.md` 精确加载上下文），不再依赖本字段触发，无需在此重复列出 |
+| `relevant-standards` | string[] | ✅ | 精确指向 `standards-{layer}.md` / `standards-shared.md` 的章节（§ 章节名）。注：`design.md` 现为 frontend 任务的**无条件必读项**（见 `specs-execution/develop.md` 精确加载上下文），不再依赖本字段触发，无需在此重复列出 |
 | `reference` | string[] | ✅ | 文件路径 + 行号 + 说明；行号必填、不接受"全文"或无范围（指向已存在代码/文档，可精确定位）；无相关文件时明确标注原因 |
 | `context` | string | ✅ | 关键实现切入点（如：`GoalList.vue L142 handleDelete()`…） |
 | `known-risks` | string[] | ✅ | 来自 TRD 或现有代码的实际陷阱，不是猜测 |
@@ -67,7 +65,7 @@ api-contract:
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | PR | 代码仓库 | PR description 含 5 段：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 |
-| sprint.md 状态 + PR 列更新（**仅 develop-sprint**；repair/b 任务不在 sprint.md） | `iterations/vN/sprint.md` | 状态列 → `[done]`，PR 列 → `#N` |
+| sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[done]`，PR 列 → `#N` |
 | 上下文重置记录（触发时写入） | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：已完成文件 / 阻塞点 / 关键决策 |
 
 ---
@@ -88,10 +86,10 @@ api-contract:
 
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `plan-sprint`（source=sprint → develop-sprint） | 任务包（含 files / AC / standards 引用） | iterations/vN/queue/*.md |
-| `generate-integration-tests`（source=integration → develop-repair） | 失败联调场景 + 修复任务包 | iterations/vN/queue/*.md |
-| `manual-test`（source=manual-test → develop-repair） | 验收问题 + 修复任务包 | iterations/vN/queue/*.md |
-| `dispatch-new`（source=bug/optimization → develop-b） | B 类任务包 | **b-queue/*.md** |
+| `plan-sprint`（source=sprint） | 任务包（含 files / AC / standards 引用） | iterations/vN/queue/*.md |
+| `generate-integration-tests`（source=integration） | 失败联调场景 + 修复任务包 | iterations/vN/queue/*.md |
+| `manual-test`（source=manual-test） | 验收问题 + 修复任务包 | iterations/vN/queue/*.md |
+| `dispatch-new`（source=bug/optimization） | B 类任务包 | b-queue/*.md |
 | `revise-doc`（影响任务包时） | 更新后的任务包或 standards 变更说明 | iterations/vN/queue/{task-id}.md 或 b-queue/{task-id}.md 更新 |
 
 **输出给**
@@ -102,4 +100,4 @@ api-contract:
 
 ---
 
-> **工作内容 / 边界场景 / 异常处理见 `specs-execution/develop-core.md`（共享实现核心 Step 1–8）+ 对应壳 `develop-sprint.md` / `develop-repair.md` / `develop-b.md`（intake + handoff）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。
+> **工作内容 / 边界场景 / 异常处理见 `specs-execution/develop.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。

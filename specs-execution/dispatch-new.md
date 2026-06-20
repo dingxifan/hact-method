@@ -104,7 +104,7 @@
 
 **17 字段无空字段方可写入 queue**。
 
-**同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop-b`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
+**同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
 
 > B 类放 `iteration: null` 而非某迭代——两个迭代之间无活跃迭代时 B 类照样有家，与 `b-tasks.md` 同为项目级。
 
@@ -130,12 +130,12 @@ git push origin master
 ```
 
 ```
-✅ dispatch-new 完成：{task-id}（{target-source} / {urgency}）已写入 b-queue，等待 develop-b 拾取。
+✅ dispatch-new 完成：{task-id}（{target-source} / {urgency}）已写入 b-queue，等待 develop 拾取。
 ```
 
 **`urgency=hotfix` 时额外输出**：
 ```
-⚠️ hotfix 任务，请立即通知相关 develop-b 执行人优先拾取 {task-id}。
+⚠️ hotfix 任务，请立即通知相关 develop 执行人优先拾取 {task-id}。
 ```
 
 ---
