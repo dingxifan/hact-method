@@ -99,19 +99,18 @@
 更新 `project.md` 产品层（目标 / 用户 / 功能边界）。
 > 用户要求跳过某段 → 注明"用户决定跳过：{原因}"，不留空。
 
-### Step 7.4：结构 linter 自检（格式判据最终判定）
+### Step 7.4：结构 linter 自检（提前跑，门卫兜底）
 
-签 G1 前跑确定性结构检查，把格式判据（段落缺 / 槽位空 / draft-ux 枚举非法 / 功能无 AC / AC id 缺失重号 / 开放问题未清零）一次机械核定，不再人或 subagent 肉眼扫：
+签 G1 前主动跑一遍，把格式判据（段落缺 / 槽位空 / draft-ux 枚举非法 / 功能无 AC / AC id 缺失重号 / 开放问题未清零）机械核到绿：
 
 ```bash
 node scripts/check-docs.js --prd iterations/vN/prd.md
 ```
 
-- 退出码 0 → 格式判据全过，进 Step 7.5。
-- 退出码 1 → 按报告逐条修 `prd.md` 重跑到 0。**不得手改报告、不得跳过。**
+红 → 按报告逐条修 `prd.md` 重跑到绿。这步是**提前自查**；Step 8 签字 commit 时 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷偷签字"机制上做不到，故不再写强制散文。
 
-> PRD↔TRD 交叉对账此刻跑不了（TRD 未生），留 `draft-tech-design` 阶段两文件齐备时由那边的 linter 跑。
-> 无 `scripts/check-docs.js`（存量未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段人工逐条核对兜底，提示补铺（init-project Step 3），不阻断。
+> PRD↔TRD 交叉对账此刻跑不了（TRD 未生），留 `draft-tech-design` 阶段两文件齐备时跑。
+> 无 `scripts/check-docs.js` 且门卫未装（存量仓）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段人工逐条核对兜底，提示补铺（init-project Step 3 / 4.1），不阻断。
 
 ### Step 7.5：独立内容审查（格式之外的内容有效性）
 
@@ -128,7 +127,7 @@ subagent 输出**问题清单**（不是 pass 盖章）。CC 据清单与用户�
 
 ### Step 8：G1
 
-> **签字前置**：Step 7.4 linter 退出码 0 + Step 7.5 内容审查问题已处理 + 语义 / 产品判断你已确认。
+> **签字前置**：Step 7.5 内容审查问题已处理 + 语义 / 产品判断你已确认。（结构 linter 由下方签字 commit 的 pre-commit 门卫强制兜底，无需在此重述"退出码 0 才签"。）
 
 ```
 ✅ PRD v{N} 完成：[功能数] 个功能，开放问题已清零，内容审查已过。
