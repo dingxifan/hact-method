@@ -98,11 +98,11 @@
 | `task-id` | `{项目缩写}-b-{三位序号}`，如 `hact-b-001` |
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
 | `urgency` | Step 3 判断结果 |
-| `schema-change` | `true`（本任务含接口或数据结构纯加法变更）/ `false`（默认） |
-| `acceptance-criteria` | bug → 现象消失 + 复现步骤无法复现；optimization → 用户提供的可观测验收标准；`schema-change=true` 时额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
-| `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；`schema-change=true` 时必须写明：最坏情况 / 如何发现 / 如何回滚 |
+| `acceptance-criteria` | bug → 现象消失 + 复现步骤无法复现；optimization → 用户提供的可观测验收标准；**含纯加法 schema 变更（Step 1 判定）时**额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
+| `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；**含纯加法 schema 变更时**必须写明：最坏情况 / 如何发现 / 如何回滚 |
+| `api-contract`（条件） | 仅 `layers=[backend]` 且新增接口被前端消费时填，否则整段删除（与 develop §字段规范一致） |
 
-**17 字段无空字段方可写入 queue**。
+**17 字段无空字段方可写入 queue**（schema 变更**不另立字段**——落在上述 `acceptance-criteria` / `known-risks` / `api-contract`，与 develop §字段规范单一真相对齐）。
 
 **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
 

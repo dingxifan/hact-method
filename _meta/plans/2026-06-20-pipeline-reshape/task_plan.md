@@ -219,6 +219,15 @@
 - **诚实账**：小幅（净 −6），wrap-up 本就精简（机械分流 + 选项菜单 + 生产安全 🚫 门不可压）。主货币 = 门卫 forcing + consistency 修复 + 去重，非减肥。无 AC 链（收尾不涉 AC）。
 - **剩余站**：init-project / dispatch-new / revise-doc / harvest-notes。
 
+## dispatch-new 站（2026-06-20，幽灵字段修复，管线 12 站全收官）
+
+用户「现在还有最后一个 dispatch-new」。扫到一处真 bug + 排除一个假漂移：
+- **真 bug：`schema-change` 幽灵字段**。dispatch-new exec（Step 4 line 101-103）把 `schema-change` 当任务包字段写（`true`/`false`，并据它 gate AC/known-risks 内容），但该字段在 canonical schema（`templates/queue/task-package.md` / `specs-structural/develop.md §字段规范` / `check-sprint.js` REQUIRED）**全零出现**，develop 也不读它（grep 验零）——而 dispatch-new 自称"按 develop §字段规范 17 字段"写包、structural line 25 明确 defer to develop §字段规范，**自相矛盾**。修法（无 fork，canonical 单一真相权威）：删 `schema-change` 字段行，其效果折进真实字段——`acceptance-criteria`（schema 变更时加 TRD 已更新条）/ `known-risks`（最坏情况/发现/回滚）/ 新增 `api-contract`（条件，backend 接口被前端消费时填）；末句明示"schema 变更不另立字段"。全仓 grep 验现仅剩「schema 变更」**概念**引用、无 `schema-change` 字段残留。
+- **假漂移排除：「17 字段」是对的**。一度疑 task-package 列 18 key vs 全仓「17 字段」(~13 处) 矛盾——读 check-sprint line 35 定案：`status` 不计入（与 status.yml 重复、由后者权威），REQUIRED 恰 17，`api-contract` 条件必填另算。「17 字段」全仓正确一致，不改。
+- **其余一致**：b-queue 路径 exec/structural 一致；`type: develop`（post-develop-撤销 type 枚举）一致；状态流转 `[可取]→[taken-by]→[merged]`（post-④ merge-on-push，done 瞬态跳过）一致；无 pr-review 残留。
+- **诚实账**：货币 = 修 1 个幽灵字段 bug（消 spec 与 canonical schema 矛盾）；净行数近零（删 1 行加 1 行）。
+- **🏁 管线 12 站全收官**：init-project / draft-prd / draft-ux / draft-tech-design / plan-sprint / develop / generate-integration-tests / manual-test / deploy / wrap-up-iteration / revise-doc / harvest-notes / dispatch-new 全部走过。
+
 ## revise-doc + harvest-notes 站（2026-06-20，用户「用得少，扫一下」）
 
 用户定「做 revise-doc 和 harvest，用得非常少，扫一下」——重点扫一致性/漂移/悬挂，非强行减肥。结论：**两站都维护良好，几乎无需动**。
