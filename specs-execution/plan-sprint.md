@@ -134,8 +134,6 @@
 
 ### Step 3.5：任务包独立对抗审查
 
-任务包是 develop 唯一消费的工单、杠杆最大的产物，但前面字段自检 / AC 对账都是 CC 自审。此处补一道**独立眼睛**——派从未参与写作的 sub-agent 对抗审查，在源头堵"任务包 AC 偏离 PRD"，确保下游 develop 据任务包 AC 写的测试在验**正确的东西**（不可视区 AC 的例子忠于 PRD，测试才不会"测得很对却测错了需求"）。
-
 **派发**：派一个全新 subagent，令其读 `../hact-method/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读** prd.md / trd.md / standards / queue（隔离上下文，不传写包叙事与拆分理由）。任务包 >4 个**按包分批**派，利于 loop 收敛。
 > brief 查四类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
 
@@ -182,14 +180,11 @@
 
 脚本 `🧑` 段语义残量由签字人确认：疑点已逐条确认、TRD 每模块都有任务包、Step 3.5 独审无遗留阻断、任务包 AC 逐条**忠实**于回链的 PRD AC（内容真覆盖，非仅 id 在场）。
 
-> 与 Step 3.5 独审互补：独审深查任务包对 PRD/TRD 保真（是其中一条语义判据），由 `🧑` 段提示复核。
 > 存量项目（无 `scripts/check-sprint.js` 且门卫未装，或任务包仍是旧序列化格式）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G3 段人工逐条核对兜底，并提示新 sprint 套 `templates/queue/task-package.md`。
 
 ---
 
 ### Step 5：G3
-
-> **签字前置**：Step 4.7 已自检（`🧑` 段语义残量已确认）。结构 linter 由签字 commit 的 pre-commit 门卫强制兜底，无需重述"退出码 0 才签"。
 
 ```
 ✅ Sprint 规划完成：[N] 个任务包入 queue，sprint.md 已生成，依赖已标注。

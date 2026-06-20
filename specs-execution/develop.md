@@ -2,7 +2,7 @@
 
 > CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
 > **执行模型**：主线只**编排**（定标 / 设计门 / 浮决策 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由**执行 subagent** 跑、隔离上下文；每个任务的质量由**独立审查 subagent**（对抗式、自读权威原文）把关，不通过即回炉。人工只守一个门：**前端设计是否到位**。
-> **无独立 pr-review 环节**（2026-06-20 砍除）：代码质量由 per-task 独立对抗审查 + 全量绿把关，develop 自审自合并。**治理代价已被接受**：master 写入无第二人工门——仅**安全敏感改动**（权限 / 认证 / 数据隔离）保留一道人工裁决（见末端·合并）。
+> **无独立 pr-review 环节**（2026-06-20 砍除）：代码质量由 per-task 独立对抗审查 + 全量绿把关，develop 自审自合并。仅**安全敏感改动**（权限 / 认证 / 数据隔离）保留一道人工裁决（见末端·合并）。
 
 **上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到执行 subagent，故**批次可放大**（容量被 subagent 数量解耦，会话定标软锚点随之放宽）。本 spec 处理**一个任务集**（size ≥ 1）：`交付=独立` 任务形成单元素集（自己一个 PR），同层 `交付=批量` 任务形成多元素集（共一个 PR）。单任务即 N=1 特例。
 
@@ -14,8 +14,6 @@
 > ① **会话定标**——确认本轮吃哪几个任务。
 > ② **前端设计到位**——frontend 批次开跑前一次性确认（backend-only 跳过）。
 > ③ **escape-hatch**——执行 subagent 撞 do-not 拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红时返回 blocked，主线浮给用户。
->
-> 这三处都是**真需要人**的决策（吃哪些任务 / 视觉品味 / 真阻塞），无快进意义——故不设 Fast Mode；其余「读懂→计划→写→绿→审」本就全自动 loop。
 
 ---
 
@@ -62,7 +60,6 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
   前端设计到位检查：本批次 frontend 任务涉及画面 [...]，design.md [已覆盖全部 / 缺 {X} 的视觉规格]，prototype.html [有对应交互路径 / 缺 {Y}]。
   ```
   🚫 等用户确认「设计到位、可全自动跑」。design.md 有缺口 → 用户补 design / 或起 `revise-doc`，**缺口补齐前不开跑**。
-  > **为何独留这一门**：把"视觉决策"从执行中途前移到开跑前一次——design.md 若开跑前就覆盖齐全，执行中就不会冒出"无据可依的视觉决策"。视觉/交互的"到位、是否用户真要的"无权威原文可机械 / 独立核（design §10「是否用户真要的」归用户），这是 AI 自洽 loop 唯一兜不住的，故留人，且只此一处、只在开跑前。
 
 ---
 
@@ -215,9 +212,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | source | 去向 |
 |---|---|
 | `sprint` / `integration` / `manual-test`（A 类） | 写入 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`），由本迭代 `wrap-up-iteration` 第二步统一分流 |
-| `bug` / `optimization`（B 类） | **就地分流**——B 类无 wrap-up，不能堆 `feedback.md` 干等。当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
-
-> B 类就地分流后，个人 notes 的可上提条目同样由管理者的 `harvest-notes` 收割上提，与 A 类殊途同归。
+| `bug` / `optimization`（B 类） | **就地分流**：当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
 ---
 

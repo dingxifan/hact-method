@@ -62,7 +62,7 @@
 
 ### Step 1：核对测试环境
 
-G3 签署时已确认环境可达，此处快速复核：
+快速复核以下三项：
 - [ ] 后端服务可达（curl 健康检查端点返回正常）
 - [ ] 数据库指向测试库（非生产库）
 - [ ] 前端页面可打开
@@ -129,11 +129,11 @@ G3 签署时已确认环境可达，此处快速复核：
 
 全部 subagent 返回后，汇总写入 `integration-tests/result-{日期}.md`（格式见 `../hact-method/templates/integration-result.md`）。
 
-**同步写项目根 `status.yml` 的 `integration_tests[]`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`；hact-app 直接取数驱动 F6 联调清单）：每条场景一项
+**同步写项目根 `status.yml` 的 `integration_tests[]`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）：每条场景一项
 ```yaml
 - { iteration: vN, index: {序号}, description: {场景描述}, status: {待执行/执行中/通过/失败}, failure_reason: {失败现象 或 null} }
 ```
-结果表的 ✅ → `通过`，❌ → `失败`（failure_reason 填现象），未跑 → `待执行`。result-{日期}.md 是人看的视图，status.yml 是机器取数源；现象/复现步骤等正文留在 result md，不进 YAML。
+结果表的 ✅ → `通过`，❌ → `失败`（failure_reason 填现象），未跑 → `待执行`。现象/复现步骤等正文留在 result md，不进 YAML。
 
 ---
 
@@ -181,7 +181,7 @@ git branch -d fix/it-{desc}
 
 **`[不阻断]`**（边界或视觉问题）：
 - 评估规模：≤3 文件且原因明确 → 建议走 B 类快速通道（`dispatch-new`）；否则写入 `backlog.md`，格式：`- [ ] {日期} | [不阻断] {描述} | 联调发现`
-- 不派 source=integration 修复任务（B 类走独立通道）
+- 不派 source=integration 修复任务
 
 **同一 `[阻断]` 修复后仍失败超过 2 轮** → 上报；判断根因是否在 TRD 设计，若是则创建 `revise-doc(target=trd)` 任务。
 

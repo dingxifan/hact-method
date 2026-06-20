@@ -152,7 +152,7 @@
 
 ### Step 4：结构 linter 自检（【linter】判据的最终判定，含交叉对账）
 
-TRD 落盘后**立即**跑确定性检查（不等到签字）。此刻 PRD 与 TRD 都在，**两条交叉对账在此兑现**——这是 draft-prd-vN 阶段无法跑、留到此处的：① PRD `涉及实体` ↔ TRD `### 表`；② PRD `AC-nn` ↔ TRD `# 满足 AC` 回链（逐条正向挡悬空 + 逐条反向验覆盖，机械化 AC 覆盖映射自检）。这些是【linter】判据，机械核定，**不派判据冷核 subagent**（子计划 3 已删；内容有效性另由 Step 5 末端审查，是两回事）：
+TRD 落盘后**立即**跑确定性检查（不等到签字）。此刻 PRD 与 TRD 都在，**两条交叉对账在此兑现**：① PRD `涉及实体` ↔ TRD `### 表`；② PRD `AC-nn` ↔ TRD `# 满足 AC` 回链（逐条正向挡悬空 + 逐条反向验覆盖，机械化 AC 覆盖映射自检）。这些是【linter】判据，机械核定，**不派判据冷核 subagent**：
 
 ```bash
 node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
@@ -163,7 +163,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
   - TRD 段落缺/槽位空/表块或接口块缺 → 修 `trd.md`。
   - 交叉对账 FAIL（PRD 实体无对应表）→ 多数是 TRD 漏建表，补 `### 表：{名}`；若确认该"实体"非持久化数据（纯前端态/外部系统），则回 `prd.md` 把该功能 `涉及实体` 改正（去掉或写"无"）。
   - 交叉对账 FAIL（AC 回链悬空 / PRD AC 未被承接）→ 悬空：改正 TRD 回链号或删退休号；未被承接：在对应载体补 `# 满足 AC：AC-nn`，或列疑点向用户确认本期不做。
-  - 重跑到绿（Step 9 签字 commit 的 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷签"机制上做不到，故不写强制散文；本步到签字之间若再改 TRD，门卫兜住结构漂移）。
+  - 重跑到绿（签字 commit 的 pre-commit 门卫会再跑、红则拦 commit）。
 
 > linter 覆盖结构/一致性判据（含 AC 覆盖映射的**齐全性**机械核）；**语义判据**（接口字段是否真满足画面、载体是否**真承接**所回链的 AC 而非仅 id 在场）落 linter 🧑 段，由 Step 5 末端审查 + 签字时复核 + 后续 `develop` 内置独立审查的技术保真把关。
 > 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
@@ -210,8 +210,6 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
   - notes 不存在 / 无 `[规范]` 条目 → 仅用公共模板 + 现有 standards
   - 与现有 standards 同项但建议不同 → 保留现有版本，把不同建议记入 `feedback.md` 走分流，不当场覆盖
   - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 `decisions.md` 说明冲突和理由
-
-> **适用前提（设计甲）**：当前架构 / 开发高度重叠，draft-tech-design 执行人 ≈ 本期真实开发者，故在生成端注入本人 notes 即覆盖实际写代码的人。团队分化后是否扩展到 develop 加载端（设计乙），见 `../hact-method/_meta/plans/方法论待议.md`。
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
 - 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目

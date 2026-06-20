@@ -204,10 +204,10 @@ git branch -d fix/mt-{desc}
 
 用户明确说「验收通过」后，完善验收报告 `iterations/vN/acceptance-report.md`（格式见 `../hact-method/templates/acceptance-report.md`）。两件人工兜底必须落进报告：
 - **完备性对账**：AC 验证表列全 PRD 每条 AC——某条 PRD AC 在开发链无任务包覆盖（plan-sprint 双向对账漏网）在此暴露，记入问题记录。
-- **验证来源如实标注**：不可视区 AC 取自测试脊柱（develop 绿测试）+ 联调，机械验过、不重复人工核；可视区/业务 AC 由用户人工验收（乙-2 收口：人工注意力留给只有人能判的可视区与业务可接受性）。
+- **验证来源如实标注**：不可视区 AC 取自测试脊柱（develop 绿测试）+ 联调，机械验过、不重复人工核；可视区/业务 AC 由用户人工验收。
 - **环境差异**：若测试环境与生产行为有差异，在报告中注明，由用户决定是否接受 / 需生产复验。
 
-**签 G4 前 · 完成判据核对**：`check-gate.js G4 vN` 核确定性判据（`source=manual-test` 修复任务全 [merged]、验收报告结论"通过"）——签字 commit 时门卫自动跑、红则拦 commit（偷签机制上做不到，同 PRD/plan-sprint，见 `../hact-method/skeleton/06-gates.md` §7）。脚本 `🧑 留签字人确认` 段的语义残量（用户是否明确说验收通过、反馈问题是否都已处理）由你这个产品签字人确认——可视区人工验收本就该人判（design §3）。
+**签 G4 前 · 完成判据核对**：`check-gate.js G4 vN` 核确定性判据（`source=manual-test` 修复任务全 [merged]、验收报告结论"通过"）——签字 commit 时门卫自动跑、红则拦 commit（偷签机制上做不到，同 PRD/plan-sprint，见 `../hact-method/skeleton/06-gates.md` §7）。脚本 `🧑 留签字人确认` 段的语义残量（用户是否明确说验收通过、反馈问题是否都已处理）由你这个产品签字人确认。
 
 （存量项目无 `scripts/check-gate.js` → 门卫 no-op 放行、退回 §7 G4/G5 段人工逐条核对兜底，并提示补铺，见 init-project Step 3。）
 
