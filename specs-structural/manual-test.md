@@ -27,38 +27,12 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 验收报告 | `iterations/vN/acceptance-report.md` | 见下方格式 |
+| 验收报告 | `iterations/vN/acceptance-report.md` | 见 `../hact-method/templates/acceptance-report.md` |
 | G4 签字 | `iterations/vN/gates.md` | `- [x] G4：验收通过 — YYYY-MM-DD` |
 | 修复任务包（如有） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（范围外问题） | `backlog.md` | 标注「超出本期范围，留下期」 |
 | 进度跟踪 | `_meta/sessions/manual-test-progress.md` | 本轮派发任务清单 + 历史轮次 + 当前状态 |
 | feedback.md 条目（发现共性问题时） | `feedback.md` | `{日期} \| {发现} \| 建议更新到 {文件哪节}` |
-
-**验收报告格式：**
-
-```markdown
-# 验收报告 · vN · {项目名}
-
-## 验收结论
-通过
-
-## Acceptance Criteria 验证
-| AC | 描述 | 验证来源 | 状态 |
-|----|------|---------|------|
-| AC-1 | {描述} | 脊柱+联调测试（不可视区） | ✅ 绿 |
-| AC-2 | {描述} | 人工验收（可视区/业务） | ✅ 通过（修复后通过） |
-
-> 不可视区 AC 正确性取自测试脊柱（develop 绿测试）+ 联调，不重复人工核对；可视区/业务 AC 由用户人工验收。本表仍列全 PRD 每条 AC 做完备性对账（抓 plan-sprint 漏网）。
-
-## 问题记录
-| # | 现象 | 复现步骤 | 处理结果 |
-|---|------|---------|---------|
-| 1 | {描述} | {步骤} | 已修复（{task-id}） |
-| 2 | {描述} | {步骤} | 记入 backlog |
-
-## 验收通过日期
-{YYYY-MM-DD}
-```
 
 ---
 
