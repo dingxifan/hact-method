@@ -25,6 +25,7 @@
 | lu-ailu（陆爱露） | gitee.com/dingxifan/hact-notes-lu-ailu | E:\group-code\hact-notes-lu-ailu |
 | ba-xiansheng（Jason） | gitee.com/dingxifan/hact-notes-ba-xiansheng | E:\group-code\hact-notes-ba-xiansheng |
 | axiaoke（葛春林） | gitee.com/dingxifan/hact-notes-axiaoke | E:\group-code\hact-notes-axiaoke |
+| dingxifan（dingxifan） | gitee.com/dingxifan/hact-notes-dingxifan | E:\Group-code-lab\hact-notes-dingxifan |
 
 ---
 
@@ -43,3 +44,4 @@
 | lu-ailu | —（尚未收割） | 0 |
 | ba-xiansheng | —（尚未收割） | 0 |
 | axiaoke | —（尚未收割） | 0 |
+| dingxifan | —（尚未收割） | 0 |
