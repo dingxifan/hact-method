@@ -38,7 +38,8 @@ Read: design.md（若存在）
 |-------------|---------|
 | `prototype.html` 不存在，`design-brief.md` 也不存在 | 从 Step 1 开始 |
 | `design-brief.md` 存在，`prototype.html` 不存在 | 说"上次选了 Claude Design 路径，简报已生成，等你把 prototype.html 带回来。带回后告诉我'Design 稿已就位'"，然后挂起等待 |
-| `prototype.html` 存在、用户未确认 OK | 从 Step 5 开始（对抗审查 → 用户走查） |
+| `prototype.html` 存在，但 `prototype-map.md` 不存在 | 读取 `prototype.html`，对照 PRD AC 生成 `prototype-map.md`，再从 Step 5 开始 |
+| `prototype.html` + `prototype-map.md` 均存在、用户未确认 OK | 从 Step 5 开始（对抗审查 → 用户走查） |
 | `prototype.html` 存在且用户已确认走查 OK | Step 7（收尾） |
 
 **开场说**：
@@ -206,7 +207,25 @@ CC 问：
 
 **不假装"浏览器打开"**——CC 不能真打开浏览器，只做逻辑核查。
 
-**生成后**：转 Step 5（对抗审查）。
+**生成后：写 `prototype-map.md`**
+
+生成 `iterations/vN/prototype-map.md`（Step 5 subagent 的核查基线，CC 刚写完原型此时最准）：
+
+````markdown
+## 前端 AC 覆盖
+
+| AC | 场景 | HTML 锚点 |
+|----|------|---------|
+| {AC-nn} | {Sx[, Sy]} | `#{id}[, #{id}]` |
+
+## 排除 AC
+
+| AC | 排除原因 |
+|----|---------|
+| {AC-nn} | {后端/数据层/cron 等，无前端 UI} |
+````
+
+转 Step 5。
 
 ---
 
@@ -224,7 +243,7 @@ CC 问：
 | 流程图 | Step 2 流程穿线 | mermaid 图，完整包含分叉 / 空态 / 错误路径 |
 | 画面清单 | Step 2 画面构思 | 每画面：名称 / 触发条件 / 核心信息 / 交互要点 / 边界状态 |
 | 关键决策结论 | Step 3（如有） | 已对好的决策直接写定论，不再让 Design 重新讨论 |
-| AC 覆盖范围声明 | Step 2 AC→Sx 映射 | 两段：前端 AC（Sx 覆盖）/ 排除 AC（后端/数据层 + 原因）；Step 5 对抗审查的核对基线 |
+| AC 覆盖范围声明 | Step 2 AC→Sx 映射 | 两段说明：前端 AC（AC 编号 + 场景 Sx + 一句话描述）/ 排除 AC（AC 编号 + 排除原因）；锚点归 `prototype-map.md`，不在此表达 |
 | 技术约束与红线 | 固定 | 见下方 |
 
 **技术约束与红线（固定写入 brief）**：
@@ -235,6 +254,19 @@ CC 问：
 - 占位数据符合业务场景（"张三 / 财务部 / 工号 10086"，不是"xxx / yyy"）
 - 每个可点击元素必须有明确的跳转目标，无死锚点
 - 状态可见性：hover / disabled / 空态 / 错误态必须有对应样式
+- 交互元素使用语义化 `id`，命名格式 `{动词}-{对象}`（如 `btn-create-user`、`drawer-detail`）
+- 生成 `prototype.html` 的同时，**输出一份 `prototype-map.md`**（两段 Markdown 表格，根据实际写入的元素 `id` 填写）：
+  ```markdown
+  ## 前端 AC 覆盖
+  | AC | 场景 | HTML 锚点 |
+  |----|------|---------|
+  | AC-01 | S1, S3 | `#btn-create-user`, `#list-screen` |
+
+  ## 排除 AC
+  | AC | 排除原因 |
+  |----|---------|
+  | AC-05 | 后端权限校验，无前端 UI |
+  ```
 
 **生成后**，CC 告知用户：
 
@@ -247,13 +279,13 @@ CC 问：
 
 **本会话挂起**，等用户带 HTML 回来。
 
-🚫 用户带回 `prototype.html` 并说"Design 稿已就位" → 转 Step 5（对抗审查）。
+🚫 用户带回 `prototype.html` + `prototype-map.md` 并说"Design 稿已就位" → 转 Step 5。
 
 ---
 
 ## Step 5：独立对抗审查
 
-派全新 subagent，读 `templates/review-briefs/prototype-review.md`（含自读指令），告知本期版本 vN，由 subagent 自读 `design-brief.md` AC 声明 + `prototype.html`，输出覆盖状态表 + 缺口列表。
+派全新 subagent，读 `templates/review-briefs/prototype-review.md`（含自读指令），告知本期版本 vN，由 subagent 自读 `prototype-map.md` + `prototype.html`，输出覆盖状态表 + 缺口列表。
 
 **结果处理**：
 
@@ -268,7 +300,7 @@ CC 问：
 
 **CC 交付话术**：
 
-> 「原型 `iterations/vN/prototype.html` 已就绪，请在浏览器打开走查。对照 design-brief 的 AC 声明核业务路径，顺便看交互体感和视觉。有任何问题直接说。」
+> 「原型 `iterations/vN/prototype.html` 已就绪，请在浏览器打开走查。沿业务路径点一遍，顺便看交互体感和视觉。有任何问题直接说。」
 
 **反馈调整循环**：
 
@@ -318,7 +350,7 @@ flowchart TD
 **git commit**：
 
 ```bash
-git add iterations/vN/ux-flows.md iterations/vN/prototype.html
+git add iterations/vN/ux-flows.md iterations/vN/prototype.html iterations/vN/prototype-map.md
 # design.md 若 Step 1.3 已 commit 且本步无改动，则不再 add
 git commit -m "feat(ux): v{N} 交互流程图 + 原型 [{项目名}]"
 ```
@@ -351,7 +383,7 @@ git commit -m "feat(ux): v{N} 交互流程图 + 原型 [{项目名}]"
 
 ## Subagent 使用
 
-**Step 5 独立对抗审查**：派全新 subagent 读 `templates/review-briefs/prototype-review.md`，subagent 自读 `design-brief.md` AC 声明 + `prototype.html`，不收主线上下文。审查维度改动去改 brief 文件（单一来源）。
+**Step 5 独立对抗审查**：派全新 subagent 读 `templates/review-briefs/prototype-review.md`，subagent 自读 `prototype-map.md` + `prototype.html`，不收主线上下文。审查维度改动去改 brief 文件（单一来源）。
 
 其余步骤（业务沟通、内部消化、决策对答、原型生成、走查）均为主线工作或对话推进，不使用 subagent。
 

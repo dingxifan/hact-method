@@ -37,7 +37,8 @@
 |------|------|------|
 | 场景列表 + 流程图 | `iterations/vN/ux-flows.md` | Markdown，**仅含两段**：场景列表 + mermaid 流程图 |
 | HTML 原型 | `iterations/vN/prototype.html` | 自包含单文件，可在浏览器直接打开 |
-| 设计简报 | `iterations/vN/design-brief.md` | 含 AC 覆盖范围声明；Claude Design 路径必有，CC 路径亦应落盘 |
+| 设计简报 | `iterations/vN/design-brief.md` | Claude Design 路径专用；含业务背景/视觉规范/场景/流程/AC 说明，供 Design 生成原型 |
+| AC 覆盖映射 | `iterations/vN/prototype-map.md` | 两条路径均必有；一张表（AC / 场景 / HTML 锚点），Step 5 对抗审查的核查基线 |
 | 视觉规范（如首次） | `design.md` | 项目级跨迭代文件；首次 draft-ux 时由本 task 生成初稿 |
 
 **ux-flows.md 必含内容（仅两段）**：
@@ -71,8 +72,8 @@
 - [ ] 原型落实 `design.md` 视觉规范（无硬编码颜色/字号/间距）
 - [ ] 原型状态可见性落实（hover/focus/disabled/空态/错误态）
 - [ ] 跨迭代影响的关键决策已写入项目级 `decisions.md`（如有）
-- [ ] design-brief.md 已落盘，含 AC 覆盖范围声明
-- [ ] 独立对抗审查通过（声明覆盖的前端 AC 均有对应原型路径，或缺口已明确豁免）
+- [ ] prototype-map.md 已落盘（AC / 场景 / HTML 锚点，仅含前端 AC）
+- [ ] 独立对抗审查通过（prototype-map.md 中每条锚点在原型中存在且路径可走通，或缺口已明确豁免）
 - [ ] 用户已实际走查原型并确认逻辑与体验正确
 
 ---
@@ -90,7 +91,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `draft-tech-design` | 已确认的交互流程 + 原型 + 视觉规范，作为接口设计的业务依据 | `iterations/vN/ux-flows.md` + `iterations/vN/prototype.html` + `design.md` |
+| `draft-tech-design` | 已确认的交互流程 + 原型 + 视觉规范，作为接口设计的业务依据 | `iterations/vN/ux-flows.md` + `iterations/vN/prototype.html` + `iterations/vN/prototype-map.md` + `design.md` |
 
 ---
 
