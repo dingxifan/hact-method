@@ -1,10 +1,10 @@
-﻿# task: init-project
+# task: init-project
 
 **discipline**: `management`
 **Gate**: —
 **属性**: `project-name`
 
-> 新项目立项：在 `E:\group-code\` 下创建独立项目仓库，建立代码与协调文件合并的目录结构，git 初始化。
+> 新项目立项：在 `E:\Group-code-lab\` 下创建独立项目仓库，建立代码与协调文件合并的目录结构，git 初始化。
 
 ---
 
@@ -13,7 +13,7 @@
 - **触发**：首次收到一个新项目的需求
 - **无 Gate 前置**：流程起点
 - **需确认**：项目名称（英文或拼音，kebab-case，如 `mail-ai` / `hact-app`）
-- **执行位置**：hact-method 工作区，项目仓创建为 `E:\group-code\` 的子目录
+- **执行位置**：hact-method 工作区，项目仓创建为 `E:\Group-code-lab\` 的子目录
 
 ---
 
@@ -48,7 +48,7 @@
 
 ## 完成判据
 
-- [ ] `E:\group-code\{name}\` 目录及全部子文件已创建
+- [ ] `E:\Group-code-lab\{name}\` 目录及全部子文件已创建
 - [ ] 各占位文件含初始结构（无空文件）
 - [ ] git 已初始化，初始 commit 已完成
 - [ ] Gitee 远端已绑定并推送，团队成员已添加为协作者

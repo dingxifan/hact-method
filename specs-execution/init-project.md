@@ -1,9 +1,9 @@
-﻿# exec: init-project
+# exec: init-project
 
 > CC 加载本文时，当前任务是为新项目创建独立仓库（代码 + 协调文件合并）。
 
 **上下文密度**：低。机械化操作为主，单次会话可完整完成。
-**执行位置**：hact-method 工作区；创建目标在 `E:\group-code\{name}\`。
+**执行位置**：hact-method 工作区；创建目标在 `E:\Group-code-lab\{name}\`。
 
 ---
 
@@ -13,7 +13,7 @@
 
 ## 会话启动
 
-开场说：「我将为新项目创建独立仓库（`E:\group-code\{name}\`），代码和协调文件合并存放。请确认项目名称（英文或拼音，kebab-case）——名称确认后不再更改。」
+开场说：「我将为新项目创建独立仓库（`E:\Group-code-lab\{name}\`），代码和协调文件合并存放。请确认项目名称（英文或拼音，kebab-case）——名称确认后不再更改。」
 
 🚫 等用户给出项目名称
 
@@ -23,13 +23,13 @@
 
 ### Step 1：名称校验
 
-检查 `E:\group-code\` 下是否已有同名目录。
+检查 `E:\Group-code-lab\` 下是否已有同名目录。
 
 - 有冲突 → 告知用户，请求重新命名，回到 🚫
 - 无冲突 → 继续
 
 ```
-✅ 名称校验通过：`E:\group-code\{name}\` 不存在冲突。
+✅ 名称校验通过：`E:\Group-code-lab\{name}\` 不存在冲突。
 → 下一步：创建目录结构
 继续？
 ```
@@ -41,11 +41,11 @@
 ### Step 2：创建目录结构
 
 ```bash
-mkdir -p "E:/group-code/{name}/iterations/v1/queue/done"
-mkdir -p "E:/group-code/{name}/b-queue"
-mkdir -p "E:/group-code/{name}/_meta/input"
-mkdir -p "E:/group-code/{name}/_meta/sessions"
-mkdir -p "E:/group-code/{name}/scripts"
+mkdir -p "E:/Group-code-lab/{name}/iterations/v1/queue/done"
+mkdir -p "E:/Group-code-lab/{name}/b-queue"
+mkdir -p "E:/Group-code-lab/{name}/_meta/input"
+mkdir -p "E:/Group-code-lab/{name}/_meta/sessions"
+mkdir -p "E:/Group-code-lab/{name}/scripts"
 ```
 
 > `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）；`_meta/sessions/`：各任务跨会话接续文件（`{task-type}-progress.md`）；`b-queue/`：B 类任务包（项目级，跨迭代，不依赖活跃迭代）。
@@ -53,8 +53,8 @@ mkdir -p "E:/group-code/{name}/scripts"
 Git 不跟踪空目录，必须写入占位文件：
 
 ```bash
-echo "" > "E:/group-code/{name}/iterations/v1/queue/done/.gitkeep"
-echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
+echo "" > "E:/Group-code-lab/{name}/iterations/v1/queue/done/.gitkeep"
+echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 ```
 
 ---
@@ -86,7 +86,7 @@ echo "" > "E:/group-code/{name}/b-queue/.gitkeep"
 
 **4.1 本地初始化 + 装门卫：**
 ```bash
-cd "E:/group-code/{name}"
+cd "E:/Group-code-lab/{name}"
 git init
 # 装 pre-commit 门卫（.git/hooks 不随 clone 走，故源文件已 tracked 在 scripts/，此处装进生效位）
 cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
@@ -296,7 +296,7 @@ curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
 
 ```
 ✅ init-project 完成：
-- 本地仓库：E:\group-code\{name}\
+- 本地仓库：E:\Group-code-lab\{name}\
 - 远端：{gitee-url}
 - hact-app：project_id={project_id}（或"待手动完成"）
 → 下一步：draft-prd-vN — A 类需求从产品阶段开始；B 类需求直接用 dispatch-new。
@@ -323,4 +323,4 @@ curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
 
 ## 断点续做
 
-检查 `E:\group-code\{name}\` 目录是否存在及哪些文件已创建；从未完成的步骤继续。
+检查 `E:\Group-code-lab\{name}\` 目录是否存在及哪些文件已创建；从未完成的步骤继续。
