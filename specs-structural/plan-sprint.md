@@ -47,7 +47,7 @@
 - [ ] **【linter】** AC 正向回链 + 逐条反向覆盖：每条任务包 AC 带 `(源：PRD AC-nn)` 或 `(技术)` tag、回链 id 在 PRD 存在，且 PRD 每条 AC（AC-nn）被某任务包 AC 引用（逐条覆盖机械核；逐条**忠实性**仍留 Step 3.5 独审 + 签字人）
 - [ ] 任务包独立对抗审查通过（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖 四类无 [阻断]，或阻断已修复 / 已转 revise-doc）
 - [ ] **【linter】** 依赖关系已标注（任务包 `depends_on` 在册，无依赖填 `[]`）
-- [ ] 每个任务的 `交付` 列已填（`独立` 或 `批量`），判断理由已向用户说明并确认
+- [ ] 每个任务的 `交付` 列已填（`串行` 或 `可并行`），判断理由已向用户说明并确认
 - [ ] **【linter】** sprint.md 已写，queue↔sprint.md↔status.yml 三方一致（`check-sprint.js` 三方一致）
 - [ ] 完成判据已核对（`check-sprint.js` 退出码 0 + `🧑` 段语义残量人签；存量项目无脚本则退回 `skeleton/06-gates.md` §7 G3 段人工逐条核对）
 - [ ] G3 已签（`gates.md` 已记录 + commit）

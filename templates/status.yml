@@ -32,7 +32,7 @@ tasks: []
 #    pr: null
 #    parent_id: null
 #    depends_on: []
-#    delivery: 批量          # 独立 / 批量 / null
+#    delivery: 可并行         # 串行 / 可并行 / null
 #    urgency: null           # hotfix / null
 
 integration_tests: []

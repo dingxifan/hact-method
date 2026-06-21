@@ -74,7 +74,7 @@ tasks:
     pr: 12                      # int PR 号，无为 null
     parent_id: null             # string 父任务 id，无为 null
     depends_on: []              # string[]，依赖的 task-id 列表
-    delivery: 独立              # enum，独立 / 批量；B 类 / 修复任务可为 null
+    delivery: 串行              # enum，串行 / 可并行；B 类 / 修复任务可为 null
     urgency: null               # enum，hotfix / null
   - id: hact-b-001              # B 类示例
     iteration: null             # 不属任何迭代
@@ -117,7 +117,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `tasks[].source` | sprint / integration / manual-test / bug / optimization |
 | `tasks[].status` | 可取 / taken-by / done / merged |
 | `tasks[].layer` | frontend / backend / shared / null |
-| `tasks[].delivery` | 独立 / 批量 / null |
+| `tasks[].delivery` | 串行 / 可并行 / null |
 | `tasks[].urgency` | hotfix / null |
 | `integration_tests[].status` | 待执行 / 执行中 / 通过 / 失败 |
 | `code_reviews[].conclusion` | 通过 / 需修订 |
