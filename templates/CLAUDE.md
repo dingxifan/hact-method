@@ -9,6 +9,7 @@
 ### A 类主线
 - `init-project`              → `@../hact-method-lab/specs-execution/init-project.md`
 - `draft-prd-vN`              → `@../hact-method-lab/specs-execution/draft-prd-vN.md`
+- `draft-ux`                  → `@../hact-method-lab/specs-execution/draft-ux.md`（可选，PRD 有 `draft-ux: 需要` 时触发，插在 G1→G2 之间）
 - `draft-tech-design`         → `@../hact-method-lab/specs-execution/draft-tech-design.md`
 - `plan-sprint`               → `@../hact-method-lab/specs-execution/plan-sprint.md`
 - `develop`                   → `@../hact-method-lab/specs-execution/develop.md`（含 per-task 独立审查 + 自合并到 master，无独立 pr-review）
