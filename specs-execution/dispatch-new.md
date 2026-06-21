@@ -1,4 +1,4 @@
-# exec: dispatch-new
+﻿# exec: dispatch-new
 
 > CC 加载本文时，当前任务是处理一条 B 类入口：收到 bug 报告或优化需求，判断是否属于 B 类，写任务包入 queue，记入 b-tasks.md。
 > 本 task 是轻量派发任务，通常 10 分钟内完成。
@@ -104,7 +104,7 @@
 
 **17 字段无空字段方可写入 queue**（schema 变更**不另立字段**——落在上述 `acceptance-criteria` / `known-risks` / `api-contract`，与 develop §字段规范单一真相对齐）。
 
-**同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
+**同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 
 > B 类放 `iteration: null` 而非某迭代——两个迭代之间无活跃迭代时 B 类照样有家，与 `b-tasks.md` 同为项目级。
 

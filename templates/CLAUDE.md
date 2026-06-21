@@ -1,4 +1,4 @@
-# {项目名}
+﻿# {项目名}
 
 ## 项目说明
 {一句话描述项目用途}
@@ -7,19 +7,19 @@
 本仓使用 hact-method 的执行规范，按当前任务类型引用对应文件：
 
 ### A 类主线
-- `init-project`              → `@../hact-method/specs-execution/init-project.md`
-- `draft-prd-vN`              → `@../hact-method/specs-execution/draft-prd-vN.md`
-- `draft-tech-design`         → `@../hact-method/specs-execution/draft-tech-design.md`
-- `plan-sprint`               → `@../hact-method/specs-execution/plan-sprint.md`
-- `develop`                   → `@../hact-method/specs-execution/develop.md`（含 per-task 独立审查 + 自合并到 master，无独立 pr-review）
-- `generate-integration-tests`→ `@../hact-method/specs-execution/generate-integration-tests.md`
-- `manual-test`               → `@../hact-method/specs-execution/manual-test.md`
-- `deploy`                    → `@../hact-method/specs-execution/deploy.md`
-- `wrap-up-iteration`         → `@../hact-method/specs-execution/wrap-up-iteration.md`
+- `init-project`              → `@../hact-method-lab/specs-execution/init-project.md`
+- `draft-prd-vN`              → `@../hact-method-lab/specs-execution/draft-prd-vN.md`
+- `draft-tech-design`         → `@../hact-method-lab/specs-execution/draft-tech-design.md`
+- `plan-sprint`               → `@../hact-method-lab/specs-execution/plan-sprint.md`
+- `develop`                   → `@../hact-method-lab/specs-execution/develop.md`（含 per-task 独立审查 + 自合并到 master，无独立 pr-review）
+- `generate-integration-tests`→ `@../hact-method-lab/specs-execution/generate-integration-tests.md`
+- `manual-test`               → `@../hact-method-lab/specs-execution/manual-test.md`
+- `deploy`                    → `@../hact-method-lab/specs-execution/deploy.md`
+- `wrap-up-iteration`         → `@../hact-method-lab/specs-execution/wrap-up-iteration.md`
 
 ### B 类 / 辅助
-- `dispatch-new`              → `@../hact-method/specs-execution/dispatch-new.md`
-- `revise-doc`                → `@../hact-method/specs-execution/revise-doc.md`
+- `dispatch-new`              → `@../hact-method-lab/specs-execution/dispatch-new.md`
+- `revise-doc`                → `@../hact-method-lab/specs-execution/revise-doc.md`
 
 > B 类任务手动实现后、commit 前，调用 `adversarial-review` skill 做独立对抗审查（diff ≥ 15 行且改了代码文件时）。
 
@@ -42,7 +42,7 @@
 git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
 
 # hact-method
-git -C "../hact-method" fetch origin && (git -C "../hact-method" pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
+git -C "../hact-method-lab" fetch origin && (git -C "../hact-method-lab" pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
 
 # 个人 notes 仓（约定路径 ../hact-notes-{你的用户名}；不存在则跳过，不阻断）
 git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{username}" pull 2>/dev/null || echo "notes 仓无远端跟踪，已 fetch") \

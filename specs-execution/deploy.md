@@ -1,4 +1,4 @@
-# exec: deploy
+﻿# exec: deploy
 
 > CC 加载本文时，当前任务是将已验收的代码部署到目标环境，验证服务正常。
 > 默认合并部署：一次包含所有已验收改动（A 类迭代 + B 类 normal + hotfix）。
@@ -119,7 +119,7 @@ curl -f {health-check-url}
 
 ## Step 7：记录部署结果
 
-按 `../hact-method/templates/deploy-log.md` 格式在项目根 `deploy-log.md` **追加**一条（不覆盖）：包含内容 / 构建结果 / 健康检查 / 备注。
+按 `../hact-method-lab/templates/deploy-log.md` 格式在项目根 `deploy-log.md` **追加**一条（不覆盖）：包含内容 / 构建结果 / 健康检查 / 备注。
 
 ```
 ✅ deploy 完成：{target} 部署成功，健康检查通过。

@@ -1,7 +1,7 @@
-# exec: plan-sprint
+﻿# exec: plan-sprint
 
 > 任务：读 TRD 拆 develop 任务，写任务包入 queue，输出 sprint.md，签 G3。三层：**骨架**（任务清单对齐）→ **结构层**（完整任务包）→ **收尾**（sprint.md + G3）。
-> 任务包套结构化模板 `../hact-method/templates/queue/task-package.md`——**模板已带 17 字段格式、AC 回链 tag、例子写法、reference 行号规则；本文只讲过程与判断，不重抄格式**。`check-sprint.js` 据模板 parse。
+> 任务包套结构化模板 `../hact-method-lab/templates/queue/task-package.md`——**模板已带 17 字段格式、AC 回链 tag、例子写法、reference 行号规则；本文只讲过程与判断，不重抄格式**。`check-sprint.js` 据模板 parse。
 
 **上下文密度**：高。读多份文件、写多份任务包；骨架确认前不写任务包。
 
@@ -107,7 +107,7 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后套 `../hact-method/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整 17 字段包（字段权威见 `specs-structural/develop.md §字段规范`）；**字段格式 / AC tag / 例子写法 / reference 行号规则模板已带**。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
+骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整 17 字段包（字段权威见 `specs-structural/develop.md §字段规范`）；**字段格式 / AC tag / 例子写法 / reference 行号规则模板已带**。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
 
 下表只列**模板讲不了的判断 / 跨文件来源**（中）+ **该字段验证归属**（右，显式标谁机械、谁留人）：
 
@@ -134,7 +134,7 @@
 
 ### Step 3.5：任务包独立对抗审查
 
-**派发**：派一个全新 subagent，令其读 `../hact-method/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读** prd.md / trd.md / standards / queue（隔离上下文，不传写包叙事与拆分理由）。任务包 >4 个**按包分批**派，利于 loop 收敛。
+**派发**：派一个全新 subagent，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读** prd.md / trd.md / standards / queue（隔离上下文，不传写包叙事与拆分理由）。任务包 >4 个**按包分批**派，利于 loop 收敛。
 > brief 查四类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
 
 **【loop 逻辑】**（主线拿到 subagent findings 后的处置）
@@ -158,7 +158,7 @@
 
 ### Step 4：写 sprint.md
 
-套模板 `../hact-method/templates/sprint.md` 汇总生成 `iterations/vN/sprint.md`——每行对应 queue/ 一个任务包（task-id / title / layers / 依赖 / 状态 `[可取]` / PR `—` / 交付），附「## 依赖说明」段（批量任务 blocked-by 独立任务 + 一句话原因）。
+套模板 `../hact-method-lab/templates/sprint.md` 汇总生成 `iterations/vN/sprint.md`——每行对应 queue/ 一个任务包（task-id / title / layers / 依赖 / 状态 `[可取]` / PR `—` / 交付），附「## 依赖说明」段（批量任务 blocked-by 独立任务 + 一句话原因）。
 
 > 多迭代并行（vN 与 vN+1 同时有任务）时各迭代各写自己的 `iterations/vN/sprint.md`，queue 天然隔离于各自迭代目录，互不干扰。
 
@@ -166,7 +166,7 @@
 
 ### Step 4.5：填充 status.yml 的 tasks[]
 
-把本期全部任务追加进项目根 `status.yml` 的 `tasks[]`（机器侧状态契约，项目级单文件，字段见 `../hact-method/skeleton/07-status-contract.md`；不存在则先从 `../hact-method/templates/status.yml` 补建）。
+把本期全部任务追加进项目根 `status.yml` 的 `tasks[]`（机器侧状态契约，项目级单文件，字段见 `../hact-method-lab/skeleton/07-status-contract.md`；不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 
 每任务一条：`source: sprint`、`type: develop`、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
 
@@ -180,7 +180,7 @@
 
 脚本 `🧑` 段语义残量由签字人确认：疑点已逐条确认、TRD 每模块都有任务包、Step 3.5 独审无遗留阻断、任务包 AC 逐条**忠实**于回链的 PRD AC（内容真覆盖，非仅 id 在场）。
 
-> 存量项目（无 `scripts/check-sprint.js` 且门卫未装，或任务包仍是旧序列化格式）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G3 段人工逐条核对兜底，并提示新 sprint 套 `templates/queue/task-package.md`。
+> 存量项目（无 `scripts/check-sprint.js` 且门卫未装，或任务包仍是旧序列化格式）→ 退回 `../hact-method-lab/skeleton/06-gates.md` §7 G3 段人工逐条核对兜底，并提示新 sprint 套 `templates/queue/task-package.md`。
 
 ---
 
@@ -211,7 +211,7 @@
 |--------|-------------|------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件 | — | 读取失败则主线单独读 |
 | Step 3（任务 >4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 17 字段 YAML | 失败则主线接管该包 |
-| Step 3.5 独立审查 | 独立 sub-agent 审任务包保真，维度见 brief `../hact-method/templates/review-briefs/task-package-review.md` | 令 subagent 读该 brief 自执行（自读 prd/trd/standards/queue），只告知 vN；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
+| Step 3.5 独立审查 | 独立 sub-agent 审任务包保真，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 令 subagent 读该 brief 自执行（自读 prd/trd/standards/queue），只告知 vN；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
 **重要**：subagent 只返回任务包内容，**由主线写入文件**，不让 subagent 直接操作文件系统。
 

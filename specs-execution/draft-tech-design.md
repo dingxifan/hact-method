@@ -1,4 +1,4 @@
-# exec: draft-tech-design
+﻿# exec: draft-tech-design
 
 > CC 加载本文时，当前任务是读 PRD 输出 TRD + 三份 standards，签 G2。
 > 三层顺序：**骨架**（架构轮廓）→ **结构层**（完整契约）→ **执行层**（standards）
@@ -32,8 +32,8 @@
 - `project.md`（技术层已有决策）
 - `decisions.md`
 - `reusables.md`
-- `../hact-method/templates/standards/backend.md`
-- `../hact-method/templates/standards/frontend.md`
+- `../hact-method-lab/templates/standards/backend.md`
+- `../hact-method-lab/templates/standards/frontend.md`
 
 **技术偏好确认**：
 - 首期项目：询问用户技术栈偏好，确认后写入 `project.md` 技术层，后续迭代直接复用
@@ -122,7 +122,7 @@
 
 ### Step 3：写完整 TRD
 
-骨架确认后，逐段写完整 TRD，**每段写完后报告进度**。最终 `iterations/vN/trd.md` 套用结构化模板 `../hact-method/templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位），**不得偏离 header/槽位写法**——Step 4 linter 按此解析；模板的 `<待填>` 占位与注释须全部替换/删除。
+骨架确认后，逐段写完整 TRD，**每段写完后报告进度**。最终 `iterations/vN/trd.md` 套用结构化模板 `../hact-method-lab/templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位），**不得偏离 header/槽位写法**——Step 4 linter 按此解析；模板的 `<待填>` 占位与注释须全部替换/删除。
 
 **§ 技术选型变更**：仅写本期新增；格式：依赖 / 版本 / 用途 / 选型理由。迭代项目不重复已有。
 
@@ -166,7 +166,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
   - 重跑到绿（签字 commit 的 pre-commit 门卫会再跑、红则拦 commit）。
 
 > linter 覆盖结构/一致性判据（含 AC 覆盖映射的**齐全性**机械核）；**语义判据**（接口字段是否真满足画面、载体是否**真承接**所回链的 AC 而非仅 id 在场）落 linter 🧑 段，由 Step 5 末端审查 + 签字时复核 + 后续 `develop` 内置独立审查的技术保真把关。
-> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
+> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
 
@@ -174,7 +174,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
 
 check-docs（+ 门卫）守**结构与覆盖齐全性**；**内容有效性派全新 subagent 陌生视角复核**（防同上下文自评盖章）——TRD 的语义残量比 PRD 更厚（接口契约对不对、精化缩没缩水、字段满不满足画面）。
 
-**派发**：派一个全新 subagent，令其读 `../hact-method/templates/review-briefs/trd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 trd.md + prd.md（+ ux-flows / prototype 如有），陌生视角逐查四维度（内部一致性 / AC 真承接 / 字段满足画面 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
+**派发**：派一个全新 subagent，令其读 `../hact-method-lab/templates/review-briefs/trd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 trd.md + prd.md（+ ux-flows / prototype 如有），陌生视角逐查四维度（内部一致性 / AC 真承接 / 字段满足画面 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
 
 CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用户拍板。
 
@@ -203,7 +203,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 三份 `standards-{shared,frontend,backend}.md` 是**项目根的跨迭代活文档**（非迭代内产物，与 `decisions.md` / `reusables.md` / `design.md` 同级），单一真相源——首期播种、之后每期原地增补，并行迭代共享同一份保全库约定一致。TRD 确认后，启动 **2 个并行 subagent** 处理 frontend / backend；主线同时处理 shared。
 
 **Standards 来源规则**（双源：公共模板 + 执行人个人 notes）：
-- **首期播种**（项目根 `standards-*.md` 仍是 init 空桩）：从 `../hact-method/templates/standards/{layer}.md` 挑选本期 TRD 相关项写入，不全量复制
+- **首期播种**（项目根 `standards-*.md` 仍是 init 空桩）：从 `../hact-method-lab/templates/standards/{layer}.md` 挑选本期 TRD 相关项写入，不全量复制
 - **迭代增补**：直接在项目根现有 `standards-*.md` 上**原地**追加 / 修订本期 TRD 新增的约定，不复制整份、不另起迭代副本
 - **双源补充**：再取执行人个人 notes（`../hact-notes-{name}/notes.md`）中 `[规范]` 标签、与本 layer 相关的条目并入项目 standards——让本人已积累、尚未经 harvest-notes 上提的规范当期即生效
   - **去重**：并入前对照公共模板 + 项目根现有 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
@@ -212,7 +212,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
   - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 `decisions.md` 说明冲突和理由
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
-- 传入：TRD 完整内容 + 对应 `../hact-method/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
+- 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
 - 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型；并入 notes 条目前先对照公共模板 / 现有 standards 去重
 - 主线负责写文件（项目根 `standards-{layer}.md` 原地播种 / 增补），不让 subagent 直接写文件
 
@@ -259,7 +259,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 - [x] G2：TRD 已确认 — {YYYY-MM-DD}
 ```
 
-**更新项目根 `status.yml`**（字段见 `../hact-method/skeleton/07-status-contract.md`）：将 `iterations.vN.gates.G2` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method/templates/status.yml` 补建）。
+**更新项目根 `status.yml`**（字段见 `../hact-method-lab/skeleton/07-status-contract.md`）：将 `iterations.vN.gates.G2` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 
 执行 `git add iterations/vN/trd.md standards-shared.md standards-frontend.md standards-backend.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`（standards 在项目根，非 iterations/vN/）
 
@@ -288,7 +288,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 | Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 失败则主线自审降级，不阻断 |
 | Step 7 standards 维护 | 2 个并行 subagent 各处理一份（frontend / backend 的播种 / 增补） | 失败则主线接管该份，记录原因 |
 
-> **Step 5 内容审查 ≠ 子计划 3 退场的"完成判据冷核"**：后者核【linter】判据完整性、已归 `check-docs.js` 机械核（Step 4）；前者验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），是另一角色。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。
+> **Step 5 内容审查 ≠ 子计划 3 退场的"完成判据冷核"**：后者核【linter】判据完整性、已归 `check-docs.js` 机械核（Step 4）；前者验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），是另一角色。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。
 
 ---
 

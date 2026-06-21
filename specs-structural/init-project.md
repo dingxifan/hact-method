@@ -1,4 +1,4 @@
-# task: init-project
+﻿# task: init-project
 
 **discipline**: `management`
 **Gate**: —
@@ -27,7 +27,7 @@
 
 ## 主要产物
 
-> 多数占位文件**复制自 `../hact-method/templates/{产物名}.md`**（单一真相源），把文件内 `{项目名}` 占位替换为实际项目名。templates/ 是格式真相源，本契约不再内联重抄。
+> 多数占位文件**复制自 `../hact-method-lab/templates/{产物名}.md`**（单一真相源），把文件内 `{项目名}` 占位替换为实际项目名。templates/ 是格式真相源，本契约不再内联重抄。
 
 | 产物 | 路径 | 初始内容 |
 |------|------|---------|

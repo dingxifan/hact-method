@@ -1,4 +1,4 @@
-# task: manual-test
+﻿# task: manual-test
 
 **discipline**: `product`
 **Gate**: G4（可选签于任务尾部）
@@ -27,7 +27,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 验收报告 | `iterations/vN/acceptance-report.md` | 见 `../hact-method/templates/acceptance-report.md` |
+| 验收报告 | `iterations/vN/acceptance-report.md` | 见 `../hact-method-lab/templates/acceptance-report.md` |
 | G4 签字 | `iterations/vN/gates.md` | `- [x] G4：验收通过 — YYYY-MM-DD` |
 | 修复任务包（如有） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（范围外问题） | `backlog.md` | 标注「超出本期范围，留下期」 |

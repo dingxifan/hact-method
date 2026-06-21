@@ -1,4 +1,4 @@
-# exec: wrap-up-iteration
+﻿# exec: wrap-up-iteration
 
 > CC 加载本文时，当前任务是执行迭代收尾三步：偏离对账 / feedback 审阅分流 / project.md 合并，完成后签 G5。
 > 可与 deploy 并行执行，无强依赖。deploy 失败不阻断收尾，但 project.md 的"已上线"标注取决于部署结果。
@@ -137,7 +137,7 @@
 
 ---
 
-**签 G5 前 · 完成判据核对**：`check-gate.js G5 vN` 核确定性判据（feedback.md 已清空、project.md 无"开发中"标注）——签字 commit 时门卫自动跑、红则拦 commit（偷签机制上做不到，同 PRD/plan-sprint，见 `../hact-method/skeleton/06-gates.md` §7）。脚本 `🧑 留签字人确认` 段的语义残量（backlog `[偏离]` 是否处理得当、feedback 分流是否准确）由你这个 management 签字人确认。
+**签 G5 前 · 完成判据核对**：`check-gate.js G5 vN` 核确定性判据（feedback.md 已清空、project.md 无"开发中"标注）——签字 commit 时门卫自动跑、红则拦 commit（偷签机制上做不到，同 PRD/plan-sprint，见 `../hact-method-lab/skeleton/06-gates.md` §7）。脚本 `🧑 留签字人确认` 段的语义残量（backlog `[偏离]` 是否处理得当、feedback 分流是否准确）由你这个 management 签字人确认。
 
 （存量项目无 `scripts/check-gate.js` → 门卫 no-op 放行、退回 §7 G4/G5 段人工逐条核对兜底，并提示补铺，见 init-project Step 3。）
 
@@ -153,7 +153,7 @@
 
 🚫 等用户确认
 
-用户确认后，在 `iterations/vN/gates.md` 写入 G5；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G5` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）。执行：
+用户确认后，在 `iterations/vN/gates.md` 写入 G5；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G5` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）。执行：
 ```bash
 git add iterations/vN/gates.md status.yml project.md decisions.md backlog.md feedback.md
 git commit -m "chore: 迭代 {version} 收尾，G5 签署 [{项目名}]"

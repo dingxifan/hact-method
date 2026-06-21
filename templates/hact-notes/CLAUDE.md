@@ -1,6 +1,6 @@
-# 个人积累仓 · hact-notes-{姓名}
+﻿# 个人积累仓 · hact-notes-{姓名}
 
-这是 {姓名} 的**私有个人积累仓**——hact-method 方法论的"个人积累"工作区（见 `../hact-method/skeleton/02-workspaces.md` §4）。
+这是 {姓名} 的**私有个人积累仓**——hact-method 方法论的"个人积累"工作区（见 `../hact-method-lab/skeleton/02-workspaces.md` §4）。
 
 ## 这个仓是什么
 - 随手记开发中的经验：踩坑、想沉淀的规范、自检漏项、方法论吐槽、个人心得。

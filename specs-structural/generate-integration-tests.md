@@ -33,7 +33,7 @@
 |------|------|------|
 | 测试脚本（后端） | `integration-tests/backend/{场景名}.http` 或 `.sh` | HTTP 请求文件 / curl 脚本 |
 | 测试脚本（前端）**（完整档，可选）** | `integration-tests/frontend/{场景名}.pinchtab` | pinchtab 脚本 |
-| 测试结果记录 | `integration-tests/result-{日期}.md` | 见 `../hact-method/templates/integration-result.md` |
+| 测试结果记录 | `integration-tests/result-{日期}.md` | 见 `../hact-method-lab/templates/integration-result.md` |
 | 修复任务包（[阻断] 失败时） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（[不阻断] 失败时） | `backlog.md` | `- [ ] {日期} \| [不阻断] {描述} \| 联调发现` |
 | 进度断点（compact 时写入） | `_meta/sessions/generate-integration-tests-progress.md` | 场景清单 + 已跑场景结论 + 已派修复 task-id |

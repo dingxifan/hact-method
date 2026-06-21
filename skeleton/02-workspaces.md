@@ -1,4 +1,4 @@
-# 02 — 工作区
+﻿# 02 — 工作区
 
 > **本文回答**：v2 有几个工作区？每个工作区是什么"心态"？文件读写权限的边界？
 >
@@ -12,8 +12,8 @@
 
 | 工作区 | 心态 | 物理形态 |
 |---|---|---|
-| **hact-method** | 方法论 | `E:\group-code\hact-method\` |
-| **项目根** | 项目 | `E:\group-code\{project-name}\`（项目仓根目录） |
+| **hact-method** | 方法论 | `E:\Group-code-lab\hact-method-lab\` |
+| **项目根** | 项目 | `E:\Group-code-lab\{project-name}\`（项目仓根目录） |
 | **hact-notes** | 个人积累 | `E:\group-code\hact-notes-{姓名}\`（每人独立私有仓） |
 
 ---
@@ -52,7 +52,7 @@
 - `wrap-up-iteration`（含 G5 签字）
 - `dispatch-new`（B 类入口：派新 BUG / 优化）
 
-**物理形态**：项目仓根目录（`E:\group-code\{project-name}\`），代码与协调文件合并存放。
+**物理形态**：项目仓根目录（`E:\Group-code-lab\{project-name}\`），代码与协调文件合并存放。
 
 **文件权限**：
 - **可写**：当前项目仓的所有内容（代码 + 协调文件）

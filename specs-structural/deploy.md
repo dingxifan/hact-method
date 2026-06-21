@@ -1,4 +1,4 @@
-# task: deploy
+﻿# task: deploy
 
 **discipline**: `deploy`
 **Gate**: —
@@ -29,7 +29,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 部署日志 | `deploy-log.md` | 格式见 `../hact-method/templates/deploy-log.md`（追加，不覆盖） |
+| 部署日志 | `deploy-log.md` | 格式见 `../hact-method-lab/templates/deploy-log.md`（追加，不覆盖） |
 | deployment.config（首次） | `deployment.config` | 键值对配置文件，含四个字段：`server-address` / `build-command` / `health-check-url` / `restart-command` |
 
 ---

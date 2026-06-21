@@ -1,4 +1,4 @@
-# AI 与人协作工作方法 v2 · hact-method
+﻿# AI 与人协作工作方法 v2 · hact-method
 
 ## 项目层
 @BRIEF.md
@@ -30,7 +30,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 
 | 场景 | 说明 |
 |------|------|
-| 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `E:\group-code\{project-name}\` |
+| 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `E:\Group-code-lab\{project-name}\` |
 | 方法论调整（修改 skeleton / specs / templates） | 在本仓执行，直接编辑方法论文件。信息来源见下方「方法论调整信息来源」 |
 | 收割个人积累上提（`harvest-notes`） | 在本仓执行，遍历成员 notes 仓只读收割，去重择优写入公共层（templates/standards、templates/checklists、方法论待议） |
 | 跨项目浏览 / 对比 | 在本仓执行 |
@@ -50,7 +50,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 
 ### 何时在项目仓开 CC 会话
 
-项目仓创建后，**以下所有任务都在项目仓（`E:\group-code\{project-name}\`）中执行**：
+项目仓创建后，**以下所有任务都在项目仓（`E:\Group-code-lab\{project-name}\`）中执行**：
 
 | 任务 | 说明 |
 |------|------|
@@ -63,7 +63,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 ### 项目仓结构（init-project 创建）
 
 ```
-E:\group-code\{project-name}\
+E:\Group-code-lab\{project-name}\
 ├── [代码文件]               ← 前后端代码
 ├── iterations/
 │   └── vN/
@@ -91,7 +91,7 @@ E:\group-code\{project-name}\
 
 项目仓 CLAUDE.md 中用 `@` 引用 hact-method 的规范：
 ```
-@../hact-method/specs-execution/{task-type}.md
+@../hact-method-lab/specs-execution/{task-type}.md
 ```
 
 ---

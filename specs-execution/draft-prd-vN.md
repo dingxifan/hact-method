@@ -1,7 +1,7 @@
-# exec: draft-prd-vN
+﻿# exec: draft-prd-vN
 
 > 任务：三层渐进完成本期 PRD，签 G1。骨架（方向对齐）→ 结构层（功能契约）→ 收尾（开放问题清零 + 末端校验 + G1）。
-> 产物套结构化模板 `../hact-method/templates/prd.md`——**模板已带字段格式与填写规则，本文只讲过程与判断，不重抄格式**。
+> 产物套结构化模板 `../hact-method-lab/templates/prd.md`——**模板已带字段格式与填写规则，本文只讲过程与判断，不重抄格式**。
 
 **上下文密度**：中。对话驱动，轮次多但单轮不重；关键节点阻断等用户确认。
 
@@ -70,7 +70,7 @@
 
 ### Step 4：逐功能展开
 
-骨架确认后**逐个功能**写完整契约，**每个写完单独确认再写下一个**。字段格式见模板 `../hact-method/templates/prd.md` 功能块（`### 功能：` + 槽位，模板注释已含 AC id 规则与例子写法），本文只讲模板讲不了的判断：
+骨架确认后**逐个功能**写完整契约，**每个写完单独确认再写下一个**。字段格式见模板 `../hact-method-lab/templates/prd.md` 功能块（`### 功能：` + 槽位，模板注释已含 AC id 规则与例子写法），本文只讲模板讲不了的判断：
 
 - **AC 行为例子（测试脊柱·幕 1）**：每条有行为的 AC 紧跟 `例：Given…/When…/Then…`。例子由 CC 起草、**产品只验"行为对不对"**（不需会写代码、不分前后端，与确认其它 AC 文本同性质）；技术精度（状态码/错误码）留 TRD 幕 2。**作用**：把坏 AC 在需求阶段（最便宜处）逼出来——写不成例子多半 AC 模糊，当场澄清。此例子是下游测试脊柱源头，全程无损携带、永不蒸馏。
 - **用户故事**汇总到顶层「## 用户故事」段（3–5 个覆盖核心场景），不逐功能写。
@@ -92,7 +92,7 @@
 
 ### Step 7：写文件 + 知识沉淀
 
-套模板 `../hact-method/templates/prd.md` 整合写入 `iterations/vN/prd.md`，替换/删除所有 `<待填>`、注释、示例块（模板注释已列规则，linter 按模板解析，偏离即误报）。
+套模板 `../hact-method-lab/templates/prd.md` 整合写入 `iterations/vN/prd.md`，替换/删除所有 `<待填>`、注释、示例块（模板注释已列规则，linter 按模板解析，偏离即误报）。
 
 **迭代 PRD（v2+）**：文件开头加「## vN 变更摘要」（格式见模板注释），每功能标题带变更类型后缀（`### 功能：名 \`继承\``），与摘要表一致。变更类型：**继承**（完全一致）/**继承·微调**（局部调整）/**重构**（逻辑重写、目标同）/**简化**（范围收窄）/**新增**（首次引入）。
 
@@ -110,13 +110,13 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 红 → 按报告逐条修 `prd.md` 重跑到绿。这步是**提前自查**；Step 8 签字 commit 时 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷偷签字"机制上做不到，故不再写强制散文。
 
 > PRD↔TRD 交叉对账此刻跑不了（TRD 未生），留 `draft-tech-design` 阶段两文件齐备时跑。
-> 无 `scripts/check-docs.js` 且门卫未装（存量仓）→ 退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段人工逐条核对兜底，提示补铺（init-project Step 3 / 4.1），不阻断。
+> 无 `scripts/check-docs.js` 且门卫未装（存量仓）→ 退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条核对兜底，提示补铺（init-project Step 3 / 4.1），不阻断。
 
 ### Step 7.5：独立内容审查（格式之外的内容有效性）
 
 linter（+ 门卫）守**格式**；**内容有效性派全新 subagent 陌生视角复核**（防同上下文自评盖章）。
 
-**派发**：派一个全新 subagent，令其读 `../hact-method/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
+**派发**：派一个全新 subagent，令其读 `../hact-method-lab/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
 
 CC 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用户拍板。
 
@@ -136,7 +136,7 @@ CC 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用
 
 用户确认 → 在 `iterations/vN/gates.md` 写 `- [x] G1：PRD 已确认 — {YYYY-MM-DD}`。
 
-**更新项目根 `status.yml`**（机器侧状态契约；字段见 `../hact-method/skeleton/07-status-contract.md`；不存在先从 `../hact-method/templates/status.yml` 补建）：确保 `iterations.vN.gates` 块存在（v1 已由 init-project 建，v2+ 在此新增该期块、G1–G5 未签）→ 将 `iterations.vN.gates.G1` 改为 `{ signed: true, date: {YYYY-MM-DD} }`。
+**更新项目根 `status.yml`**（机器侧状态契约；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；不存在先从 `../hact-method-lab/templates/status.yml` 补建）：确保 `iterations.vN.gates` 块存在（v1 已由 init-project 建，v2+ 在此新增该期块、G1–G5 未签）→ 将 `iterations.vN.gates.G1` 改为 `{ signed: true, date: {YYYY-MM-DD} }`。
 
 `git add iterations/vN/prd.md iterations/vN/gates.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
 
@@ -150,7 +150,7 @@ CC 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用
 
 ## Subagent 使用
 
-PRD 生成全程纯对话；**唯一 subagent 在 Step 7.5**——定稿后派全新陌生视角审内容有效性（格式归 linter，内容归独立审查）。失败则主线自审降级兜底。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
+PRD 生成全程纯对话；**唯一 subagent 在 Step 7.5**——定稿后派全新陌生视角审内容有效性（格式归 linter，内容归独立审查）。失败则主线自审降级兜底。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
 
 ---
 

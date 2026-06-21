@@ -1,4 +1,4 @@
-# STATUS.md — hact-method
+﻿# STATUS.md — hact-method
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发 hact-app**（进行中）
@@ -39,7 +39,7 @@
 | Worktree | 路径 | 分支 | 当前 tip | 角色 |
 |------|------|------|---------|------|
 | hact-method（旧版基线） | `E:\group-code\hact-method\` | `master` | `89d01ff` draft-ux 重构 | **旧方法**对照基线（已 reset 到 origin/master，2026-06-20） |
-| hact-method-lab（最新） | `E:\group-code\hact-method-lab\` | `method-lab` | `ba9dce8` | **新方法**，含 loop-layer2 起的全部大改；与 `origin/method-lab` 同步 |
+| hact-method-lab（最新） | `E:\Group-code-lab\hact-method-lab\` | `method-lab` | `ba9dce8` | **新方法**，含 loop-layer2 起的全部大改；与 `origin/method-lab` 同步 |
 | hact-app | `E:\group-code\hact-app\` | — | — | hact-app 代码 + 协调文件（用户自行推送） |
 | human-ai-col | `E:\group-code\human-ai-col\` | — | — | v1 方法论（冻结，gitee.com/dingxifan/human-ai-col） |
 

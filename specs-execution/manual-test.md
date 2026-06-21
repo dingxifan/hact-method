@@ -1,4 +1,4 @@
-# exec: manual-test
+﻿# exec: manual-test
 
 > CC 加载本文时，当前任务是提供测试环境、引导用户自主验收、收集反馈派修复任务、用户明确通过后签 G4。
 > 本 task 以用户为主导，CC 负责记录、派发和跟踪，不替用户判断通过与否。
@@ -163,7 +163,7 @@ git branch -d fix/mt-{desc}
 - `source=manual-test`
 - `task-id` 命名：`{项目缩写}-mt-{三位序号}`，如 `hact-mt-001`
 - 写入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`
-- **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: manual-test`、`type: develop`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method/skeleton/07-status-contract.md`）
+- **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: manual-test`、`type: develop`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 - 执行 commit + push，任务包对开发者可见：
   ```bash
   git add iterations/vN/queue/{task-id}.md status.yml
@@ -202,12 +202,12 @@ git branch -d fix/mt-{desc}
 
 ## Step 5：写验收报告 + 签 G4
 
-用户明确说「验收通过」后，完善验收报告 `iterations/vN/acceptance-report.md`（格式见 `../hact-method/templates/acceptance-report.md`）。两件人工兜底必须落进报告：
+用户明确说「验收通过」后，完善验收报告 `iterations/vN/acceptance-report.md`（格式见 `../hact-method-lab/templates/acceptance-report.md`）。两件人工兜底必须落进报告：
 - **完备性对账**：AC 验证表列全 PRD 每条 AC——某条 PRD AC 在开发链无任务包覆盖（plan-sprint 双向对账漏网）在此暴露，记入问题记录。
 - **验证来源如实标注**：不可视区 AC 取自测试脊柱（develop 绿测试）+ 联调，机械验过、不重复人工核；可视区/业务 AC 由用户人工验收。
 - **环境差异**：若测试环境与生产行为有差异，在报告中注明，由用户决定是否接受 / 需生产复验。
 
-**签 G4 前 · 完成判据核对**：`check-gate.js G4 vN` 核确定性判据（`source=manual-test` 修复任务全 [merged]、验收报告结论"通过"）——签字 commit 时门卫自动跑、红则拦 commit（偷签机制上做不到，同 PRD/plan-sprint，见 `../hact-method/skeleton/06-gates.md` §7）。脚本 `🧑 留签字人确认` 段的语义残量（用户是否明确说验收通过、反馈问题是否都已处理）由你这个产品签字人确认。
+**签 G4 前 · 完成判据核对**：`check-gate.js G4 vN` 核确定性判据（`source=manual-test` 修复任务全 [merged]、验收报告结论"通过"）——签字 commit 时门卫自动跑、红则拦 commit（偷签机制上做不到，同 PRD/plan-sprint，见 `../hact-method-lab/skeleton/06-gates.md` §7）。脚本 `🧑 留签字人确认` 段的语义残量（用户是否明确说验收通过、反馈问题是否都已处理）由你这个产品签字人确认。
 
 （存量项目无 `scripts/check-gate.js` → 门卫 no-op 放行、退回 §7 G4/G5 段人工逐条核对兜底，并提示补铺，见 init-project Step 3。）
 
@@ -218,7 +218,7 @@ git branch -d fix/mt-{desc}
 
 🚫 等用户确认
 
-用户确认后，写入 `iterations/vN/gates.md`；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G4` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method/templates/status.yml` 补建）。执行：
+用户确认后，写入 `iterations/vN/gates.md`；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G4` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。执行：
 ```bash
 git add iterations/vN/gates.md iterations/vN/acceptance-report.md status.yml
 git commit -m "chore: 验收通过，G4 签署 [{项目名}]"

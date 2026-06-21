@@ -1,4 +1,4 @@
-# exec: develop
+﻿# exec: develop
 
 > CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
 > **执行模型**：主线只**编排**（定标 / 设计门 / 浮决策 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由**执行 subagent** 跑、隔离上下文；每个任务的质量由**独立审查 subagent**（对抗式、自读权威原文）把关，不通过即回炉。人工只守一个门：**前端设计是否到位**。
@@ -45,7 +45,7 @@
   🚫 等用户确认子集。确认后该子集 = 本轮任务集 = 一个 PR（一批次=一分支=一 PR，见末端 commit 命名）。
 - **阻断**：本 layer 有 `交付=独立` 任务处于 `[done]`（PR 已推未合并到 master）且有 `批量` 任务依赖它 → 停止：「⚠️ {task-id}（独立）PR 尚未合并到 master，依赖它的批量任务暂不可拾取，请先完成该独立任务的 develop 会话（含合并）。」
 
-**认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）。
+**认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）。
 
 **分支锁定（认领时立即建立，push 时唯一来源）**：
 
@@ -111,7 +111,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 
 ### 阶段 B · 独立审查 subagent（对抗式，自读权威原文）
 
-执行 subagent 返回 `done` 后，主线派**全新隔离** subagent 读 `../hact-method/templates/review-briefs/develop-review.md`，只告知 `{task-id}` + layer + vN。该审查员**自读权威原文**（任务包 / `git diff` / standards 章节 / 测试代码+结果），**绝不接收执行 subagent 的自评 / 总结**（喂自评即丧失独立性，等于自己批自己的作业），对抗式找问题、存疑即判阻断。
+执行 subagent 返回 `done` 后，主线派**全新隔离** subagent 读 `../hact-method-lab/templates/review-briefs/develop-review.md`，只告知 `{task-id}` + layer + vN。该审查员**自读权威原文**（任务包 / `git diff` / standards 章节 / 测试代码+结果），**绝不接收执行 subagent 的自评 / 总结**（喂自评即丧失独立性，等于自己批自己的作业），对抗式找问题、存疑即判阻断。
 
 **审查 loop（有界）**：
 - 审查输出 `findings: []` 或全为「建议」级 → 本任务**通过**，进下一任务（建议项记入 PR「遗留问题」或当场顺手改）。
@@ -197,7 +197,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
 - 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
 - **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 项目根 `status.yml`（机器侧契约，见 `../hact-method/skeleton/07-status-contract.md`）：集合内每个 task 的 `status` 改 `merged`、`pr` 全填同一个 `{N}`；并向 `code_reviews[]` **每任务追加一条审计留痕**（替代旧 pr-review 写入）——`conclusion: 通过`（独审已通过才合并），`issues` 填独审剩下的「建议」级 finding（映射 `severity: 建议`），无则 `[]`
+- 项目根 `status.yml`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）：集合内每个 task 的 `status` 改 `merged`、`pr` 全填同一个 `{N}`；并向 `code_reviews[]` **每任务追加一条审计留痕**（替代旧 pr-review 写入）——`conclusion: 通过`（独审已通过才合并），`issues` 填独审剩下的「建议」级 finding（映射 `severity: 建议`），无则 `[]`
   ```bash
   git checkout master && git pull
   git add {集合内任务包文件} iterations/vN/sprint.md status.yml   # sprint.md 仅 source=sprint 时含
