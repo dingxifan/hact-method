@@ -4,7 +4,7 @@
 **Gate**: —
 **属性**: 无
 
-> 所有 sprint 开发完成后，设计端到端测试场景，写自动化脚本跑测试，失败转修复任务。
+> 所有 sprint 开发完成后，默认跑后端 curl smoke test（轻量档）；smoke test 有结论后，用户按需加跑前端 pinchtab（完整档）。
 
 ---
 
@@ -32,7 +32,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 测试脚本（后端） | `integration-tests/backend/{场景名}.http` 或 `.sh` | HTTP 请求文件 / curl 脚本 |
-| 测试脚本（前端） | `integration-tests/frontend/{场景名}.pinchtab` | pinchtab 脚本 |
+| 测试脚本（前端）**（完整档，可选）** | `integration-tests/frontend/{场景名}.pinchtab` | pinchtab 脚本 |
 | 测试结果记录 | `integration-tests/result-{日期}.md` | 见 `../hact-method/templates/integration-result.md` |
 | 修复任务包（[阻断] 失败时） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（[不阻断] 失败时） | `backlog.md` | `- [ ] {日期} \| [不阻断] {描述} \| 联调发现` |
@@ -45,9 +45,10 @@
 
 满足以下三条才可进入 `manual-test`：
 
-- [ ] 所有测试场景均有明确结论（无"未测"条目）；前端 pinchtab 场景已控制在 ≤15 条
+- [ ] 所有已生成测试场景均有明确结论（无"未测"条目）
 - [ ] 主流程无 `[阻断]` 失败（或已全部通过 develop(source=integration) 修复并复测）
 - [ ] `[不阻断]` 问题已记入 backlog，已分级
+- [ ] **（完整档）** 前端 pinchtab 场景已控制在 ≤15 条
 
 ---
 
