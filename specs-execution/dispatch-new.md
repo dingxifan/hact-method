@@ -1,4 +1,4 @@
-﻿# exec: dispatch-new
+# exec: dispatch-new
 
 > CC 加载本文时，当前任务是处理一条 B 类入口：收到 bug 报告或优化需求，判断是否属于 B 类，写任务包入 queue，记入 b-tasks.md。
 > 本 task 是轻量派发任务，通常 10 分钟内完成。
@@ -10,8 +10,7 @@
 ## 红线
 
 - **B 类判定有疑问时，倾向升级 A 类**：宁可多走流程，不遗漏产品决策
-- **复现步骤不明确不写任务包**：先追问，无法复现的 bug 在任务包 `known-risks` 中标注，不写"复现步骤不明"的包
-- **优化需求没有量化验收标准不写任务包**：先与用户确认可观测的成功指标，再写
+- **AC 行为例子写不出来不写任务包**：bug 复现路径不清晰 / optimization 期望行为不具体，先追问到能写出清晰的 Given/When/Then 为止；无法复现的 bug 在任务包 `known-risks` 标注
 - **`urgency=hotfix` 写完立即通知**：不等积累，立即告知相关 develop 执行人优先拾取
 
 ---
@@ -64,6 +63,7 @@
 2. 复现步骤（最小复现路径）
 3. 已尝试的解决方案（如有）
 4. 最可能的修复方向（如有判断）
+5. 不应被影响的相邻行为（举例；不确定可留空，下一步 CC 会补提）
 ```
 
 **`target-source=optimization`**：
@@ -72,9 +72,12 @@
 1. 改进目标（想达到什么效果）
 2. 当前状态（基线指标，如有）
 3. 验收标准（怎么算做成了，需可观测 / 可验证）
+4. 不应改变的现有行为（举例；不确定可留空，下一步 CC 会补提）
 ```
 
-🚫 等用户提供信息；信息不完整时继续追问，不提前进入下一步
+**`layer=frontend` 额外（两个 source 均适用）**：对应画面 / 交互在 `design.md` 的节点或 `prototype.html` 的路径（不确定可留空）。
+
+🚫 等用户提供信息；**收到回答后先判断能否据此写出清晰的 Given/When/Then 行为例子——不能则继续追问，禁止带模糊信息进下一步。**
 
 ---
 
@@ -84,6 +87,37 @@
 |------|---------|
 | 影响核心功能且用户无法绕过 | `hotfix` |
 | 其余 | `normal` |
+
+---
+
+## Step 3.5：行为契约草稿
+
+CC 基于 Step 2 信息主动起草；循环直到用户明确确认后才进 Step 4。
+
+```
+行为契约草稿：
+
+【AC 行为例子】
+Given: {前置条件}
+When: {动作 / 事件}
+Then: {期望系统行为}
+（逐条列出，覆盖主路径 + 关键边界 / 异常路径；条数按实际需要）
+
+【do-not 禁动边界】
+- {不应受影响的相邻行为}
+（CC 根据改动范围主动列出，用户确认 / 补充 / 删除）
+
+【files 初步估填】
+- {预计改动的文件 / 组件}
+
+[layer=frontend 时额外输出]
+【视觉参照】design.md §{节} / prototype.html {路径}
+无对应规格时：明确写「无对应设计规格，以 do-not 边界为准」
+```
+
+**写不出某条 AC 行为例子 → 返回 Step 2 追问，不带模糊信息进下一步。**
+
+🚫 等用户确认；有修正则更新后重提，直到明确确认
 
 ---
 
@@ -98,7 +132,9 @@
 | `task-id` | `{项目缩写}-b-{三位序号}`，如 `hact-b-001` |
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
 | `urgency` | Step 3 判断结果 |
-| `acceptance-criteria` | bug → 现象消失 + 复现步骤无法复现；optimization → 用户提供的可观测验收标准；**含纯加法 schema 变更（Step 1 判定）时**额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
+| `acceptance-criteria` | 直接使用 Step 3.5 确认的 Given/When/Then 行为例子；**含纯加法 schema 变更（Step 1 判定）时**额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
+| `do-not` | 直接使用 Step 3.5 确认的禁动边界列表 |
+| `files` | Step 3.5 初步估填的预计改动文件 / 组件清单 |
 | `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；**含纯加法 schema 变更时**必须写明：最坏情况 / 如何发现 / 如何回滚 |
 | `api-contract`（条件） | 仅 `layers=[backend]` 且新增接口被前端消费时填，否则整段删除（与 develop §字段规范一致） |
 
@@ -106,13 +142,13 @@
 
 **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 
-> B 类放 `iteration: null` 而非某迭代——两个迭代之间无活跃迭代时 B 类照样有家，与 `b-tasks.md` 同为项目级。
+> B 类放 `iteration: null` 而非某迭代——两个迭代之间无活跃迭代时 B 类照样有家，与 项目根 `b-tasks.md` 同为项目级。
 
 ---
 
 ## Step 5：记入 b-tasks.md
 
-在 `b-tasks.md` 追加一行：
+在 项目根 `b-tasks.md` 追加一行：
 
 ```markdown
 | {task-id} | {target-source} | {urgency} | {任务标题} | [可取] | {YYYY-MM-DD} |
@@ -144,4 +180,4 @@ git push origin master
 
 本 task 无需断点续做——任务包写入 queue 后即完成，状态持久化在文件中。
 
-**同一 bug 重复报告时**：先读 `b-tasks.md` 确认是否已有对应条目；有则在已有条目的任务包 `known-risks` 追加频次备注，不新建任务包。
+**同一 bug 重复报告时**：先读 项目根 `b-tasks.md` 确认是否已有对应条目；有则在已有条目的任务包 `known-risks` 追加频次备注，不新建任务包。
