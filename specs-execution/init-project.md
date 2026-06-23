@@ -63,12 +63,12 @@ echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 
 **复制自 `E:\Group-code-lab\hact-method-lab\templates\{产物名}.md`**，把文件内 `{项目名}` 替换为实际项目名，写完确认非空（templates/ 是格式单一真相源，structural §主要产物 只列指针）：
 
-- `project.md` / `reusables.md` / `b-tasks.md` / `decisions.md` / `backlog.md` / `feedback.md`
-- `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
+- 项目根 `project.md` / 项目根 `reusables.md` / 项目根 `b-tasks.md` / 项目根 `decisions.md` / 项目根 `backlog.md` / 项目根 `feedback.md`
+- 项目根 `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，hact-app 取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
 **特殊桩（不走 templates/）**：
-- `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`：**项目根跨迭代活文档**，建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 7 填入、之后每期原地增补
+- 项目根 `standards-shared.md` / 项目根 `standards-frontend.md` / 项目根 `standards-backend.md`：**项目根跨迭代活文档**，建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 7 填入、之后每期原地增补
 
 同时写入以下文件：
 - `CLAUDE.md`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
@@ -76,6 +76,7 @@ echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 - `scripts/check-docs.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
 - `scripts/check-gate.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
 - `scripts/check-sprint.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
+- `scripts/check-ux.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-ux.js`（draft-ux 产物结构 linter，纯 Node 无外部依赖；`draft-ux` Step 7 签字 commit 时门卫自动核 ux-flows.md 两段结构 + prototype-map.md AC 覆盖表 + prototype.html 存在）
 - `scripts/pre-commit-hook.sh`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\pre-commit-hook.sh`（**门卫**——commit 时按 staged 文件路由跑对应 check-\*.js，红则拦 commit；脚本/node 缺失 no-op 放行。作为 tracked 文件入仓使其随 clone 存活；实际生效需装进 `.git/hooks/`，见 Step 4.1）
 - `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `E:\Group-code-lab\hact-method-lab\templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）
 - `.gitattributes`：写入一行 `*.sh text eol=lf`（**必须**——Windows `core.autocrlf=true` 下 .sh 会被 checkout 成 CRLF，门卫脚本 `#!/bin/sh\r` 在 POSIX sh / git hook 下报 bad interpreter；锁 LF 才能跨平台跑）

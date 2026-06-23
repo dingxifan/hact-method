@@ -77,6 +77,11 @@ for dir in $iter_dirs; do
       run scripts/check-gate.js "$g" "$ver"
     done
   fi
+
+  # --- ux-flows / prototype（check-ux.js）---
+  if echo "$staged" | grep -qE "^${dir}(ux-flows\.md|prototype\.html|prototype-map\.md)$"; then
+    run scripts/check-ux.js "$ver"
+  fi
 done
 
 if [ "$fail" -ne 0 ]; then
