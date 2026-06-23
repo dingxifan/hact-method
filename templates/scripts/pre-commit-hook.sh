@@ -70,9 +70,9 @@ for dir in $iter_dirs; do
 
   # --- gates.md 新增 G4/G5（check-gate.js）---
   if echo "$staged" | grep -qE "^${dir}gates\.md$"; then
-    # 只看本次 diff 新增（+）行里的 G4/G5——G1/G2/G3 在各自产物 commit 时已被对应 linter 守过
+    # 只看本次 diff 新增（+）行里已签署（[x]）的 G4/G5——未签行（新建 gates.md 时全行为+）不触发检查
     added_gates=$(git diff --cached -U0 -- "${dir}gates.md" \
-      | grep -E '^\+' | grep -oE 'G[45]' | sort -u)
+      | grep -E '^\+' | grep -E '\[x\]' | grep -oE 'G[45]' | sort -u)
     for g in $added_gates; do
       run scripts/check-gate.js "$g" "$ver"
     done
