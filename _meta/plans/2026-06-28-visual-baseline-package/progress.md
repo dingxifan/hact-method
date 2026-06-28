@@ -15,7 +15,7 @@
   - 件③④：generate-integration-tests 完整档涉基线必跑 + 3 断言（主色/外溢/容器）+ design.md「〇视觉冒烟锚点」段。
   - 收口：structural plan-sprint/gen-it 完成判据 + 待议#17 + 2026-06-22 findings + STATUS 里程碑。
 - **自测**：`node --check` 过；fixture 三用例（v1 无 baseline→FAIL / 有 baseline+依赖→pass / v2 无 baseline→human）全过。
-- **状态**：未 commit、未 push（待用户）。
+- **状态**：已 scoped commit `0784bf7` + push 到 `origin/method-lab`（用户确认）。工作区其余无关 WIP（6 个 specs-execution + templates/CLAUDE.md + 其它 plan 目录）未纳入本 commit。
 
 ### 已建/改文件
 - 建：`_meta/plans/2026-06-28-visual-baseline-package/{findings,task_plan,progress}.md`

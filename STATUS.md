@@ -66,7 +66,7 @@
   - **③④ 视觉冒烟断言**：`generate-integration-tests.md` 完整档涉视觉基线迭代**必跑**（不再问）+ 固化 3 条机械断言（实测 `--el-color-primary`==设计主色 / `scrollWidth-innerWidth<=0` / 关键容器尺寸==token），取数源 = `design.md` 新增「〇、视觉冒烟锚点」段（④并入③，不单列）。
 - **拒绝的 over-engineering**（防膨胀）：像素快照/visual regression CI、design-tokens.json 导出工具链、per-task `visual-tokens-required` 字段、check-gate 加视觉核、通用 check-visual-tokens.js。理由记 `_meta/plans/2026-06-28-visual-baseline-package/findings.md §五`。
 - **诚实账**：①是 ADD（核心增量，旧框架缺的格）；②是把 parked #17 想清的事落地 + 类别纠正（落对层）；③是复用既有 pinchtab 的小 ADD。`check-sprint.js` 已 `node --check` 过。
-- **改动文件**（17 处）：specs-execution（plan-sprint / draft-tech-design / generate-integration-tests）+ specs-structural（plan-sprint / generate-integration-tests）+ templates（queue/task-package / review-briefs/task-package-review / scripts/check-sprint.js / standards/frontend / checklists/frontend-checklist / design）+ 收口（待议 #17 / 2026-06-22 findings / 本 STATUS）。**未 push**（master/推送严格，待用户明确）。
+- **改动文件**：specs-execution（plan-sprint / draft-tech-design / generate-integration-tests）+ specs-structural（plan-sprint / generate-integration-tests / develop §字段规范 baseline）+ templates（queue/task-package / review-briefs/task-package-review / scripts/check-sprint.js / standards/frontend / checklists/frontend-checklist / design）+ 收口（待议 #17 / 2026-06-22 findings / 本 STATUS）。**已 commit `0784bf7` 并 push 到 `origin/method-lab`**（用户明确确认 push；分支非 master）；scoped commit，工作区其余无关 WIP 未纳入。
 
 ### 2026-06-20 develop 站「展开」四连改 — 单/批量合一 → 会话定标 → 执行模型翻转（独立审查 loop）→ 砍除 pr-review（merge-on-push）
 
