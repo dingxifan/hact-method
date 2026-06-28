@@ -1,0 +1,151 @@
+{
+  "pages": {
+    "purpose": "核心统一实体，承载页面/笔记/目标/任务/活动五态",
+    "confidence": "code",
+    "evidence": "page.entity.ts:23 type default 'note'; ai.service.ts:90 type=activity|task|note; goals/tasks/recurrence service 用 type=goal/task/activity",
+    "fields": {
+      "id": {"purpose": "主键", "confidence": "code", "evidence": "page.entity.ts:5 @PrimaryGeneratedColumn uuid"},
+      "user_id": {"purpose": "归属用户", "confidence": "code", "evidence": "page.entity.ts:9; RLS user_id=auth.uid()"},
+      "title": {"purpose": "标题", "confidence": "code", "evidence": "page.entity.ts:12"},
+      "content": {"purpose": "正文Tiptap JSON", "confidence": "code", "evidence": "page.entity.ts:14 default doc/content; data-blocks 解析 Tiptap"},
+      "excerpt": {"purpose": "卡片预览摘录", "confidence": "code", "evidence": "PageDetailClient.tsx:210 extractExcerpt; PageCard.tsx 显示"},
+      "content_text": {"purpose": "纯文本供搜索", "confidence": "code", "evidence": "SearchDialog.tsx:261 getSnippet(content_text); PageDetailClient.tsx:217 写入"},
+      "type": {"purpose": "区分五态", "confidence": "code", "evidence": "note/goal/task/activity/page，多 service .eq('type',...)"},
+      "status": {"purpose": "未开始/进行中/完成", "confidence": "code", "evidence": "ai.service.ts:99 not_started|in_progress；reminder neq 'completed'"},
+      "due_date": {"purpose": "任务截止日", "confidence": "code", "evidence": "reminder.service.ts:35 task due_date=today 提醒"},
+      "priority": {"purpose": "优先级高/中/低", "confidence": "code", "evidence": "ai.service.ts:98 high|medium|low"},
+      "start_time": {"purpose": "活动开始时刻", "confidence": "code", "evidence": "recurrence.service.ts:92 活动 start_time；reminder 活动提醒窗口"},
+      "end_time": {"purpose": "活动结束时刻", "confidence": "code", "evidence": "page.entity.ts:39；migration chk_activity_times end_time>=start_time"},
+      "parent_goal_id": {"purpose": "上级目标自引用", "confidence": "code", "evidence": "goals.service.ts:79 parent_goal_id 挂任务/直挂活动"},
+      "parent_task_id": {"purpose": "上级任务自引用", "confidence": "code", "evidence": "tasks.service.ts:35 任务下活动 parent_task_id"},
+      "goal_type": {"purpose": "目标年度/月度", "confidence": "code", "evidence": "ViewClient.tsx:26 annual=年度,monthly=月度；CreatePageDialog 月度挂年度"},
+      "start_date": {"purpose": "任务起始日", "confidence": "code", "evidence": "ai.service.ts:69 task start_date=today；activity 输出 null"},
+      "recurrence_type": {"purpose": "循环类型日/周/月", "confidence": "code", "evidence": "recurrence.service.ts:25 daily/weekly/monthly/monthly_nth_weekday"},
+      "recurrence_interval": {"purpose": "循环间隔数", "confidence": "code", "evidence": "recurrence.service.ts:94 interval; addInterval(date,type,interval)"},
+      "recurrence_next_generated_at": {"purpose": "下次已生成标记", "confidence": "code", "evidence": "recurrence.service.ts:67 is null 才生成,生成后写时间防重复"},
+      "reminder_sent_at": {"purpose": "提醒已发时间", "confidence": "code", "evidence": "reminder.service.ts:37 is null 才发,发后写时间"},
+      "feishu_event_id": {"purpose": "飞书日历事件ID", "confidence": "code", "evidence": "recurrence.service.ts:202 createCalendarEvent 回写;删除时同步删日历"},
+      "deleted_at": {"purpose": "软删除时间", "confidence": "code", "evidence": "goals.service.ts:128 update deleted_at;查询 is null 过滤"},
+      "recurrence_nth_position": {"purpose": "月循环第N个", "confidence": "code", "evidence": "recurrence.service.ts:119 getNthWeekdayOfMonth nth; -1=最后"},
+      "recurrence_weekday": {"purpose": "月循环星期几", "confidence": "code", "evidence": "recurrence.service.ts:99 ISO 1=Mon..7=Sun"},
+      "recurrence_end_date": {"purpose": "循环终止日", "confidence": "code", "evidence": "recurrence.service.ts:143 超过终止日停止生成"},
+      "recurrence_base_date": {"purpose": "循环基准日", "confidence": "code", "evidence": "recurrence.service.ts:103 monthly_nth_weekday 缺则回填 start_time 日"},
+      "updated_by": {"purpose": "最后修改人(协作)", "confidence": "code", "evidence": "goals.service.ts:245 toggleTaskLayer 写 updated_by;migration 2.1 加;协作者编辑标记"},
+      "attachments": {"purpose": "附件列表jsonb", "confidence": "code", "evidence": "migration 2.6 fileAttachment Block→attachments(storagePath/filename/size/mimeType)"},
+      "enable_task_layer": {"purpose": "启用任务层开关", "confidence": "code", "evidence": "goals.service.ts:179 toggleTaskLayer 切目标→任务/活动两/三层(v7)"},
+      "created_at": {"purpose": "创建时间", "confidence": "code", "evidence": "page.entity.ts:72 @CreateDateColumn"},
+      "updated_at": {"purpose": "更新时间", "confidence": "code", "evidence": "page.entity.ts:75 @UpdateDateColumn"}
+    }
+  },
+  "profiles": {
+    "purpose": "用户档案：飞书身份映射 + 提醒/AI 偏好",
+    "confidence": "code",
+    "evidence": "profile.entity.ts; settings.service.ts getUserSettings/getMembers",
+    "fields": {
+      "id": {"purpose": "主键=auth用户", "confidence": "code", "evidence": "profile.entity.ts:5 @PrimaryColumn uuid"},
+      "display_name": {"purpose": "显示名", "confidence": "code", "evidence": "settings.service.ts:146 getMembers display_name"},
+      "avatar_url": {"purpose": "头像URL", "confidence": "code", "evidence": "shares.service.ts:188 avatarUrl"},
+      "feishu_user_id": {"purpose": "飞书user_id", "confidence": "code", "evidence": "profile.entity.ts:15 unique"},
+      "feishu_open_id": {"purpose": "飞书open_id供推送", "confidence": "code", "evidence": "reminder.service.ts:47 sendCardMessage(feishu_open_id)"},
+      "is_admin": {"purpose": "是否管理员", "confidence": "code", "evidence": "settings.service.ts:131 is_admin"},
+      "feishu_union_id": {"purpose": "飞书union_id", "confidence": "code", "evidence": "settings.service.ts:151 feishu_synced=union_id!=null"},
+      "feishu_refresh_token": {"purpose": "飞书刷新令牌", "confidence": "code", "evidence": "feishu.service.ts:374 用 refresh_token 换 access token 并回写"},
+      "notification_enabled": {"purpose": "通知总开关", "confidence": "code", "evidence": "reminder.service.ts:46 eq notification_enabled true 才发"},
+      "reminder_minutes": {"purpose": "活动提前提醒分钟", "confidence": "code", "evidence": "reminder.service.ts:114 活动 start_time 前 N 分钟"},
+      "reminder_time": {"purpose": "任务每日提醒时刻", "confidence": "code", "evidence": "reminder.service.ts:55 任务当天到该时刻发提醒"},
+      "ai_prompt_override": {"purpose": "自定义AI提示词", "confidence": "code", "evidence": "ai.service.ts:255 优先用个人 ai_prompt_override"},
+      "created_at": {"purpose": "创建时间", "confidence": "code", "evidence": "profile.entity.ts:39 @CreateDateColumn"},
+      "updated_at": {"purpose": "更新时间", "confidence": "code", "evidence": "profile.entity.ts:42 @UpdateDateColumn"}
+    }
+  },
+  "departments": {
+    "purpose": "飞书组织部门同步镜像表",
+    "confidence": "code",
+    "evidence": "department.entity.ts 飞书部门ID/层级/排序",
+    "fields": {
+      "id": {"purpose": "主键", "confidence": "code", "evidence": "department.entity.ts:5"},
+      "feishu_department_id": {"purpose": "飞书部门ID唯一", "confidence": "code", "evidence": "department.entity.ts:9 unique"},
+      "name": {"purpose": "部门名称", "confidence": "code", "evidence": "department.entity.ts:11"},
+      "parent_feishu_department_id": {"purpose": "上级飞书部门ID", "confidence": "code", "evidence": "department.entity.ts:15 部门层级"},
+      "order_num": {"purpose": "排序序号", "confidence": "code", "evidence": "department.entity.ts:18 default 0"},
+      "created_at": {"purpose": "创建时间", "confidence": "code", "evidence": "department.entity.ts:21"},
+      "updated_at": {"purpose": "更新时间", "confidence": "code", "evidence": "department.entity.ts:24"}
+    }
+  },
+  "filter_defaults": {
+    "purpose": "各视图默认筛选/排序/分组(按用户+视图)",
+    "confidence": "code",
+    "evidence": "filter-defaults.service.ts findOne/upsert onConflict user_id,view_type",
+    "fields": {
+      "id": {"purpose": "主键", "confidence": "name"},
+      "user_id": {"purpose": "所属用户", "confidence": "code", "evidence": "filter-defaults.service.ts:27 eq user_id"},
+      "view_type": {"purpose": "视图类型", "confidence": "code", "evidence": "filter-defaults.service.ts:5 goal/task/activity/note"},
+      "filters": {"purpose": "默认筛选jsonb", "confidence": "code", "evidence": "filter-defaults.service.ts:47 payload.filters"},
+      "sort_field": {"purpose": "默认排序字段", "confidence": "code", "evidence": "filter-defaults.service.ts:48"},
+      "sort_direction": {"purpose": "默认排序方向", "confidence": "code", "evidence": "filter-defaults.service.ts:49"},
+      "group_by": {"purpose": "默认分组字段", "confidence": "code", "evidence": "filter-defaults.service.ts:50"},
+      "created_at": {"purpose": "创建时间", "confidence": "name"},
+      "updated_at": {"purpose": "更新时间", "confidence": "code", "evidence": "filter-defaults.service.ts:44 写入"}
+    }
+  },
+  "view_configs": {
+    "purpose": "视图配置(多排序);疑被 filter_defaults 取代,无活引用",
+    "confidence": "name",
+    "evidence": "后端无 service 引用该表;字段形状对应 useViewConfig.ts ViewConfig(filters/sorts/groupBy)",
+    "fields": {
+      "id": {"purpose": "主键", "confidence": "name"},
+      "user_id": {"purpose": "所属用户", "confidence": "name"},
+      "view_type": {"purpose": "视图类型", "confidence": "name"},
+      "filters": {"purpose": "筛选条件jsonb", "confidence": "name", "evidence": "useViewConfig.ts:5 ViewFilters"},
+      "sorts": {"purpose": "多字段排序jsonb", "confidence": "name", "evidence": "useViewConfig.ts:10 ViewSort[]"},
+      "group_by": {"purpose": "分组字段", "confidence": "name", "evidence": "useViewConfig.ts:18 groupBy"},
+      "created_at": {"purpose": "创建时间", "confidence": "name"},
+      "updated_at": {"purpose": "更新时间", "confidence": "name"}
+    }
+  },
+  "page_shares": {
+    "purpose": "笔记分享给协作者的记录表",
+    "confidence": "code",
+    "evidence": "migration 2.2;shares.service.ts createShares 仅 note 可分享",
+    "fields": {
+      "id": {"purpose": "主键", "confidence": "code", "evidence": "migration:22 gen_random_uuid"},
+      "page_id": {"purpose": "被分享笔记", "confidence": "code", "evidence": "migration:23 FK pages ON DELETE CASCADE"},
+      "shared_with_user_id": {"purpose": "协作者", "confidence": "code", "evidence": "shares.service.ts:57 被分享人"},
+      "shared_by_user_id": {"purpose": "分享发起人", "confidence": "code", "evidence": "shares.service.ts:60 currentUserId"},
+      "created_at": {"purpose": "分享时间", "confidence": "code", "evidence": "migration:26 default NOW()"}
+    }
+  },
+  "note_read_status": {
+    "purpose": "笔记已读状态,算共享笔记未读红点",
+    "confidence": "code",
+    "evidence": "migration 2.3;notes.service.ts:81 isUnread(updated_at,last_read_at)",
+    "fields": {
+      "page_id": {"purpose": "笔记页ID", "confidence": "code", "evidence": "migration:39 FK pages"},
+      "user_id": {"purpose": "读者用户ID", "confidence": "code", "evidence": "migration:40;notes.service.ts:111 me"},
+      "last_read_at": {"purpose": "最后已读时间", "confidence": "code", "evidence": "notes.service.ts:75 比对 updated_at 判未读"}
+    }
+  },
+  "page_mentions": {
+    "purpose": "页面相互提及,驱动反向链接(backlinks)",
+    "confidence": "code",
+    "evidence": "Backlinks.tsx:26 by target_page_id 查 source 页;双链",
+    "fields": {
+      "id": {"purpose": "主键", "confidence": "name"},
+      "source_page_id": {"purpose": "提及来源页", "confidence": "code", "evidence": "Backlinks.tsx:27 source_page_id fkey 取来源页"},
+      "target_page_id": {"purpose": "被提及页", "confidence": "code", "evidence": "Backlinks.tsx:28 eq target_page_id=当前页"},
+      "created_at": {"purpose": "创建时间", "confidence": "name"}
+    }
+  },
+  "system_settings": {
+    "purpose": "全局系统配置KV表,敏感值可加密",
+    "confidence": "code",
+    "evidence": "settings.service.ts getAllSettings/getRawSetting;AES-256-GCM 加解密",
+    "fields": {
+      "id": {"purpose": "主键", "confidence": "code", "evidence": "system-setting.entity.ts:6"},
+      "key": {"purpose": "配置键唯一", "confidence": "code", "evidence": "system-setting.entity.ts:9 unique"},
+      "value": {"purpose": "配置值(可加密)", "confidence": "code", "evidence": "settings.service.ts:87 加密则 encrypt 存"},
+      "is_encrypted": {"purpose": "是否加密存储", "confidence": "code", "evidence": "settings.service.ts:56 true 则解密+掩码"},
+      "updated_at": {"purpose": "更新时间", "confidence": "code", "evidence": "system-setting.entity.ts:18 @UpdateDateColumn"}
+    }
+  }
+}

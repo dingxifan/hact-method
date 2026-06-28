@@ -1,0 +1,554 @@
+{
+ "departments": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "feishu_department_id",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "name",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "parent_feishu_department_id",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "order_num",
+    "type": "integer",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "created_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "updated_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "filter_defaults": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "user_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "view_type",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "filters",
+    "type": "jsonb",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "sort_field",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "sort_direction",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "group_by",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "created_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "updated_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "note_read_status": {
+  "columns": [
+   {
+    "name": "page_id",
+    "type": "uuid",
+    "pk": true,
+    "fk": "pages.id"
+   },
+   {
+    "name": "user_id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "last_read_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "page_mentions": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "source_page_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": "pages.id"
+   },
+   {
+    "name": "target_page_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": "pages.id"
+   },
+   {
+    "name": "created_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "page_shares": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "page_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": "pages.id"
+   },
+   {
+    "name": "shared_with_user_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "shared_by_user_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "created_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "pages": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "user_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": "profiles.id"
+   },
+   {
+    "name": "title",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "content",
+    "type": "jsonb",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "excerpt",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "content_text",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "created_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "updated_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "type",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "status",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "due_date",
+    "type": "date",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "priority",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "start_time",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "end_time",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "parent_goal_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": "pages.id"
+   },
+   {
+    "name": "parent_task_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": "pages.id"
+   },
+   {
+    "name": "goal_type",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "start_date",
+    "type": "date",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "recurrence_type",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "recurrence_interval",
+    "type": "integer",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "recurrence_next_generated_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "reminder_sent_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "feishu_event_id",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "deleted_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "recurrence_nth_position",
+    "type": "smallint",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "recurrence_weekday",
+    "type": "smallint",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "recurrence_end_date",
+    "type": "date",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "recurrence_base_date",
+    "type": "date",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "updated_by",
+    "type": "uuid",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "attachments",
+    "type": "jsonb",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "enable_task_layer",
+    "type": "boolean",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "profiles": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "display_name",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "avatar_url",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "feishu_user_id",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "feishu_open_id",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "created_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "updated_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "is_admin",
+    "type": "boolean",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "feishu_union_id",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "feishu_refresh_token",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "notification_enabled",
+    "type": "boolean",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "reminder_minutes",
+    "type": "integer",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "reminder_time",
+    "type": "time without time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "ai_prompt_override",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "system_settings": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "key",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "value",
+    "type": "text",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "is_encrypted",
+    "type": "boolean",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "updated_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ },
+ "view_configs": {
+  "columns": [
+   {
+    "name": "id",
+    "type": "uuid",
+    "pk": true,
+    "fk": null
+   },
+   {
+    "name": "user_id",
+    "type": "uuid",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "view_type",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "filters",
+    "type": "jsonb",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "sorts",
+    "type": "jsonb",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "group_by",
+    "type": "character varying",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "created_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   },
+   {
+    "name": "updated_at",
+    "type": "timestamp with time zone",
+    "pk": false,
+    "fk": null
+   }
+  ]
+ }
+}

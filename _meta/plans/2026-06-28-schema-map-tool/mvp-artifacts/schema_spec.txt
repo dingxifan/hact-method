@@ -1,0 +1,95 @@
+## departments
+  - id : uuid PK
+  - feishu_department_id : text
+  - name : text
+  - parent_feishu_department_id : text
+  - order_num : integer
+  - created_at : timestamp with time zone
+  - updated_at : timestamp with time zone
+## filter_defaults
+  - id : uuid PK
+  - user_id : uuid
+  - view_type : character varying
+  - filters : jsonb
+  - sort_field : character varying
+  - sort_direction : character varying
+  - group_by : character varying
+  - created_at : timestamp with time zone
+  - updated_at : timestamp with time zone
+## note_read_status
+  - page_id : uuid PK
+  - user_id : uuid PK
+  - last_read_at : timestamp with time zone
+## page_mentions
+  - id : uuid PK
+  - source_page_id : uuid FK->pages.id
+  - target_page_id : uuid FK->pages.id
+  - created_at : timestamp with time zone
+## page_shares
+  - id : uuid PK
+  - page_id : uuid FK->pages.id
+  - shared_with_user_id : uuid
+  - shared_by_user_id : uuid
+  - created_at : timestamp with time zone
+## pages
+  - id : uuid PK
+  - user_id : uuid FK->profiles.id
+  - title : text
+  - content : jsonb
+  - excerpt : text
+  - content_text : text
+  - created_at : timestamp with time zone
+  - updated_at : timestamp with time zone
+  - type : character varying
+  - status : character varying
+  - due_date : date
+  - priority : character varying
+  - start_time : timestamp with time zone
+  - end_time : timestamp with time zone
+  - parent_goal_id : uuid FK->pages.id
+  - parent_task_id : uuid FK->pages.id
+  - goal_type : character varying
+  - start_date : date
+  - recurrence_type : character varying
+  - recurrence_interval : integer
+  - recurrence_next_generated_at : timestamp with time zone
+  - reminder_sent_at : timestamp with time zone
+  - feishu_event_id : text
+  - deleted_at : timestamp with time zone
+  - recurrence_nth_position : smallint
+  - recurrence_weekday : smallint
+  - recurrence_end_date : date
+  - recurrence_base_date : date
+  - updated_by : uuid
+  - attachments : jsonb
+  - enable_task_layer : boolean
+## profiles
+  - id : uuid PK
+  - display_name : text
+  - avatar_url : text
+  - feishu_user_id : text
+  - feishu_open_id : text
+  - created_at : timestamp with time zone
+  - updated_at : timestamp with time zone
+  - is_admin : boolean
+  - feishu_union_id : text
+  - feishu_refresh_token : text
+  - notification_enabled : boolean
+  - reminder_minutes : integer
+  - reminder_time : time without time zone
+  - ai_prompt_override : text
+## system_settings
+  - id : uuid PK
+  - key : character varying
+  - value : text
+  - is_encrypted : boolean
+  - updated_at : timestamp with time zone
+## view_configs
+  - id : uuid PK
+  - user_id : uuid
+  - view_type : character varying
+  - filters : jsonb
+  - sorts : jsonb
+  - group_by : character varying
+  - created_at : timestamp with time zone
+  - updated_at : timestamp with time zone

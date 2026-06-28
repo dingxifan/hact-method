@@ -1,0 +1,154 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>JHH-Nortion schema (用途版)</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<style>
+ html,body{margin:0;height:100%;font-family:sans-serif;background:#fafafa}
+ header{padding:6px 14px;background:#222;color:#fff;font-size:13px}
+ #wrap{width:100%;height:calc(100vh - 30px);overflow:hidden;cursor:grab}
+ #graph svg{width:100%!important;height:100%!important;max-width:none!important}
+ #legend{position:fixed;top:38px;left:8px;width:300px;max-height:calc(100vh - 60px);overflow:auto;
+   background:rgba(255,255,255,.95);border:1px solid #ddd;border-radius:8px;padding:10px 12px;font-size:12px;
+   box-shadow:0 2px 12px rgba(0,0,0,.12);z-index:9}
+ #legend h4{margin:0 0 6px;font-size:12px}
+ #legend .row{padding:3px 0;line-height:1.4;border-bottom:1px solid #f0f0f0}
+ #legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+ #legend .pp{color:#555}
+ #legend .foot{margin-top:8px;color:#888;font-size:11px}
+ #toggle{position:fixed;top:38px;left:8px;z-index:10;display:none}
+</style></head><body>
+<header>JHH-Nortion · 真库 schema + 用途考据（9 表 / 85 字段 · 73 实锤 / 12 推断）&nbsp;·&nbsp;<b>滚轮缩放·拖拽平移</b>&nbsp;·&nbsp;字段右侧灰字=用途，<span style="color:#f59e0b">※推测</span>=仅按命名</header>
+<div id="legend"><h4>表用途 <span style="font-weight:400;color:#888">（点表名隐藏）</span></h4><div class="row"><span class="dot" style="background:#22c55e"></span><b>departments</b> <span class="pp">飞书组织部门同步镜像表</span></div><div class="row"><span class="dot" style="background:#22c55e"></span><b>filter_defaults</b> <span class="pp">各视图默认筛选/排序/分组(按用户+视图)</span></div><div class="row"><span class="dot" style="background:#22c55e"></span><b>note_read_status</b> <span class="pp">笔记已读状态,算共享笔记未读红点</span></div><div class="row"><span class="dot" style="background:#22c55e"></span><b>page_mentions</b> <span class="pp">页面相互提及,驱动反向链接(backlinks)</span></div><div class="row"><span class="dot" style="background:#22c55e"></span><b>page_shares</b> <span class="pp">笔记分享给协作者的记录表</span></div><div class="row"><span class="dot" style="background:#22c55e"></span><b>pages</b> <span class="pp">核心统一实体，承载页面/笔记/目标/任务/活动五态</span></div><div class="row"><span class="dot" style="background:#22c55e"></span><b>profiles</b> <span class="pp">用户档案：飞书身份映射 + 提醒/AI 偏好</span></div><div class="row"><span class="dot" style="background:#22c55e"></span><b>system_settings</b> <span class="pp">全局系统配置KV表,敏感值可加密</span></div><div class="row"><span class="dot" style="background:#f59e0b"></span><b>view_configs</b> <span class="pp">视图配置(多排序);疑被 filter_defaults 取代,无活引用</span></div>
+<div class="foot"><span style="color:#22c55e">●</span> 代码实锤&nbsp;&nbsp;<span style="color:#f59e0b">●</span> 命名推断</div></div>
+<div id="wrap"><div id="graph" class="mermaid">
+erDiagram
+  departments {
+    uuid id PK "主键"
+    text feishu_department_id "飞书部门ID唯一"
+    text name "部门名称"
+    text parent_feishu_department_id "上级飞书部门ID"
+    integer order_num "排序序号"
+    timestamp_with_time_zone created_at "创建时间"
+    timestamp_with_time_zone updated_at "更新时间"
+  }
+  filter_defaults {
+    uuid id PK "主键 ※推测"
+    uuid user_id "所属用户"
+    character_varying view_type "视图类型"
+    jsonb filters "默认筛选jsonb"
+    character_varying sort_field "默认排序字段"
+    character_varying sort_direction "默认排序方向"
+    character_varying group_by "默认分组字段"
+    timestamp_with_time_zone created_at "创建时间 ※推测"
+    timestamp_with_time_zone updated_at "更新时间"
+  }
+  note_read_status {
+    uuid page_id PK "笔记页ID"
+    uuid user_id PK "读者用户ID"
+    timestamp_with_time_zone last_read_at "最后已读时间"
+  }
+  page_mentions {
+    uuid id PK "主键 ※推测"
+    uuid source_page_id FK "提及来源页"
+    uuid target_page_id FK "被提及页"
+    timestamp_with_time_zone created_at "创建时间 ※推测"
+  }
+  page_shares {
+    uuid id PK "主键"
+    uuid page_id FK "被分享笔记"
+    uuid shared_with_user_id "协作者"
+    uuid shared_by_user_id "分享发起人"
+    timestamp_with_time_zone created_at "分享时间"
+  }
+  pages {
+    uuid id PK "主键"
+    uuid user_id FK "归属用户"
+    text title "标题"
+    jsonb content "正文Tiptap JSON"
+    text excerpt "卡片预览摘录"
+    text content_text "纯文本供搜索"
+    timestamp_with_time_zone created_at "创建时间"
+    timestamp_with_time_zone updated_at "更新时间"
+    character_varying type "区分五态"
+    character_varying status "未开始/进行中/完成"
+    date due_date "任务截止日"
+    character_varying priority "优先级高/中/低"
+    timestamp_with_time_zone start_time "活动开始时刻"
+    timestamp_with_time_zone end_time "活动结束时刻"
+    uuid parent_goal_id FK "上级目标自引用"
+    uuid parent_task_id FK "上级任务自引用"
+    character_varying goal_type "目标年度/月度"
+    date start_date "任务起始日"
+    character_varying recurrence_type "循环类型日/周/月"
+    integer recurrence_interval "循环间隔数"
+    timestamp_with_time_zone recurrence_next_generated_at "下次已生成标记"
+    timestamp_with_time_zone reminder_sent_at "提醒已发时间"
+    text feishu_event_id "飞书日历事件ID"
+    timestamp_with_time_zone deleted_at "软删除时间"
+    smallint recurrence_nth_position "月循环第N个"
+    smallint recurrence_weekday "月循环星期几"
+    date recurrence_end_date "循环终止日"
+    date recurrence_base_date "循环基准日"
+    uuid updated_by "最后修改人(协作)"
+    jsonb attachments "附件列表jsonb"
+    boolean enable_task_layer "启用任务层开关"
+  }
+  profiles {
+    uuid id PK "主键=auth用户"
+    text display_name "显示名"
+    text avatar_url "头像URL"
+    text feishu_user_id "飞书user_id"
+    text feishu_open_id "飞书open_id供推送"
+    timestamp_with_time_zone created_at "创建时间"
+    timestamp_with_time_zone updated_at "更新时间"
+    boolean is_admin "是否管理员"
+    text feishu_union_id "飞书union_id"
+    text feishu_refresh_token "飞书刷新令牌"
+    boolean notification_enabled "通知总开关"
+    integer reminder_minutes "活动提前提醒分钟"
+    time_without_time_zone reminder_time "任务每日提醒时刻"
+    text ai_prompt_override "自定义AI提示词"
+  }
+  system_settings {
+    uuid id PK "主键"
+    character_varying key "配置键唯一"
+    text value "配置值(可加密)"
+    boolean is_encrypted "是否加密存储"
+    timestamp_with_time_zone updated_at "更新时间"
+  }
+  view_configs {
+    uuid id PK "主键 ※推测"
+    uuid user_id "所属用户 ※推测"
+    character_varying view_type "视图类型 ※推测"
+    jsonb filters "筛选条件jsonb ※推测"
+    jsonb sorts "多字段排序jsonb ※推测"
+    character_varying group_by "分组字段 ※推测"
+    timestamp_with_time_zone created_at "创建时间 ※推测"
+    timestamp_with_time_zone updated_at "更新时间 ※推测"
+  }
+  pages ||--o{ note_read_status : page_id
+  pages ||--o{ page_mentions : source_page_id
+  pages ||--o{ page_mentions : target_page_id
+  pages ||--o{ page_shares : page_id
+  profiles ||--o{ pages : user_id
+  pages ||--o{ pages : parent_goal_id
+  pages ||--o{ pages : parent_task_id
+</div></div>
+<script>
+ mermaid.initialize({startOnLoad:false});
+ (async()=>{
+   await mermaid.run({querySelector:'#graph'});
+   const svg=document.querySelector('#graph svg');
+   svg.removeAttribute('style'); svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+   svgPanZoom(svg,{controlIconsEnabled:true,fit:true,center:true,minZoom:0.05,maxZoom:60,zoomScaleSensitivity:0.4});
+   // best-effort: hover tooltip of table purpose on each entity title
+   try{
+     const PURP={"departments": "飞书组织部门同步镜像表", "filter_defaults": "各视图默认筛选/排序/分组(按用户+视图)", "note_read_status": "笔记已读状态,算共享笔记未读红点", "page_mentions": "页面相互提及,驱动反向链接(backlinks)", "page_shares": "笔记分享给协作者的记录表", "pages": "核心统一实体，承载页面/笔记/目标/任务/活动五态", "profiles": "用户档案：飞书身份映射 + 提醒/AI 偏好", "system_settings": "全局系统配置KV表,敏感值可加密", "view_configs": "视图配置(多排序);疑被 filter_defaults 取代,无活引用"};
+     svg.querySelectorAll('text').forEach(tx=>{
+       const t=(tx.textContent||'').trim();
+       if(PURP[t]){const ti=document.createElementNS('http://www.w3.org/2000/svg','title');
+         ti.textContent=t+' — '+PURP[t];(tx.parentNode||tx).appendChild(ti);}
+     });
+   }catch(e){}
+   document.getElementById('legend').addEventListener('click',e=>{e.currentTarget.style.display='none';});
+ })();
+</script></body></html>
