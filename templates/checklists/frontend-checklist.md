@@ -15,6 +15,8 @@
 - **事件监听配对**：`onMounted` 的 `addEventListener` 在 `onUnmounted` 对应 `removeEventListener`，监听函数具名（非匿名箭头）——`eslint-plugin-vue` 相关规则。
 - **Element Plus 模板禁忌**：未在 El Plus 组件 tag 上用 inline style 控宽；`el-dialog` `title` / `el-select` option `value` 非空字符串（模板 lint）。
 - **硬编码设计字面值**：颜色 / 间距 / 圆角 / 阴影 / 字号写字面值而非 `design.md` 定义的 SCSS 变量（变量已存在却写字面值属违反）——`stylelint` 禁字面值规则。**这是把"设计保真"里可机械的一半从人眼移到工具，直击跨迭代复发的硬编码偏离。**
+- **全局样式入口存在**（视觉地基包 PR 必核，后续前端 PR 默认已满足）：`main.ts` 引入了全局 reset + `variables.scss`，且无业务组件各写 `body`/全局样式——grep `main.ts` 引入语句 + grep 各 `.vue` 是否含 `body {`/`html {`。缺失 = body margin、视口外溢无人兜底。
+- **UI 库主题被覆盖**（同上，地基包 PR 必核）：存在 design 主色对 UI 库主题变量的覆盖声明（如 `--el-color-primary`），未沿用库默认主色——grep 主题覆盖文件/变量。缺失 = 全站主色仍是库默认。
 
 > **诚实前提（同 backend）**：上述靠**项目真配了对应 eslint/stylelint/vue-tsc 规则**才查得出（通用 lint 默认查不出"硬编码颜色 vs 变量"、事件监听配对、模板禁忌）。项目**未配该规则的项，落到下方「三、留人走查」**，不得当作已被 lint 兜住。
 

@@ -5,6 +5,20 @@
 
 ---
 
+## 〇、视觉冒烟锚点（机械断言，供 generate-integration-tests 实测比对）
+
+下列地基不变量在联调**完整档**由 pinchtab/JS **实测比对**（不符即 `[阻断]`）——把"靠人眼"的视觉地基从 manual-test 末端前移成自动校验。值随下方各系统填好后在此登记：
+
+| 锚点 | 实测方式 | 期望值（填写后登记） |
+|------|---------|---------------------|
+| 主色已覆盖 UI 库 | `getComputedStyle(document.documentElement).getPropertyValue('--el-color-primary')`（按本项目 UI 库主色变量名调整） | == 「一、色彩系统」`$primary` 色值 |
+| 目标视口无横向外溢 | 主要页面、目标视口宽下 `document.documentElement.scrollWidth - window.innerWidth <= 0` | ≤ 0 |
+| 关键容器尺寸 | 侧栏宽 / 顶栏高等的实测 `offsetWidth`/`offsetHeight` | == 「六、布局规范」对应 token |
+
+> 锚点只覆盖**少数确定可断言**的地基不变量（主色 / 外溢 / 关键容器），不追求逐像素；逐像素与字号字重观感仍由 manual-test 人工走查。
+
+---
+
 ## 一、色彩系统
 
 ### 主色

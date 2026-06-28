@@ -3,7 +3,8 @@
  * check-sprint.js · hact-method G3（plan-sprint 产物）完成判据 linter（子计划 3c）
  *
  * 用途：机械核对 G3 完成判据里**确定性可查**的部分——任务包字段完备 / reference 行号 /
- *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致。
+ *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致 /
+ *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）。
  *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 忠实性——内容真覆盖、非仅 id 在场）机器判不了，
  *      留签字人确认（🧑 段），脚本只把可机械的挡在签字前。
  *
@@ -295,6 +296,25 @@ function checkSprint(iteration, root) {
     if (qNotSt.length) fail('三方一致:status', 'status.yml', `queue 有但 status.yml tasks[] 无（source=sprint,${iteration}）：${qNotSt.join(', ')}`);
     if (stNotQ.length) fail('三方一致:status', 'status.yml', `status.yml 有但 queue 无：${stNotQ.join(', ')}`);
     if (!qNotSt.length && !stNotQ.length) pass('三方一致:status', `queue ↔ status.yml tasks[] 一致`);
+  }
+
+  // 6. 视觉地基包：v1 含前端必有标 `baseline: visual` 的地基包（plan-sprint Step 2）；
+  //    vN+1 的「design.md 变更触发」机器判不了 → 退人工。
+  const fePkgs = packages.filter(p => /frontend/.test(p.layersStr));
+  if (fePkgs.length) {
+    const basePkg = packages.find(p => /visual/.test(scalarText(p.fm['baseline'])));
+    if (!basePkg) {
+      if (iteration === 'v1')
+        fail('视觉地基包', queueDir, `v1 含 ${fePkgs.length} 个 frontend 任务但无标 baseline: visual 的视觉地基包（全局 reset + UI 库主题覆盖 + token 全局接线）—— plan-sprint Step 2 硬性必有`);
+      else
+        human('视觉地基包', `本期含 frontend 任务但无地基包 —— 若 design.md 较上期 G3 后有变更需追加「地基跟进包」（design.md 变更触发机器判不了，由签字人确认）`);
+    } else {
+      const notDep = fePkgs.filter(p => p.id !== basePkg.id && !p.deps.includes(basePkg.id));
+      if (notDep.length)
+        human('视觉地基依赖', `地基包 ${basePkg.id} 在场，但这些 frontend 任务未 depends_on 它：${notDep.map(p => p.id).join('、')} —— 确认是否应串在地基之后`);
+      else
+        pass('视觉地基包', `视觉地基包 ${basePkg.id} 在场，frontend 任务均依赖它`);
+    }
   }
 
   // 语义残量（留人签）

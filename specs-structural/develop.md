@@ -21,7 +21,7 @@
 
 ## 字段规范
 
-> **序列化锁定（子计划 3c）**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`。`check-sprint.js`（G3 linter）据此机械 parse——旧的「最小 frontmatter + `## markdown` 段」布局退役。下表 17 字段 + 条件 `api-contract` 是字段的**单一真相**。
+> **序列化锁定（子计划 3c）**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`。`check-sprint.js`（G3 linter）据此机械 parse——旧的「最小 frontmatter + `## markdown` 段」布局退役。下表 17 字段 + 条件 `api-contract` / `baseline` 是字段的**单一真相**。
 
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
@@ -43,6 +43,7 @@
 | `escalate-if` | string[] | ✅ | 触发上报的条件；必须包含"上下文不足以做实现决策" |
 | `depends_on` | string[] | ✅ | 本任务依赖的前置 task-id 列表，无依赖填 `[]`。两类来源：① 编译/接口依赖（下游引用上游新增的共享类型/接口，须等上游合并）② 共享资产消费（多任务共享同一表/枚举/共享类型时，指向 source-of-truth 任务）。**消费方无需另存**——由其他任务的 `depends_on` 反查得出（谁的 `depends_on` 含本 task-id，谁即消费方）。与 sprint.md「依赖」列、status.yml `depends_on` 三处一致 |
 | `api-contract` | object | 条件 | 仅 `layers=[backend]` 且该接口被前端消费时必填；由 plan-sprint 推导写入，develop 只读；见下方格式说明 |
+| `baseline` | enum | 条件 | 仅「视觉地基包」填 `visual`（普通包不写此行）；标记本包是全局 reset + UI 库主题覆盖 + token 全局接线的跨切面地基。由 plan-sprint 在 v1（或 design.md 变更迭代）拆出、`check-sprint.js` 据此核 v1 必有；其余 frontend 任务 `depends_on` 它。见 `specs-execution/plan-sprint.md` Step 2 |
 
 **api-contract 格式**：
 ```yaml

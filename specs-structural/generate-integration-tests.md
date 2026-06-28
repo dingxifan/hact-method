@@ -15,6 +15,7 @@
   - `iterations/vN/trd.md`（接口定义）
   - `iterations/vN/prd.md`（acceptance criteria，测试场景来源）
   - 项目根 `standards-shared.md`（测试环境约定段落）
+  - 项目根 `design.md`（完整档「〇、视觉冒烟锚点」段——视觉冒烟断言取数源）
 
 ---
 
@@ -49,6 +50,7 @@
 - [ ] 主流程无 `[阻断]` 失败（或已全部通过 develop(source=integration) 修复并复测）
 - [ ] `[不阻断]` 问题已记入 backlog，已分级
 - [ ] **（完整档）** 前端 pinchtab 场景已控制在 ≤15 条
+- [ ] **（涉视觉基线迭代·完整档必跑）** 视觉冒烟断言（主色覆盖 / 视口无外溢 / 关键容器尺寸）全部通过，或失败已走 develop 修复并复测通过
 
 ---
 

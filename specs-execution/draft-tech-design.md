@@ -1,4 +1,4 @@
-﻿# exec: draft-tech-design
+# exec: draft-tech-design
 
 > CC 加载本文时，当前任务是读 PRD 输出 TRD + 三份 standards，签 G2。
 > 三层顺序：**骨架**（架构轮廓）→ **结构层**（完整契约）→ **执行层**（standards）
@@ -29,15 +29,15 @@
 - `iterations/vN/prd.md`
 - `iterations/vN/ux-flows.md`（如存在；作为接口设计的业务流参照）
 - `iterations/vN/prototype.html`（如存在；作为接口设计时确认各画面数据需求的参照）
-- `project.md`（技术层已有决策）
-- `decisions.md`
-- `reusables.md`
+- 项目根 `project.md`（技术层已有决策）
+- 项目根 `decisions.md`
+- 项目根 `reusables.md`
 - `../hact-method-lab/templates/standards/backend.md`
 - `../hact-method-lab/templates/standards/frontend.md`
 
 **技术偏好确认**：
-- 首期项目：询问用户技术栈偏好，确认后写入 `project.md` 技术层，后续迭代直接复用
-- 迭代项目：从 `project.md` 技术层读取已有选型，不重新询问
+- 首期项目：询问用户技术栈偏好，确认后写入 项目根 `project.md` 技术层，后续迭代直接复用
+- 迭代项目：从 项目根 `project.md` 技术层读取已有选型，不重新询问
 
 **选项列表**（G1 已满足，确认要做什么）：
 
@@ -200,7 +200,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 ### Step 7：维护项目 Standards（首期播种 / 迭代增补）
 
-三份 `standards-{shared,frontend,backend}.md` 是**项目根的跨迭代活文档**（非迭代内产物，与 `decisions.md` / `reusables.md` / `design.md` 同级），单一真相源——首期播种、之后每期原地增补，并行迭代共享同一份保全库约定一致。TRD 确认后，启动 **2 个并行 subagent** 处理 frontend / backend；主线同时处理 shared。
+三份 `standards-{shared,frontend,backend}.md` 是**项目根的跨迭代活文档**（非迭代内产物，与 项目根 `decisions.md` / 项目根 `reusables.md` / 项目根 `design.md` 同级），单一真相源——首期播种、之后每期原地增补，并行迭代共享同一份保全库约定一致。TRD 确认后，启动 **2 个并行 subagent** 处理 frontend / backend；主线同时处理 shared。
 
 **Standards 来源规则**（双源：公共模板 + 执行人个人 notes）：
 - **首期播种**（项目根 `standards-*.md` 仍是 init 空桩）：从 `../hact-method-lab/templates/standards/{layer}.md` 挑选本期 TRD 相关项写入，不全量复制
@@ -208,8 +208,8 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 - **双源补充**：再取执行人个人 notes（`../hact-notes-{name}/notes.md`）中 `[规范]` 标签、与本 layer 相关的条目并入项目 standards——让本人已积累、尚未经 harvest-notes 上提的规范当期即生效
   - **去重**：并入前对照公共模板 + 项目根现有 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
   - notes 不存在 / 无 `[规范]` 条目 → 仅用公共模板 + 现有 standards
-  - 与现有 standards 同项但建议不同 → 保留现有版本，把不同建议记入 `feedback.md` 走分流，不当场覆盖
-  - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 `decisions.md` 说明冲突和理由
+  - 与现有 standards 同项但建议不同 → 保留现有版本，把不同建议记入 项目根 `feedback.md` 走分流，不当场覆盖
+  - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 项目根 `decisions.md` 说明冲突和理由
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
 - 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
@@ -218,9 +218,11 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 主线处理项目根 `standards-shared.md`（命名规范 / 错误码 / API 响应格式 / 权限模型），首期播种 / 迭代增补同上规则。
 
-**测试基建约定（不可视区测试的地基，不可省）**：`standards-backend.md` 必含「测试框架约定」一节——测试框架选型 + `npm run test`（或等价）命令 + 测试文件位置约定。这是 develop 把不可视区 AC（Given/When/Then 例子）落成可运行测试的前提（核心抓手 A）；没有它，develop 的 `npm run test` 步无处落地。
-- 首期项目：在此确立框架，写入 standards-backend 与 `project.md` 技术层。
+**测试基建约定（不可视区测试的地基，不可省）**：项目根 `standards-backend.md` 必含「测试框架约定」一节——测试框架选型 + `npm run test`（或等价）命令 + 测试文件位置约定。这是 develop 把不可视区 AC（Given/When/Then 例子）落成可运行测试的前提（核心抓手 A）；没有它，develop 的 `npm run test` 步无处落地。
+- 首期项目：在此确立框架，写入 standards-backend 与 项目根 `project.md` 技术层。
 - 存量项目首次迁移到本规范：若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop.md` 阶段 A 测试基建缺失处理）。
+
+**视觉地基约定（可视区地基，含前端时不可省）**：项目根 `standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种时取全）——① stylelint 禁硬编码字面值规则（颜色/间距/字号）② UI 库主题覆盖约定（设计主色映射进 `--el-color-primary` 等库变量、禁库默认主色）③ 单一全局样式入口（`main.ts` 引 reset + variables）。这是 plan-sprint 拆「视觉地基包」、frontend-checklist 段一机械核、generate-integration-tests 视觉冒烟断言三处的共同 owner；缺它则 token 定义了无人接线（v8 主色全错根因）。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
 
 三份汇总后检查：无重复条目 / 无相互矛盾 / 覆盖 TRD 提到的所有关键约束。
 
@@ -235,11 +237,11 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 ### Step 8：知识沉淀
 
-更新 `decisions.md`，追加本期关键架构决策（格式：决策 / 原因 / 日期）。
+更新 项目根 `decisions.md`，追加本期关键架构决策（格式：决策 / 原因 / 日期）。
 
-> **边界**：技术选型有重大变更（替换已有依赖）→ 写入 `decisions.md` 并说明原因，不静默替换。
+> **边界**：技术选型有重大变更（替换已有依赖）→ 写入 项目根 `decisions.md` 并说明原因，不静默替换。
 
-更新 `project.md` 技术层（技术选型 / 数据库结构 / 模块划分）。
+更新 项目根 `project.md` 技术层（技术选型 / 数据库结构 / 模块划分）。
 
 ---
 
@@ -264,8 +266,8 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 执行 `git add iterations/vN/trd.md standards-shared.md standards-frontend.md standards-backend.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD + standards 完成，G2 签署 [{项目名}]" && git push`（standards 在项目根，非 iterations/vN/）
 
 **feedback 检查**（签 G2 后）：
-- 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
-- standards 生成后发现与 TRD 有明显脱节（需要大量人工修正）→ 写入 `feedback.md`
+- 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 项目根 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
+- standards 生成后发现与 TRD 有明显脱节（需要大量人工修正）→ 写入 项目根 `feedback.md`
 - 无发现 → 跳过
 
 移交：「TRD 完成，下一步 `plan-sprint`。」

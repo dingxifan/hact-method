@@ -10,6 +10,9 @@
 - 禁止硬编码颜色值（如 `color: #333`），统一使用 SCSS 变量
 - 禁止硬编码间距（如 `margin: 20px`），统一使用间距变量（8px 网格）
 - 项目启动时在 `src/styles/variables.scss` 中定义色彩和间距变量，后续所有样式引用变量
+- **全局样式入口（单一）**：必须有单一全局样式入口（`main.ts` 引入 `reset` + `variables.scss`），`html`/`body`/`*` reset 等地基样式只在此处声明；禁止各组件各写 `body`/全局样式（否则 body margin、视口外溢这类地基活无人兜底、十几处各写一份）
+- **UI 库主题覆盖**：用 Element Plus / Ant Design 等 UI 库时，必须用 design.md token 覆盖其主题变量（如把设计主色映射进 `--el-color-primary`），**禁用库默认主色/默认主题**；覆盖集中在全局入口或单一主题文件。「定义了 token 但没覆盖库主题」= 全站主色仍是库默认（v8 主色全错的直接根因）
+- 以上「全局入口 + 主题覆盖 + token 接线」是**视觉地基包**的内容，由 plan-sprint 在 v1 拆为前端首包统一落地（见 plan-sprint Step 2）
 
 ### 间距（8px 网格，不得自造数值）
 

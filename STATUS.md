@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发 hact-app**（进行中）
-- 上次更新：2026-06-20
+- 上次更新：2026-06-28
 
 ## 各阶段完成情况
 
@@ -53,6 +53,20 @@
 | exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 13/13 全部完成，已通过评审和一致性检查 |
 
 ## 历史里程碑
+
+### 2026-06-28 视觉地基三件套 — 并入 2026-06-22 前端一致性框架，补「跨切面地基」结构盲区
+
+> 触发：hact-app v8 开发包全 [merged] + 绿测试 + 联调 35 全绿，人工验收一打开即 15 条系统性视觉偏离（主色全错 EP 默认 #409eff vs 设计 #3370ff / 16px 视口外溢 / 侧栏宽 180 vs 208 / 脚栏带整块没做）。根因四缺口 R1（token 定义没接线）/R2（无全局基线层）/R3（跨组件地基活无人认领）/R4（像素无机械门禁）。本地 `method-lab`，**未 push**。
+
+- **定性**：v8 与 parked 的 2026-06-22 前端一致性框架（待议 #17）**同根**。R1/R4 框架已识别；**真新增量 = R2/R3**——旧框架是「逐组件复用 + 逐规则 lint」视角，假设每个违规挂在某业务包里，但 EP 主题覆盖 / 全局 reset / body margin 这类**跨切面公共件不属于任何业务页**，plan-sprint 按页/组件切包天然漏掉（reusables 与 lint 两道防线之间的结构缝）。**「视觉地基包」是这次最有价值的产出**。
+- **两处类别纠正**（用户原稿）：① token 落地**不能写进 check-sprint/check-gate**——这俩 linter 核 markdown 产物、**G3 时还没代码**；裸 hex grep / 主题覆盖 / 全局入口是**代码级**，必须落 develop 的 stylelint+lint 层。② 具体 stylelint 规则是**技术栈层**（哪个 UI 库/哪些路径），由 draft-tech-design 在项目仓播种，**不在 hact-method 建通用 check-visual-tokens.js**。
+- **三件落地**（用户拍板口径：地基包 v1 硬性必有 + design.md 变更触发 / 视觉冒烟涉基线迭代必跑 / 本轮只落三件不碰组件复用）：
+  - **① 视觉地基包**：plan-sprint Step 2 骨架规则（v1 含前端则地基包为前端首包、其余 frontend `depends_on` 它，内容 = 全局 reset + UI 库主题覆盖 + token 全局接线，标 `baseline: visual`；vN+1 design.md 变更触发地基跟进包）+ Step 3.5 brief 第⑤维度「视觉地基完备性」+ `check-sprint.js` 硬核（v1 含前端无 `baseline:visual` 包 → FAIL；vN+1 退 human）+ task-package 模板标记说明。
+  - **② token 落地门禁**：`standards/frontend.md` 补两条强制（单一全局样式入口 + UI 库主题覆盖、禁库默认主色）+ `frontend-checklist.md` 段一加两机械项（全局入口存在 / 主题被覆盖，地基包 PR 必核）+ `draft-tech-design.md` Step 7 加「视觉地基约定」owner 块（与「测试基建约定」并列）。
+  - **③④ 视觉冒烟断言**：`generate-integration-tests.md` 完整档涉视觉基线迭代**必跑**（不再问）+ 固化 3 条机械断言（实测 `--el-color-primary`==设计主色 / `scrollWidth-innerWidth<=0` / 关键容器尺寸==token），取数源 = `design.md` 新增「〇、视觉冒烟锚点」段（④并入③，不单列）。
+- **拒绝的 over-engineering**（防膨胀）：像素快照/visual regression CI、design-tokens.json 导出工具链、per-task `visual-tokens-required` 字段、check-gate 加视觉核、通用 check-visual-tokens.js。理由记 `_meta/plans/2026-06-28-visual-baseline-package/findings.md §五`。
+- **诚实账**：①是 ADD（核心增量，旧框架缺的格）；②是把 parked #17 想清的事落地 + 类别纠正（落对层）；③是复用既有 pinchtab 的小 ADD。`check-sprint.js` 已 `node --check` 过。
+- **改动文件**（17 处）：specs-execution（plan-sprint / draft-tech-design / generate-integration-tests）+ specs-structural（plan-sprint / generate-integration-tests）+ templates（queue/task-package / review-briefs/task-package-review / scripts/check-sprint.js / standards/frontend / checklists/frontend-checklist / design）+ 收口（待议 #17 / 2026-06-22 findings / 本 STATUS）。**未 push**（master/推送严格，待用户明确）。
 
 ### 2026-06-20 develop 站「展开」四连改 — 单/批量合一 → 会话定标 → 执行模型翻转（独立审查 loop）→ 砍除 pr-review（merge-on-push）
 

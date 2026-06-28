@@ -45,7 +45,8 @@
 - [ ] **【linter】** 所有任务包 17 字段完整，无空字段（`check-sprint.js` 字段完备）；`layers=[backend]` 且有前端消费的任务包 `api-contract` 已填写（presence 由 linter 验，字段结构正确性经用户确认）
 - [ ] **【linter】** 字段保真自检通过：`reference` 每条含行号（拒"全文"/无范围）；前端任务 reference 含 ux-flows 行号条目；后端任务 reference 含 TRD 行号条目
 - [ ] **【linter】** AC 正向回链 + 逐条反向覆盖：每条任务包 AC 带 `(源：PRD AC-nn)` 或 `(技术)` tag、回链 id 在 PRD 存在，且 PRD 每条 AC（AC-nn）被某任务包 AC 引用（逐条覆盖机械核；逐条**忠实性**仍留 Step 3.5 独审 + 签字人）
-- [ ] 任务包独立对抗审查通过（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖 四类无 [阻断]，或阻断已修复 / 已转 revise-doc）
+- [ ] 任务包独立对抗审查通过（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖 / 视觉地基完备性 五类无 [阻断]，或阻断已修复 / 已转 revise-doc）
+- [ ] **【linter】** 视觉地基包（本期含 frontend 任务时）：v1 必有标 `baseline: visual` 的视觉地基包（`check-sprint.js` 硬核 FAIL）；vN+1 的 design.md 变更触发地基跟进包由 Step 3.5 独审 + 签字人确认（机器退人工）
 - [ ] **【linter】** 依赖关系已标注（任务包 `depends_on` 在册，无依赖填 `[]`）
 - [ ] 每个任务的 `交付` 列已填（`串行` 或 `可并行`），判断理由已向用户说明并确认
 - [ ] **【linter】** sprint.md 已写，queue↔sprint.md↔status.yml 三方一致（`check-sprint.js` 三方一致）

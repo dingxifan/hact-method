@@ -1,7 +1,7 @@
 # exec: generate-integration-tests
 
-> CC 加载本文时，当前任务是在所有 sprint develop 任务合并后，先跑后端 smoke test；smoke test 有结论后，由用户决定是否加跑前端 pinchtab。
-> 两档制：**轻量档（默认）** = 后端 curl smoke test → **完整档（按需）** = 轻量档 + 前端 pinchtab
+> CC 加载本文时，当前任务是在所有 sprint develop 任务合并后，先跑后端 smoke test；smoke test 有结论后，决定是否加跑前端 pinchtab（非视觉基线迭代由用户决定；**涉视觉基线迭代完整档必跑**）。
+> 两档制：**轻量档（默认）** = 后端 curl smoke test → **完整档** = 轻量档 + 前端 pinchtab + 视觉冒烟断言（**涉视觉基线迭代必跑**；纯后端/无视觉基线变更迭代按需）
 
 **上下文密度**：轻量档低。只需读 TRD 接口设计段 + PRD AC；完整档按需追加 ux-flows.md + prototype.html。
 
@@ -49,23 +49,6 @@
 
 ```
 ✅ 测试环境核对完成：后端 {地址}，数据库为测试库。
-→ 下一步：处理 CR [建议]
-继续？
-```
-
----
-
-### Step 1.5：处理 CR [建议] 清单
-
-读 `backlog.md`，找出所有标记 `[CR-建议]` 的条目：
-
-- **无条目** → 跳过此步
-- **有条目** → 逐条判断：
-  - 改动 ≤5 行且原因显而易见 → 直接修复，commit，标记 `[x]`
-  - 较复杂或影响范围不确定 → 评估规模：≤3 文件且改动独立 → 建议走 B 类快速通道；否则移除 `[CR-建议]` 标记，改为普通 backlog 条目
-
-```
-✅ CR [建议] 处理完成：直接修复 {N} 条，降级为普通 backlog {M} 条。
 → 下一步：生成后端脚本
 继续？
 ```
@@ -134,24 +117,29 @@ git branch -d fix/it-{desc}
 
 ### Step 4.5：完整档决策
 
-后端测试全部有结论后，输出：
+后端测试全部有结论后，判定档位：
+
+- **涉视觉基线迭代**（本期含 frontend 任务且 `design.md` 定义了视觉基线）→ **完整档必跑**，不询问，直接进入下方完整档步骤。视觉冒烟断言是「唯一捕捉网从 manual-test 末端前移」的关键，不可跳过。
+- **非视觉基线迭代**（纯后端，或前端本期无视觉基线变更）→ 输出下方询问，按需：
 
 ```
 后端 smoke test 结果：{N} 条通过，{M} 条已修复，{K} 条记入 backlog。
 是否继续跑前端 pinchtab 场景？（输入「是」继续，或直接进入 manual-test）
 ```
 
-🚫 等用户回应
+🚫 等用户回应（仅非视觉基线迭代）；选「否」/ 进入 manual-test → 跳转 Step 5（收尾）
 
-**用户选「否」/ 进入 manual-test** → 跳转 Step 5（收尾）
-
-**用户选「是」（完整档）** → 继续以下步骤：
+**完整档步骤**（必跑迭代或用户选「是」）：
 
 1. 确认前端页面可打开
 2. 派 Explore subagent 读 ux-flows.md + prototype.html（若存在），生成前端场景（上限 15 条，优先主流程 + 跨模块集成点）：调用 `Skill(pinchtab)` 生成脚本，保存到 `integration-tests/frontend/v{N}-run-all.sh`；prototype.html 存在时软核对场景覆盖是否齐全（不设硬闸口，超 15 条按上限降级 backlog）
 3. 更新脚本索引，追加前端部分；commit + push
 4. 按模块并行派 subagent 执行 pinchtab 场景，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`
-5. 处理前端失败（同 Step 4 逻辑）
+5. **视觉冒烟断言**（涉视觉基线迭代必做，≤3 条固定、不计入 15 条上限）：在关键页面加载后用 pinchtab/JS 实测以下确定值，取数源 = `design.md`「〇、视觉冒烟锚点」段，不符即 `[阻断]`：
+   - **主色覆盖**：`getComputedStyle(document.documentElement).getPropertyValue('--el-color-primary').trim()`（按本项目 UI 库主色变量名调整）== design.md 主色 token —— 抓「token 定义了没覆盖库主题」
+   - **视口无外溢**：目标视口宽下 `document.documentElement.scrollWidth - window.innerWidth <= 0` —— 抓「视口外溢」
+   - **关键容器尺寸**：侧栏宽 / 顶栏高等的实测 `offsetWidth`/`offsetHeight` == design.md 布局 token —— 抓「侧栏宽错」
+6. 处理前端失败（同 Step 4 逻辑）；视觉冒烟断言失败按 `[阻断]` 走 develop 修复，根因常在视觉地基包（主题未覆盖 / 全局 reset 缺失）
 
 ---
 
@@ -171,7 +159,7 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的�
 - [ ] 主流程无 `[阻断]` 失败（已修复且复测通过）
 - [ ] `[不阻断]` 问题已记入 backlog 且已分级
 
-**若运行了完整档**，额外确认：前端 pinchtab 场景已控制在 ≤15 条
+**若运行了完整档**，额外确认：前端 pinchtab 场景已控制在 ≤15 条；**涉视觉基线迭代**的视觉冒烟断言（主色 / 视口外溢 / 关键容器）全部通过或失败已走 develop 修复并复测通过
 
 三条件全满足：
 ```
@@ -185,7 +173,7 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的�
 
 ### Step 7：feedback 检查
 
-- 多个 `[阻断]` 根因相同 → 写入 `feedback.md`（`{日期} | {发现} | 建议更新到 {standards/trd 哪节}`）
+- 多个 `[阻断]` 根因相同 → 写入 项目根 `feedback.md`（`{日期} | {发现} | 建议更新到 {standards/trd 哪节}`）
 - 完整档 pinchtab 无法覆盖的场景比预期多 → 记录，供下期调整策略（如改用直接导航替代 UI 点击链）
 - 无发现 → 跳过
 

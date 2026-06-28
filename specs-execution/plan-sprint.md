@@ -1,4 +1,4 @@
-﻿# exec: plan-sprint
+# exec: plan-sprint
 
 > 任务：读 TRD 拆 develop 任务，写任务包入 queue，输出 sprint.md，签 G3。三层：**骨架**（任务清单对齐）→ **结构层**（完整任务包）→ **收尾**（sprint.md + G3）。
 > 任务包套结构化模板 `../hact-method-lab/templates/queue/task-package.md`——**模板已带 17 字段格式、AC 回链 tag、例子写法、reference 行号规则；本文只讲过程与判断，不重抄格式**。`check-sprint.js` 据模板 parse。
@@ -18,9 +18,9 @@
 **必读文件**（Explore subagent 并行读）：
 - `iterations/vN/prd.md`（AC 来源——任务包 AC 须回链至此，G2 后开发链中段唯一回看 PRD 的窗口）
 - `iterations/vN/trd.md`
-- 项目根 `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`
-- `reusables.md`（避免任务包重复指派已有实现）
-- `decisions.md`
+- 项目根 `standards-shared.md` / 项目根 `standards-frontend.md` / 项目根 `standards-backend.md`
+- 项目根 `reusables.md`（避免任务包重复指派已有实现）
+- 项目根 `decisions.md`
 - `iterations/vN/ux-flows.md`（若存在，供前端任务包 `reference`）
 
 **选项列表**（G2 已满足，确认要做什么）：
@@ -71,7 +71,12 @@
 任务 ID：`{项目缩写}-v{N}-{三位序号}`，如 `auth-v1-001`。
 某 TRD 模块耦合过深、拆不成独立 develop 任务 → 先写一个大任务包，在其 `known-risks` 标耦合点，不强拆。
 
-🚫 等用户确认拆分合理性（粒度 / 依赖 / 遗漏 / 交付方式）
+**视觉地基包规则**（本迭代含 frontend 任务时）：EP 主题覆盖 / 全局 reset / body margin / token 全局接线这类**跨切面公共件不属于任何业务页**，按页/组件切包会天然漏掉——必须显式拆一个「视觉地基包」兜底：
+- **v1（硬性必有）**：v1 含前端任务则地基包为前端**首包**（建议 001），其余 frontend 任务 `depends_on` 它。内容 = 全局 reset + UI 库主题覆盖（把设计主色等 token 映射进 `--el-color-primary` 等库变量，禁用库默认主色）+ design.md token 全局接线（`variables.scss` + `main.ts`/`App.vue` 单一全局样式入口）。任务包加 `baseline: visual` 标记（check-sprint 据此核 v1 必有）。
+- **vN+1（design.md 变更触发）**：`design.md` 较上期有变更（新增/改色阶/改布局 token）→ 追加「地基跟进包」覆盖变更点（同样标 `baseline: visual`）；`git log --oneline -- design.md` 比对上期 G3 后是否动过。
+- 地基已建成且 design.md 无变更 → 无需地基包。
+
+🚫 等用户确认拆分合理性（粒度 / 依赖 / 遗漏 / 交付方式 / **地基包是否齐备**）
 
 ---
 
@@ -135,14 +140,14 @@
 ### Step 3.5：任务包独立对抗审查
 
 **派发**：派一个全新 subagent，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读** prd.md / trd.md / standards / queue（隔离上下文，不传写包叙事与拆分理由）。任务包 >4 个**按包分批**派，利于 loop 收敛。
-> brief 查四类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
+> brief 查五类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖 / 视觉地基完备性**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
 
 **【loop 逻辑】**（主线拿到 subagent findings 后的处置）
 
 | sub-agent 输出 | 动作 |
 |---|---|
 | `findings: []` | 退出，进入 Step 4 |
-| 只有 `[建议]` | 记入 `feedback.md`（供 wrap-up 分流）；退出，进入 Step 4 |
+| 只有 `[建议]` | 记入 项目根 `feedback.md`（供 wrap-up 分流）；退出，进入 Step 4 |
 | 有 `[阻断]` | 主线修对应任务包（改 AC 回链 / 补漏覆盖的 PRD AC / 修 api-contract），重审 |
 | 同一 `[阻断]` 修 3 次仍出现 | 停止 loop，上报用户；判断根因——若在 TRD（漂移点①：TRD 丢了 AC）则创建 `revise-doc(target=trd)`，不在本会话硬改 |
 
@@ -199,7 +204,7 @@
 
 `git add iterations/vN/queue/ iterations/vN/sprint.md iterations/vN/gates.md status.yml && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
 
-**feedback 检查（签 G3 后）**：疑点超 3 条且根因集中（如 TRD 某类接口描述普遍不完整）/ 拆分中发现 TRD 多处遗漏需反复修订 → 写 `feedback.md`（`{日期} | {发现} | {建议}`）；无则跳过。
+**feedback 检查（签 G3 后）**：疑点超 3 条且根因集中（如 TRD 某类接口描述普遍不完整）/ 拆分中发现 TRD 多处遗漏需反复修订 → 写 项目根 `feedback.md`（`{日期} | {发现} | {建议}`）；无则跳过。
 
 移交：「Sprint 已规划，开发者可从 queue 拾取任务，下一步 `develop`。」
 
