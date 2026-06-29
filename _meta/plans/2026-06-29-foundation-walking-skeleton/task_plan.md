@@ -93,4 +93,16 @@ V1（及之后）
 - 阶段 4：✅ 完成（1376ee4 之后，**未 commit**）— **不拆 develop**（评估：foundation build 与 develop 共享核心、只差进料口 = sub7 撤回的格；draft-foundation 是身子不相交才拆——相反格）。落地：① develop exec 加「source=foundation 进料块」（G2 预检 + 全栈 + 建造单元=foundation-design.md + 单分支 foundation-v0 + 跳前端设计门 + 三处替换：阶段A自读地基件 / 阶段B用 foundation-review / 末端v0状态+登记标杆进 reusables）+ 第零步/阶段B/移交/Subagent 表 4 处小注 ② 新建 `templates/review-briefs/foundation-review.md`（逐关注点穷举验实际档≥应有档、安全项主动找反例验构造级、命门必问 C、标杆质量、走骨架完整且薄）③ develop structural 补 source 枚举/前置/判据/输入。**B（标杆登记 reusables）在 develop 移交；C（命门）在 foundation-review。**
 - 阶段 5：✅ 完成（ebe7328 之后，**未 commit**）— ① plan-sprint 视觉地基包**框架/值二分**：走过 V0 的新项目 v1 地基包缩成"把 design.md 真值填进 V0 已建的 variables.scss 框架"，存量项目建全套兜底；check-sprint 的 baseline:visual 标记规则不动（核标记不核内容）② draft-prd 加载上下文加读 `foundation.md` 领域地图（功能挂核心实体、不另起领域）③ **draft-ux 不改**（它填 design.md 规格、V0 建 variables.scss 框架，两个产物；真值接线归 plan-sprint v1 地基包）。
 - 阶段 6（骨架+status 同步，**未 commit**）：✅ skeleton/04（catalog 12→13 + draft-foundation 节 + source/develop 条目加 foundation）/06（G2 内涵+聚合标注 V0）/07（type 12→13、discipline 9→8、source 枚举、状态流转加 V0 两行）/README（12→13）/ templates/status.yml（v0 块示例 + source 枚举 + 计数）。grep 验：task-package.md 正确不含 foundation（走骨架无任务包）、skeleton/05 单任务生命周期无需改。**顺手修了 #24 遗留的 discipline 9→8 陈旧计数。**
-- 剩：**BRIEF 决策#25** + **STATUS 里程碑**（决策记录，本质阶段 6 但与骨架同步分开）+ **阶段 7** 收编 parked blueprint-layer + 最终通读。
+- BRIEF#25 + STATUS 里程碑：✅ 完成（**未 commit**）。
+- 阶段 7：✅ 完成（**未 commit**）— blueprint-layer 讨论小结加「收编标注」（领域涌现半边=其精简落地、ERP 重型蓝图仍 parked、层级判断完全继承）；全链路 grep 通读（16 文件一致铺开、无断链）。
+- **重构闭环。本地 method-lab 6 commit（阶段2-6）+ 本批（BRIEF/STATUS/收编/计划）未推。push 待人类明确。**
+
+## 完成总览（2026-06-29 闭环）
+| 阶段 | 内容 | commit |
+|---|---|---|
+| 2 | init-project 共识步 + foundation.md 蓝图 | ce7e639 |
+| 3 | draft-foundation 新建 + tech-design 瘦身 + 路由 | 1376ee4 |
+| 4 | develop 接 source=foundation + foundation-review | ebe7328 |
+| 5 | plan-sprint 视觉地基包二分 + draft-prd 接 foundation | d70de1d |
+| 6 | 骨架(04/06/07/README)+status.yml 同步 | 8ad216f |
+| 记录 | BRIEF#25 + STATUS 里程碑 + blueprint 收编 | 待 commit |
