@@ -66,9 +66,19 @@ git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{userna
 
 **Step 1：读取项目当前状态，推断当前任务类型**
 1. 读取 `project.md` 了解当前产品与技术状态
-2. 读取最新迭代目录下的 `gates.md` 确认 Gate 签署状态
+2. 读取相关迭代的 `gates.md` 确认 Gate 签署状态（**V0 期读 `iterations/v0/gates.md`**，见第 4 步「先判 V0」；否则读最新 `vN`——`iterations/v0/` 存在且 V0 未完成时，不要被 init 预建的空 `v1/` 目录误导）
 3. 读取 `iterations/vN/sprint.md`，从**状态列**和 **PR 列**得出各任务进度（一次读取即可得全貌，无需逐个读 queue 文件）
 4. 按下表推断当前任务类型并**明确声明**：
+
+**先判 V0 走骨架**（`iterations/v0/` 存在时 V0 优先于下面 V1+ 表；不存在 = 跳过了 V0 或 V0 已完成，直接看 V1+ 表）：
+
+| `iterations/v0/` 状态 | 推断任务类型 |
+|---|---|
+| `v0/gates.md` G2 未签 | `draft-foundation` — V0 地基设计未完成，续做 |
+| G2 已签，`status.yml` 中 `foundation` task 缺失或未 `[merged]` | `develop`(source=foundation) — 建走骨架（拾取见 develop 会话启动「source=foundation 进料」块）|
+| G2 已签，`foundation` task `[merged]` | **V0 完成**（机器信号）→ 落到下面 V1+ 表（通常进 `draft-prd-vN`）|
+
+**V1+ 推断表**：
 
 | sprint.md 状态分布 | PR 列 | Gate 状态 | 推断任务类型 |
 |-------------------|-------|-----------|-------------|

@@ -69,7 +69,7 @@ echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，看板应用取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
 **特殊桩（不走 templates/）**：
-- 项目根 `standards-shared.md` / 项目根 `standards-frontend.md` / 项目根 `standards-backend.md`：**项目根跨迭代活文档**，建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 7 填入、之后每期原地增补
+- 项目根 `standards-shared.md` / 项目根 `standards-frontend.md` / 项目根 `standards-backend.md`：**项目根跨迭代活文档**，建空桩（一行标题 + 「待 V0 draft-foundation 播种」注），内容由 **V0 `draft-foundation`** 首期播种（存量未走 V0 则首期 `draft-tech-design` 兜底）、之后每期原地增补
 
 同时写入以下文件：
 - `CLAUDE.md`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
@@ -312,7 +312,15 @@ curl -s "{看板应用-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
 
 > **尺寸纪律**：中小型项目这步是一场短讨论 + 半页 foundation.md，别滚成分析瘫痪。完成判据 = "地基播了种、各方认了"，不是"全貌全想透"；含糊项留空，等开发中 escape 提拔。
 
-**6.4 提交：**
+**6.4 决定要不要走 V0 走骨架**（A 类项目）：默认**走**——把跨切面地基（瓶颈管道 / 作用域 repo / 外壳 / 主题框架）在 V1 之前一次性建对。**微型项目可声明跳过**（如几页的小工具，多一整轮设计+build 不划算，与 `draft-ux: 需要/不需要` 对称）：
+- **走 V0**（默认）→ `draft-foundation` 建 `iterations/v0/`，走 V0 流程。
+- **跳过 V0** → **不建 `iterations/v0/`**，直接进 V1；地基代码在 V1 内随功能组织、standards 等首期簇由 `draft-tech-design` 兜底（**等同存量路径**）。**代价**：放弃 V0「强制边在 build 前焊死」的保证，靠 plan-sprint 视觉地基包 + develop 兜——仅微型 / 低风险项目适用。
+
+> `iterations/v0/` 是否存在 = V0 路径的机器信号（跨会话推断据此判，见项目仓 `CLAUDE.md` Step 1）；跳过则该目录不存在、推断自然落到 V1。
+
+🚫 等用户拍板走 / 跳
+
+**6.5 提交：**
 ```bash
 cd "E:/Group-code-lab/{name}"
 git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git push
@@ -336,7 +344,10 @@ git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git pus
 - 远端：{gitee-url}
 - 地基蓝图：foundation.md（已播种）
 - 看板应用：project_id={project_id}（或"待手动完成"）
-→ 下一步：进入 V0 走骨架 — 地基设计（`draft-tech-design` 的 V0 模式，依 foundation.md 选具体形式、定栈），G2 签后由 develop(source=foundation) 建骨架；V0 骨架端到端跑通后才进 V1 `draft-prd-vN`。B 类需求直接用 dispatch-new。
+→ 下一步（按 Step 6.4 的 V0 决定）：
+- **走 V0**：`draft-foundation`（V0 地基设计，依 foundation.md 选形式、定栈）→ 签 G2(v0) → `develop(source=foundation)` 建骨架 → V0 端到端跑通后进 V1 `draft-prd-vN`。
+- **跳过 V0**（微型项目）：直接 V1 `draft-prd-vN`（地基随功能在 V1 内建，存量兜底路径）。
+- B 类需求：直接用 `dispatch-new`。
 ```
 
 ---

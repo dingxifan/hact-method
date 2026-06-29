@@ -36,7 +36,7 @@
 
 **[v2+] 建本期目录**：version=vN（N≥2）时，若 `iterations/vN/` 不存在 → 告知「即将开始 v{N}，创建 iterations/v{N}/queue/done」→ 🚫 等确认 → `mkdir -p "iterations/v{N}/queue/done"`。已存在则跳过（断点续场景）。首期 v1 由 init-project 预建。
 
-**加载上下文**：首期读 `_meta/input/background.md`（如有）+ 项目根 `foundation.md`（**地基蓝图·领域地图**——核心实体 / 主数据 / 贯穿全局作用域；本期功能挂其核心实体、不另起领域，与 V0 已立的地基一致）；迭代读 项目根 `project.md`（已有现状 + 已排除功能）。
+**加载上下文**：首期读 `_meta/input/background.md`（如有）+ 项目根 `foundation.md`（**地基蓝图·领域地图**——核心实体 / 主数据 / 贯穿全局作用域；本期功能挂其核心实体、不另起领域，与 V0 已立的地基一致；**不存在则跳过**——存量项目或声明跳过 V0 的项目无此文件）；迭代读 项目根 `project.md`（已有现状 + 已排除功能）。
 
 开场：「本次完成 v{N} PRD，分三层：对齐方向骨架 → 逐功能写契约 → 清零开放问题签 G1。」确认版本号后开始。
 

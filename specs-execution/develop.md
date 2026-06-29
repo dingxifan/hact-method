@@ -36,12 +36,13 @@
 **source=foundation 进料（V0 走骨架特例）**
 
 `source=foundation` 时会话启动改走本块——**不走** sprint 拾取/认领/批次分支/前端设计门；**主循环 + 末端照常**，仅三处替换：
+- **判定 foundation 模式**（无任务包、无 source 字段可读）：由项目状态判——`iterations/v0/gates.md` G2 已签 **且** `status.yml` 无 `[merged]` 的 `foundation` task（即项目仓 `CLAUDE.md` Step 1「先判 V0」推断出的本模式），或用户明示走骨架。
 - **全栈、不问执行层**：走骨架横跨前后端，跳过「第零步」。
 - **建造单元 = `iterations/v0/foundation-design.md`**：对象 = 其「地基件清单」逐件 + 「标杆穿透切片」。地基件互锁（管道/作用域 repo/外壳/主题/信封彼此依赖）→ **串行建在单条 `foundation-v0` 分支、共一个 PR**：
   ```bash
   git checkout -b foundation-v0   # 从 master 切
   ```
-  status.yml：建 `iterations.v0` 块 + `tasks` 追加 `{ id: foundation, source: foundation, status: taken-by, branch: foundation-v0 }`。
+  status.yml：`iterations.v0` 块已由 draft-foundation 建（仅 G2）；此处只往 `tasks` **追加** `{ id: foundation, source: foundation, status: taken-by, branch: foundation-v0 }`（不重建 v0 块）。
 - **跳过前端设计门**：走骨架建主题**框架**用占位 token（design.md 真值由 V1 `draft-ux` 填），不实现具体画面 → 无 design.md 覆盖可对、无前端设计人工门。
 - **三处替换**（其余主循环 / 末端不变）：
   ① 阶段 A 执行 subagent **自读 `foundation-design.md` 对应件 + `foundation.md` 该关注点行 + relevant standards**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。

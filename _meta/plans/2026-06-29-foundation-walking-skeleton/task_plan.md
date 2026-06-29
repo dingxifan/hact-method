@@ -97,6 +97,15 @@ V1（及之后）
 - 阶段 7：✅ 完成（**未 commit**）— blueprint-layer 讨论小结加「收编标注」（领域涌现半边=其精简落地、ERP 重型蓝图仍 parked、层级判断完全继承）；全链路 grep 通读（16 文件一致铺开、无断链）。
 - **重构闭环。本地 method-lab 6 commit（阶段2-6）+ 本批（BRIEF/STATUS/收编/计划）未推。push 待人类明确。**
 
+## 阶段 8 · 独审整改（2026-06-29，**未 commit**）
+
+独立审查员（重开窗口）出 9 finding，全部核实属实并修（无反驳；F1/F5 是真漏——B→A 翻案未回扫；re-grep 发现残留比审查点的更广）：
+- **簇 A（B→A 残留，阻断）**：扫净 6 处（审查点 3 + re-grep 多查 3）——init exec Step7 移交 / structural 接口 / standards 桩注 ×2 / foundation.md:5 + :40。全部 draft-tech-design(V0模式) → draft-foundation。
+- **簇 B（V0 生命周期，阻断 F2 + F3/F4）**：CLAUDE.md Step 1 加「先判 V0」优先块（v0/gates G2 + foundation task 状态推断 draft-foundation / develop(source=foundation) / V0完成进V1）+ item2 防 init 预建空 v1 误导；develop 加 foundation 模式判定（无任务包时由项目状态判）+ 「V0 完成」机器信号=foundation task [merged]。
+- **簇 C（小修）**：F6 develop「建 v0 块」→「追加 task」（draft-foundation 已建）；F7 BRIEF #17 加 v0 无 PRD 迭代例外注；F8 draft-prd foundation.md「不存在则跳过」。
+- **簇 D（F9 跳过档）**：init Step 6.4 加「走/跳 V0」决定（默认走、微型项目可跳，与 draft-ux 对称）；跳过=不建 iterations/v0/、路由到 draft-tech-design 存量兜底；Step7 移交按决定分支。`iterations/v0/` 存在与否 = V0 路径机器信号。
+- 7 文件：BRIEF / develop / draft-prd / init exec+structural / CLAUDE.md / foundation.md。grep 验 B→A 扫净（余 draft-tech-design 均为合法兜底/check-docs 引用）。
+
 ## 完成总览（2026-06-29 闭环）
 | 阶段 | 内容 | commit |
 |---|---|---|
