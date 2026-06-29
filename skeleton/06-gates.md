@@ -11,7 +11,7 @@
 | Gate | 内涵 | 签于哪个 task |
 |---|---|---|
 | **G1** | 本期 PRD 通过——产品需求清晰、用户故事完整、acceptance criteria 制定 | `draft-prd-vN` 任务尾部 |
-| **G2** | 本期技术设计通过——TRD（接口/数据结构）+ 3 份 standards 完成 | `draft-tech-design` 任务尾部 |
+| **G2** | 本期技术设计通过——TRD（接口/数据结构）+ 3 份 standards 完成；**V0 走骨架**：地基设计通过（foundation.md 实际档达标 + 走骨架设计 + standards 首播） | `draft-tech-design`（V1+）/ `draft-foundation`（V0）任务尾部 |
 | **G3** | 开发包就绪——sprint 拆解完成、queue 写满、任务依赖明确 | `plan-sprint` 任务尾部 |
 | **G4** | 开发完成——所有开发任务 [merged]、联调通过、人工验收通过 | `manual-test` 任务尾部 |
 | **G5** | 迭代收尾——偏离对账 + feedback 分流 + project.md 合并 完成 | `wrap-up-iteration` 任务尾部 |
@@ -29,7 +29,7 @@ Gate 不是独立的实体——它是**一组 task 的状态聚合**。
 | Gate | 关联任务集合 |
 |---|---|
 | **G1** | 本期 `draft-prd-vN` [merged] + 任意 `revise-doc(target=prd)` [merged]（如有） |
-| **G2** | 本期 `draft-tech-design` [merged] + 任意 `revise-doc(target=trd\|standards)` [merged]（如有） |
+| **G2** | V1+：本期 `draft-tech-design` [merged] + 任意 `revise-doc(target=trd\|standards)` [merged]（如有）；**V0：本期 `draft-foundation`（签 G2(v0) 即地基设计验收，走骨架 `develop(source=foundation)` 在 G2 后建）** |
 | **G3** | 本期 `plan-sprint` [merged] |
 | **G4** | 本期所有 `develop(source=sprint)` [merged] + `generate-integration-tests` [merged] + 所有 `develop(source=integration)` [merged] + `manual-test` [merged] + 所有 `develop(source=manual-test)` [merged] |
 | **G5** | 本期 `wrap-up-iteration` [merged] + 本期 `deploy` [merged]（部署失败 / 纯文档迭代不阻断 G5 签字，见下注） |

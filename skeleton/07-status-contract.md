@@ -66,8 +66,8 @@ tasks:
     sprint: 1                    # int sprint 编号；B 类 / 修复任务为 null
     source: sprint               # enum，见下
     title: 用户表与权限          # string，列表显示用
-    type: develop               # enum，12 种 task type
-    discipline: dev-backend     # enum，9 种 discipline
+    type: develop               # enum，13 种 task type
+    discipline: dev-backend     # enum，8 种 discipline
     layer: backend              # enum，frontend / backend / shared / null
     status: merged              # enum，可取 / taken-by / done / merged
     assigned_to: zhangsan       # string Gitee login，未认领为 null
@@ -114,7 +114,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 
 | 字段 | 枚举值 |
 |---|---|
-| `tasks[].source` | sprint / integration / manual-test / bug / optimization |
+| `tasks[].source` | sprint / foundation / integration / manual-test / bug / optimization |
 | `tasks[].status` | 可取 / taken-by / done / merged |
 | `tasks[].layer` | frontend / backend / shared / null |
 | `tasks[].delivery` | 串行 / 可并行 / null |
@@ -141,6 +141,8 @@ CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API
 | 事件 | 归属 spec | 更新内容 |
 |---|---|---|
 | 项目初始化 | `init-project` | **创建 status.yml**（模板 + `iterations.v1.gates` 全未签 + 空 tasks） |
+| V0 地基设计 + 签 G2(v0) | `draft-foundation` | 建 `iterations.v0` 块（仅 G2）+ `gates.G2` |
+| V0 走骨架 认领→建→合并 | `develop`(source=foundation) | 追加 task（`source=foundation`, `iteration=v0`）+ `taken-by`→`merged` + `code_reviews[]` |
 | 签 G1 | `draft-prd-vN` | 确保 `iterations.vN.gates` 块存在（v2+ 新建）+ `gates.G1` |
 | 签 G2 | `draft-tech-design` | `gates.G2` |
 | 签 G3 + 灌 sprint 任务 | `plan-sprint` | 批量追加 sprint 任务（`source=sprint`, `iteration=vN`）+ `gates.G3` |

@@ -10,12 +10,13 @@
 
 ## 总览
 
-**12 个 task type**，按生命周期段分布：
+**13 个 task type**，按生命周期段分布：
 
 | 段 | task | discipline | Gate |
 |---|---|---|---|
 | hact-method | `init-project` | management | — |
 | hact-method | `harvest-notes` | management | — |
+| V0 走骨架 | `draft-foundation` | architecture | G2(v0) |
 | 准备 | `draft-prd-vN` | product | G1 |
 | 准备 | `draft-tech-design` | architecture | G2 |
 | 准备 | `plan-sprint` | dispatch | G3 |
@@ -38,7 +39,7 @@
 | `urgency` | `normal` (默认) / `hotfix`（紧急） | `develop` |
 | `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop` |
 | `task_type` | `dev-frontend` / `dev-backend`（单值路由键；layers 跨层时由分配者指定主） | `develop` |
-| `source` | `sprint` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
+| `source` | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
 | `target` | `prd` / `trd` / `standards` | `revise-doc` |
 | `target-source` | `bug` / `optimization` | `dispatch-new` |
 | `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-tech-design`, `wrap-up-iteration` |
@@ -47,7 +48,7 @@
 
 ---
 
-## 12 task 完整定义
+## 13 task 完整定义
 
 ### 1. `init-project`
 
@@ -140,12 +141,13 @@
 - **主要产物**: PR（已合并）+ 代码改动 + 测试 + `code_reviews[]` 审计留痕
 - **关联 Gate**: —
 - **属性**:
-  - `source`：sprint / integration / manual-test / bug / optimization（决定上下文加载）
+  - `source`：sprint / foundation / integration / manual-test / bug / optimization（决定上下文加载）
   - `layers`：[frontend] / [backend] / [shared]（数组，可多值）
   - `task_type`：dev-frontend / dev-backend（单值路由键；layers=[shared] 或跨层时由分配者指定）
   - `urgency`：normal / hotfix
 - **加载规范分支**:
   - source=sprint → 引用 PRD + sprint.md
+  - source=foundation → 引用 `iterations/v0/foundation-design.md` + `foundation.md`（建走骨架，无任务包队列）
   - source=integration → 引用失败的联调脚本场景
   - source=manual-test → 引用人工验收报告条目
   - source=bug → 引用 bug 报告 + 复现步骤
@@ -250,6 +252,21 @@
 - **属性**: 无
 
 详见 `specs-structural/harvest-notes.md`。
+
+---
+
+### 13. `draft-foundation`
+
+> V0 地基设计：据 `foundation.md` 定栈、给每块跨切面关注点选定形式并验强制边、首播 standards、定走骨架范围与标杆切片。**只产设计、不产代码**（公共代码归 `develop(source=foundation)`）。
+
+- **discipline**: `architecture`
+- **完成判据**: foundation.md「实际形式·档」逐行 ≥ 应有档（安全项构造级）+ foundation-design.md 含地基件 + 标杆切片 + 三份 standards 首播 + 栈入 project.md + G2(v0) 签
+- **主要产物**: `foundation.md`（更新）+ `iterations/v0/foundation-design.md` + 三份 standards 首播 + `project.md` 技术层 + `iterations/v0/gates.md`
+- **关联 Gate**: **G2**（v0；与 draft-tech-design 同槽，architecture 签字，判据为地基验收：每块选定形式且达标 + 标杆切片定 + standards 播种）
+- **前置条件**: init-project 完成、`foundation.md` 已播种（A 类项目 V0，先于 V1 PRD）
+- **属性**: 无（迭代固定 v0）
+
+详见 `specs-structural/draft-foundation.md`。
 
 ---
 
