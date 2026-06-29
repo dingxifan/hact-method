@@ -24,13 +24,30 @@
 当前执行层：frontend / backend？
 ```
 
-🚫 等用户确认（或从任务包 `layer` 字段自动判断后向用户确认）
+🚫 等用户确认（或从任务包 `layer` 字段自动判断后向用户确认）。**`source=foundation` 全栈，跳过本步。**
 
-**G3 前置检查（source=sprint 时必做）**
+**Gate 前置检查（按 source）**
 
-拾取任务包后，确认 `source` 字段：
+确认 `source` 字段：
 - `source=sprint` → 读 `iterations/vN/gates.md`，确认 G3 已签。未签则阻断：「⚠️ G3 未通过，Sprint 尚未规划，请先完成 plan-sprint。」
+- `source=foundation` → 读 `iterations/v0/gates.md`，确认 G2 已签。未签则阻断：「⚠️ G2(v0) 未通过，地基设计未确认，请先完成 draft-foundation。」**并改走下方「source=foundation 进料」块**。
 - `source=integration` / `manual-test` / `bug` / `optimization` → 无 Gate 前置，直接继续
+
+**source=foundation 进料（V0 走骨架特例）**
+
+`source=foundation` 时会话启动改走本块——**不走** sprint 拾取/认领/批次分支/前端设计门；**主循环 + 末端照常**，仅三处替换：
+- **全栈、不问执行层**：走骨架横跨前后端，跳过「第零步」。
+- **建造单元 = `iterations/v0/foundation-design.md`**：对象 = 其「地基件清单」逐件 + 「标杆穿透切片」。地基件互锁（管道/作用域 repo/外壳/主题/信封彼此依赖）→ **串行建在单条 `foundation-v0` 分支、共一个 PR**：
+  ```bash
+  git checkout -b foundation-v0   # 从 master 切
+  ```
+  status.yml：建 `iterations.v0` 块 + `tasks` 追加 `{ id: foundation, source: foundation, status: taken-by, branch: foundation-v0 }`。
+- **跳过前端设计门**：走骨架建主题**框架**用占位 token（design.md 真值由 V1 `draft-ux` 填），不实现具体画面 → 无 design.md 覆盖可对、无前端设计人工门。
+- **三处替换**（其余主循环 / 末端不变）：
+  ① 阶段 A 执行 subagent **自读 `foundation-design.md` 对应件 + `foundation.md` 该关注点行 + relevant standards**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
+  ② 阶段 B 独审读 **`../hact-method-lab/templates/review-briefs/foundation-review.md`**（替代 develop-review：验强制边实际档≥应有档 + 命门 + 标杆质量）。
+  ③ 末端状态更新走下方「`source=foundation`」分支（无 sprint.md；登记标杆切片）。
+> 安全敏感预检（末端·合并前）：走骨架本就含数据隔离/鉴权的构造级落地 → **必然触发** architecture 裁决门，按既有规则等 architecture discipline 签后合并。
 
 **拾取任务（source=sprint）：形成任务集**
 
@@ -115,7 +132,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 
 ### 阶段 B · 独立审查 subagent（对抗式，自读权威原文）
 
-执行 subagent 返回 `done` 后，主线派**全新隔离** subagent 读 `../hact-method-lab/templates/review-briefs/develop-review.md`，只告知 `{task-id}` + layer + vN。该审查员**自读权威原文**（任务包 / `git diff` / standards 章节 / 测试代码+结果），**绝不接收执行 subagent 的自评 / 总结**（喂自评即丧失独立性，等于自己批自己的作业），对抗式找问题、存疑即判阻断。
+执行 subagent 返回 `done` 后，主线派**全新隔离** subagent 读 `../hact-method-lab/templates/review-briefs/develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 `{task-id}` + layer + vN。该审查员**自读权威原文**（任务包 / `git diff` / standards 章节 / 测试代码+结果），**绝不接收执行 subagent 的自评 / 总结**（喂自评即丧失独立性，等于自己批自己的作业），对抗式找问题、存疑即判阻断。
 
 **审查 loop（有界）**：
 - 审查输出 `findings: []` 或全为「建议」级 → 本任务**通过**，进下一任务（建议项记入 PR「遗留问题」或当场顺手改）。
@@ -216,6 +233,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 按 `source` 更新对应追踪文件：
 - `source=sprint` → 无需额外操作（PR 号 + `[merged]` 已写入 sprint.md）；同层全部 `[merged]` 后，下游 `generate-integration-tests` 前置即满足
+- `source=foundation` → status.yml 把 `foundation` task 改 `merged`、`pr` 填 `{N}`；**把标杆穿透切片登记进 项目根 `reusables.md`**（标"参考实现 / 活文档，新功能照此骨架样式做"）；走骨架完成，下游进 V1 `draft-prd-vN`
 - `source=bug / optimization` → 在 项目根 `b-tasks.md` 对应行追加 `PR#{N} 已合并`
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"PR#{N} 已合并，可复测"
 
@@ -251,7 +269,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | 角色 | 触发 | 任务 | 失败处理 |
 |------|------|------|---------|
 | **执行 subagent** | 主循环每任务阶段 A | 自读上下文 → 读懂 → 计划+复用 → 写+自绿，返回结构化结果 | 见下方失败协议 |
-| **独立审查 subagent** | 主循环每任务阶段 B | 读 `develop-review.md`、自读权威原文、对抗式审，返回问题清单 | 失败则主线重派；连续失败按审查 loop 超界处置 |
+| **独立审查 subagent** | 主循环每任务阶段 B | 读 `develop-review.md`（`source=foundation` 时 `foundation-review.md`）、自读权威原文、对抗式审，返回问题清单 | 失败则主线重派；连续失败按审查 loop 超界处置 |
 | 子模块 subagent | 阶段 A 内（>5 文件 / 跨模块） | 实现单个模块，返回代码 | 由执行 subagent 内部处理 |
 | Explore | 阶段 A 复用检查 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 失败则执行 subagent 直接读 |
 

@@ -4,7 +4,7 @@
 **Gate**: —
 **属性**: `source` · `layers` · `task_type` · `urgency`
 
-> 从任务包写代码到推 PR：覆盖 sprint 功能开发、联调修复、验收修复、bug 修复、优化。
+> 从任务包写代码到推 PR：覆盖 V0 走骨架、sprint 功能开发、联调修复、验收修复、bug 修复、优化。
 
 ---
 
@@ -13,6 +13,7 @@
 - **触发**：任务包已入 queue，状态为 [可取]
 - **文件**：对应 layer 的 `standards-{layer}.md` + `standards-shared.md` 已存在（`draft-tech-design` 产物）
 - **source=sprint**：G3 已签（`plan-sprint` 完成）
+- **source=foundation**：G2(v0) 已签（`draft-foundation` 完成）；建造单元 = `iterations/v0/foundation-design.md`（地基件 + 标杆切片），全栈、无任务包队列
 - **source=integration**：上游联调脚本失败场景已记录，修复任务包由 `generate-integration-tests` 派出
 - **source=manual-test**：验收问题已记录，修复任务包由 `manual-test` 派出
 - **source=bug / optimization**：任务包由 `dispatch-new` 派出，无 Gate 前置
@@ -28,7 +29,7 @@
 | `task-id` | string | ✅ | 唯一标识，对应 sprint.md 行或 B 类总账行 |
 | `sprint_id` | string | ✅ | 所属 Sprint 标识，如 `v4`；由 plan-sprint 填写 |
 | `layers` | string[] | ✅ | `[frontend]` / `[backend]` / `[shared]` |
-| `source` | enum | ✅ | `sprint` / `integration` / `manual-test` / `bug` / `optimization` |
+| `source` | enum | ✅ | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` |
 | `task_type` | enum | ✅ | `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）/ layers=[shared] 时由分配者在任务包中指定 |
 | `urgency` | enum | ✅ | `normal`（默认）/ `hotfix` |
 | `title` | string | ✅ | 简短描述，15字以内 |
@@ -77,7 +78,7 @@ api-contract:
 - [ ] 所有 `acceptance-criteria` 均已满足
 - [ ] **不可视区 AC 已 1:1 落成测试且全绿**（backend/逻辑任务：AC 的 Given/When/Then 例子各有对应测试，`npm run test` 全绿）
 - [ ] layer 对应 checklist 自检通过（backend = `backend-checklist.md` 测试品类清单：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试，留人判项有结论；frontend = `frontend-checklist.md` 三段式：机械归 lint/vue-tsc/stylelint + 可测逻辑写测试 + 视觉/交互留人走查）
-- [ ] **集合内每个任务已通过独立审查 subagent**（对抗式、自读权威原文，brief = `templates/review-briefs/develop-review.md`；无阻断级 finding；frontend 含设计保真比对）
+- [ ] **集合内每个任务已通过独立审查 subagent**（对抗式、自读权威原文，brief = `templates/review-briefs/develop-review.md`；**source=foundation 时 `foundation-review.md`**，逐关注点穷举验实际档≥应有档 + 命门 + 标杆质量；无阻断级 finding；frontend 含设计保真比对）
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
 - [ ] **安全敏感改动**（权限/认证/数据隔离）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门）
@@ -92,6 +93,7 @@ api-contract:
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
 | `plan-sprint`（source=sprint） | 任务包（含 files / AC / standards 引用） | iterations/vN/queue/*.md |
+| `draft-foundation`（source=foundation） | 走骨架设计（地基件清单 + 标杆切片）+ 地基蓝图 | iterations/v0/foundation-design.md + 项目根 foundation.md |
 | `generate-integration-tests`（source=integration） | 失败联调场景 + 修复任务包 | iterations/vN/queue/*.md |
 | `manual-test`（source=manual-test） | 验收问题 + 修复任务包 | iterations/vN/queue/*.md |
 | `dispatch-new`（source=bug/optimization） | B 类任务包 | b-queue/*.md |

@@ -89,5 +89,6 @@ V1（及之后）
 - 阶段 1：✅ 完成（Q1=B / Q2=B 已定）
 - 阶段 2：✅ 完成（`templates/foundation.md` 新建；init-project exec 加 Step 6 共识讨论 + Step 7 移交指向 V0；init-project structural 同步产物/判据/接口）。**本地未 commit。**
 - 命门纳入（用户 2026-06-29「让按规范做最省力」一段，findings §八）：① 代码生成**整条删**（CC 即生成器）；**A** 命门=foundation.md 成功度量 ✅ 已补入模板头；**B** V0 标杆切片（→阶段4 V0 spec + reusables 登记）；**C** foundation-review 必问命门（→阶段4 brief）。③ 标杆模块因删①升为 CC 漂移主防线。standards 诚实化（每条标执行者）用户定**先不动**。
-- 阶段 3：✅ 完成（ce7e639 之后，**未 commit**）— ① 新建 `specs-{execution,structural}/draft-foundation.md`（V0 地基设计：定栈+填 foundation.md 实际档+走骨架设计+standards 首播+标杆切片+G2(v0)，只设计不产代码）② draft-tech-design exec×4 + structural×1 瘦身（首期簇→存量兜底，新项目读栈/增补）③ templates/CLAUDE.md 路由表加 draft-foundation。**skeleton/04 catalog + status.yml type 枚举留阶段 6。**
-- 下一步：阶段 4 — V0 迭代表示 + develop 加 source=foundation + 新建 foundation-review brief（含命门必问 C + 标杆切片登记 B）。
+- 阶段 3：✅ 完成（1376ee4）— ① 新建 `draft-foundation`（exec+structural）② draft-tech-design 瘦身（首期簇→存量兜底）③ CLAUDE.md 路由表。
+- 阶段 4：✅ 完成（1376ee4 之后，**未 commit**）— **不拆 develop**（评估：foundation build 与 develop 共享核心、只差进料口 = sub7 撤回的格；draft-foundation 是身子不相交才拆——相反格）。落地：① develop exec 加「source=foundation 进料块」（G2 预检 + 全栈 + 建造单元=foundation-design.md + 单分支 foundation-v0 + 跳前端设计门 + 三处替换：阶段A自读地基件 / 阶段B用 foundation-review / 末端v0状态+登记标杆进 reusables）+ 第零步/阶段B/移交/Subagent 表 4 处小注 ② 新建 `templates/review-briefs/foundation-review.md`（逐关注点穷举验实际档≥应有档、安全项主动找反例验构造级、命门必问 C、标杆质量、走骨架完整且薄）③ develop structural 补 source 枚举/前置/判据/输入。**B（标杆登记 reusables）在 develop 移交；C（命门）在 foundation-review。**
+- 下一步：阶段 5 — plan-sprint 收编视觉地基包（泛化为 foundation 包特例）+ draft-prd/draft-ux 下游接线。
