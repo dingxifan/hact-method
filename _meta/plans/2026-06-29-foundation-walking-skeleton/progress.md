@@ -35,6 +35,22 @@
 - **阶段 3 设计 + Q1 翻案**：读 draft-tech-design 真本子 → 它全程 PRD/AC 驱动、V0 无 PRD → "V0 模式"=丑 if/else。**Q1 由 B 改投 A**（新建 `draft-foundation`，抬首期簇）。Q2 整个首期簇搬 V0；Q3 同 G2 槽两套判据（A 让其干净）；Q4 设计定切片/develop 建+登记。用户确认 A。
 - **即将 commit 阶段 2 + 计划**（本地 method-lab，**不 push**），工作区清干净再进阶段 3。
 
+## 会话 3 · 2026-06-29（第三轮检查 + JHH 补 V0 实战实验 + 收获落地）
+
+**第三轮检查（V0 对下游影响 + 措施落地）**：派三 agent 审建立侧/消费侧/接线层 → 全健全、无断链、计数自洽（13 task/8 discipline）。亲自裁决掉 agent 多条"高危"误报（测试框架约定在 draft-foundation:122、decisions 栈选型在 :134、task 13v14 是 draft-ux 存量约定与 V0 无关）。落 3 小缝（commit `5e4975e`）。
+
+**JHH-Nortion 补 V0 实战实验（本会话核心）**：
+- 选 JHH（已指向 hact-method-lab、零配置）。倒推 foundation.md + draft-foundation 诊断 + 独立 foundation-review 审真代码。
+- **关键转折**：初判"数据隔离守人审弱边"（手写 .eq、逮到 goals:76-81 漏 user_id），**被用户一句"后台接 Supabase、可能靠 RLS"掀翻**——查实：RLS policy `user_id=auth.uid()` 真实启用、前端 anon-key 直连走 RLS 构造级、后端 service_role 是受治理豁免、漏 user_id 的子查询被上游归属闸挡（反例不可达）。**三个审查 agent 一致误判 = 单层 pattern-match 判档的系统盲点。**
+- **诚实修正**：JHH 数据隔离实为构造级（主路径 RLS），初判误报；"走到底"建 ScopedSupabaseService 前提不成立、未做。
+- **重构视角（用户提的 greenfield 模拟）**：站 V0 列地基清单 + 对比 JHH v7 真实状态——安全维度 V0 不改变（成熟团队 RLS/守卫已对），真价值=抗一致性漂移（响应/分页/序列化/四态/token 等 6 块停人审、7 迭代已漂）。
+- **口径校正（用户）**：安全 = 开发质量的结构性保证（非数据安全专用）；强制边/命门是通用质量机制；规模下复利失控的是质量档位松动，临界点=第五阶段真人进来。
+- **5 块构造级机制讲透**：RLS@DB / APP_GUARD / 全局 ValidationPipe / (main) 路由组 / api-client 单例；前 4 平台焊死(真构造级)、第 5 单通道强约定(缺 lint 可绕)。规律=真构造级靠平台瓶颈禁止违规，非"记得用 helper"。
+
+**收获落地（commit `a08ec1b`）**：A 多层强制边规则 + B 反例可达 → foundation-review 判档核心；C 数据隔离形式加 DB 层 RLS + 口径（安全=质量/真构造级判据）→ foundation.md 模板命门段；E draft-tech-design Step7 存量守卫。JHH 实验产物已清、未污染。
+
+**仍开**：F draft-ux 13/14 计数（存量、与 V0 无关、低优先）。本地 method-lab 12 commit 未推，push 待人类。
+
 ## 待办指针
 - [x] 阶段 1：Q1=A（翻案）/ Gate=B / Q2 扩 / Q4 定
 - [x] 阶段 2：foundation.md 模板 + init-project 共识步 + 命门 A（待 commit）
