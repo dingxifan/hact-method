@@ -33,6 +33,7 @@
 | 共享规范 | 项目根 `standards-shared.md` | Markdown；**项目级跨迭代活文档**（非迭代内产物）；**首播由 V0 `draft-foundation`**，本任务（V1+）在同文件原地增补（存量项目未走 V0 时本任务首播兜底） |
 | 前端规范 | 项目根 `standards-frontend.md` | 同上 |
 | 后端规范 | 项目根 `standards-backend.md` | 同上（含「测试框架约定」节） |
+| 地基蓝图增补（条件） | 项目根 `foundation.md` | **仅本期识别出新跨切面关注点时**：原地增补领域地图 / 关注点登记 + 立应有档（V0 播种、本任务 post-V0 维护，与 standards 同纪律；Step 7） |
 | G2 签字 | `iterations/vN/gates.md` | `- [x] G2：TRD 已确认 — YYYY-MM-DD` |
 | decisions.md 更新 | `decisions.md` | 表格追加：决策 / 原因 / 日期 |
 | project.md 更新（技术层） | `project.md` | 追加或更新技术层内容 |

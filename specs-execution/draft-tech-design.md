@@ -198,7 +198,9 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 ## 第三层：执行层（Standards + 收尾）
 
-### Step 7：维护项目 Standards（首期播种 / 迭代增补）
+### Step 7：维护项目活文档（地基蓝图增补 + Standards）
+
+**地基蓝图增补（`foundation.md`，post-V0 维护——与 standards 增补同理）**：foundation.md 是项目根跨迭代活文档（V0 `draft-foundation` 播种）。本期设计若识别出**新的跨切面关注点**——新核心实体贯穿全局 / 新跨切面技术地基（新错误类目、新作用域维度、新全局拦截）/ 上期 develop 经 feedback 上来的地基缺口——则**原地增补** foundation.md：「一、领域地图」补核心实体；「二、关注点登记」补新行 + 立**应有档**（安全敏感项=构造级，同 V0 纪律）。**准入门槛照旧**：只收已证明跨切面 + 稳定的，本期一次性 / 含糊的不进、留 escape 再提拔。增补后该关注点的底料由 `plan-sprint` 拆「地基跟进包」、`develop` 建（见 plan-sprint 视觉地基包规则的 foundation.md 变更触发支）。**无新跨切面关注点 → 本步跳过，foundation.md 不动。**
 
 三份 `standards-{shared,frontend,backend}.md` 是**项目根的跨迭代活文档**（非迭代内产物，与 项目根 `decisions.md` / 项目根 `reusables.md` / 项目根 `design.md` 同级），单一真相源。**新项目已由 V0 `draft-foundation` 首期播种 → 本任务（V1+）走原地增补**；存量项目未走 V0、standards 仍空桩时本任务首期播种（兜底）。TRD 确认后，启动 **2 个并行 subagent** 处理 frontend / backend；主线同时处理 shared。
 

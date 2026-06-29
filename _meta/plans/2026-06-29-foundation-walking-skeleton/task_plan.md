@@ -106,6 +106,20 @@ V1（及之后）
 - **簇 D（F9 跳过档）**：init Step 6.4 加「走/跳 V0」决定（默认走、微型项目可跳，与 draft-ux 对称）；跳过=不建 iterations/v0/、路由到 draft-tech-design 存量兜底；Step7 移交按决定分支。`iterations/v0/` 存在与否 = V0 路径机器信号。
 - 7 文件：BRIEF / develop / draft-prd / init exec+structural / CLAUDE.md / foundation.md。grep 验 B→A 扫净（余 draft-tech-design 均为合法兜底/check-docs 引用）。
 
+## 阶段 9 · post-V0 地基增长 + 复审两新缝（2026-06-29，**未 commit**）
+
+**复审结论（簇 B 聚焦）**：F2/F3/F4 真修、簇 A 扫净、零阻断；两条建议级新缝，核实后均接受并修：
+- **新缝-1**（V0→V1 边界 routing 只靠括注散文）→ CLAUDE.md V1+ 表补一行「迭代目录空 / 无 sprint.md，G1 未签 → draft-prd-vN」，routing 落表上。
+- **新缝-2**（F8 文字"或声明跳过 V0 的项目无此文件"事实错——init 在走/跳决定前已无条件建+填 foundation.md）→ 改为"仅存量项目无此文件；新项目无论走/跳 V0 均已播种"。
+
+**post-V0 增长收口（用户问"V0 之后地基规范怎么增加"暴露的缺口，按其拍板「按1做」补）**——与 V0 同构、摊进 V1+ 管线：
+- `draft-tech-design` Step7 加**地基蓝图增补**步（本期识别新跨切面关注点 → 原地增补 foundation.md 领域地图/关注点登记 + 立应有档，与 standards 增补同纪律 + 准入门槛；无则跳过）+ structural 条件产物。
+- `plan-sprint` 地基跟进包触发**泛化**：design.md 变更（视觉）**或** foundation.md 新增关注点（非视觉，建底料）→ 拆跟进包；`git log -- design.md foundation.md` 比对。
+- `develop` A 类反馈去向加**地基缺口回流**：跨切面"跳出地基"的发现注明`建议 foundation.md 增补`，下期 draft-tech-design 据此增补。
+- foundation.md 模板头注明：post-V0 增补由 draft-tech-design Step7 / escape 经 feedback 回流 / 底料 plan-sprint+develop。
+
+**触及文件**：CLAUDE.md / draft-prd / draft-tech-design exec+structural / plan-sprint / develop / foundation.md。
+
 ## 完成总览（2026-06-29 闭环）
 | 阶段 | 内容 | commit |
 |---|---|---|

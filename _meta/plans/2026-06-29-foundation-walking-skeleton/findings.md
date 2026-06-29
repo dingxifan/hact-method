@@ -109,6 +109,17 @@ plan-sprint 按页/组件切包，切包只生产"挂在某页上的活"。住"�
 
 **Q2 draft-foundation 产代码吗**：**不产，只产文档（设计）**。公共形式的代码（瓶颈管道/base repo/主题框架）是 **V0 `develop(source=foundation)`** 的活。理由 = 2026-06-16 铁律（设计预写代码=空中建筑，org-krm v5 15 条全废）+ 保 foundation-review 对抗审查。V0 与任何迭代同构：`draft-foundation(设计·G2) → develop(建·merged)`。连 lint/stylelint 配置也是"draft-foundation 在 standards 写明、V0 develop 接线"。
 
+## 十、post-V0 地基如何增长（用户 2026-06-29 问，阶段 9 收口）
+
+V0 只**建**地基；地基**长**的机制起初只对视觉半边接了线（plan-sprint design.md 变更触发），非视觉的（领域地图 + 错误信封/作用域/新跨切面）是"活文档"原则但无 spec 步喂它——真缺口。收口=与 V0 同构、摊进 V1+ 管线的两层：
+
+| 触发 | 蓝图层（foundation.md 增补） | 底料层（建代码） |
+|---|---|---|
+| V1+ 设计期识别新跨切面关注点 | draft-tech-design Step7 增补（与 standards 对称、同 architecture、同准入门槛：已证明跨切面+稳定才进） | plan-sprint 拆地基跟进包（foundation.md 变更触发，泛化自视觉跟进包）→ develop 建 |
+| 开发期 escape（强制边/审查逮到跳出地基） | feedback.md 注明"建议 foundation.md 增补"→ 下期 draft-tech-design 增补；紧急 revise-doc | 同上 |
+
+要点：**准入门槛挡膨胀**（escape 驱动、只收稳定的）；复用现成机器（draft-tech-design 已增补 standards、plan-sprint 已有跟进包雏形、develop 已有 feedback 回流），增量主要是"foundation.md 纳入增补对象 + 跟进包从视觉泛化到全地基"。
+
 ## 七、几乎不需要新机器（降低重构成本的关键）
 
 - 走骨架 = `develop(source=foundation)`，复用 develop 全套（写码+自测+独立审查+合并），只多一个 source 值 + foundation review brief。不新增 task type，不撞 #20。

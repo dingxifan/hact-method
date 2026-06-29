@@ -260,7 +260,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 | source | 去向 |
 |---|---|
-| `sprint` / `integration` / `manual-test`（A 类） | 写入 项目根 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`），由本迭代 `wrap-up-iteration` 第二步统一分流 |
+| `sprint` / `integration` / `manual-test`（A 类） | 写入 项目根 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`；**若为跨切面地基缺口**——新发现的越权/错误类目/作用域漏洞等"跳出地基"——则注明`建议 foundation.md 增补地基关注点`，下期 `draft-tech-design` Step7 据此增补 + 立应有档），由本迭代 `wrap-up-iteration` 第二步统一分流 |
 | `bug` / `optimization`（B 类） | **就地分流**：当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
 ---

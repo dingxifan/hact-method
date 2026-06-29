@@ -82,6 +82,7 @@ git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{userna
 
 | sprint.md 状态分布 | PR 列 | Gate 状态 | 推断任务类型 |
 |-------------------|-------|-----------|-------------|
+| 迭代目录空 / 无 `sprint.md` | — | G1 未签 | `draft-prd-vN` — 本期 PRD 未起草（V0 完成后或新迭代起点的落点）|
 | 有 `[可取]` | — | G3 已签，G4 未签 | `develop` — 列出可认领任务，等待用户拾取 |
 | 有任意 `[taken-by]` 或 `[done]` | — | G3 已签，G4 未签 | `develop` — 继续未完成任务包（`[done]` = 上次会话推 PR 后未及合并，续做至自合并 `[merged]`）|
 | 全部 `[merged]` | — | G4 未签 | `generate-integration-tests` |
