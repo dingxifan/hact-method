@@ -54,15 +54,16 @@
 
 ## 历史里程碑
 
-### 2026-06-29 地基层 + V0 走骨架（主管线重构，BRIEF 决策#25）— 本地 method-lab 7 commit 未推（含独审整改）
+### 2026-06-29 地基层 + V0 走骨架（主管线重构，BRIEF 决策#25）— 本地 method-lab 9 commit 未推（两轮独审 + post-V0 增长）
 
-> 触发：接 2026-06-28 视觉地基三件套，把它放大成一类普遍盲区——「按页/功能切包天然漏掉的跨切面公共件」（R2/R3）。一路讨论收敛出**地基层**模型并落地为主管线重构。设计全程沉淀 `_meta/plans/2026-06-29-foundation-walking-skeleton/`（task_plan + findings 九节 + progress）。**本地 method-lab，7 commit 未 push（含一轮独立审查整改；master/推送严格，待人类点头）。**
+> 触发：接 2026-06-28 视觉地基三件套，把它放大成一类普遍盲区——「按页/功能切包天然漏掉的跨切面公共件」（R2/R3）。一路讨论收敛出**地基层**模型并落地为主管线重构。设计全程沉淀 `_meta/plans/2026-06-29-foundation-walking-skeleton/`（task_plan + findings 十节 + progress）。**本地 method-lab，9 commit 未 push（含两轮独立审查整改 + post-V0 增长；master/推送严格，待人类点头）。**
 
 - **模型**：地基形式由"业务代码怎么碰它"定（说它/穿过它/住进它/被它笼罩/往里填 五形式）；强制边三档（构造上不可能 > 机械探测 > 人审）是命门「图省事的人顺手写多大概率合规」的背面；两进料口（技术内生可清单化 / 领域涌现从早期探讨摸）；准入门槛=已证明跨切面 + 稳定。mail-ai/JHH 实测：两成熟项目数据隔离都守在**人审弱边**（手写 where、当场逮到 remove 漏 accountId）——「bar 不在上游立、再好的团队也滑到弱边」是地基蓝图必须前置的硬证据。
 - **新管线**：`init-project`（+共识讨论步→播种 `foundation.md` 地基蓝图）→ **V0 走骨架**（`draft-foundation` 设计签 G2(v0) + `develop(source=foundation)` 建最小空壳+标杆切片）→ V1（PRD 挂领域地图 / draft-ux 填 token 进 V0 框架 / tech-design 瘦身读栈+增补 / plan-sprint 视觉地基包框架值二分）。
 - **关键判断**：① 新建 `draft-foundation` **不拆** tech-design（身子不相交）② develop **不拆**、`source=foundation` 一味（共享核心、只差进料 = sub7 撤回的格，与①相反）③ Gate 复用 G2(v0) ④ 代码生成删（CC 即生成器，标杆模块升主防线）⑤ standards/reusables 载荷重分配。task 12→13，discipline 仍 8。存量项目首期簇在 tech-design 保留兜底。
-- **7 commit（method-lab，未推）**：`ce7e639` 阶段2 init+foundation.md ／ `1376ee4` 阶段3 draft-foundation+tech-design瘦身 ／ `ebe7328` 阶段4 develop接source=foundation+foundation-review ／ `d70de1d` 阶段5 plan-sprint二分+draft-prd接foundation ／ `8ad216f` 阶段6 骨架+status 同步（顺修 #24 遗留 discipline 9→8）／ `06c0afd` 阶段7 BRIEF#25+STATUS+blueprint收编 ／ `c7c85df` 阶段8 独审整改。
-- **状态**：已过一轮独立审查（重开窗口、对抗式），**9 finding 全部核实属实并修**（F1/F5 是真漏=B→A 翻案未回扫前向引用，被审查逮到；簇 B 补 V0 生命周期接线=会话启动推断先判 V0 + develop foundation 模式判定 + 「foundation task merged=V0完成」信号；F9 加微型项目跳过 V0 档）。blueprint-layer 已收编标注。**push 待人类明确。**
+- **post-V0 增长**（阶段9，回答"地基 V0 后怎么长"）：与 V0 同构摊进 V1+——draft-tech-design Step7 增补 foundation.md（识别新跨切面关注点，准入门槛挡膨胀）+ plan-sprint 地基跟进包触发泛化（design.md 或 foundation.md 变更）+ develop 反馈地基缺口回流。补上"地基只建不长"的洞。
+- **9 commit（method-lab，未推）**：阶段2 `ce7e639` ／ 阶段3 `1376ee4` ／ 阶段4 `ebe7328` ／ 阶段5 `d70de1d` ／ 阶段6 `8ad216f` ／ 阶段7 `06c0afd` ／ 阶段8 独审整改 `c7c85df` ／ STATUS `acd49dc` ／ 阶段9 post-V0增长+复审两新缝 `5835f45`。
+- **状态**：**过两轮独立审查、均收敛**——①首轮 9 finding 全修（F1/F5 真漏=B→A 翻案未回扫，被逮到；簇B 补 V0 生命周期接线；F9 加跳过档）②簇B 复审：F2/F3/F4 真闭合、簇A 扫净、零阻断，仅两建议级新缝（V0→V1 routing 落表 + draft-prd 文字纠正）已修。blueprint-layer 已收编。**push 待人类明确。**
 
 ### 2026-06-29 hact-app 概念脱钩（方法独立性）+ 行为管线/演进说明 WIP 归档 — 三 commit 已 push
 
