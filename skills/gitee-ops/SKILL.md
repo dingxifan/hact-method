@@ -16,7 +16,7 @@ Gitee 与 GitHub 不兼容，`gh` CLI 无法用于 Gitee 仓库。所有 HTTP �
 ```bash
 # 从 git remote 提取 owner 和 repo
 REMOTE=$(git remote get-url origin)
-# 示例输出：https://gitee.com/dingxifan/hact-app.git
+# 示例输出：https://gitee.com/dingxifan/mail-ai.git
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
 

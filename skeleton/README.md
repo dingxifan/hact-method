@@ -12,7 +12,7 @@
 4. **[`04-task-catalog.md`](04-task-catalog.md)** — 12 个 task type 完整字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）
 5. **[`05-state-machine.md`](05-state-machine.md)** — 4 个状态（可取 / taken-by / done / merged）+ 流转 + 软锁 + 异常转移
 6. **[`06-gates.md`](06-gates.md)** — 5 个 Gate + 子状态聚合 + A 类 vs B 类 + 多迭代展示
-7. **[`07-status-contract.md`](07-status-contract.md)** — 项目根 `status.yml` 状态契约：机器侧（hact-app）取数的单一事实，项目级单文件、状态与文件分离（2026-05-31 增补，配合 hact-app 取数稳定化）
+7. **[`07-status-contract.md`](07-status-contract.md)** — 项目根 `status.yml` 状态契约：机器侧（看板应用）取数的单一事实，项目级单文件、状态与文件分离（2026-05-31 增补，配合看板应用取数稳定化）
 
 ## 核心设计原则
 
@@ -50,4 +50,4 @@ hact-method/
 
 ## 下游文档预期
 
-第二阶段将基于本骨架展开 `specs-structural/`：每个 task 一份独立 spec 文档，覆盖完整契约（含边界场景、错误处理、字段细节）。第三阶段实施 `hact-app`（v2 看板应用），是本方法论的首个落地实例。第四阶段补 `specs-execution/`：每个 task 的执行细则 + 高密度 discipline 的 subagent 协议。
+第二阶段将基于本骨架展开 `specs-structural/`：每个 task 一份独立 spec 文档，覆盖完整契约（含边界场景、错误处理、字段细节）。第三阶段实施看板应用（v2），是本方法论的首个落地实例。第四阶段补 `specs-execution/`：每个 task 的执行细则 + 高密度 discipline 的 subagent 协议。

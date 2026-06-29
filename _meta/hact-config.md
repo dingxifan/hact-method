@@ -1,10 +1,10 @@
-# hact-app 全局配置
+# 看板应用全局配置
 
 > 团队共用，提交进仓库。CC 在 init-project Step 5 时直接读取，无需向用户询问。
 
 | 配置项 | 值 |
 |--------|-----|
-| hact-app 部署地址 | `http://47.110.94.114` |
+| 看板应用部署地址 | `http://47.110.94.114` |
 | CC_TOKEN | `dev-cc-token-for-testing` |
 | notes-org（个人积累仓所在 Gitee 命名空间） | `dingxifan`（**Gitee 企业版**，企业全名"苏州立刻电子商务有限公司"，id=16378871）。⚠️ 是企业（enterprise）不是组织（org）：建仓用 `POST /enterprises/dingxifan/repos`，**不要**用 `/orgs/...`（会 404）。仓库地址形如 `gitee.com/dingxifan/hact-notes-{姓名}`。 |
 

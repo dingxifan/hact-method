@@ -1,20 +1,20 @@
 # 07 · status.yml 状态契约
 
-> 本文件定义**项目根** `status.yml` 的字段、类型、枚举与取值，是**人与 hact-app 共同的单一事实**。
-> hact-app 直接 `YAML.parse(status.yml)` 取数，不再解析任何叙述性 markdown。
+> 本文件定义**项目根** `status.yml` 的字段、类型、枚举与取值，是**人与看板应用共同的单一事实**。
+> 看板应用直接 `YAML.parse(status.yml)` 取数，不再解析任何叙述性 markdown。
 > 设计依据：`_meta/plans/2026-05-31-status-contract/design.md`。
 
 ---
 
 ## 一、为什么有这份契约
 
-hact-app 原先靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.md` 复选框来取状态。这些是「为人写的叙述性 markdown」，CC 每次生成时排版会漂移，导致 hact-app 持续取错数。
+看板应用原先靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.md` 复选框来取状态。这些是「为人写的叙述性 markdown」，CC 每次生成时排版会漂移，导致看板应用持续取错数。
 
 **解法**：把「机器要的结构化状态」从「人看的叙述文档」里彻底分离，单独落到一份 schema 锁死的 `status.yml`。
 
 **核心原则（判定一个数据进不进 YAML）：**
 > 凡是 UI 上以「字段 / 列 / 角标 / 计数」出现的 → 进 `status.yml`；
-> 凡是以「文档正文」出现、需点开才看的 → 不进 YAML，由 hact-app 用到时走 API 现拉。
+> 凡是以「文档正文」出现、需点开才看的 → 不进 YAML，由看板应用用到时走 API 现拉。
 
 ---
 
@@ -36,14 +36,14 @@ hact-app 原先靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.
 - **创建**：`init-project` 从模板创建一次，含 `iterations.v1.gates`（全未签）+ 空 `tasks[]`。
 - **更新**：此后每个状态转移由所属 exec spec「做一个填一个」（见第五节）。
 - **健壮性**：任何更新步骤写入前若文件不存在（历史项目、断点等），先从 `templates/status.yml` 补建再写，不报错中断。
-- **不动现有 markdown**：`sprint.md`/`gates.md`/`queue/*.md` 保留为「人看的视图」，hact-app 不再读它们，两边漂移也不影响取数。
+- **不动现有 markdown**：`sprint.md`/`gates.md`/`queue/*.md` 保留为「人看的视图」，看板应用不再读它们，两边漂移也不影响取数。
 
 ---
 
 ## 四、字段契约
 
 ```yaml
-project: hact-app                # string，项目名
+project: 看板应用                # string，项目名
 schema: 1                        # int，本契约 schema 版本号；字段演进靠它兼容
 generated_by: cc                 # string，固定 cc
 
@@ -110,7 +110,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
         location: src/auth.ts:40 # string 文件:行号，可为 null
 ```
 
-### 枚举对齐（与 hact-app TRD 数据模型一致）
+### 枚举对齐（与看板应用 TRD 数据模型一致）
 
 | 字段 | 枚举值 |
 |---|---|
@@ -125,11 +125,11 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 
 > CR severity 映射：develop 内置独立审查用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`（阻断在审查 loop 内已修，落 YAML 的多为 `[建议]→建议`）。
 
-### 不进 YAML（hact-app 走 API 现拉）
+### 不进 YAML（看板应用走 API 现拉）
 任务包 17 字段正文、`description`、`completion_report`、`output`、PRD/TRD/sprint/联调报告正文。
 
 ### CR issue 内联（已查证定案）
-CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API。依据：`develop` 内置独立审查把逐条 issue 写进 Gitee PR comment，仓库内无含结构化 issue 的文件可供 API 拉取；hact-app 前端 `CRDrawer.vue` 已就绪、期望 `{ conclusion, issues[], comment }`，内联后即可用。（2026-06-20 起 CR 由 develop 自审写入，非独立 pr-review。）
+CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API。依据：`develop` 内置独立审查把逐条 issue 写进 Gitee PR comment，仓库内无含结构化 issue 的文件可供 API 拉取；看板应用前端 `CRDrawer.vue` 已就绪、期望 `{ conclusion, issues[], comment }`，内联后即可用。（2026-06-20 起 CR 由 develop 自审写入，非独立 pr-review。）
 
 ---
 

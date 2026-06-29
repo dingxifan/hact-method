@@ -72,7 +72,7 @@ E:\Group-code-lab\{project-name}\
 │       ├── gates.md
 │       └── queue/               ← 任务包（该迭代）
 │           └── done/
-├── status.yml               ← 机器侧状态契约（项目级单文件，hact-app 取数源，init-project 建，见 skeleton/07）
+├── status.yml               ← 机器侧状态契约（项目级单文件，看板应用取数源，init-project 建，见 skeleton/07）
 ├── project.md               ← 跨迭代项目快照
 ├── decisions.md             ← 架构决策记录
 ├── design.md                ← 视觉规格
@@ -107,11 +107,11 @@ E:\Group-code-lab\{project-name}\
 - **brainstorming skill 不适用**：项目内的分析讨论即为 brainstorming 阶段
 - **planning-with-files-zh skill 适用**：_meta/plans/ 目录由该 skill 管理
 
-## 当前阶段：第三阶段·开发 hact-app
+## 当前阶段：第三阶段·开发看板应用
 
 - 第一阶段（搭骨架）✅：skeleton/ 下 6 份骨架文档
 - 第二阶段（结构层规范）✅：specs-structural/ 下 13 份任务契约 + specs-execution/ 下 13 份执行规范
-- 第三阶段（开发 hact-app）进行中：用本方法论走完 PRD→TRD→sprint→develop 完整流程，开发 hact-app 看板应用
+- 第三阶段（开发看板应用）进行中：用本方法论走完 PRD→TRD→sprint→develop 完整流程，开发看板应用
 
 ## 与 human-ai-col 的关系
 - `../human-ai-col/` 是 v1 方法论仓库，已冻结，仅维护存量项目（simple-auth 等）

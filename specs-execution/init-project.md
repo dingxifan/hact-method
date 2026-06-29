@@ -65,7 +65,7 @@ echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 
 - 项目根 `project.md` / 项目根 `reusables.md` / 项目根 `b-tasks.md` / 项目根 `decisions.md` / 项目根 `backlog.md` / 项目根 `feedback.md`
 - 项目根 `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
-- `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，hact-app 取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
+- `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，看板应用取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
 **特殊桩（不走 templates/）**：
 - 项目根 `standards-shared.md` / 项目根 `standards-frontend.md` / 项目根 `standards-backend.md`：**项目根跨迭代活文档**，建空桩（一行标题 + 「待 draft-tech-design v1 播种」注），内容由首期 `draft-tech-design` Step 7 填入、之后每期原地增补
@@ -184,16 +184,16 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 ---
 
-### Step 5：注册到 hact-app + 配置 Gitee Webhook
+### Step 5：注册到看板应用 + 配置 Gitee Webhook
 
 **5.1 读取配置：**
 
 从 `E:\Group-code-lab\hact-method-lab\_meta\hact-config.md` 读取以下值，**无需向用户询问**：
 
-- `{hact-app-url}`：hact-app 部署地址
+- `{看板应用-url}`：看板应用部署地址
 - `{cc-token}`：CC_TOKEN
 
-🚫 等用户提供（可跳过整个 Step 5，跳过则在移交信息中注明"hact-app 注册待手动完成"）
+🚫 等用户提供（可跳过整个 Step 5，跳过则在移交信息中注明"看板应用注册待手动完成"）
 
 **5.2 生成 webhook_secret：**
 
@@ -204,14 +204,14 @@ node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
 
 记录生成的值为 `{webhook_secret}`。
 
-**5.3 在 hact-app 注册项目：**
+**5.3 在看板应用注册项目：**
 
 从 `{gitee-url}` 中解析出 `{owner}` 和 `{repo}`，构造标准化 URL（去掉 `.git` 后缀）。复用 Step 4.4 的 Gitee token（若未收集则此处**必须**补收）：
 
-> ⚠️ `gitee_token` 为必填项。hact-app 需要用它在服务器端 clone 仓库，缺失则 `local_path` 永远为 null，cron 和 webhook 均无法同步，项目状态永远无法更新。
+> ⚠️ `gitee_token` 为必填项。看板应用需要用它在服务器端 clone 仓库，缺失则 `local_path` 永远为 null，cron 和 webhook 均无法同步，项目状态永远无法更新。
 
 ```bash
-curl -s -X POST "{hact-app-url}/api/cc/projects" \
+curl -s -X POST "{看板应用-url}/api/cc/projects" \
   -H "Authorization: Bearer {cc-token}" \
   -H "Content-Type: application/json" \
   -d '{
@@ -236,7 +236,7 @@ curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
   -H "Content-Type: application/json" \
   -d '{
     "access_token": "{gitee-token}",
-    "url": "{hact-app-url}/api/webhooks/gitee",
+    "url": "{看板应用-url}/api/webhooks/gitee",
     "push_events": true,
     "token": "{webhook_secret}"
   }'
@@ -254,7 +254,7 @@ curl -s -X POST "https://gitee.com/api/v5/repos/{owner}/{repo}/hooks" \
 判断方式：等约 30 秒后直接做 5.5.2；用以下查询看 sync_event——
 
 ```bash
-curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
+curl -s "{看板应用-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
   -H "Authorization: Bearer {cc-token}"
 ```
 
@@ -273,7 +273,7 @@ git push
 等待约 10 秒，查询 sync_event：
 
 ```bash
-curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
+curl -s "{看板应用-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
   -H "Authorization: Bearer {cc-token}"
 ```
 
@@ -284,7 +284,7 @@ curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
 > 此步是强制验证，不可跳过。token 不匹配会导致 webhook 永远被 401 拒绝，项目状态永远不同步，且没有任何明显报错。
 
 ```
-✅ hact-app 注册完成：project_id={project_id}，服务器已 clone，Webhook 已配置并验证。
+✅ 看板应用注册完成：project_id={project_id}，服务器已 clone，Webhook 已配置并验证。
 → 下一步：移交
 继续？
 ```
@@ -299,7 +299,7 @@ curl -s "{hact-app-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
 ✅ init-project 完成：
 - 本地仓库：E:\Group-code-lab\{name}\
 - 远端：{gitee-url}
-- hact-app：project_id={project_id}（或"待手动完成"）
+- 看板应用：project_id={project_id}（或"待手动完成"）
 → 下一步：draft-prd-vN — A 类需求从产品阶段开始；B 类需求直接用 dispatch-new。
 ```
 

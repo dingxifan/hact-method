@@ -8,8 +8,8 @@
 ```powershell
 # 从 git remote 获取 owner 和 repo
 git remote get-url origin
-# 示例输出：https://gitee.com/your-name/hact-app.git
-# → owner = your-name，repo = hact-app
+# 示例输出：https://gitee.com/your-name/mail-ai.git
+# → owner = your-name，repo = mail-ai
 
 # 从 backend/.env 读取 token
 $GITEE_TOKEN = (Get-Content backend/.env | Where-Object { $_ -match "^GITEE_ACCESS_TOKEN=" }).Split("=")[1].Trim()
