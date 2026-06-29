@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发看板应用**（进行中）
-- 上次更新：2026-06-28
+- 上次更新：2026-06-29
 
 ## 各阶段完成情况
 
@@ -53,6 +53,17 @@
 | exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 13/13 全部完成，已通过评审和一致性检查 |
 
 ## 历史里程碑
+
+### 2026-06-29 hact-app 概念脱钩（方法独立性）+ 行为管线/演进说明 WIP 归档 — 三 commit 已 push
+
+> 触发：核对工作区时发现一批未提交 WIP（2026-06-26 行为规格管线 + 2026-06-25/28 规划草稿 + 两份演进说明），且用户指出 `hact-app` 概念在本 worktree 与方法耦合过深、应清理以保方法独立性。本地 `method-lab`，**已 push**（`16e7c4b..c6b9a8c`）。
+
+- **对齐纠正（关键）**：`hact-app` 不是"又一个用本方法开发的普通项目"，而是方法的**伴随看板/管理端应用**——`status.yml` 状态契约为它取数而设（skeleton/07）、init-project Step 5 把新项目**注册进它**、Gate UI/identity Web 端/state-machine 并发模型都假设它在场。第二重身份（状态看板基础设施）才是耦合根源。
+- **决策（用户拍板）**：**改名脱钩、保留机制**——所有机制（status.yml/状态契约/注册/UI）一个不动，只把专有名 `hact-app` → 通用角色名 **「看板应用」**。范围 = **规范层 + 框架文档**；`_meta/plans` 历史不动。
+- **落地（21 跟踪 + 演进说明，纯重命名 84/84 无内容增减）**：skeleton（01/05/06/07/README）、specs-execution（init-project/plan-sprint）、specs-structural（init-project）、templates（status.yml + gitee-ops 命令）、skills/gitee-ops、guide（00–04/99）、BRIEF/CLAUDE、`_meta/hact-config.md`、演进说明正式版。
+- **特殊判断**：① `hact-config.md` 是真实运维配置——只改标签、**保留部署地址/token 值**；② 被当项目名举例的 `hact-app` → 历史真样例 `mail-ai`（structural 用 `org-krm`）；③ gitee URL 示例 → `mail-ai.git`；④ guide/01 走查示例原是"建 hact-app 再注册进 hact-app"的循环，例子项目改 `mail-ai`（邮件协作工具）消圈；⑤ sed 替换产生的中日韩字符间多余空格用 `C.UTF-8` locale 清掉，保留中英间正常空格。
+- **有意保留**：STATUS 的 `历史里程碑 / 仓库拓扑 / 2026-05-08 快照` 仍有 19 处 `hact-app`——带日期的事实记录 + hact-app worktree 物理仍在，按"不伪造历史"原则只清「当前阶段」框架行。
+- **三 commit（已 push `origin/method-lab`）**：① `f2449be` feat 行为规格管线落地（PRD 功能类型触发 + draft-ux 行为待决扫描 + 项目根路径一致性 + CLAUDE 表格化，实现 2026-06-26 设计）② `3c49a42` refactor hact-app 脱钩 ③ `c6b9a8c` docs 演进说明补视觉地基三件套 + 三份规划草稿。三组文件无重叠，干净分离。
 
 ### 2026-06-28 视觉地基三件套 — 并入 2026-06-22 前端一致性框架，补「跨切面地基」结构盲区
 
