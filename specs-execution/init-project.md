@@ -2,7 +2,7 @@
 
 > CC 加载本文时，当前任务是为新项目创建独立仓库（代码 + 协调文件合并）。
 
-**上下文密度**：低。机械化操作为主，单次会话可完整完成。
+**上下文密度**：低。机械化操作为主（Step 1–5、7），单次会话可完整完成；唯 Step 6「项目共识讨论」是发散环节（读背景、摸全貌、填地基蓝图），骑在本 task 内、不另起 task（决策#20）。
 **执行位置**：hact-method 工作区；创建目标在 `E:\Group-code-lab\{name}\`。
 
 ---
@@ -65,6 +65,7 @@ echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 
 - 项目根 `project.md` / 项目根 `reusables.md` / 项目根 `b-tasks.md` / 项目根 `decisions.md` / 项目根 `backlog.md` / 项目根 `feedback.md`
 - 项目根 `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
+- 项目根 `foundation.md`：复制自 `templates\foundation.md`（**地基蓝图**空模板——领域地图 / 关注点登记槽位留空，本 spec **Step 6 共识讨论**时填；技术内生清单与安全项「应有档=构造级」已预置。下游 V0 走骨架据此建骨架）
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，看板应用取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
 **特殊桩（不走 templates/）**：
@@ -293,14 +294,49 @@ curl -s "{看板应用-url}/api/cc/projects/{project_id}/sync-events?limit=1" \
 
 ---
 
-### Step 6：移交
+### Step 6：项目共识讨论 → 填地基蓝图（发散）
+
+> 本步是 init 里唯一的发散环节：在 PRD **之前**先把项目地基立住，让后面所有开发都在它上面累加。**只摸全貌与领域模型，不列功能**（列功能就变 PRD 了）。产物落入 Step 3 已铺的空 `foundation.md`。
+
+**6.1 确认背景材料：** 检查 `_meta/input/` 是否有背景材料。无 → 请用户提供（粘贴或放文件），不得跳过空谈。
+
+**6.2 共识讨论：** 围绕背景，与用户多轮文字沟通，摸清三件事（**不外露过程、不列功能**）：
+- 这个应用是什么、解决什么问题、全貌大概长什么样；
+- **贯穿全局**的核心实体 / 主数据有哪几个（功能都挂它上面）；
+- 是否有**贯穿全局的作用域**（租户/组织/用户/项目）和关键业务不变式。
+
+**6.3 填 `foundation.md`：**
+- **「一、领域地图」**：填核心实体表 + 作用域 + 不变式（无则写"无"）。
+- **「二、地基关注点登记 + 强制边」**：技术内生清单逐行勾选/删减；从「一」补**领域涌现**行（尤其那个贯穿全局作用域 → 必有一行"数据隔离/作用域"）。
+- **立应有档（init 的核心价值）**：逐行确认「应有档」。⚠️ **安全敏感项（数据隔离/鉴权/越权）= 构造级，不可议价**——向用户点明：bar 不在这立，下游再好的人也会滑到手写弱边、漏一行就泄数据（mail-ai/JHH 实证）。「实际形式·档」留空，V0 选栈后填。
+
+> **尺寸纪律**：中小型项目这步是一场短讨论 + 半页 foundation.md，别滚成分析瘫痪。完成判据 = "地基播了种、各方认了"，不是"全貌全想透"；含糊项留空，等开发中 escape 提拔。
+
+**6.4 提交：**
+```bash
+cd "E:/Group-code-lab/{name}"
+git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git push
+```
+
+```
+✅ 地基蓝图就位：foundation.md 已播种（领域地图 + N 个地基关注点，安全项应有档=构造级）。
+→ 下一步：移交
+继续？
+```
+
+🚫 等用户确认地基蓝图无误才继续
+
+---
+
+### Step 7：移交
 
 ```
 ✅ init-project 完成：
 - 本地仓库：E:\Group-code-lab\{name}\
 - 远端：{gitee-url}
+- 地基蓝图：foundation.md（已播种）
 - 看板应用：project_id={project_id}（或"待手动完成"）
-→ 下一步：draft-prd-vN — A 类需求从产品阶段开始；B 类需求直接用 dispatch-new。
+→ 下一步：进入 V0 走骨架 — 地基设计（`draft-tech-design` 的 V0 模式，依 foundation.md 选具体形式、定栈），G2 签后由 develop(source=foundation) 建骨架；V0 骨架端到端跑通后才进 V1 `draft-prd-vN`。B 类需求直接用 dispatch-new。
 ```
 
 ---
