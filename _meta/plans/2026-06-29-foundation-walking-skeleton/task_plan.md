@@ -88,5 +88,6 @@ V1（及之后）
 - 阶段 0：✅ 完成（设计沉淀）
 - 阶段 1：✅ 完成（Q1=B / Q2=B 已定）
 - 阶段 2：✅ 完成（`templates/foundation.md` 新建；init-project exec 加 Step 6 共识讨论 + Step 7 移交指向 V0；init-project structural 同步产物/判据/接口）。**本地未 commit。**
-- 命门纳入（用户 2026-06-29「让按规范做最省力」一段，findings §八）：① 代码生成**整条删**（CC 即生成器）；**A** 命门=foundation.md 成功度量 ✅ 已补入模板头；**B** V0 标杆切片（→阶段4 V0 spec + reusables 登记）；**C** foundation-review 必问命门（→阶段4 brief）。③ 标杆模块因删①升为 CC 漂移主防线。
-- 下一步：阶段 3 — draft-tech-design 劈两半（V0 地基设计 / V1 功能 TRD），主管线核心改动。
+- 命门纳入（用户 2026-06-29「让按规范做最省力」一段，findings §八）：① 代码生成**整条删**（CC 即生成器）；**A** 命门=foundation.md 成功度量 ✅ 已补入模板头；**B** V0 标杆切片（→阶段4 V0 spec + reusables 登记）；**C** foundation-review 必问命门（→阶段4 brief）。③ 标杆模块因删①升为 CC 漂移主防线。standards 诚实化（每条标执行者）用户定**先不动**。
+- 阶段 3：✅ 完成（ce7e639 之后，**未 commit**）— ① 新建 `specs-{execution,structural}/draft-foundation.md`（V0 地基设计：定栈+填 foundation.md 实际档+走骨架设计+standards 首播+标杆切片+G2(v0)，只设计不产代码）② draft-tech-design exec×4 + structural×1 瘦身（首期簇→存量兜底，新项目读栈/增补）③ templates/CLAUDE.md 路由表加 draft-foundation。**skeleton/04 catalog + status.yml type 枚举留阶段 6。**
+- 下一步：阶段 4 — V0 迭代表示 + develop 加 source=foundation + 新建 foundation-review brief（含命门必问 C + 标杆切片登记 B）。

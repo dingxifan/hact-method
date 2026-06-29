@@ -9,6 +9,7 @@
 | task.type | 规范路径 | 备注 |
 |-----------|---------|------|
 | `init-project` | `../hact-method-lab/specs-execution/init-project.md` | |
+| `draft-foundation` | `../hact-method-lab/specs-execution/draft-foundation.md` | V0 地基设计（走骨架前）；A 类项目 init 后、V1 PRD 前；只设计不产代码，骨架代码归 develop(source=foundation) |
 | `draft-prd-vN` | `../hact-method-lab/specs-execution/draft-prd-vN.md` | |
 | `draft-ux` | `../hact-method-lab/specs-execution/draft-ux.md` | 可选，PRD 有 `draft-ux: 需要` 时触发，插在 G1→G2 之间 |
 | `draft-tech-design` | `../hact-method-lab/specs-execution/draft-tech-design.md` | |

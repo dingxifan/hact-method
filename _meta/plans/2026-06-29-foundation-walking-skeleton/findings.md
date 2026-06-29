@@ -99,6 +99,16 @@ plan-sprint 按页/组件切包，切包只生产"挂在某页上的活"。住"�
 
 → 收窄后净增量（① 已删）：**A** 命门当 foundation.md 的成功度量（头部写死那句 + 「实际档」列即概率答卷）；**B** V0 指定标杆切片（reusables 登记）；**C** foundation-review 直接问命门那句。
 
+## 九、standards/reusables 的去向 + 设计/代码边界（用户 2026-06-29 两问）
+
+**Q1 standards/reusables 还值多少**：没架空，**载荷重新分配**——地基层吸走"必须"那半（强边），standards/reusables 留"应该/可选"那半（弱边）。
+- standards：从"执行机制（要人记的规矩）"→"**带执行者标注的索引 + 人审残量 + 设计理由**"，更短更诚实（散文→linter 那条线的延续）。提拔到构造/机械的条目降为说明；仍人审的（命名/日志粒度/品味）才是真载体。
+- reusables：强制底料毕业进 foundation；reusables 留**真可选复用 + 标杆切片指针**。
+- 三者边界（防打架）：**foundation.md=登记（哪块/什么边/什么形式）；standards=实现的具体编码约定；reusables=可选复用+标杆指针**，分层不重复（foundation 的"视觉地基"行指向 standards-frontend 的 stylelint 细则）。
+- **「standards 诚实化」（每条标执行者）用户定先不动**，阶段 3 只搬不改。
+
+**Q2 draft-foundation 产代码吗**：**不产，只产文档（设计）**。公共形式的代码（瓶颈管道/base repo/主题框架）是 **V0 `develop(source=foundation)`** 的活。理由 = 2026-06-16 铁律（设计预写代码=空中建筑，org-krm v5 15 条全废）+ 保 foundation-review 对抗审查。V0 与任何迭代同构：`draft-foundation(设计·G2) → develop(建·merged)`。连 lint/stylelint 配置也是"draft-foundation 在 standards 写明、V0 develop 接线"。
+
 ## 七、几乎不需要新机器（降低重构成本的关键）
 
 - 走骨架 = `develop(source=foundation)`，复用 develop 全套（写码+自测+独立审查+合并），只多一个 source 值 + foundation review brief。不新增 task type，不撞 #20。

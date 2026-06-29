@@ -30,7 +30,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | TRD | `iterations/vN/trd.md` | Markdown，套结构化模板 `templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位，供 `scripts/check-docs.js` 解析与交叉对账） |
-| 共享规范 | 项目根 `standards-shared.md` | Markdown；**项目级跨迭代活文档**（非迭代内产物）；v1 播种自 `templates/standards/`，vN+1 在同文件原地增补 |
+| 共享规范 | 项目根 `standards-shared.md` | Markdown；**项目级跨迭代活文档**（非迭代内产物）；**首播由 V0 `draft-foundation`**，本任务（V1+）在同文件原地增补（存量项目未走 V0 时本任务首播兜底） |
 | 前端规范 | 项目根 `standards-frontend.md` | 同上 |
 | 后端规范 | 项目根 `standards-backend.md` | 同上（含「测试框架约定」节） |
 | G2 签字 | `iterations/vN/gates.md` | `- [x] G2：TRD 已确认 — YYYY-MM-DD` |
