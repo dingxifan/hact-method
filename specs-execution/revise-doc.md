@@ -83,7 +83,7 @@
 
 ## Step 4：记入 backlog
 
-在 `backlog.md` 追加 `[修订]` 条目：
+在 项目根 `backlog.md` 追加 `[修订]` 条目：
 
 ```markdown
 - [修订] {YYYY-MM-DD} | target={target} | {改了什么，一句话} | 原因：{reason 字段内容}
@@ -103,7 +103,7 @@
 
 **修订影响已 [merged] 的 develop PR**（该 PR 代码已合并但与修订内容不一致）：
 - 创建新的 develop 任务包（`source=sprint`，urgency 按影响程度），说明需要修正已合并代码以与修订后文档对齐
-- 在 `backlog.md` 追加 `[偏离]` 条目，留 `wrap-up-iteration` 偏离对账时处理
+- 在 项目根 `backlog.md` 追加 `[偏离]` 条目，留 `wrap-up-iteration` 偏离对账时处理
 - 不回滚已合并 PR
 
 无下游影响 → 记录「无下游影响」，继续 Step 6。
@@ -131,7 +131,7 @@ git commit -m "fix(doc): {修订内容摘要} [{项目名}]"
 ## Step 8：feedback 检查
 
 回顾触发本次修订的根因：
-- 同一文档短期内被多次修订（≥2 次）→ 说明上游文档质量有问题，写入 `feedback.md`（格式：`{日期} | {发现} | 建议在 {draft-prd-vN / draft-tech-design} 阶段加强 {哪个环节}`）
+- 同一文档短期内被多次修订（≥2 次）→ 说明上游文档质量有问题，写入 项目根 `feedback.md`（格式：`{日期} | {发现} | 建议在 {draft-prd-vN / draft-tech-design} 阶段加强 {哪个环节}`）
 - 单次偶发修订 → 跳过
 
 ```
@@ -145,6 +145,6 @@ git commit -m "fix(doc): {修订内容摘要} [{项目名}]"
 本 task 修订范围小，通常单次会话完成，无需断点续做文件。
 
 **中断续做**：
-1. 读 `backlog.md`：`[修订]` 条目是否已追加 → 已追加说明 Step 4 完成，从 Step 5 继续
+1. 读 项目根 `backlog.md`：`[修订]` 条目是否已追加 → 已追加说明 Step 4 完成，从 Step 5 继续
 2. 读目标文件：内容是否已是修订后版本 → 已修订说明 Step 3 完成，从 Step 4 继续
 3. 读 `queue/`：是否已有对应级联 revise-doc 任务包 → 有则 Step 5 已完成

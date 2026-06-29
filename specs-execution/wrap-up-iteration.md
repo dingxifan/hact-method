@@ -1,4 +1,4 @@
-﻿# exec: wrap-up-iteration
+# exec: wrap-up-iteration
 
 > CC 加载本文时，当前任务是执行迭代收尾三步：偏离对账 / feedback 审阅分流 / project.md 合并，完成后签 G5。
 > 可与 deploy 并行执行，无强依赖。deploy 失败不阻断收尾，但 project.md 的"已上线"标注取决于部署结果。
@@ -24,9 +24,9 @@
 读任务包，确认 `version` 字段（如 `v1`）。
 
 读以下文件：
-- `backlog.md`（扫描 `[偏离]` 条目数量）
-- `feedback.md`（扫描条目数量）
-- `project.md`（当前快照）
+- 项目根 `backlog.md`（扫描 `[偏离]` 条目数量）
+- 项目根 `feedback.md`（扫描条目数量）
+- 项目根 `project.md`（当前快照）
 - `iterations/vN/prd.md` + `iterations/vN/trd.md`（本期最终版，用于第三步对照）
 
 ```
@@ -61,13 +61,13 @@
 
 ## 第一步：偏离对账
 
-读 `backlog.md` 中所有 `[偏离]` 条目，逐条判断：
+读 项目根 `backlog.md` 中所有 `[偏离]` 条目，逐条判断：
 
 | 偏离影响范围 | 处理方式 |
 |---|---|
 | 影响接口或数据结构 | 创建 `revise-doc(target=trd)` 任务包，写入 `iterations/vN/queue/{task-id}.md` |
 | 影响功能边界或用户行为 | 创建 `revise-doc(target=prd)` 任务包，写入 `iterations/vN/queue/{task-id}.md` |
-| 仅影响实现细节 | 追加至 `decisions.md`（格式：`{日期} | {决策内容} | 原因：{偏离说明}`） |
+| 仅影响实现细节 | 追加至 项目根 `decisions.md`（格式：`{日期} | {决策内容} | 原因：{偏离说明}`） |
 
 **同期 `[偏离]` 超过 5 条** → 在 feedback.md 追加一条「本期 TRD 覆盖质量问题，待方法论讨论」，纳入第二步分流，不在此步展开。
 
@@ -85,7 +85,7 @@
 
 ## 第二步：feedback 审阅分流
 
-读 `feedback.md`，逐条分流：
+读 项目根 `feedback.md`，逐条分流：
 
 | feedback 内容 | 目的地 | 操作 |
 |---|---|---|
@@ -93,7 +93,7 @@
 | 某个验证动作被漏掉，独立审查 / 联调才发现（能写成 `[ ]` checkbox） | 执行人 hact-notes（标签 `[checklist]`） | 誊入个人 notes，由 harvest-notes 后续上提 |
 | 角色工作流 / 规范结构 / 方法论有问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes，由 harvest-notes 后续进待议清单 |
 | 跨项目通用机制问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes |
-| 项目架构决策有遗漏 | `decisions.md`（项目仓，不变） | 追加条目 |
+| 项目架构决策有遗漏 | 项目根 `decisions.md`（项目仓，不变） | 追加条目 |
 | 无价值 | 直接删除 | — |
 
 > **`[规范]` vs `[checklist]` 判断标准**：feedback 是"以后写代码要遵守某规则"→ `[规范]`；feedback 是"以后自检时要专门核查这一项，否则容易漏"→ `[checklist]`。
@@ -106,7 +106,7 @@
 
 > **归属**：誊入"产生该反馈的成员"的 notes。当前架构 / 开发 / 管理高度重叠场景下，即收尾执行人本人的 notes 仓（见边界场景"feedback 来自他人"）。
 
-分流完成后**清空 `feedback.md`**（保留文件头，清空内容）。
+分流完成后**清空 项目根 `feedback.md`**（保留文件头，清空内容）。
 
 ```
 ✅ feedback 分流完成：誊入 notes {N} 条（[规范]{a}/[checklist]{b}/[方法论]{c}）/ decisions.md {M} 条 / 删除 {X} 条。feedback.md 已清空。
@@ -120,7 +120,7 @@
 
 ## 第三步：project.md 合并
 
-对照本期最终 PRD + TRD，逐段核查 `project.md`：
+对照本期最终 PRD + TRD，逐段核查 项目根 `project.md`：
 
 - **产品层**（目标 / 用户 / 功能边界）与最终 PRD 一致
 - **技术层**（技术选型 / 数据库结构 / 模块划分）与最终 TRD 一致
@@ -178,8 +178,8 @@ git push
 ## 上下文管理
 
 **断点续做**：
-1. 读 `feedback.md`：非空 → 第二步未完成；已清空 → 第二步已完成
-2. 读 `backlog.md`：扫描 `[偏离]` 条目是否已处理（有无对应的 decisions.md 条目或 revise-doc 任务）
-3. 读 `project.md`：有「开发中」标注 → 第三步未完成；无且有「已上线」/「待部署」→ 第三步已完成
+1. 读 项目根 `feedback.md`：非空 → 第二步未完成；已清空 → 第二步已完成
+2. 读 项目根 `backlog.md`：扫描 `[偏离]` 条目是否已处理（有无对应的 decisions.md 条目或 revise-doc 任务）
+3. 读 项目根 `project.md`：有「开发中」标注 → 第三步未完成；无且有「已上线」/「待部署」→ 第三步已完成
 4. 读 `iterations/vN/gates.md`：G5 已签 → 任务完成
 5. 从第一个未完成的步骤继续

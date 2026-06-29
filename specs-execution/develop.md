@@ -1,4 +1,4 @@
-﻿# exec: develop
+# exec: develop
 
 > CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
 > **执行模型**：主线只**编排**（定标 / 设计门 / 浮决策 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由**执行 subagent** 跑、隔离上下文；每个任务的质量由**独立审查 subagent**（对抗式、自读权威原文）把关，不通过即回炉。人工只守一个门：**前端设计是否到位**。
@@ -97,7 +97,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
    - 只读 `reference` 列出的文件行号范围，不读全文
    - **frontend 额外**：必读项目根 `design.md` 全文（视觉规格唯一参照）；`ux-flows.md` 对应功能段（若存在，按 title 匹配）；`prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
 2. **读懂**：对照 `acceptance-criteria` 明确本任务要做什么（不再向用户复述确认——理解忠实性由阶段 B 独审兜）。
-3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块；用 Explore 读 `reusables.md`，已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
+3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块；用 Explore 读 项目根 `reusables.md`，已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
 4. **写**：逐模块实现并**落盘**。>5 文件 / 跨模块可再派子 subagent 分模块（frontend 按组件、backend 按 controller/service 拆；属 subagent 内部的事，主线不介入）。
 5. **自绿（增量，共享工作树）**：跑 `build` / `type-check` / `lint` / `test`；不可视区 AC 的 Given/When/Then 例子规格（测试脊柱：行为源自 PRD 幕 1、技术精度源自 TRD 幕 2）**1:1 物化成可运行测试**且全绿——这是脊柱例子第一次落成 runnable 形态（守 2026-06-16：runnable 物化在代码存在后；测试随分支携带、不蒸馏）。`build/type/lint` 项目无对应命令 → 跳过该条不阻断。同一测试修 3 次仍红 → 不硬磨，返回 `blocked`（根因疑在 AC / TRD）。
 6. **返回结构**给主线：
@@ -111,7 +111,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
    blocked: { reason: "do-not 边界拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红 / 测试基建缺失", detail: "..." }  # status=blocked 时填
    ```
 
-> **测试基建缺失**（项目无测试运行器）：执行 subagent 返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 独立审查 subagent 按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
+> **测试基建缺失**（项目无测试运行器）：执行 subagent 返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 项目根 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 独立审查 subagent 按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
 
 ### 阶段 B · 独立审查 subagent（对抗式，自读权威原文）
 
@@ -216,7 +216,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 按 `source` 更新对应追踪文件：
 - `source=sprint` → 无需额外操作（PR 号 + `[merged]` 已写入 sprint.md）；同层全部 `[merged]` 后，下游 `generate-integration-tests` 前置即满足
-- `source=bug / optimization` → 在 `b-tasks.md` 对应行追加 `PR#{N} 已合并`
+- `source=bug / optimization` → 在 项目根 `b-tasks.md` 对应行追加 `PR#{N} 已合并`
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"PR#{N} 已合并，可复测"
 
 ```
@@ -232,14 +232,16 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 - 遇到 standards 未覆盖的决策（视觉 / 接口边界等）且反复出现
 - 上下文重置协议被触发（记录触发原因，供后续调整任务拆分粒度 / context 估量策略参考——估量降低触发概率但不消除，单任务做爆仍走重置）
 - 独立审查反复揪出同类问题（可能 standards / checklist 有空缺）
-- 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）→ 入 `backlog.md`（格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径} | 待后续处理`；与 B 类 adversarial-review 同 tag，下游 generate-integration-tests Step 1.5 统一清理）
+- 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）：
+  - ≤5 行且原因显而易见 → 直接修复（在 master 追加 commit），标记 `[x]`
+  - 较复杂 → 评估规模：≤3 文件且改动独立 → 建议走 B 类快速通道；否则入 项目根 `backlog.md`（格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径}`）
 - 无发现 → 跳过
 
 **反馈去向按 `source` 分**：
 
 | source | 去向 |
 |---|---|
-| `sprint` / `integration` / `manual-test`（A 类） | 写入 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`），由本迭代 `wrap-up-iteration` 第二步统一分流 |
+| `sprint` / `integration` / `manual-test`（A 类） | 写入 项目根 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`），由本迭代 `wrap-up-iteration` 第二步统一分流 |
 | `bug` / `optimization`（B 类） | **就地分流**：当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
 ---
@@ -283,7 +285,7 @@ context-state:
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 开跑前人工门 | **前端设计到位确认**（design.md / prototype 覆盖本批次画面） | 无（backend-only 跳过） |
-| 执行 subagent 额外加载 | `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
+| 执行 subagent 额外加载 | 项目根 `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
 | 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint/vue-tsc/stylelint｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
 | 子模块 subagent 拆分粒度 | 按组件拆 | 按模块拆（controller / service 分开）|
 | 独立审查侧重 | AC 忠实 + 机械保真（变量非硬编码）；视觉到位归人工门 | AC 忠实 + 测试品类齐全 + 标准合规 |

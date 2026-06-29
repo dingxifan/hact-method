@@ -4,23 +4,22 @@
 {一句话描述项目用途}
 
 ## 规范加载
-本仓使用 hact-method 的执行规范，按当前任务类型引用对应文件：
+本仓使用 hact-method 的执行规范。Step 1 推断出 task.type 后，用 Read 工具加载对应路径的单份规范，**不得预加载多份**：
 
-### A 类主线
-- `init-project`              → `@../hact-method-lab/specs-execution/init-project.md`
-- `draft-prd-vN`              → `@../hact-method-lab/specs-execution/draft-prd-vN.md`
-- `draft-ux`                  → `@../hact-method-lab/specs-execution/draft-ux.md`（可选，PRD 有 `draft-ux: 需要` 时触发，插在 G1→G2 之间）
-- `draft-tech-design`         → `@../hact-method-lab/specs-execution/draft-tech-design.md`
-- `plan-sprint`               → `@../hact-method-lab/specs-execution/plan-sprint.md`
-- `develop`                   → `@../hact-method-lab/specs-execution/develop.md`（含 per-task 独立审查 + 自合并到 master，无独立 pr-review）
-- `generate-integration-tests`→ `@../hact-method-lab/specs-execution/generate-integration-tests.md`
-- `manual-test`               → `@../hact-method-lab/specs-execution/manual-test.md`
-- `deploy`                    → `@../hact-method-lab/specs-execution/deploy.md`
-- `wrap-up-iteration`         → `@../hact-method-lab/specs-execution/wrap-up-iteration.md`
-
-### B 类 / 辅助
-- `dispatch-new`              → `@../hact-method-lab/specs-execution/dispatch-new.md`
-- `revise-doc`                → `@../hact-method-lab/specs-execution/revise-doc.md`
+| task.type | 规范路径 | 备注 |
+|-----------|---------|------|
+| `init-project` | `../hact-method-lab/specs-execution/init-project.md` | |
+| `draft-prd-vN` | `../hact-method-lab/specs-execution/draft-prd-vN.md` | |
+| `draft-ux` | `../hact-method-lab/specs-execution/draft-ux.md` | 可选，PRD 有 `draft-ux: 需要` 时触发，插在 G1→G2 之间 |
+| `draft-tech-design` | `../hact-method-lab/specs-execution/draft-tech-design.md` | |
+| `plan-sprint` | `../hact-method-lab/specs-execution/plan-sprint.md` | |
+| `develop` | `../hact-method-lab/specs-execution/develop.md` | 含 per-task 独立审查 + 自合并到 master，无独立 pr-review |
+| `generate-integration-tests` | `../hact-method-lab/specs-execution/generate-integration-tests.md` | |
+| `manual-test` | `../hact-method-lab/specs-execution/manual-test.md` | |
+| `deploy` | `../hact-method-lab/specs-execution/deploy.md` | |
+| `wrap-up-iteration` | `../hact-method-lab/specs-execution/wrap-up-iteration.md` | |
+| `dispatch-new` | `../hact-method-lab/specs-execution/dispatch-new.md` | B 类 |
+| `revise-doc` | `../hact-method-lab/specs-execution/revise-doc.md` | B 类 |
 
 > B 类任务手动实现后、commit 前，调用 `adversarial-review` skill 做独立对抗审查（diff ≥ 15 行且改了代码文件时）。
 
@@ -78,6 +77,8 @@ git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{userna
 | 全部 `[merged]`，联调报告已存在 | — | G4 未签 | `manual-test` |
 | G4 已签，G5 未签 | — | G5 未签 | `wrap-up-iteration` |
 | G5 已签 | — | — | 本迭代完结，等待下一指令 |
+
+> **联调报告轻读**：推断 `manual-test` 时，只检查 `integration-tests/result-*.md` 是否存在，不读全文；若需确认三条件通过，只读末尾 20 行。进入 `manual-test` 规范执行后再读全文。
 
 🚫 **禁止给用户贴角色标签**（如"作为前端程序员"）——执行层（frontend/backend）由 develop spec 第零步在会话内确认，不在启动阶段推断。
 
