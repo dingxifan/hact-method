@@ -72,7 +72,9 @@
 某 TRD 模块耦合过深、拆不成独立 develop 任务 → 先写一个大任务包，在其 `known-risks` 标耦合点，不强拆。
 
 **视觉地基包规则**（本迭代含 frontend 任务时）：EP 主题覆盖 / 全局 reset / body margin / token 全局接线这类**跨切面公共件不属于任何业务页**，按页/组件切包会天然漏掉——必须显式拆一个「视觉地基包」兜底：
-- **v1（硬性必有）**：v1 含前端任务则地基包为前端**首包**（建议 001），其余 frontend 任务 `depends_on` 它。内容 = 全局 reset + UI 库主题覆盖（把设计主色等 token 映射进 `--el-color-primary` 等库变量，禁用库默认主色）+ design.md token 全局接线（`variables.scss` + `main.ts`/`App.vue` 单一全局样式入口）。任务包加 `baseline: visual` 标记（check-sprint 据此核 v1 必有）。
+- **v1（硬性必有，含前端时）**：地基包为前端**首包**（建议 001），其余 frontend 任务 `depends_on` 它（要用其 token），加 `baseline: visual` 标记（check-sprint 据此核 v1 必有）。内容按是否走过 V0 走骨架分（**框架/值二分**）：
+  - **走过 V0 的新项目**：视觉地基**框架**已由 V0 建成（全局 reset + UI 库主题覆盖结构 + `variables.scss`/`main.ts` 单一全局入口，占位 token）→ v1 地基包**只缩成「把 `design.md` 真值填进 V0 的 `variables.scss`」**+ 补 design.md 新增而 V0 框架未覆盖的 token。**不重建框架。**
+  - **存量项目（未走 V0）**：地基包建全套（兜底）——全局 reset + UI 库主题覆盖（设计主色映射进 `--el-color-primary` 等、禁库默认主色）+ design.md token 全局接线（`variables.scss` + `main.ts`/`App.vue` 单一全局入口）。
 - **vN+1（design.md 变更触发）**：`design.md` 较上期有变更（新增/改色阶/改布局 token）→ 追加「地基跟进包」覆盖变更点（同样标 `baseline: visual`）；`git log --oneline -- design.md` 比对上期 G3 后是否动过。
 - 地基已建成且 design.md 无变更 → 无需地基包。
 
