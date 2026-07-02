@@ -123,7 +123,7 @@ Then: {期望系统行为}
 
 ## Step 4：写任务包
 
-按 `specs-structural/develop.md §字段规范` 写完整 17 字段任务包，写入 `b-queue/{task-id}.md`，状态 `[可取]`。
+按 `specs-structural/develop.md §字段规范` 写完整 18 字段任务包，写入 `b-queue/{task-id}.md`，状态 `[可取]`。
 
 关键字段确认（写完对照检查）：
 
@@ -132,13 +132,14 @@ Then: {期望系统行为}
 | `task-id` | `{项目缩写}-b-{三位序号}`，如 `hact-b-001` |
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
 | `urgency` | Step 3 判断结果 |
+| `risk` | 默认 `standard`；若触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用，则填 `sensitive` |
 | `acceptance-criteria` | 直接使用 Step 3.5 确认的 Given/When/Then 行为例子；**含纯加法 schema 变更（Step 1 判定）时**额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
 | `do-not` | 直接使用 Step 3.5 确认的禁动边界列表 |
 | `files` | Step 3.5 初步估填的预计改动文件 / 组件清单 |
 | `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；**含纯加法 schema 变更时**必须写明：最坏情况 / 如何发现 / 如何回滚 |
 | `api-contract`（条件） | 仅 `layers=[backend]` 且新增接口被前端消费时填，否则整段删除（与 develop §字段规范一致） |
 
-**17 字段无空字段方可写入 queue**（schema 变更**不另立字段**——落在上述 `acceptance-criteria` / `known-risks` / `api-contract`，与 develop §字段规范单一真相对齐）。
+**18 字段无空字段方可写入 queue**（schema 变更**不另立字段**——落在上述 `acceptance-criteria` / `known-risks` / `api-contract`，与 develop §字段规范单一真相对齐）。
 
 **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 

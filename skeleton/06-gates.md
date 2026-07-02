@@ -135,7 +135,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 ### G3（检查器 check-sprint.js）
 
-> 子计划 3c（2026-06-19，设计见 `_meta/plans/2026-06-19-structural-review/sub3c-G3任务包规范化-design.md`）：先把任务包序列化锁定为 YAML frontmatter（`templates/queue/task-package.md`，sub1 同款地基），再建 `check-sprint.js` 覆盖 G3 完成判据里**确定性可查**的部分——任务包 17 字段完备、`reference` 含行号（前端含 ux-flows / 后端含 trd 条目）、AC 带 `(源：PRD AC-nn)`/`(技术)` 回链 tag + 逐条 AC 反向覆盖（按 PRD `AC-nn` id，sub5 机械化）、`depends_on` 在册、queue↔sprint.md↔status.yml 三方一致。这一关**不再派 subagent 冷核**——§7 冷核协议至此整段退场。
+> 子计划 3c（2026-06-19，设计见 `_meta/plans/2026-06-19-structural-review/sub3c-G3任务包规范化-design.md`）：先把任务包序列化锁定为 YAML frontmatter（`templates/queue/task-package.md`，sub1 同款地基），再建 `check-sprint.js` 覆盖 G3 完成判据里**确定性可查**的部分——任务包既有机械字段完备（`risk` 缺省按 `standard`，不机械校验）、`reference` 含行号（前端含 ux-flows / 后端含 trd 条目）、AC 带 `(源：PRD AC-nn)`/`(技术)` 回链 tag + 逐条 AC 反向覆盖（按 PRD `AC-nn` id，sub5 机械化）、`depends_on` 在册、queue↔sprint.md↔status.yml 三方一致。这一关**不再派 subagent 冷核**——§7 冷核协议至此整段退场。
 
 1. 跑 `node scripts/check-sprint.js vN`（在项目仓根目录）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到绿（签字 commit 的门卫会强制此事——红则拦 commit，跳过/伪造 pass 机制上做不到）。
 2. 脚本 `🧑 留签字人确认` 段列出的语义残量由签字人确认：疑点清单已逐条确认、TRD 每模块都有任务包、`plan-sprint` Step 3.5 独审无遗留阻断、PRD **逐条** AC（非功能级）均被覆盖。签字时复核，无需另派 subagent。

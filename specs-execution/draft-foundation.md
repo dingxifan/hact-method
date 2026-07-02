@@ -27,7 +27,7 @@ mkdir -p "iterations/v0"
 [ -f iterations/v0/gates.md ] || printf '# Gates · v0（走骨架）\n\n- [ ] G2：地基设计已确认 —\n' > iterations/v0/gates.md
 ```
 
-**必读文件**（用 Explore subagent 并行读，不占主线）：
+**必读文件**（用 Explore subagent 并行读，默认指定 `model: "haiku"`，不占主线）：
 - 项目根 `foundation.md`（核心输入：领域地图 + 关注点登记 + 应有档）
 - `_meta/input/` 背景材料
 - 项目根 `project.md` / `decisions.md` / `reusables.md`
@@ -172,7 +172,7 @@ mkdir -p "iterations/v0"
 
 | 触发点 | Subagent 任务 | 失败处理 |
 |--------|-------------|---------|
-| 会话启动 | Explore 并行读输入文件（foundation.md / background / project.md / 模板 standards） | 读取失败则主线单独读，不阻断 |
+| 会话启动 | Explore 并行读输入文件（foundation.md / background / project.md / 模板 standards；纯读取+摘要，指定 `model: "haiku"`） | 读取失败则主线单独读，不阻断 |
 | Step 4 standards 播种 | 2 个并行 subagent 各处理一份（frontend / backend 首期播种） | 失败则主线接管该份，记原因 |
 
 ---

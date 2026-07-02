@@ -76,7 +76,7 @@
 
 ### Step 3：跑后端测试
 
-读 `integration-tests/scripts-v{N}.md`，提取模块列表，**按模块并行派 subagent**：
+读 `integration-tests/scripts-v{N}.md`，提取模块列表，**按模块并行派 subagent**（纯执行+结果上报，指定 `model: "haiku"`）：
 - 每个 subagent 执行该模块下所有 `.http` / `curl` 脚本
 - 返回：每条场景结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要 + 失败现象及复现步骤
 
@@ -134,7 +134,7 @@ git branch -d fix/it-{desc}
 1. 确认前端页面可打开
 2. 派 Explore subagent 读 ux-flows.md + prototype.html（若存在），生成前端场景（上限 15 条，优先主流程 + 跨模块集成点）：调用 `Skill(pinchtab)` 生成脚本，保存到 `integration-tests/frontend/v{N}-run-all.sh`；prototype.html 存在时软核对场景覆盖是否齐全（不设硬闸口，超 15 条按上限降级 backlog）
 3. 更新脚本索引，追加前端部分；commit + push
-4. 按模块并行派 subagent 执行 pinchtab 场景，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`
+4. 按模块并行派 subagent（纯执行+结果上报，指定 `model: "haiku"`）执行 pinchtab 场景，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`
 5. **视觉冒烟断言**（涉视觉基线迭代必做，≤3 条固定、不计入 15 条上限）：在关键页面加载后用 pinchtab/JS 实测以下确定值，取数源 = `design.md`「〇、视觉冒烟锚点」段，不符即 `[阻断]`：
    - **主色覆盖**：`getComputedStyle(document.documentElement).getPropertyValue('--el-color-primary').trim()`（按本项目 UI 库主色变量名调整）== design.md 主色 token —— 抓「token 定义了没覆盖库主题」
    - **视口无外溢**：目标视口宽下 `document.documentElement.scrollWidth - window.innerWidth <= 0` —— 抓「视口外溢」
@@ -184,8 +184,8 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的�
 | 触发点 | Subagent 任务 | Prompt 要点 | 失败处理 |
 |--------|-------------|------------|---------|
 | Step 2（后端脚本生成） | Explore 读 PRD AC + TRD 接口，生成 backend curl 脚本 | 读 prd AC + trd 接口设计段；生成 backend/v{N}-run-all.sh；写脚本索引后端部分；返回场景数 | 失败则主线手动生成 |
-| Step 3（按模块并行） | 每模块一个 subagent，执行后端 curl 脚本 | 传入：模块名、.http 脚本列表、后端地址；执行 curl；返回每条结果（✅/❌）+ 状态码 + body 摘要；部分失败仍返回其余结果 | 失败则主线逐条执行 |
-| Step 4.5（完整档·前端） | Explore 读 ux-flows + prototype 生成 pinchtab 脚本；执行 subagent 跑前端场景 | 调用 Skill(pinchtab)；上限 15 条；prototype 软核对覆盖；返回每条结果 | 失败则主线手动生成 / 逐条执行 |
+| Step 3（按模块并行） | 每模块一个 subagent（纯执行+上报，指定 `model: "haiku"`），执行后端 curl 脚本 | 传入：模块名、.http 脚本列表、后端地址；执行 curl；返回每条结果（✅/❌）+ 状态码 + body 摘要；部分失败仍返回其余结果 | 失败则主线逐条执行 |
+| Step 4.5（完整档·前端） | Explore 读 ux-flows + prototype 生成 pinchtab 脚本；执行 subagent（纯执行+上报，指定 `model: "haiku"`）跑前端场景 | 调用 Skill(pinchtab)；上限 15 条；prototype 软核对覆盖；返回每条结果 | 失败则主线手动生成 / 逐条执行 |
 
 ---
 

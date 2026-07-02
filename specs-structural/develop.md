@@ -22,7 +22,7 @@
 
 ## 字段规范
 
-> **序列化锁定（子计划 3c）**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`。`check-sprint.js`（G3 linter）据此机械 parse——旧的「最小 frontmatter + `## markdown` 段」布局退役。下表 17 字段 + 条件 `api-contract` / `baseline` 是字段的**单一真相**。
+> **序列化锁定（子计划 3c）**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`。`check-sprint.js`（G3 linter）据此机械 parse——旧的「最小 frontmatter + `## markdown` 段」布局退役。下表 18 字段 + 条件 `api-contract` / `baseline` 是字段的**单一真相**。
 
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
@@ -32,6 +32,7 @@
 | `source` | enum | ✅ | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` |
 | `task_type` | enum | ✅ | `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）/ layers=[shared] 时由分配者在任务包中指定 |
 | `urgency` | enum | ✅ | `normal`（默认）/ `hotfix` |
+| `risk` | enum | ✅ | `standard`（默认）/ `sensitive`。触及 develop 合并前安全敏感预检四类之一时填 `sensitive`：权限 / 认证 / 数据隔离、不可逆数据操作、金额 / 计费计算、对外不可撤销副作用；否则填 `standard`。缺省按 `standard` 处理，供 develop 阶段 B 决定审查 subagent 模型档位 |
 | `title` | string | ✅ | 简短描述，15字以内 |
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
 | `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |

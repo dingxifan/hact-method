@@ -32,8 +32,8 @@ function readLines(p) { return fs.readFileSync(p, 'utf8').split(/\r?\n/); }
 function exists(p) { try { return fs.statSync(p).isFile(); } catch { return false; } }
 function stripComment(s) { return s.replace(/\s+#.*$/, '').trim(); } // 去行尾 ` # 注释`
 
-// 任务包必含的 17 字段（specs-structural/develop.md §字段规范，单一真相）。
-// status 不在内（与 status.yml 重复，由后者权威）；api-contract 条件必填，单独判。
+// 任务包机械必含的 17 字段（specs-structural/develop.md §字段规范的可校验子集）。
+// status 不在内（与 status.yml 重复，由后者权威）；risk 缺省按 standard，不机械校验；api-contract 条件必填，单独判。
 const REQUIRED = ['task-id', 'sprint_id', 'layers', 'source', 'task_type', 'urgency',
   'title', 'description', 'depends_on', 'files', 'acceptance-criteria',
   'relevant-standards', 'reference', 'context', 'known-risks', 'do-not', 'escalate-if'];

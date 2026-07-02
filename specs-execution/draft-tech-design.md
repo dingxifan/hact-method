@@ -25,7 +25,7 @@
 - 有任何功能标记 `draft-ux: 需要`，且 `iterations/vN/prototype.html` 不存在 → 阻断：「⚠️ PRD 中有功能需要交互原型，请先完成 draft-ux 再启动技术设计。」
 - 全部标记 `draft-ux: 不需要`，或 `prototype.html` 已存在 → 继续
 
-**必读文件**（用 Explore subagent 并行读取，不占主线上下文）：
+**必读文件**（用 Explore subagent 并行读取，默认指定 `model: "haiku"`，不占主线上下文）：
 - `iterations/vN/prd.md`
 - `iterations/vN/ux-flows.md`（如存在；作为接口设计的业务流参照）
 - `iterations/vN/prototype.html`（如存在；作为接口设计时确认各画面数据需求的参照）
@@ -142,6 +142,8 @@
 
 **§ 共享组件建议**：表格格式，引用 reusables.md 已有资产（标"已有，建议复用"），新建议标明路径。
 
+> 若共享组件建议被拒绝并需追加到 项目根 `reusables.md`「建议已拒绝」，写入前先看该表是否已超过 20 条；若触发阈值，先按文件头约定把纯历史拒绝建议归档到 `reusables-history.md`，再追加本期拒绝项。
+
 **AC 覆盖自检**（写完七段后）：回看每条 PRD `AC-nn` 都有载体回链（接口/模块/场景，载体无关）。齐全性 Step 4 check-docs 机械核（逐条正反向），此处只肉眼扫补漏；linter 报"AC 未被承接"且确认本期不做 → 列疑点向用户确认范围调整 vs 设计遗漏，不静默丢。
 
 **留人语义残量**（linter 兜不住）：① 载体**真承接**该 AC（内容真覆盖、非仅 id 在场）② 精化例子忠实 PRD 行为意图（没夹带/缩水）——Step 5 末端审查 + 签字时复核（Step 9）。
@@ -174,7 +176,7 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
 
 check-docs（+ 门卫）守**结构与覆盖齐全性**；**内容有效性派全新 subagent 陌生视角复核**（防同上下文自评盖章）——TRD 的语义残量比 PRD 更厚（接口契约对不对、精化缩没缩水、字段满不满足画面）。
 
-**派发**：派一个全新 subagent，令其读 `../hact-method-lab/templates/review-briefs/trd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 trd.md + prd.md（+ ux-flows / prototype 如有），陌生视角逐查四维度（内部一致性 / AC 真承接 / 字段满足画面 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
+**派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "haiku"`），令其读 `../hact-method-lab/templates/review-briefs/trd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 trd.md + prd.md（+ ux-flows / prototype 如有），陌生视角逐查四维度（内部一致性 / AC 真承接 / 字段满足画面 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
 
 CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用户拍板。
 
@@ -212,12 +214,14 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
   - **去重**：并入前对照公共模板 + 项目根现有 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
   - notes 不存在 / 无 `[规范]` 条目 → 仅用公共模板 + 现有 standards
   - 与现有 standards 同项但建议不同 → 保留现有版本，把不同建议记入 项目根 `feedback.md` 走分流，不当场覆盖
-  - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 项目根 `decisions.md` 说明冲突和理由
+  - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 项目根 `decisions.md` 说明冲突和理由；写入前先按 `decisions.md` 文件头约定检查是否触发归档阈值
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
 - 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
 - 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型；并入 notes 条目前先对照公共模板 / 现有 standards 去重
 - 主线负责写文件（项目根 `standards-{layer}.md` 原地播种 / 增补），不让 subagent 直接写文件
+
+> 本步 frontend / backend subagent 属 standards 内容生成任务，保持默认模型，不套 Step 5 审查类轻量模型规则。
 
 主线处理项目根 `standards-shared.md`（命名规范 / 错误码 / API 响应格式 / 权限模型），首期播种 / 迭代增补同上规则。
 
@@ -241,6 +245,8 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 ### Step 8：知识沉淀
 
 更新 项目根 `decisions.md`，追加本期关键架构决策（格式：决策 / 原因 / 日期）。
+
+> 追加前先看活跃条目是否已超过 30 条，或最早条目所属迭代是否已过去 5 期以上；若触发阈值，先按文件头约定把纯历史/已取代条目归档到 `decisions-history.md`，再追加本期决策。
 
 > **边界**：技术选型有重大变更（替换已有依赖）→ 写入 项目根 `decisions.md` 并说明原因，不静默替换。
 
@@ -289,7 +295,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 | 触发点 | Subagent 任务 | 失败处理 |
 |--------|-------------|---------|
-| 会话启动 | Explore 并行读 6 份输入文件 | 读取失败则主线单独读，不阻断 |
+| 会话启动 | Explore 并行读 6 份输入文件（纯读取+摘要，指定 `model: "haiku"`） | 读取失败则主线单独读，不阻断 |
 | Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 失败则主线自审降级，不阻断 |
 | Step 7 standards 维护 | 2 个并行 subagent 各处理一份（frontend / backend 的播种 / 增补） | 失败则主线接管该份，记录原因 |
 

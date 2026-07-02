@@ -127,7 +127,7 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 
 linter（+ 门卫）守**格式**；**内容有效性派全新 subagent 陌生视角复核**（防同上下文自评盖章）。
 
-**派发**：派一个全新 subagent，令其读 `../hact-method-lab/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
+**派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "haiku"`），令其读 `../hact-method-lab/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
 
 CC 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用户拍板。
 
@@ -161,7 +161,7 @@ CC 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用
 
 ## Subagent 使用
 
-PRD 生成全程纯对话；**唯一 subagent 在 Step 7.5**——定稿后派全新陌生视角审内容有效性（格式归 linter，内容归独立审查）。失败则主线自审降级兜底。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
+PRD 生成全程纯对话；**唯一 subagent 在 Step 7.5**——定稿后派全新陌生视角审内容有效性（格式归 linter，内容归独立审查，默认指定 `model: "haiku"`）。失败则主线自审降级兜底。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
 
 ---
 

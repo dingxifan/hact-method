@@ -91,7 +91,7 @@ CC 会收集：
 
 ### 任务包写入 queue
 
-CC 写完 17 字段任务包，放入 `iterations/vN/queue/{task-id}.md`（vN = 当前活跃迭代），同时在 `b-tasks.md` 追加一行。
+CC 写完 18 字段任务包，放入 `b-queue/{task-id}.md`，同时在 `b-tasks.md` 追加一行。`risk` 缺省按 `standard`；触及安全敏感四类时填 `sensitive`。
 
 task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`。
 

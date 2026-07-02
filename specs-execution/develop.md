@@ -135,6 +135,8 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 
 执行 subagent 返回 `done` 后，主线派**全新隔离** subagent 读 `../hact-method-lab/templates/review-briefs/develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 `{task-id}` + layer + vN。该审查员**自读权威原文**（任务包 / `git diff` / standards 章节 / 测试代码+结果），**绝不接收执行 subagent 的自评 / 总结**（喂自评即丧失独立性，等于自己批自己的作业），对抗式找问题、存疑即判阻断。
 
+**模型分级**：阶段 A 执行 subagent 是写代码/生成任务，保持默认模型；本阶段 B 是纯审查。任务包 `risk: standard`（或存量任务包缺省）→ 派发审查 subagent 时指定 `model: "haiku"`；任务包 `risk: sensitive` 或 `source=foundation` → 不指定 model，继承当前会话默认模型。
+
 **审查 loop（有界）**：
 - 审查输出 `findings: []` 或全为「建议」级 → 本任务**通过**，进下一任务（建议项记入 PR「遗留问题」或当场顺手改）。
 - 有「阻断」级 finding → 主线把问题清单回传、**重派执行 subagent** 整改 → 整改后**重派审查**。
@@ -263,6 +265,8 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | `sprint` / `integration` / `manual-test`（A 类） | 写入 项目根 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`；**若为跨切面地基缺口**——新发现的越权/错误类目/作用域漏洞等"跳出地基"——则注明`建议 foundation.md 增补地基关注点`，下期 `draft-tech-design` Step7 据此增补 + 立应有档），由本迭代 `wrap-up-iteration` 第二步统一分流 |
 | `bug` / `optimization`（B 类） | **就地分流**：当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
+> 写入项目 `decisions.md` 前先看活跃条目是否已超过 30 条，或最早条目所属迭代是否已过去 5 期以上；若触发阈值，先按文件头约定把纯历史/已取代条目归档到 `decisions-history.md`，再追加本次决策。
+
 ---
 
 ## Subagent 使用
@@ -272,7 +276,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | **执行 subagent** | 主循环每任务阶段 A | 自读上下文 → 读懂 → 计划+复用 → 写+自绿，返回结构化结果 | 见下方失败协议 |
 | **独立审查 subagent** | 主循环每任务阶段 B | 读 `develop-review.md`（`source=foundation` 时 `foundation-review.md`）、自读权威原文、对抗式审，返回问题清单 | 失败则主线重派；连续失败按审查 loop 超界处置 |
 | 子模块 subagent | 阶段 A 内（>5 文件 / 跨模块） | 实现单个模块，返回代码 | 由执行 subagent 内部处理 |
-| Explore | 阶段 A 复用检查 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 失败则执行 subagent 直接读 |
+| Explore | 阶段 A 复用检查 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要；纯读取+摘要，指定 `model: "haiku"`） | 失败则执行 subagent 直接读 |
 
 **执行 subagent 失败协议**：
 1. 同一问题三次失败 → 执行 subagent 返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策）
