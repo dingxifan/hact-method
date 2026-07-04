@@ -16,7 +16,7 @@
 
 ---
 
-> **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
+> **步骤协议**：默认 **auto-run until failure**。正常路径不逐步询问；每步完成后输出 `✅ [步骤名] 完成：[1–2 句结论]` 并直接进入下一步。只有标 `🚫` 的人工断点必须等用户明确回应才继续；失败、冲突、权限不足、健康检查异常等非绿灯场景立即停下并报告。
 
 ---
 
@@ -30,13 +30,17 @@ server-address=
 build-command=
 health-check-url=
 restart-command=
+auto-restart=false
 ```
 
-读 `deployment.config`，确认配置完整。
+读 `deployment.config`，确认配置完整。`auto-restart` 为可选字段：
+- `true`：该环境允许构建成功后自动执行 `restart-command`（如 staging、静态发布、无停机 reload、已约定发布窗口）。
+- `false` 或缺失：`target=prod` 时，执行 `restart-command` 前必须停下确认；非 prod 可自动继续。
 
 ```
 部署目标：{target}
 包含内容：{A 类 vN / B 类 {task-id 列表} / hotfix {task-id}}
+重启策略：{auto-restart=true 自动重启 / prod 需确认 / 非 prod 自动继续}
 继续？
 ```
 
@@ -52,8 +56,7 @@ restart-command=
 
 ```
 ✅ 本地构建验证通过。
-→ 下一步：推送代码
-继续？
+→ 自动进入 Step 2：推送代码
 ```
 
 ---
@@ -78,7 +81,7 @@ git pull
 
 确认拉取成功（无冲突 / 无报错）。
 
-**拉取有冲突** → 解决冲突后重试，不强制覆盖。
+**拉取有冲突** → 立即停止。不得在服务器上手工解冲突或强制覆盖；回本地解决冲突、重新构建、push 后，再从 Step 3 重试。
 
 ---
 
@@ -90,11 +93,10 @@ git pull
 
 ```
 ✅ 服务器构建完成。
-→ 下一步：重启服务
-继续？
+→ {auto-restart=true 或非 prod：自动进入 Step 5 / prod 且 auto-restart=false：等待确认重启}
 ```
 
-🚫 等用户确认重启
+🚫 **仅当 `target=prod` 且 `auto-restart` 不是 `true` 时**，等用户确认重启。其余情况自动继续。
 
 ---
 
@@ -137,8 +139,9 @@ curl -f {health-check-url}
 **多环境（staging 先于 prod）**：
 `target` 字段为多个环境时（如 `staging → prod`），依次对每个环境完整执行 Step 1–7：
 1. 先对 `staging` 执行 Step 1–7，健康检查通过后记录部署日志
-2. 确认 staging 无异常后，再对 `prod` 执行 Step 3–7（本地构建 Step 1–2 无需重复）
-3. 每个环境独立验证，staging 失败不推进 prod
+2. staging 无异常后，输出 staging 结果摘要，🚫 等用户确认是否推进 `prod`
+3. 用户确认后，再对 `prod` 执行 Step 3–7（本地构建 Step 1–2 无需重复）
+4. 每个环境独立验证，staging 失败不推进 prod
 
 **hotfix 与当前未部署的 A 类改动代码冲突**：
 - 解决冲突后再部署；不拆分部署（除非冲突短期无法解决）
