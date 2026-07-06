@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发看板应用**（进行中）
-- 上次更新：2026-06-29
+- 上次更新：2026-07-06
 
 ## 各阶段完成情况
 
@@ -34,18 +34,18 @@
 
 ## 仓库拓扑
 
-`hact-method` 与 `hact-method-lab` 是**同一 git 仓库（gitee.com/dingxifan/hact-method）的两个 worktree**，共享对象库、检出不同分支，用于新旧方法**并行对比测试**：
+`hact-method-lab` 自 2026-07-06 起是**独立 git 仓库**（`gitee.com/dingxifan/hact-method-lab`），不再与 `hact-method` 共享对象库。此前两者是同一仓库（`gitee.com/dingxifan/hact-method`）的两个 worktree，检出不同分支，用于新旧方法并行对比测试；对比阶段结束、新方法（`method-lab` 分支的全部演进）确认为主线后，独立成仓：
 
-| Worktree | 路径 | 分支 | 当前 tip | 角色 |
-|------|------|------|---------|------|
-| hact-method（旧版基线） | `E:\group-code\hact-method\`（挂载于 WSL `/mnt/e/group-code/hact-method`） | `master` | `89d01ff` draft-ux 重构 | **旧方法**对照基线（已 reset 到 origin/master，2026-06-20） |
-| hact-method-lab（最新） | `/home/administrator/group-coding/hact-method-lab`（WSL 原生路径） | `method-lab` | `093dc49` | **新方法**，含 loop-layer2 起的全部大改；与 `origin/method-lab` 同步 |
-| hact-app | `E:\group-code\hact-app\` | — | — | hact-app 代码 + 协调文件（用户自行推送） |
-| human-ai-col | `E:\group-code\human-ai-col\` | — | — | v1 方法论（冻结，gitee.com/dingxifan/human-ai-col） |
+| 仓库 | 路径 | 分支 | 角色 |
+|------|------|------|------|
+| **hact-method-lab**（本仓，独立） | `/home/administrator/group-coding/hact-method-lab`（WSL 原生路径） | `master` | 当前唯一在用的方法论主线，独立仓库、独立历史 |
+| hact-method（旧版基线，未受影响） | `E:\group-code\hact-method\`（挂载于 WSL `/mnt/e/group-code/hact-method`） | `master` | **旧方法**对照基线，原样冻结保留，仓库本身未删除、未改动 |
+| hact-app | `E:\group-code\hact-app\` | — | hact-app 代码 + 协调文件（用户自行推送） |
+| human-ai-col | `E:\group-code\human-ai-col\` | — | v1 方法论（冻结，gitee.com/dingxifan/human-ai-col，与上面两者是不同世代） |
 
-> 备注：`method-lab` 完整包含旧 master 的 51 个 commit（领先 17）。reset 前的本地 master tip `8304136` 已用 tag `master-pre-reset-8304136` 钉住，`git reset --hard master-pre-reset-8304136`（在 hact-method worktree 内）可完全还原。两 worktree 勿同时 checkout 同一分支。
+> 迁移记录（2026-07-06）：把 `method-lab` 分支（含继承自旧 `hact-method` master 的全部历史 + 之后的全部独立演进，共 261 commit，tip `15971c3`）完整推送到新建的空仓 `gitee.com/dingxifan/hact-method-lab` 的 `master` 分支。随后把本地 `hact-method-lab` 目录从旧仓库的 linked worktree 转成该新仓库的独立 clone（原 worktree 目录整体重命名为 `hact-method-lab.oldworktree` 暂留几天做安全网，未提交的 `_meta/sessions/` 已手动搬入新目录），并清理了旧仓库 `.git/worktrees/` 里失效的 worktree 登记。旧仓库 `hact-method` 里的 `method-lab` 分支未删除（历史遗留，无害，不再更新）。
 >
-> 备注（2026-07-05）：`hact-method-lab` worktree 已从 `E:\Group-code-lab\hact-method-lab\` 迁到 WSL 原生路径 `/home/administrator/group-coding/hact-method-lab`（主仓 `.git/worktrees/hact-method-lab/gitdir` 已同步改指到新路径）。原 Windows 目录下的文件未删除，但已不再是可用的 git worktree，不需要再使用。
+> 历史备注（迁移前，供追溯）：`method-lab` 曾完整包含旧 master 的 51 个 commit（领先 17）；reset 前的本地 master tip `8304136` 曾用 tag `master-pre-reset-8304136` 钉住。`hact-method-lab` worktree 曾于 2026-07-05 从 `E:\Group-code-lab\hact-method-lab\` 迁到 WSL 原生路径——这次（2026-07-06）是在那次路径迁移基础上做的仓库独立化，两次是不同性质的操作（前者只挪路径，后者切断了与旧仓库的对象库依赖）。
 
 ## 已知风险
 
@@ -58,6 +58,7 @@
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
+- 2026-07-06 hact-method-lab 独立成仓 — 从 hact-method 的 worktree 切断为独立 Gitee 仓库，完整历史带过，旧基线原样保留
 - 2026-07-02 Codex 适配层成本立论修订 — 立论改为"控成本"而非"上下文更小"+ 补合并权归属说明/长短卡同步检查/人工交接操作细节
 - 2026-07-01 新建 codex-adapter/ 实验区 — CC+Codex 混合执行草案，不改动正式方法论
 - 2026-06-29 地基层 + V0 走骨架（主管线重构，决策#25）— 两轮独审收敛，已推送 origin/method-lab

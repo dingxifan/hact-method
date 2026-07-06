@@ -4,6 +4,20 @@
 
 ## 历史里程碑
 
+### 2026-07-06 hact-method-lab 独立成仓 — 从 hact-method 的 worktree 切断为独立仓库
+
+> 触发：用户判断新旧方法并行对比阶段已经结束，`method-lab` 分支承载的新方法应该有自己独立的项目身份，而不是继续挂靠在旧仓库 `hact-method` 下当一个分支/worktree。
+
+- **决策**（AskUserQuestion 确认）：新建独立 Gitee 仓库（而非同仓改主分支）；带完整提交历史（而非从当前状态重新起一个初始 commit）；旧基线 `hact-method`（master 分支）原样保留不动；新仓库名 `hact-method-lab`，主分支名改回 `master`。
+- **执行**：
+  1. 用户在 Gitee `dingxifan` 企业下手动建空仓 `gitee.com/dingxifan/hact-method-lab`（不勾 auto_init，避免和待推送历史冲突）。
+  2. 本地加临时 remote `lab`，`git push lab method-lab:master`，推送 261 个 commit（HEAD `15971c3`），推送后核对新仓库 HEAD 与本地一致。
+  3. **worktree → 独立仓库的转换**：`hact-method-lab` 此前是 `hact-method` 仓库的 linked worktree，对象库实际存放在另一个 worktree（`/mnt/e/group-code/hact-method/.git`），只改 remote 地址不能解除这层依赖。做法：把旧目录整体 `mv` 成 `hact-method-lab.oldworktree`（不删除，留作安全网）→ 在原路径 `git clone` 新仓库得到真正独立的 `.git` → 把旧目录里唯一的未提交内容（`_meta/sessions/` 下两份 Pilot A 交接文件）手动拷回新目录 → 从旧仓库里 `rm -rf .git/worktrees/hact-method-lab` 清掉失效的 worktree 管理记录（`git worktree prune` 对此场景不生效，因为新目录路径仍然存在、只是内容变成了另一个独立仓库，prune 的"路径缺失"判定不触发，需要直接删管理目录）。
+  4. 核对：新目录 `git status` 干净、`git remote -v` 指向新仓库、`git log -1` 与推送前一致、旧仓库 `git worktree list` 不再出现失效条目。
+  5. 更新 `STATUS.md`「仓库拓扑」一节，反映独立仓库现实；旧的两 worktree 并行对比描述整体改写、历史备注保留供追溯。
+- **有意保留的无害残留**：旧仓库 `hact-method` 里的 `method-lab` 分支未删除（迁移前的推送记录，不再更新，不影响新仓库）；`hact-method-lab.oldworktree` 备份目录暂留几天再由用户决定是否删除。
+- **未变**：旧基线 `hact-method`（`/mnt/e/group-code/hact-method`，master 分支）仓库本身、内容、远端一个字节都没动。
+
 ### 2026-07-02 Codex 适配层成本立论修订 — 补合并权归属说明 / 长短卡同步检查 / 人工交接操作细节
 
 > 触发：审阅 2026-07-01 新建的 `codex-adapter/` 草案，发现四处缺口需在扩大试点前补：立论前提不稳、develop 合并权归属描述像是退回决策#24 之前的模型、长卡短卡无同步机制、"人工交接"缺具体操作步骤。改动范围全部限定在 `codex-adapter/` 实验区内，不动方法论主体。
