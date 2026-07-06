@@ -66,7 +66,7 @@ tasks:
     sprint: 1                    # int sprint 编号；B 类 / 修复任务为 null
     source: sprint               # enum，见下
     title: 用户表与权限          # string，列表显示用
-    type: develop               # enum，13 种 task type
+    type: develop               # enum，14 种 task type
     discipline: dev-backend     # enum，8 种 discipline
     layer: backend              # enum，frontend / backend / shared / null
     status: merged              # enum，可取 / taken-by / done / merged

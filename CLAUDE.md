@@ -11,6 +11,8 @@
 项目根目录只允许：
 - CLAUDE.md / BRIEF.md / STATUS.md
 - skeleton/、specs-structural/、specs-execution/（方法论核心文档）
+- guide/（面向新用户的入口引导文档，非规范本身，索引/摘要性质）
+- skills/（本仓自带的 skill 定义，如 gitee-ops / adversarial-review / verification-loop）
 - templates/（可复用模板）
 - _meta/（研发过程产物：input/、plans/、.current_plan 及历史迭代文档）
 - codex-adapter/（**实验区**，见下方说明；不是方法论核心文档，不参与正常任务加载）

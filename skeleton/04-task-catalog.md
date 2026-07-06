@@ -10,7 +10,7 @@
 
 ## 总览
 
-**13 个 task type**，按生命周期段分布：
+**14 个 task type**，按生命周期段分布：
 
 | 段 | task | discipline | Gate |
 |---|---|---|---|
@@ -18,6 +18,7 @@
 | hact-method | `harvest-notes` | management | — |
 | V0 走骨架 | `draft-foundation` | architecture | G2(v0) |
 | 准备 | `draft-prd-vN` | product | G1 |
+| 准备 | `draft-ux` | product | — (可选前置于 G2，PRD 标记 `draft-ux: 需要` 时对 G2 强制) |
 | 准备 | `draft-tech-design` | architecture | G2 |
 | 准备 | `plan-sprint` | dispatch | G3 |
 | 跨段 | `revise-doc` | product / architecture（按 target 派生） | — |
@@ -42,13 +43,13 @@
 | `source` | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
 | `target` | `prd` / `trd` / `standards` | `revise-doc` |
 | `target-source` | `bug` / `optimization` | `dispatch-new` |
-| `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-tech-design`, `wrap-up-iteration` |
+| `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-ux`, `draft-tech-design`, `wrap-up-iteration` |
 
 `layers` 和 `source` 的组合决定 `develop` 任务加载哪份 standards 和如何理解任务上下文（详见 §6 develop 条目）。
 
 ---
 
-## 13 task 完整定义
+## 14 task 完整定义
 
 ### 1. `init-project`
 
@@ -78,7 +79,22 @@
 
 ---
 
-### 3. `draft-tech-design`
+### 3. `draft-ux`
+
+> 从 PRD 功能出发消化交互流程，输出可交互 HTML 原型，在 TRD 开始前确认交互逻辑。
+
+- **discipline**: `product`
+- **完成判据**: 场景/流程图无遗漏无死路 + prototype.html 可点击走通全部路径 + 落实 design.md 视觉规范 + 独立对抗审查通过 + 用户实际走查确认
+- **主要产物**: `iterations/vN/ux-flows.md`（场景列表+流程图）+ `iterations/vN/prototype.html` + `iterations/vN/prototype-map.md`（AC/场景/锚点映射）+ `design.md`（首次时生成初稿）
+- **关联 Gate**: 无独立 Gate；可选前置于 G2，由执行人判断是否触发——但若 PRD 中有功能标记 `draft-ux: 需要`，`draft-tech-design` 对 G2 强制阻断，直到本任务产出 `prototype.html`
+- **前置条件**: `draft-prd-vN` 已完成、G1 已签；纯数据管理类页面（标准增删改查、无分支流程）可跳过
+- **属性**: `version`（vN）
+
+详见 `specs-structural/draft-ux.md`。
+
+---
+
+### 4. `draft-tech-design`
 
 > 写本期技术设计：TRD（接口/数据结构）+ 三份 standards。
 
@@ -97,7 +113,7 @@
 
 ---
 
-### 4. `plan-sprint`
+### 5. `plan-sprint`
 
 > 拆解 sprint 任务、设依赖、入 queue。
 
@@ -112,7 +128,7 @@
 
 ---
 
-### 5. `revise-doc`
+### 6. `revise-doc`
 
 > 修订一份已签 Gate 的产物文档（PRD / TRD / standards）。
 
@@ -129,7 +145,7 @@
 
 ---
 
-### 6. `develop`
+### 7. `develop`
 
 > 拿任务包写代码 + 推 PR。涵盖原 feature / fix / fix-integration / fix-acceptance / fix-bug / optimization。
 
@@ -157,7 +173,7 @@
 
 ---
 
-### 7. `generate-integration-tests`
+### 8. `generate-integration-tests`
 
 > 设计联调测试场景 + 写脚本（pinchtab + curl）+ 跑测试 + 把失败转 develop(source=integration)。
 
@@ -172,7 +188,7 @@
 
 ---
 
-### 8. `manual-test`
+### 9. `manual-test`
 
 > 人工验收：对照 PRD acceptance criteria 验证系统，发现问题转 develop(source=manual-test)。
 
@@ -187,7 +203,7 @@
 
 ---
 
-### 9. `deploy`
+### 10. `deploy`
 
 > 部署代码到服务器。
 
@@ -202,7 +218,7 @@
 
 ---
 
-### 10. `wrap-up-iteration`
+### 11. `wrap-up-iteration`
 
 > Gate 5 三步收尾：偏离对账 / feedback 审阅 / project.md 合并。机械化分流，1 分钟内可完成。
 
@@ -221,7 +237,7 @@
 
 ---
 
-### 11. `dispatch-new`
+### 12. `dispatch-new`
 
 > 派新 BUG 任务或新优化任务（B 类入口）。
 
@@ -235,7 +251,7 @@
 
 ---
 
-### 12. `harvest-notes`
+### 13. `harvest-notes`
 
 > 收割成员个人积累，把验证有效的规范 / checklist / 方法论建议上提到公共层。
 
@@ -255,7 +271,7 @@
 
 ---
 
-### 13. `draft-foundation`
+### 14. `draft-foundation`
 
 > V0 地基设计：据 `foundation.md` 定栈、给每块跨切面关注点选定形式并验强制边、首播 standards、定走骨架范围与标杆切片。**只产设计、不产代码**（公共代码归 `develop(source=foundation)`）。
 
