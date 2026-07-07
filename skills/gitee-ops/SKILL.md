@@ -14,17 +14,19 @@ Gitee 与 GitHub 不兼容，`gh` CLI 无法用于 Gitee 仓库。所有 HTTP �
 **用 Bash 工具执行以下命令**（一次性，后续步骤复用变量）：
 
 ```bash
-# 从 git remote 提取 owner 和 repo
+# 从 git remote 提取 owner 和 repo（兼容 https:// 和 git@ 两种远端格式）
 REMOTE=$(git remote get-url origin)
-# 示例输出：https://gitee.com/dingxifan/mail-ai.git
-OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
-REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
+# 示例：https://gitee.com/dingxifan/mail-ai.git 或 git@gitee.com:dingxifan/mail-ai.git
+OWNER=$(echo "$REMOTE" | sed 's|git@gitee.com:||; s|https://gitee.com/||' | cut -d/ -f1)
+REPO=$(echo "$REMOTE" | sed 's|.*/||' | sed 's|\.git||')
 
-# 从 backend/.env 读取 token（在项目根目录执行）
-GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
+# 优先读环境变量 GITEE_ACCESS_TOKEN（可配置为 shell profile 全局变量），无则回退读项目根目录 backend/.env
+GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
 
 echo "owner=$OWNER repo=$REPO token_len=${#GITEE_TOKEN}"
 ```
+
+> Bash 工具每次调用是新 shell，不继承上一次 `export`；若 token 配置在 `~/.profile`（而非 `~/.bashrc`——多数 `~/.bashrc` 对非交互式 shell 会提前 `return`，`source` 不生效），每个用到 token 的 Bash 调用开头都要先 `source ~/.profile`。
 
 确认 token_len=32 且 owner/repo 正确后继续。
 
@@ -35,7 +37,7 @@ echo "owner=$OWNER repo=$REPO token_len=${#GITEE_TOKEN}"
 ### 查看开放 PR 列表
 
 ```bash
-GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
+GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -51,7 +53,7 @@ for p in prs: print(f'PR #{p[\"number\"]} [{p[\"head\"][\"label\"]}] → {p[\"ba
 ### 创建 PR
 
 ```bash
-GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
+GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -96,7 +98,7 @@ curl -s -o /dev/null -w "%{http_code}" -X POST \
 #### 步骤 3：合并
 
 ```bash
-GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
+GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -113,7 +115,7 @@ curl -s -X PUT "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/$PR_NUMBER/mer
 #### 批量合并脚本（多个 PR）
 
 ```bash
-GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
+GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -133,7 +135,7 @@ done
 ### 查看单条 PR 详情
 
 ```bash
-GITEE_TOKEN=$(grep GITEE_ACCESS_TOKEN backend/.env | cut -d= -f2 | tr -d '\r\n ')
+GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -145,7 +147,7 @@ curl -s "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/{number}?access_token
 
 - **绝不使用 `gh` CLI** — 它不支持 Gitee
 - **所有 curl 调用用 Bash 工具**，不用 PowerShell（避免别名和 BOM 问题）
-- token 从项目根目录的 `backend/.env` 读取 `GITEE_ACCESS_TOKEN` 字段
+- token 优先读环境变量 `GITEE_ACCESS_TOKEN`（全局配置一次即可），无则回退读项目根目录 `backend/.env` 的 `GITEE_ACCESS_TOKEN` 字段
 - owner / repo 从 `git remote get-url origin` 提取，不要硬编码
 - API 根路径：`https://gitee.com/api/v5/`
 - merge_method 可选值：`merge`（保留提交历史）/ `squash`（合并为单提交）/ `rebase`
