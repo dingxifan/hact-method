@@ -4,6 +4,20 @@
 
 ## 历史里程碑
 
+### 2026-07-08 方法论调整：安全敏感判定多层化（决策#29，risk 不信自报）
+
+> 触发：全局方法论评审条目【全-1】——决策#24（自审自合并）+ #26（standard 降档 haiku）+ `risk` 由 plan-sprint/dispatch-new 自报且 check-sprint 不校验，三个各自合理的决策叠加出"漏标 sensitive → haiku 审 → 自动进 master"的无机械拦截链；B 类无 G3 检查器，同险更甚。
+
+- **五层防线（只升不降，`risk` 自报不再是安全档位单点输入）**：
+  1. 填包规则「存疑即 sensitive」——plan-sprint Step 3 表 / dispatch-new 关键字段表 / `templates/queue/task-package.md` 注释三处同步。
+  2. plan-sprint Step 3.5 独审 brief（`task-package-review.md`）增第⑥类「risk 标注核对」：包内容触及四类而标 standard = 阻断（改标即修）；标 sensitive 但看不出触及 = 建议（允许从严保留）。
+  3. `templates/scripts/check-sprint.js` 新增检查 7「risk 启发核对」：敏感启发词（四类词表，中英）命中而未标 sensitive → `🧑` 段点名提示（启发式有误报，不做 FAIL）。冒烟验证：漏标鉴权任务被点名（命中"鉴权、密码、auth、jwt"），已标 sensitive 的迁移任务静默。
+  4. develop 阶段 B 模型分级改按**有效 risk**：自报 sensitive ∨ 主线按四类语义扫任务包命中 → 不降档，并回改任务包与 status.yml 的 `risk` + 播报升档理由。
+  5. develop 末端安全敏感预检显式**基于 diff 独立判定、不读 risk 自报**（对照 diff 路径与改动内容，存疑按触及）+ **漏标闭环**：判定触及但曾被降档审过 → 先重派默认模型独审（重审通过才进 architecture 裁决）。
+- **分工**：①②③ 住 A 类 G3 链；④⑤ source 无关，同时兜 B 类（B 类唯一防线）。启发词表单一来源住 check-sprint.js（机械层），develop 侧用四类语义判断、不复制词表。误报代价 = 多花一次默认模型独审，相对 #26 降档收益可接受。
+- 顺手修正：`task-package-review.md` 第 5 类残留的栈词（`--el-color-primary`/`variables.scss`/`main.ts`，决策#27 漏网）抽象为"按项目栈"。
+- 联动：specs-structural/develop.md risk 字段与完成判据、skeleton/06 G3 覆盖描述、plan-sprint Step 3.5"查六类"与 Step 4.7 描述。计划沉淀 `_meta/plans/2026-07-08-risk-defense-layers/`。
+
 ### 2026-07-08 方法论调整：exec spec 受众分离（历史注解清扫 + 写作纪律）
 
 > 触发：全局方法论评审条目【执-2】——运行时被 CC 逐字消费的规范正文里混着写给维护者的历史注解（日期出处、退役对照、迁移注记、事故代号、内部计划代号），按决策#26 成本逻辑每次会话烧 token 且稀释指令密度。评审全文落盘 `_meta/plans/2026-07-08-method-review/findings.md`（9 条目 + 处理状态表）。

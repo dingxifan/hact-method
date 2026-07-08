@@ -136,7 +136,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 
 执行 subagent 返回 `done` 后，主线派**全新隔离** subagent 读 `../hact-method-lab/templates/review-briefs/develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 `{task-id}` + layer + vN。该审查员**自读权威原文**（任务包 / `git diff` / standards 章节 / 测试代码+结果），**绝不接收执行 subagent 的自评 / 总结**（喂自评即丧失独立性，等于自己批自己的作业），对抗式找问题、存疑即判阻断。
 
-**模型分级**：阶段 A 执行 subagent 是写代码/生成任务，保持默认模型；本阶段 B 是纯审查。任务包 `risk: standard`（或存量任务包缺省）→ 派发审查 subagent 时指定 `model: "haiku"`；任务包 `risk: sensitive` 或 `source=foundation` → 不指定 model，继承当前会话默认模型。
+**模型分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 执行 subagent 是写代码/生成任务，保持默认模型；本阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 派发审查 subagent 时指定 `model: "haiku"`；sensitive 或 `source=foundation` → 不指定 model，继承当前会话默认模型。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
 
 **审查 loop（有界）**：
 - 审查输出 `findings: []` 或全为「建议」级 → 本任务**通过**，进下一任务（建议项记入 PR「遗留问题」或当场顺手改）。
@@ -215,6 +215,8 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 > - **金额 / 计费计算**（价格、扣费、对账——算错直接亏钱）
 > - **对外不可撤销副作用**（扣款 / 发信 / 短信 / 第三方写入——发出去收不回）
 >
+> 预检**基于实际 diff 独立判定，不读任务包 `risk` 自报**（决策#29）——逐类对照 `git diff` 的路径与改动内容（鉴权/守卫/中间件文件、迁移/schema 文件、金额/计费字段计算、外发调用），存疑按触及处理。
+> **漏标闭环**：预检判定触及，但该任务阶段 B 曾按 standard 降档（haiku）审查 → 说明 risk 漏标——先按 sensitive **重派默认模型独审**（重审通过才进人工裁决），并改正任务包与 status.yml 的 `risk`。
 > 这是合并前唯一保留的人工治理门（其余代码质量已由 per-task 独审兜，决策#24）。改动不触及上述任一类别 → 直接合并。
 
 **合并**：用 `/gitee-ops` 调 merge API 把 PR 合并到 master（develop 自审自合并，无独立 pr-review）。合并失败（冲突等）→ 报告用户，不强合。

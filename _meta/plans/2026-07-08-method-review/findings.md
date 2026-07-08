@@ -58,7 +58,7 @@
 
 | 条目 | 状态 | 处理记录 |
 |------|------|---------|
-| 全-1 risk 自报 + haiku 降档叠加盲区 | ⏸️ 待处理 | — |
+| 全-1 risk 自报 + haiku 降档叠加盲区 | ✅ 2026-07-08 | 决策#29 五层防线（填包存疑即 sensitive / Step3.5 第⑥类 / check-sprint 启发词 🧑 / develop 有效 risk / 末端 diff 独立预检 + 漏标闭环），见 `2026-07-08-risk-defense-layers/` |
 | 全-2 复杂度收敛（面向分支数） | ⏸️ 待处理 | — |
 | 全-3 单人偏置 / guide 漂移（guide/00 任务表 12≠14） | ⏸️ 待处理 | guide 漂移是小修，可随任一轮顺手 |
 | 全-4 技术栈剥离 | ✅ 2026-07-08 | 决策#27，`_meta/plans/2026-07-08-stack-decoupling-confirm-tiering/` |

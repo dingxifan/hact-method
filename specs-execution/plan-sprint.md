@@ -108,7 +108,7 @@
 | 字段 | 怎么填（判断 / 来源，模板之外） | 验证归属 |
 |------|------|------|
 | `depends_on` | Step 2 已确认依赖（与 sprint.md 依赖列、status.yml 三处一致）；共享资产消费（共用表/枚举/类型）消费方→source-of-truth 任务（反查得出，不另存消费方列表） | check-sprint·在册 ¹ |
-| `risk` | 默认 `standard`；若任务触及 develop 合并前安全敏感预检四类之一（权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）则填 `sensitive`。缺省即 standard，存量任务包不回填 | develop 阶段 B·模型档位 |
+| `risk` | 默认 `standard`；若任务触及 develop 合并前安全敏感预检四类之一（权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29）。缺省即 standard，存量任务包不回填 | Step 3.5 独审第⑥类 + check-sprint 启发 🧑；develop 侧按有效 risk 兜底 |
 | `acceptance-criteria` | 不发明无来源 AC（权威=PRD）；**backend** 携精化例子 = 行为·PRD 幕1 / 精度（状态码·错误码·断言）·TRD 幕2，缺幕→`revise-doc(prd/trd)`，只携文本不预写 runnable（物化在 develop）；**frontend** 散文 AC | check-sprint·回链正反向；Step 3.5+签字人·忠实性 |
 | `reference` | **前端**链 ux-flows 场景段、**后端**链 TRD 错误码段 + `# 服务流程:{场景名}` 段（后端失败/状态/校验分支权威在 TRD，draft-ux 红线把后端校验排除在 ux-flows 外）；前后端**同场景名对齐**（UI 反馈 vs 校验/状态对同一分支不重不漏） | check-sprint·行号 ² |
 | `relevant-standards` | 覆盖 `files` 所属强制规范（语义判断，standards 无"文件→规范"映射表） | Step 3.5 第④类 |
@@ -129,7 +129,7 @@
 ### Step 3.5：任务包独立对抗审查
 
 **派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "haiku"`），令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读** prd.md / trd.md / standards / queue（隔离上下文，不传写包叙事与拆分理由）。任务包 >4 个**按包分批**派，利于 loop 收敛。
-> brief 查五类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖 / 视觉地基完备性**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
+> brief 查六类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖 / 视觉地基完备性 / risk 标注核对**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
 
 **【loop 逻辑】**（主线拿到 subagent findings 后的处置）
 
@@ -169,7 +169,7 @@
 
 ### Step 4.7：签 G3 前 · 完成判据自检（提前跑，门卫兜底）
 
-签 G3 前主动在项目仓根跑 `node scripts/check-sprint.js vN`，把 G3 全部【linter】判据机械核到绿：既有必填字段完备（`risk` 缺省按 `standard`，不做机械校验）/ `reference` 含行号（前端 ux-flows、后端 trd 条目）/ AC 带 `(源：PRD AC-nn)`·`(技术)` 回链 tag + 逐条 id 存在性 + 逐条反向覆盖 / `depends_on` 在册 / queue↔sprint.md↔status.yml 三方一致。红 → 按报告逐条修任务包、重跑到绿。这步是**提前自查**；Step 5 签字 commit 时 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷偷签字"机制上做不到，故不再写强制散文。
+签 G3 前主动在项目仓根跑 `node scripts/check-sprint.js vN`，把 G3 全部【linter】判据机械核到绿：既有必填字段完备（`risk` 缺省按 `standard`，不做必填校验；但敏感启发词命中而未标 `sensitive` 会列入 `🧑` 段提示）/ `reference` 含行号（前端 ux-flows、后端 trd 条目）/ AC 带 `(源：PRD AC-nn)`·`(技术)` 回链 tag + 逐条 id 存在性 + 逐条反向覆盖 / `depends_on` 在册 / queue↔sprint.md↔status.yml 三方一致。红 → 按报告逐条修任务包、重跑到绿。这步是**提前自查**；Step 5 签字 commit 时 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷偷签字"机制上做不到，故不再写强制散文。
 
 脚本 `🧑` 段语义残量由签字人确认：疑点已逐条确认、TRD 每模块都有任务包、Step 3.5 独审无遗留阻断、任务包 AC 逐条**忠实**于回链的 PRD AC（内容真覆盖，非仅 id 在场）。
 

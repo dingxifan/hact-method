@@ -132,7 +132,7 @@ Then: {期望系统行为}
 | `task-id` | `{项目缩写}-b-{三位序号}`，如 `hact-b-001` |
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
 | `urgency` | Step 3 判断结果 |
-| `risk` | 默认 `standard`；若触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用，则填 `sensitive` |
+| `risk` | 默认 `standard`；若触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用，则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29——B 类无 G3 检查器，误标由 develop 有效 risk 判定 + 末端 diff 独立预检兜底） |
 | `acceptance-criteria` | 直接使用 Step 3.5 确认的 Given/When/Then 行为例子；**含纯加法 schema 变更（Step 1 判定）时**额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
 | `do-not` | 直接使用 Step 3.5 确认的禁动边界列表 |
 | `files` | Step 3.5 初步估填的预计改动文件 / 组件清单 |

@@ -116,6 +116,31 @@ const reLineNum = /L\s*\d+|\d+\s*[-–~]\s*\d+|行\s*\d+/;   // 行号 / 行号�
 const reAcTag = /[（(]\s*源\s*[:：]\s*PRD/;               // (源：PRD…)
 const reTechTag = /[（(]\s*技术\s*[)）]/;                  // (技术)
 
+/* ---------- risk 敏感启发词（安全敏感预检四类，决策#29） ----------
+ * 启发式只升不降：命中而任务包未标 risk: sensitive → 🧑 留签字人确认（非 FAIL，允许误报）。
+ * 语义级判定在 develop 侧（阶段 B 有效 risk + 末端 diff 独立预检），此处只做确定性词面拦截。*/
+const SENSITIVE_HINTS = [
+  // 权限 / 认证 / 数据隔离
+  '权限', '鉴权', '认证', '越权', '租户', '密码', 'auth', 'permission', 'guard', 'jwt', 'acl',
+  // 不可逆数据操作
+  '迁移', 'migration', 'drop', 'truncate', '清空', '批量删', '硬删', 'schema',
+  // 金额 / 计费
+  '金额', '计费', '价格', '扣费', '支付', '退款', '对账', 'billing', 'payment', 'refund',
+  // 对外不可撤销副作用
+  '扣款', '短信', '邮件', '发信', 'webhook', 'sms',
+];
+const RISK_SCAN_FIELDS = ['title', 'description', 'acceptance-criteria', 'files', 'known-risks'];
+function sensitiveHits(fm) {
+  const chunks = [];
+  for (const k of RISK_SCAN_FIELDS) {
+    const v = fm[k];
+    if (!v) continue;
+    chunks.push(scalarText(v), ...listItems(v));
+  }
+  const text = chunks.join(' ').toLowerCase();
+  return SENSITIVE_HINTS.filter(w => text.includes(w.toLowerCase()));
+}
+
 /* ---------- 任务包 AC 行：抽 (源：PRD …) 标签内的所有 AC-nn id ----------
  * 支持单条多覆盖 (源：PRD AC-01、AC-02) 与人读后缀 (源：PRD AC-01·删除确认)。*/
 function acRefIds(ac) {
@@ -315,6 +340,15 @@ function checkSprint(iteration, root) {
       else
         pass('视觉地基包', `视觉地基包 ${basePkg.id} 在场，frontend 任务均依赖它`);
     }
+  }
+
+  // 7. risk 敏感启发核对（决策#29 第③层）：命中启发词而未标 sensitive → 🧑（只升不降，允许误报）
+  for (const p of packages) {
+    const declared = scalarText(p.fm['risk']).toLowerCase();
+    if (declared.includes('sensitive')) continue;
+    const hits = sensitiveHits(p.fm);
+    if (hits.length)
+      human('risk 启发核对', `${p.id}：命中敏感启发词「${[...new Set(hits)].join('、')}」但 risk=${declared || 'standard(缺省)'} —— 确认是否应标 sensitive（决定 develop 独审模型档位；末端预检另按 diff 独立判定兜底）`);
   }
 
   // 语义残量（留人签）

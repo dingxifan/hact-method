@@ -32,7 +32,7 @@
 | `source` | enum | ✅ | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` |
 | `task_type` | enum | ✅ | `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）/ layers=[shared] 时由分配者在任务包中指定 |
 | `urgency` | enum | ✅ | `normal`（默认）/ `hotfix` |
-| `risk` | enum | ✅ | `standard`（默认）/ `sensitive`。触及 develop 合并前安全敏感预检四类之一时填 `sensitive`：权限 / 认证 / 数据隔离、不可逆数据操作、金额 / 计费计算、对外不可撤销副作用；否则填 `standard`。缺省按 `standard` 处理，供 develop 阶段 B 决定审查 subagent 模型档位 |
+| `risk` | enum | ✅ | `standard`（默认）/ `sensitive`。触及 develop 合并前安全敏感预检四类之一时填 `sensitive`：权限 / 认证 / 数据隔离、不可逆数据操作、金额 / 计费计算、对外不可撤销副作用；否则填 `standard`，**存疑即 `sensitive`**。缺省按 `standard` 处理。develop 侧按**有效 risk** 消费（自报 `sensitive` 或主线四类语义扫命中即升档并回改本字段），末端安全敏感预检基于 diff 独立判定、不唯此字段（决策#29，见 `specs-execution/develop.md`） |
 | `title` | string | ✅ | 简短描述，15字以内 |
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
 | `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |
@@ -82,7 +82,7 @@ api-contract:
 - [ ] **集合内每个任务已通过独立审查 subagent**（对抗式、自读权威原文，brief = `templates/review-briefs/develop-review.md`；**source=foundation 时 `foundation-review.md`**，逐关注点穷举验实际档≥应有档 + 命门 + 标杆质量；无阻断级 finding；frontend 含设计保真比对）
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
-- [ ] **安全敏感改动**（权限/认证/数据隔离）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门）
+- [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾降档审查的先重派默认模型独审）
 - [ ] **PR 已合并到 master**（develop 自审自合并，无独立 pr-review；task 状态 `[merged]`，`code_reviews[]` 已追加审计留痕）
 
 ---
