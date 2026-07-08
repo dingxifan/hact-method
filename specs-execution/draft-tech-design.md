@@ -131,7 +131,7 @@
 **§ 接口设计**：每接口一个 `### 接口：` 块（header / 槽位 / `# 服务流程` / `# 满足 AC` 回链格式全见模板注释，不重抄）。本文只讲模板讲不了的判断：
 
 - **回链承接**：每个接口/模块/场景旁标 `# 满足 AC：AC-nn`——TRD 是 PRD AC → 下游任务包回链的**中转站**，这里漏一条 AC，plan-sprint 就断链。齐全性 Step 4 机械核。
-- **幕 2 精化（测试脊柱）**：不可视区 AC 的 PRD 行为例子（幕 1 已写）就地精化为技术精确规格——补确切状态码/错误码/断言、对齐本接口请求/响应契约（PRD「应被拒绝」→ TRD「Then 403 + PERM_DENIED」）。**只精化不创造**；PRD 缺该例子 → 回链对不上，回 `revise-doc(target=prd)` 或列疑点，不在 TRD 凭空补。runnable 测试守 develop（2026-06-16：测试在代码存在后才稳），TRD 只出规格。可视区 AC 不精化为后端规格，留原型 / manual-test 走查。
+- **幕 2 精化（测试脊柱）**：不可视区 AC 的 PRD 行为例子（幕 1 已写）就地精化为技术精确规格——补确切状态码/错误码/断言、对齐本接口请求/响应契约（PRD「应被拒绝」→ TRD「Then 403 + PERM_DENIED」）。**只精化不创造**；PRD 缺该例子 → 回链对不上，回 `revise-doc(target=prd)` 或列疑点，不在 TRD 凭空补。runnable 测试守 develop（物化在代码存在后才稳），TRD 只出规格。可视区 AC 不精化为后端规格，留原型 / manual-test 走查。
 - **字段对画面**：`prototype.html` 在时，逐画面核接口请求/响应字段够该画面所需数据，避免前端拿不到要显示的字段。
 
 **§ 测试环境约定**（不可省略）：后端地址 / 前端访问方式 / 数据库指向 / 有副作用操作的禁止清单。
@@ -229,7 +229,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 - 新项目：测试框架已由 V0 `draft-foundation` 确立（standards-backend「测试框架约定」已在）→ 本期沿用、按需增补。
 - 存量项目（未走 V0）：在此确立框架，写入 standards-backend 与 项目根 `project.md` 技术层；若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop.md` 阶段 A 测试基建缺失处理）。
 
-**视觉地基约定（可视区地基，含前端时不可省）**：**新项目由 V0 `draft-foundation` 首播确立、本期沿用/增补；存量项目未走 V0 时在此首播（兜底）。** 项目根 `standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种时取全）——① style lint 禁硬编码字面值规则（颜色/间距/字号）② UI 库主题覆盖约定（设计主色映射进项目 UI 库的主题变量、禁库默认主色；具体变量名见栈子模板）③ 单一全局样式入口（应用入口引 reset + 全局变量文件）。这是 plan-sprint 拆「视觉地基包」、frontend-checklist 段一机械核、generate-integration-tests 视觉冒烟断言三处的共同 owner；缺它则 token 定义了无人接线（v8 主色全错根因）。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
+**视觉地基约定（可视区地基，含前端时不可省）**：**新项目由 V0 `draft-foundation` 首播确立、本期沿用/增补；存量项目未走 V0 时在此首播（兜底）。** 项目根 `standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种时取全）——① style lint 禁硬编码字面值规则（颜色/间距/字号）② UI 库主题覆盖约定（设计主色映射进项目 UI 库的主题变量、禁库默认主色；具体变量名见栈子模板）③ 单一全局样式入口（应用入口引 reset + 全局变量文件）。这是 plan-sprint 拆「视觉地基包」、frontend-checklist 段一机械核、generate-integration-tests 视觉冒烟断言三处的共同 owner；缺它则 token 定义了无人接线、全站主色仍是库默认。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
 
 三份汇总后检查：无重复条目 / 无相互矛盾 / 覆盖 TRD 提到的所有关键约束。
 
@@ -299,7 +299,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 | Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 失败则主线自审降级，不阻断 |
 | Step 7 standards 维护 | 2 个并行 subagent 各处理一份（frontend / backend 的播种 / 增补） | 失败则主线接管该份，记录原因 |
 
-> **Step 5 内容审查 ≠ 子计划 3 退场的"完成判据冷核"**：后者核【linter】判据完整性、已归 `check-docs.js` 机械核（Step 4）；前者验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），是另一角色。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。
+> **Step 5 与 Step 4 分工**：Step 4 linter 机械核结构 / 覆盖类【linter】判据；Step 5 验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），两者不重叠。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。
 
 ---
 

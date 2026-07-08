@@ -22,7 +22,7 @@
 
 ## 字段规范
 
-> **序列化锁定（子计划 3c）**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`。`check-sprint.js`（G3 linter）据此机械 parse——旧的「最小 frontmatter + `## markdown` 段」布局退役。下表 18 字段 + 条件 `api-contract` / `baseline` 是字段的**单一真相**。
+> **序列化锁定**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`，`check-sprint.js`（G3 linter）据此机械 parse。下表 18 字段 + 条件 `api-contract` / `baseline` 是字段的**单一真相**。
 
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
@@ -69,7 +69,7 @@ api-contract:
 |------|------|------|
 | PR | 代码仓库 | PR description 含 5 段：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 |
 | sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[merged]`，PR 列 → `#N` |
-| code_reviews[] 审计留痕 | 项目根 `status.yml` | 每 task 一条（conclusion + 建议级 issues），替代旧 pr-review 写入 |
+| code_reviews[] 审计留痕 | 项目根 `status.yml` | 每 task 一条（conclusion + 建议级 issues），由 develop 末端写入 |
 | 上下文重置记录（触发时写入） | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：已完成文件 / 阻塞点 / 关键决策 |
 
 ---

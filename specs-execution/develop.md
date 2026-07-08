@@ -2,7 +2,7 @@
 
 > CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
 > **执行模型**：主线只**编排**（定标 / 设计门 / 浮决策 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由**执行 subagent** 跑、隔离上下文；每个任务的质量由**独立审查 subagent**（对抗式、自读权威原文）把关，不通过即回炉。人工只守一个门：**前端设计是否到位**。
-> **无独立 pr-review 环节**（2026-06-20 砍除）：代码质量由 per-task 独立对抗审查 + 全量绿把关，develop 自审自合并。仅**安全敏感改动**（权限 / 认证 / 数据隔离）保留一道人工裁决（见末端·合并）。
+> **无独立 pr-review 环节**（决策#24）：代码质量由 per-task 独立对抗审查 + 全量绿把关，develop 自审自合并。仅**安全敏感改动**（权限 / 认证 / 数据隔离）保留一道人工裁决（见末端·合并）。
 
 **上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到执行 subagent，故**批次可放大**。本 spec 处理**一次会话**，任务集 size ≥ 1：`交付=可并行` 任务共一个 PR；`交付=串行` 任务各自一个 PR，会话内可串行多个（每任务完整跑「主循环+末端」后切回 master，再启下一个）。
 
@@ -118,7 +118,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 2. **读懂**：对照 `acceptance-criteria` 明确本任务要做什么（不再向用户复述确认——理解忠实性由阶段 B 独审兜）。
 3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块；用 Explore 读 项目根 `reusables.md`，已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
 4. **写**：逐模块实现并**落盘**。>5 文件 / 跨模块可再派子 subagent 分模块（frontend 按组件、backend 按 controller/service 拆；属 subagent 内部的事，主线不介入）。
-5. **自绿（增量，共享工作树）**：跑 `build` / `type-check` / `lint` / `test`；不可视区 AC 的 Given/When/Then 例子规格（测试脊柱：行为源自 PRD 幕 1、技术精度源自 TRD 幕 2）**1:1 物化成可运行测试**且全绿——这是脊柱例子第一次落成 runnable 形态（守 2026-06-16：runnable 物化在代码存在后；测试随分支携带、不蒸馏）。`build/type/lint` 项目无对应命令 → 跳过该条不阻断。同一测试修 3 次仍红 → 不硬磨，返回 `blocked`（根因疑在 AC / TRD）。
+5. **自绿（增量，共享工作树）**：跑 `build` / `type-check` / `lint` / `test`；不可视区 AC 的 Given/When/Then 例子规格（测试脊柱：行为源自 PRD 幕 1、技术精度源自 TRD 幕 2）**1:1 物化成可运行测试**且全绿——这是脊柱例子第一次落成 runnable 形态（runnable 物化在代码存在后；测试随分支携带、不蒸馏）。`build/type/lint` 项目无对应命令 → 跳过该条不阻断。同一测试修 3 次仍红 → 不硬磨，返回 `blocked`（根因疑在 AC / TRD）。
 6. **返回结构**给主线：
    ```yaml
    status: done | blocked
@@ -215,7 +215,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 > - **金额 / 计费计算**（价格、扣费、对账——算错直接亏钱）
 > - **对外不可撤销副作用**（扣款 / 发信 / 短信 / 第三方写入——发出去收不回）
 >
-> 这是砍除 pr-review 后保留的唯一治理门（其余代码质量已由 per-task 独审兜）。改动不触及上述任一类别 → 直接合并。
+> 这是合并前唯一保留的人工治理门（其余代码质量已由 per-task 独审兜，决策#24）。改动不触及上述任一类别 → 直接合并。
 
 **合并**：用 `/gitee-ops` 调 merge API 把 PR 合并到 master（develop 自审自合并，无独立 pr-review）。合并失败（冲突等）→ 报告用户，不强合。
 
@@ -224,7 +224,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
 - 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
 - **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 项目根 `status.yml`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）：集合内每个 task 的 `status` 改 `merged`、`pr` 全填同一个 `{N}`；并向 `code_reviews[]` **每任务追加一条审计留痕**（替代旧 pr-review 写入）——`conclusion: 通过`（独审已通过才合并），`issues` 填独审剩下的「建议」级 finding（映射 `severity: 建议`），无则 `[]`
+- 项目根 `status.yml`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）：集合内每个 task 的 `status` 改 `merged`、`pr` 全填同一个 `{N}`；并向 `code_reviews[]` **每任务追加一条审计留痕**——`conclusion: 通过`（独审已通过才合并），`issues` 填独审剩下的「建议」级 finding（映射 `severity: 建议`），无则 `[]`
   ```bash
   git checkout master && git pull
   git add {集合内任务包文件} iterations/vN/sprint.md status.yml   # sprint.md 仅 source=sprint 时含

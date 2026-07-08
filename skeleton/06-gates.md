@@ -113,13 +113,13 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 - **【linter】判据**：结构完备（字段/段落在不在）+ 交叉一致（PRD↔TRD、queue↔sprint↔status）+ 状态/文件可查（任务全 merged、报告结论、feedback 清空）这类，由确定性检查器机械核——跑一万次结果一致、不受上下文失真影响。**G1–G5 全覆盖**：**G1/G2** 用 `scripts/check-docs.js`（PRD/TRD 结构 + 交叉）、**G3** 用 `scripts/check-sprint.js`（任务包字段/AC回链/三方一致）、**G4/G5** 用 `scripts/check-gate.js`（状态 + 文件薄检查）。
 - **语义判据**：如"用户故事完整""AC 是否用户真要的""用户是否真验收通过""feedback 分流对不对"，机器判不了，由**对应职能的人**在签字时确认。
 
-哪几条判据标【linter】由各 task 的 `specs-structural` 完成判据节标注。**§7 已塌缩成单一模型**：所有 Gate = 跑对应检查器（退出码 0 = 结构判据通过）+ 脚本 `🧑` 段列出的语义残量由签字人确认。原「派 subagent 冷核」协议（曾是"用 AI 治 AI 盖章"的规范膨胀退化回路活体标本，见 `design.md §2.5`）随 G1/G2（子计划 3）、G4/G5（3b）、G3（3c）三批检查器落地**已整段退场**。
+哪几条判据标【linter】由各 task 的 `specs-structural` 完成判据节标注。**统一模型**：所有 Gate = 跑对应检查器（退出码 0 = 结构判据通过）+ 脚本 `🧑` 段列出的语义残量由签字人确认——**不派判据核对 subagent**（各 Gate 通用）。
 
 **判官 + 门卫**：检查器是**判官**（查产物结构对不对），但"记得跑判官、退出码 0 才签"若只写成散文，仍是一条会在 context 里失真的规则。`scripts/pre-commit-hook.sh` 是**门卫**——签字 commit 时按 staged 文件自动跑对应 check-\*.js，红则拦 commit。判官说红就过不去，于是各 Gate 不再需要"记得跑 + 退出码 0 才签"的强制散文，机制本身使"通过判官"成为提交的唯一出路。门卫由 init-project 装（`specs-execution/init-project.md` Step 4.1）；**存量仓未装门卫 / 未铺脚本 → 退回签字人手工核对**（见各 Gate「存量项目兜底」），与 `--no-verify` 同属"护栏非密码锁"，是合作者的强制出路、非安全边界。
 
 ### G1 / G2（已有结构 linter）
 
-> 子计划 3（2026-06-19，设计见 `_meta/plans/2026-06-19-structural-review/sub3-gate重定义-design.md`）：PRD/TRD 的 ①结构完备 ②交叉一致已由 `check-docs.js` 覆盖，这两关**不再派 subagent 冷核**——原"派 AI 核 AI 盖章"协议（曾是规范膨胀退化回路的活体标本）在此退场。
+> `check-docs.js` 覆盖 PRD/TRD 的 ①结构完备 ②交叉一致。设计沉淀：`_meta/plans/2026-06-19-structural-review/sub3-gate重定义-design.md`。
 
 1. 跑 `node scripts/check-docs.js ...`（G1 仅 PRD；G2 含 PRD↔TRD 交叉对账）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到绿（签字 commit 的门卫会强制此事——红则拦 commit，跳过/伪造 pass 机制上做不到）。
 2. 未标【linter】的**语义判据**由签字人确认：PRD 在 `draft-prd-vN` 逐功能确认中已把关；TRD 的 AC 覆盖**齐全性**已由 check-docs 机械核（PRD AC↔`# 满足 AC` 回链逐条对账），残留语义（载体是否**真承接**所回链的 AC、PRD 行为例子是否齐全、TRD 精化例子规格是否忠实该行为例子）+ 后续 `develop` 内置独立审查的技术保真在签字时复核，无需另派 subagent。
@@ -127,7 +127,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 ### G4 / G5（薄检查器 check-gate.js）
 
-> 子计划 3b（2026-06-19，设计见 `_meta/plans/2026-06-19-structural-review/sub3b-G345检查器-design.md`）：G4/G5 完成判据里**确定性可查**的部分（G4：source=manual-test 修复任务全 merged + 验收报告结论=通过；G5：feedback.md 已清空 + project.md 无"开发中"）已由 `check-gate.js` 覆盖，这两关**不再派 subagent 冷核**。其语义核心（用户是否真验收通过、feedback 分流对不对、偏离处理对不对）机器判不了，显式留签字人确认——面很小，且 G4 验收本就是 design §3 钉死的"可视区留人走查"。
+> `check-gate.js` 覆盖 G4/G5 完成判据里**确定性可查**的部分（G4：source=manual-test 修复任务全 merged + 验收报告结论=通过；G5：feedback.md 已清空 + project.md 无"开发中"）。语义核心（用户是否真验收通过、feedback 分流对不对、偏离处理对不对）机器判不了，显式留签字人确认。设计沉淀：`_meta/plans/2026-06-19-structural-review/sub3b-G345检查器-design.md`。
 
 1. 跑 `node scripts/check-gate.js G{N} vN`（在项目仓根目录）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到绿（签字 commit 的门卫会强制此事——红则拦 commit，跳过/伪造 pass 机制上做不到）。
 2. 脚本 `🧑 留签字人确认` 段列出的语义残量由签字人确认（G4：用户明确说验收通过、反馈问题已处理；G5：backlog `[偏离]` 处理得当、feedback 分流准确）。签字时复核，无需另派 subagent。
@@ -135,7 +135,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 ### G3（检查器 check-sprint.js）
 
-> 子计划 3c（2026-06-19，设计见 `_meta/plans/2026-06-19-structural-review/sub3c-G3任务包规范化-design.md`）：先把任务包序列化锁定为 YAML frontmatter（`templates/queue/task-package.md`，sub1 同款地基），再建 `check-sprint.js` 覆盖 G3 完成判据里**确定性可查**的部分——任务包既有机械字段完备（`risk` 缺省按 `standard`，不机械校验）、`reference` 含行号（前端含 ux-flows / 后端含 trd 条目）、AC 带 `(源：PRD AC-nn)`/`(技术)` 回链 tag + 逐条 AC 反向覆盖（按 PRD `AC-nn` id，sub5 机械化）、`depends_on` 在册、queue↔sprint.md↔status.yml 三方一致。这一关**不再派 subagent 冷核**——§7 冷核协议至此整段退场。
+> 任务包序列化锁定为 YAML frontmatter（`templates/queue/task-package.md`），`check-sprint.js` 据此覆盖 G3 完成判据里**确定性可查**的部分——机械字段完备（`risk` 缺省按 `standard`，不机械校验）、`reference` 含行号（前端含 ux-flows / 后端含 trd 条目）、AC 带 `(源：PRD AC-nn)`/`(技术)` 回链 tag + 逐条 AC 反向覆盖（按 PRD `AC-nn` id）、`depends_on` 在册、queue↔sprint.md↔status.yml 三方一致。设计沉淀：`_meta/plans/2026-06-19-structural-review/sub3c-G3任务包规范化-design.md`。
 
 1. 跑 `node scripts/check-sprint.js vN`（在项目仓根目录）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到绿（签字 commit 的门卫会强制此事——红则拦 commit，跳过/伪造 pass 机制上做不到）。
 2. 脚本 `🧑 留签字人确认` 段列出的语义残量由签字人确认：疑点清单已逐条确认、TRD 每模块都有任务包、`plan-sprint` Step 3.5 独审无遗留阻断、PRD **逐条** AC（非功能级）均被覆盖。签字时复核，无需另派 subagent。

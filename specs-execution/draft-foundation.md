@@ -1,7 +1,7 @@
 # exec: draft-foundation
 
 > CC 加载本文时，当前任务是为新项目做 **V0 地基设计**：定栈、把 `foundation.md` 每块关注点选定具体形式并验"实际档 ≥ 应有档"、首期播种 standards、定走骨架范围与标杆切片，签 G2(v0)。
-> **只产文档（设计），不产代码。** 公共形式的代码（瓶颈管道 / 作用域 repo / 外壳 / 主题框架 / 错误信封）由下游 `develop(source=foundation)` 物化——设计预写代码 = 空中建筑（2026-06-16 铁律）。
+> **只产文档（设计），不产代码。** 公共形式的代码（瓶颈管道 / 作用域 repo / 外壳 / 主题框架 / 错误信封）由下游 `develop(source=foundation)` 物化——设计预写代码 = 空中建筑（铁律）。
 
 **上下文密度**：中。读 `foundation.md` + 背景 + project.md；输出更新 foundation.md + 三份 standards + `iterations/v0/foundation-design.md`。
 

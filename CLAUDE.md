@@ -53,6 +53,14 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 
 不主动读各项目仓的 `feedback.md` 或成员个人 notes——方法论类问题应已经 wrap-up 分流（A 类）/ develop 就地分流（B 类）写入成员 notes，再由 `harvest-notes` 上提到待议清单。若用户认为有遗漏可手动指向。**推荐顺序：先跑 `harvest-notes` 收割，再开方法论调整会话。**
 
+### 方法论文件写作纪律（受众分离）
+
+`specs-execution/`、`skeleton/06 §7`、`specs-structural/` 是**运行时被 CC 逐字消费**的文本，写作时按受众分离：
+
+- **正文只写**：做什么 + 必要的一句操作性 why（帮助遵循的短理由）+ `决策#N` 短指针（指 BRIEF，不展开叙事）+ 设计沉淀路径指针（一行）
+- **不入正文**：日期出处（"守 2026-06-16"）、退役机制对照（"砍除 X 后"）、迁移注记（"原 Step X 已并入"）、事故代号、内部计划代号（"子计划 3c""sub7"）——这些的 canonical 记录住 BRIEF 决策 / `_meta/status-history.md` / `_meta/plans/` 设计稿，git 历史可追溯，**不在运行时文本里复述**
+- 每轮方法论调整收尾时自查：本轮往上述文件新增的文字里有没有混进历史注解
+
 ### 何时在项目仓开 CC 会话
 
 项目仓创建后，**以下所有任务都在项目仓（`E:\Group-code-lab\{project-name}\`）中执行**：
