@@ -4,6 +4,21 @@
 
 ## 历史里程碑
 
+### 2026-07-08 方法论调整：技术栈剥离 + 确认点分级（决策#27/#28）
+
+> 触发：全局方法论评审（本仓 CC 会话）指出两个结构问题——①栈词汇（Vue/NestJS/EP 变量名）渗进骨架层，方法论实际成了"Vue+NestJS 专用版"；②一期主线 20+ 次人工确认无分级，可推导判定与人拍板混在同一档。用户确认后两条同轮落地。
+
+- **决策 #27 技术栈剥离**：
+  - 新建栈子模板 `templates/standards/frontend-vue3.md`（Vue 组件/SCSS/EP 使用+陷阱/Pinia/Vite）+ `backend-nestjs.md`（TypeORM/class-validator/NestJS 路由陷阱/Node 日期陷阱/dotenv）；通用模板 `frontend.md`/`backend.md` 瘦身为栈无关原则，头部声明双层关系。
+  - `skeleton/03-disciplines.md` 去栈措辞（dev-frontend/dev-backend/integration-testing/deploy 四处）；specs-execution 五份点改（draft-tech-design/draft-foundation 视觉地基条款变量名抽象、plan-sprint EP→UI 库、manual-test vue-tsc→type-check、develop checklist 工具名注"按项目栈"）。
+  - standards 播种双源升三源：通用模板 + `project.md` 技术层路由的栈子模板 + 个人 notes `[规范]`；无对应子模板退回通用。draft-tech-design Step 7 与 draft-foundation Step 4 同步。
+  - 不动：工具依赖层（Gitee/pinchtab/pm2/nginx 声明式引用）、checklist 栈拆分（记待议）、skeleton/07 CRDrawer.vue（看板应用事实）。
+- **决策 #28 确认点分级**：
+  - 步骤协议统一升级（12 份 exec spec）：非 🚫 步骤去掉"继续？"直接续跑；新增 ⚖️ 档（按既定规则默认判定 + 输出结论理由 + 直接继续 + 用户可推翻）。deploy 已是 auto-run 不动，develop 无协议行。
+  - plan-sprint Step 2.5 交付方式并入 Step 2（判定规则原样保留，改为 ⚖️ 随骨架一并确认），净减 1 个硬阻断；develop 第零步执行层 ⚖️ 自动判定（仅两层都有可取任务才问）；draft-prd v2+ 建目录不等确认、Step 4 增 vN+1 继承/继承·微调批量确认（新增/重构/简化仍逐个，v1 不受影响）；4 个会话启动选项列表（plan-sprint/draft-tech-design/manual-test/wrap-up）加"开场已明确主线意图则跳过"。
+  - 保持 🚫 不动：疑点清单、骨架方向、TRD 内容确认、五个 Gate 签字、前端设计门、manual-test 验收循环、draft-ux 全部、init-project 信息收集。
+- 联动更新：BRIEF 决策 #27/#28、skeleton/README 决策数 26→28、templates/sprint.md Step 2.5 引用改 Step 2、待议清单（2026-06-22 后端条目⑤标已落地 + 新增 checklist 栈拆分待议）。计划沉淀 `_meta/plans/2026-07-08-stack-decoupling-confirm-tiering/`。
+
 ### 2026-07-06 hact-method-lab 独立成仓 — 从 hact-method 的 worktree 切断为独立仓库
 
 > 触发：用户判断新旧方法并行对比阶段已经结束，`method-lab` 分支承载的新方法应该有自己独立的项目身份，而不是继续挂靠在旧仓库 `hact-method` 下当一个分支/worktree。

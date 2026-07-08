@@ -89,7 +89,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ### `integration-testing`
 
-**范围**：联调测试设计与脚本编写——识别测试场景、写 pinchtab/curl 脚本、跑测试、把发现的问题转修复任务。
+**范围**：联调测试设计与脚本编写——识别测试场景、写联调脚本（浏览器自动化 + HTTP，如 pinchtab / curl）、跑测试、把发现的问题转修复任务。
 
 **边界**：
 
@@ -103,7 +103,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ### `dev-frontend`
 
-**范围**：前端开发——Vue 组件实现、视觉规格落地、前端单元测试、pinchtab 等浏览器侧。
+**范围**：前端开发——前端组件实现、视觉规格落地、前端单元测试、浏览器自动化侧（如 pinchtab）。具体框架/UI 库属项目技术栈层（`project.md` 技术层 + standards 栈子模板），不在本骨架预设。
 
 **边界**：
 
@@ -111,13 +111,13 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 - 不包含联调测试设计（→ `integration-testing`）
 - 代码审查由 `develop` 内置独立审查 subagent 承担（非独立 discipline）
 
-**典型工作**：拉 `develop(layer=frontend)` 任务，按 `standards-frontend.md` 写 Vue 代码，per-task 独立审查通过后推 PR 并合并。
+**典型工作**：拉 `develop(layer=frontend)` 任务，按 `standards-frontend.md` 写前端代码（框架按项目栈），per-task 独立审查通过后推 PR 并合并。
 
 ---
 
 ### `dev-backend`
 
-**范围**：后端开发——NestJS 控制器/服务实现、数据库交互、API 实现、后端单元测试。
+**范围**：后端开发——服务端业务实现（路由/服务分层）、数据库交互、API 实现、后端单元测试。具体框架/ORM 属项目技术栈层（`project.md` 技术层 + standards 栈子模板），不在本骨架预设。
 
 **边界**：
 
@@ -131,7 +131,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ### `deploy`
 
-**范围**：部署运维——nginx 配置、PM2 进程管理、SSH 操作、build pipeline 验收。
+**范围**：部署运维——静态服务与反向代理配置、后端进程管理（如 nginx / pm2，按项目部署栈）、SSH 操作、build pipeline 验收。
 
 **边界**：
 

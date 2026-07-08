@@ -23,14 +23,14 @@
 - **复杂工作不预定义**——方法论调整等发散性工作不强行做 task type
 - **签字归属内容**——Gate 签字合并到最近前置任务，不另立 sign-gate task
 
-完整 26 条决策见 [`../BRIEF.md`](../BRIEF.md) "关键设计决策" 段。
+完整 28 条决策见 [`../BRIEF.md`](../BRIEF.md) "关键设计决策" 段。
 
 ## 跟其他文档的关系
 
 ```
 hact-method/
 ├── CLAUDE.md             项目级 CC 指令 / 文件规范
-├── BRIEF.md              项目背景 / 目标 / 阶段 / 关键设计决策（20 条）
+├── BRIEF.md              项目背景 / 目标 / 阶段 / 关键设计决策（28 条）
 ├── STATUS.md             当前状态
 ├── skeleton/             ← 本目录（骨架，第一阶段产物）
 ├── specs-structural/     第二阶段：每个 task 的完整结构契约（继承 04）

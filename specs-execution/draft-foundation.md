@@ -7,7 +7,7 @@
 
 ---
 
-> **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
+> **步骤协议**：每步完成输出 `✅ [步骤] 完成：[2–3 句结论] → 下一步：[步骤] — [一句说明]` 后**直接继续**（非 🚫 步骤不问"继续？"、不等回应）；🚫 处必须停下等用户明确回应；⚖️ 处按既定规则默认判定，输出结论 + 理由后直接继续，用户可随时推翻（推翻则修正后再继续）。
 
 ---
 
@@ -117,11 +117,11 @@ mkdir -p "iterations/v0"
 
 三份 `standards-{shared,frontend,backend}.md` 是**项目根跨迭代活文档**，V0 **首期播种**（此后各迭代原地增补）。TRD 确认后启动 **2 个并行 subagent** 处理 frontend / backend，主线处理 shared。
 
-**来源规则（双源）**：从 `../hact-method-lab/templates/standards/{layer}.md` 挑本项目相关项写入（不全量复制）+ 并入执行人个人 notes（`../hact-notes-{name}/notes.md`）`[规范]` 标签条目（并入前对照公共模板去重）。notes 不存在 / 无 `[规范]` → 仅用公共模板。与公共模板某条冲突 → 以本项目决策为准，记 `decisions.md`。
+**来源规则（三源）**：从 `../hact-method-lab/templates/standards/{layer}.md`（栈无关通用）挑本项目相关项写入（不全量复制）+ 按本 V0 选定的栈（Step 1 确认、入 `project.md` 技术层）叠加对应**栈子模板** `templates/standards/{layer}-{栈}.md`（如 `frontend-vue3.md` / `backend-nestjs.md`；**项目栈无对应子模板 → 仅用通用模板**，栈特定约定直接写项目 standards）+ 并入执行人个人 notes（`../hact-notes-{name}/notes.md`）`[规范]` 标签条目（并入前对照公共模板去重）。notes 不存在 / 无 `[规范]` → 前两源。与公共模板某条冲突 → 以本项目决策为准，记 `decisions.md`。
 
 **测试基建约定（不可省）**：`standards-backend.md` 必含「测试框架约定」一节——框架选型 + `npm run test`（或等价）命令 + 测试文件位置。这是后续 develop 把不可视区 AC 落成可运行测试的前提；没有它 develop 的测试步无处落地。在此确立框架，并写入 `project.md` 技术层。
 
-**视觉地基约定（含前端时不可省）**：`standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种取全）——① stylelint 禁硬编码字面值（颜色/间距/字号）② UI 库主题覆盖（设计主色映射进 `--el-color-primary` 等、禁库默认主色）③ 单一全局样式入口。这是 V0 develop 建「视觉地基件」、frontend-checklist 机械核、视觉冒烟断言三处的共同 owner。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
+**视觉地基约定（含前端时不可省）**：`standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种取全）——① style lint 禁硬编码字面值（颜色/间距/字号）② UI 库主题覆盖（设计主色映射进项目 UI 库的主题变量、禁库默认主色；具体变量名见栈子模板）③ 单一全局样式入口。这是 V0 develop 建「视觉地基件」、frontend-checklist 机械核、视觉冒烟断言三处的共同 owner。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
 
 > **本步只搬不改**：standards 暂按公共模板形态播种，「每条标执行者（构造/机械/人审）」的诚实化是后续单独议题，V0 不做。
 

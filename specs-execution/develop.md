@@ -18,13 +18,14 @@
 
 ## 会话启动（主线）
 
-**第零步：确认执行层**
+**第零步：确定执行层（⚖️ 默认判定）**
 
-```
-当前执行层：frontend / backend？
-```
+读 `iterations/vN/sprint.md` 的 layers 列与状态列：
+- 用户开场已指明层 → 按用户指定，播报即可
+- 仅一个 layer 有 `[可取]` 任务 → 直接定层，播报「当前执行层：{layer}（唯一有可取任务的层）」后继续，不等待
+- 两层都有 `[可取]` 任务且用户未指明 → 🚫 问「当前执行层：frontend / backend？」等确认
 
-🚫 等用户确认（或从任务包 `layer` 字段自动判断后向用户确认）。**`source=foundation` 全栈，跳过本步。**
+**`source=foundation` 全栈，跳过本步。**
 
 **Gate 前置检查（按 source）**
 
@@ -309,7 +310,7 @@ context-state:
 |------|-------------|-------------|
 | 开跑前人工门 | **前端设计到位确认**（design.md / prototype 覆盖本批次画面） | 无（backend-only 跳过） |
 | 执行 subagent 额外加载 | 项目根 `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
-| 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint/vue-tsc/stylelint｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
+| 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint / type-check / style lint（命令按项目栈）｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
 | 子模块 subagent 拆分粒度 | 按组件拆 | 按模块拆（controller / service 分开）|
 | 独立审查侧重 | AC 忠实 + 机械保真（变量非硬编码）；视觉到位归人工门 | AC 忠实 + 测试品类齐全 + 标准合规 |
 

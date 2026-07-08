@@ -81,6 +81,10 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 26. **按 token 计费后的运行成本原则**（2026-07-01）：从 Claude 包月转为 Claude Code/API 按量后，方法论的主成本不再只是 spec 行数，而是「每次会话读入的活文档」与「每个任务倍增的 subagent 调用」。保留决策#17 的项目级活文档单一源，但给 `decisions.md` / `reusables.md` 加归档约定，避免项目寿命越长越贵；保留决策#24 的 per-task 独立审查，但给任务包新增 `risk` 字段，并把纯审查/一致性核对类 subagent 默认降为 `model: "haiku"`，安全敏感任务与生成/写代码类 subagent 继续使用默认模型。**降档范围按"任务性质"而非"所属阶段"判断**——同一原则同步覆盖 `generate-integration-tests` 的按模块/场景并行执行 subagent（纯执行脚本+结果上报，天然倍增）与各阶段会话启动的 Explore 并行读文件 fan-out（纯读取+摘要）；生成类/写代码类/含判断取舍的 subagent（如 standards 生成、任务包撰写）不降档。同步把本仓 `STATUS.md` 历史正文只留索引，完整记录归 `_meta/status-history.md`。
 
+27. **技术栈剥离（骨架/规范栈无关，栈内容住 standards 栈子模板）**（2026-07-08）：方法论名义项目无关，但栈词汇（Vue/NestJS/Element Plus 变量名）曾渗进 skeleton 与 specs——换栈项目要动骨架，违背分层。修正：**skeleton 与 specs-execution 只说约束类型**（"前端组件实现""UI 库主题变量""type-check 命令按项目栈"），**栈特定写法下沉 `templates/standards/{layer}-{栈}.md` 栈子模板**（首批 `frontend-vue3.md` / `backend-nestjs.md`，即原通用模板中迁出的 Vue/EP/Pinia/Vite 与 TypeORM/class-validator/NestJS 细则）；通用模板 `frontend.md` / `backend.md` 瘦身为栈无关原则。**路由键 = `project.md` 技术层**（V0 `draft-foundation` 确立）：standards 播种从双源升三源（通用模板 + 栈子模板 + 个人 notes `[规范]`），项目栈无对应子模板 → 退回通用模板、栈特定约定直接写项目 standards。工具依赖层（Gitee/pinchtab/pm2/nginx）保留声明式引用不属此列；checklist 栈拆分暂缓（记方法论待议）。
+
+28. **人工确认点分级（🚫 只留人拍板，可推导判定 ⚖️ 默认判定+可推翻）**（2026-07-08）：准备段一期主线累计 20+ 次人工确认，混着"必须人拍板"（范围/取舍/验收/Gate 签字/安全）与"可从既有信息推导"（交付方式、执行层、可逆目录创建）两类——后者是把 develop 已实现的"全自动 loop + 少数人工门"哲学在准备段的欠账。分级：**🚫 硬阻断**（必须停下等回应）只留人拍板项；**⚖️ 默认判定**——CC 按既定规则自判、输出结论+理由后直接继续，用户可随时推翻（推翻则修正再继续）；步骤协议同步改为非 🚫 步骤**不再问"继续？"**、直接续跑。首批落地：plan-sprint Step 2.5 交付方式并入 Step 2（规则不变、不再单独阻断）；develop 第零步执行层自动判定（仅两层都有可取任务才问）；draft-prd v2+ 建目录不等确认、vN+1 继承/继承·微调功能批量确认（新增/重构/简化仍逐个）；四个会话启动选项列表在用户开场已明确主线意图时跳过。不动清单：疑点清单、骨架方向、TRD 内容确认、五个 Gate 签字、前端设计门、manual-test 验收循环、draft-ux 全部（共创类）、init-project 信息收集。
+
 ## 工具依赖
 
 使用 hact-method 前需一次性配置以下工具，配置完成后无需重复操作：

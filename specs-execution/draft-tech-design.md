@@ -7,7 +7,7 @@
 
 ---
 
-> **步骤协议**：每步完成后输出 `✅ [步骤名] 完成：[2–3 句结论] → 下一步：[步骤名] — [一句说明] 继续？`；🚫 处必须等用户明确回应才继续。
+> **步骤协议**：每步完成输出 `✅ [步骤] 完成：[2–3 句结论] → 下一步：[步骤] — [一句说明]` 后**直接继续**（非 🚫 步骤不问"继续？"、不等回应）；🚫 处必须停下等用户明确回应；⚖️ 处按既定规则默认判定，输出结论 + 理由后直接继续，用户可随时推翻（推翻则修正后再继续）。
 
 ---
 
@@ -55,7 +55,7 @@
 请选 [1]、[2]，或输入「展开」，或直接说你要做什么。
 ```
 
-🚫 等用户选择后再继续
+🚫 等用户选择后再继续（⚖️ 例外：用户开场已明确表达主线意图——如直接说「做技术设计」——本列表跳过不出，播报一行后直接进入 Step 1）
 
 用户选 [1] → 进入 Step 1 疑点清单（技术偏好已在上方会话启动确认，不重复问）
 用户选 [2] → 加载 revise-doc exec spec，按 revise-doc 流程执行
@@ -207,8 +207,8 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 三份 `standards-{shared,frontend,backend}.md` 是**项目根的跨迭代活文档**（非迭代内产物，与 项目根 `decisions.md` / 项目根 `reusables.md` / 项目根 `design.md` 同级），单一真相源。**新项目已由 V0 `draft-foundation` 首期播种 → 本任务（V1+）走原地增补**；存量项目未走 V0、standards 仍空桩时本任务首期播种（兜底）。TRD 确认后，启动 **2 个并行 subagent** 处理 frontend / backend；主线同时处理 shared。
 
-**Standards 来源规则**（双源：公共模板 + 执行人个人 notes）：
-- **首期播种**（项目根 `standards-*.md` 仍是 init 空桩——**仅存量项目未走 V0 地基阶段时**；新项目 V0 已首播，不走此支）：从 `../hact-method-lab/templates/standards/{layer}.md` 挑选本期 TRD 相关项写入，不全量复制
+**Standards 来源规则**（三源：通用模板 + 栈子模板 + 执行人个人 notes）：
+- **首期播种**（项目根 `standards-*.md` 仍是 init 空桩——**仅存量项目未走 V0 地基阶段时**；新项目 V0 已首播，不走此支）：从 `../hact-method-lab/templates/standards/{layer}.md`（栈无关通用）挑选本期 TRD 相关项写入，不全量复制；再按 项目根 `project.md` 技术层选对应**栈子模板** `templates/standards/{layer}-{栈}.md`（如 `frontend-vue3.md` / `backend-nestjs.md`）叠加挑选栈特定项。**项目栈无对应子模板 → 仅用通用模板**，栈特定约定按本期 TRD 直接写进项目 standards
 - **迭代增补**：直接在项目根现有 `standards-*.md` 上**原地**追加 / 修订本期 TRD 新增的约定，不复制整份、不另起迭代副本
 - **双源补充**：再取执行人个人 notes（`../hact-notes-{name}/notes.md`）中 `[规范]` 标签、与本 layer 相关的条目并入项目 standards——让本人已积累、尚未经 harvest-notes 上提的规范当期即生效
   - **去重**：并入前对照公共模板 + 项目根现有 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
@@ -217,7 +217,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
   - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 项目根 `decisions.md` 说明冲突和理由；写入前先按 `decisions.md` 文件头约定检查是否触发归档阈值
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
-- 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md` + 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
+- 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md`（+ 项目栈对应的 `{layer}-{栈}.md` 栈子模板，如有）+ 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
 - 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型；并入 notes 条目前先对照公共模板 / 现有 standards 去重
 - 主线负责写文件（项目根 `standards-{layer}.md` 原地播种 / 增补），不让 subagent 直接写文件
 
@@ -229,7 +229,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 - 新项目：测试框架已由 V0 `draft-foundation` 确立（standards-backend「测试框架约定」已在）→ 本期沿用、按需增补。
 - 存量项目（未走 V0）：在此确立框架，写入 standards-backend 与 项目根 `project.md` 技术层；若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop.md` 阶段 A 测试基建缺失处理）。
 
-**视觉地基约定（可视区地基，含前端时不可省）**：**新项目由 V0 `draft-foundation` 首播确立、本期沿用/增补；存量项目未走 V0 时在此首播（兜底）。** 项目根 `standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种时取全）——① stylelint 禁硬编码字面值规则（颜色/间距/字号）② UI 库主题覆盖约定（设计主色映射进 `--el-color-primary` 等库变量、禁库默认主色）③ 单一全局样式入口（`main.ts` 引 reset + variables）。这是 plan-sprint 拆「视觉地基包」、frontend-checklist 段一机械核、generate-integration-tests 视觉冒烟断言三处的共同 owner；缺它则 token 定义了无人接线（v8 主色全错根因）。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
+**视觉地基约定（可视区地基，含前端时不可省）**：**新项目由 V0 `draft-foundation` 首播确立、本期沿用/增补；存量项目未走 V0 时在此首播（兜底）。** 项目根 `standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种时取全）——① style lint 禁硬编码字面值规则（颜色/间距/字号）② UI 库主题覆盖约定（设计主色映射进项目 UI 库的主题变量、禁库默认主色；具体变量名见栈子模板）③ 单一全局样式入口（应用入口引 reset + 全局变量文件）。这是 plan-sprint 拆「视觉地基包」、frontend-checklist 段一机械核、generate-integration-tests 视觉冒烟断言三处的共同 owner；缺它则 token 定义了无人接线（v8 主色全错根因）。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
 
 三份汇总后检查：无重复条目 / 无相互矛盾 / 覆盖 TRD 提到的所有关键约束。
 
