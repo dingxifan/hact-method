@@ -59,11 +59,11 @@
 | 条目 | 状态 | 处理记录 |
 |------|------|---------|
 | 全-1 risk 自报 + haiku 降档叠加盲区 | ✅ 2026-07-08 | 决策#29 五层防线（填包存疑即 sensitive / Step3.5 第⑥类 / check-sprint 启发词 🧑 / develop 有效 risk / 末端 diff 独立预检 + 漏标闭环），见 `2026-07-08-risk-defense-layers/` |
-| 全-2 复杂度收敛（面向分支数） | ⏸️ 待处理 | — |
+| 全-2 复杂度收敛（面向分支数） | ✅ 2026-07-08 | 以**实证回收**替代分析式收敛（mail-ai v5–v8 + JHH v7 全量记录）：已部署机制死重极少（仅 escalate-if 零触发且近零成本），复杂度疑点全部集中在未部署库存（#25–#29）；处置=冻结新增，库存过一轮真实迭代后按同法回收再判。见 `2026-07-08-empirical-harvest/findings.md` |
 | 全-3 单人偏置 / guide 漂移（guide/00 任务表 12≠14） | ⏸️ 待处理 | guide 漂移是小修，可随任一轮顺手 |
 | 全-4 技术栈剥离 | ✅ 2026-07-08 | 决策#27，`_meta/plans/2026-07-08-stack-decoupling-confirm-tiering/` |
-| 全-5 status.yml 无消费者漂移风险 | ⏸️ 待处理 | 与 hact-app 切读捆绑（待议 #6/#7） |
+| 全-5 status.yml 无消费者漂移风险 | ⏸️ 待处理（部分修正） | 实证回收全程以 status.yml/status-history.yml 为主数据源——审计消费首次成立，code_reviews[] 留痕质量高；但应用侧（hact-app 切读）仍待做（待议 #6/#7） |
 | 执-1 确认点分级 | ✅ 2026-07-08 | 决策#28，同上计划目录 |
 | 执-2 exec spec 受众分离 | ✅ 2026-07-08 | 三层清扫（exec 8 处 / skeleton06 §7 四块 / structural 3 处）+ CLAUDE.md 写作纪律，见 `2026-07-08-exec-spec-audience-separation/`。实测修正：纯历史注解密度低于评审印象，重灾区在 06 §7 与 structural 而非 exec；主产出是防回潮纪律 |
-| 执-3 develop foundation 进料块外置 | ⏸️ 待处理 | — |
-| 执-4 输出验证侧投入 | ⏸️ 待处理 | 方向已在待议 2026-06-19【全局方向】条 |
+| 执-3 develop foundation 进料块外置 | ⏸️ 待处理 | 实证注记：source=foundation 从未在实际项目部署，外置改造押后到首次部署后一并判 |
+| 执-4 输出验证侧投入 | ⏸️ 待处理（方向已实证收窄） | 实证回收证实且收窄：8 条生产 bug 归因 ≥5 例落"真实外部边界"（Outlook/飞书/IMAP 真实数据/OSS 规模）、1 例静默失败（唯一 hotfix）；仓内集成测试拦截率仅 2/118。加投应指向**真实外部边界冒烟 + 生产静默失败告警**，而非更多仓内测试。见 `2026-07-08-empirical-harvest/findings.md` §3 |

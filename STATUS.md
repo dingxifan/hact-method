@@ -58,6 +58,7 @@
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
+- 2026-07-08 实证回收（empirical harvest）— 回收 mail-ai v5–v8 + JHH v7 全量实测记录判定复杂度收益：已部署机制死重极少（独审 ≈70 阻断/安全裁决 2 触发/manual-test ≈19 拦截），疑点集中在未部署库存（#25–#29）→ 冻结新增至库存过一轮真实迭代；加投方向收窄为「真实外部边界冒烟 + 生产静默失败告警」
 - 2026-07-08 安全敏感判定多层化（决策#29）— risk 不信自报、只升不降：五层防线堵"漏标 sensitive → haiku 审 → 自动合并"链（check-sprint 启发词 + Step3.5 第⑥类 + develop 有效 risk + 末端 diff 独立预检）
 - 2026-07-08 exec spec 受众分离 — 运行时文本历史注解清扫（exec/skeleton06§7/structural 三层）+ CLAUDE.md 写作纪律防回潮；全局评审落盘 `_meta/plans/2026-07-08-method-review/findings.md`
 - 2026-07-08 技术栈剥离 + 确认点分级（决策#27/#28）— standards 栈子模板层建成（frontend-vue3 / backend-nestjs）+ 播种三源；步骤协议引入 ⚖️ 默认判定档，准备段硬阻断收敛
