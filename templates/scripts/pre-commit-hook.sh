@@ -8,7 +8,7 @@
 # 触发：commit 时按 staged 文件路由到对应检查器——
 #   iterations/vN/prd.md            → check-docs.js（同迭代有 trd.md 则带上做交叉对账）
 #   iterations/vN/trd.md            → check-docs.js（PRD+TRD 交叉）
-#   iterations/vN/sprint.md|queue/  → check-sprint.js vN
+#   iterations/vN/sprint.md|queue/*.md → check-sprint.js vN（只认 .md——.gitkeep 不触发，init 提交 queue 必然为空）
 #   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
 #
 # 触发条件依赖共暂存（暗礁）：linter 按 staged 的**产物文件**路由——check-docs 看
@@ -64,7 +64,8 @@ for dir in $iter_dirs; do
   fi
 
   # --- sprint / 任务包（check-sprint.js）---
-  if echo "$staged" | grep -qE "^${dir}(sprint\.md|queue/)"; then
+  # 只认 .md：init 提交只 stage queue/**/.gitkeep（立项时 queue 必然为空），不触发本检查
+  if echo "$staged" | grep -qE "^${dir}(sprint\.md|queue/.*\.md)$"; then
     run scripts/check-sprint.js "$ver"
   fi
 

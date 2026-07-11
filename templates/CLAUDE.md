@@ -39,15 +39,28 @@
 对项目仓、hact-method、个人 notes 仓各执行一遍同步：
 
 ```bash
-# 项目仓
-git fetch origin && (git pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
+# 同步函数：不吞 stderr、失败原样报错（不得改写为"已同步"）；
+# 「拉取 N 个 commit」由 HEAD 前后对比实测得出——拉到才说拉到
+sync_repo() {  # 用法: sync_repo <仓路径> <必须分支|->
+  dir="$1"; want="$2"
+  branch=$(git -C "$dir" rev-parse --abbrev-ref HEAD) || return 1
+  if [ "$want" != "-" ] && [ "$branch" != "$want" ]; then
+    echo "⚠️ $dir 当前在 $branch 而非 $want" >&2; return 1
+  fi
+  before=$(git -C "$dir" rev-parse HEAD)
+  git -C "$dir" fetch origin || return 1
+  if git -C "$dir" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+    git -C "$dir" pull --ff-only || return 1   # diverged / 冲突 / 凭据失败在此原样报错
+  else
+    echo "$dir（$branch）：当前分支无远端跟踪，仅 fetch"
+  fi
+  echo "$dir（$branch）：拉取 $(git -C "$dir" rev-list --count "$before..HEAD") 个 commit"
+}
 
-# hact-method
-git -C "../hact-method-lab" fetch origin && (git -C "../hact-method-lab" pull 2>/dev/null || echo "当前分支无远端跟踪，已 fetch 同步")
-
-# 个人 notes 仓（约定路径 ../hact-notes-{你的用户名}；不存在则跳过，不阻断）
-git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{username}" pull 2>/dev/null || echo "notes 仓无远端跟踪，已 fetch") \
-  || echo "未检测到个人 notes 仓，如需积累请先创建并登记（见 init-project Step 4.5）"
+sync_repo . -                          # 项目仓（断点续做可能在任务分支上，不限分支）
+sync_repo ../hact-method-lab master    # hact-method：必须在 master
+sync_repo "../hact-notes-{username}" - \
+  || echo "个人 notes 仓同步未成功（未创建/无跟踪/冲突）——不阻断，如需积累见 init-project Step 4.5"
 ```
 
 完成后，**必须**向人类输出以下声明（格式固定，不可省略）：
@@ -60,7 +73,9 @@ git -C "../hact-notes-{username}" fetch origin && (git -C "../hact-notes-{userna
 同步完成，进入 Step 1。
 ```
 
-⚠️ **项目仓或 hact-method** 出现冲突或 diverged → 停止，不得进入 Step 1，等待人类解决后重新执行 Step 0。个人 notes 仓冲突不阻断（私有，提示后可继续）。
+声明纪律：「已拉取 N 个 commit」只能填 sync_repo 输出的实测计数；任何仓同步失败时不得声明"已是最新/已同步"，原样贴出报错。
+
+⚠️ **项目仓或 hact-method** 的 sync_repo 失败（冲突 / diverged / 凭据失败 / hact-method 不在 master）→ 停止，不得进入 Step 1，等待人类解决后重新执行 Step 0。个人 notes 仓失败不阻断（私有，提示后可继续）。
 
 项目仓与 hact-method 同步完即可进入 Step 1（个人 notes 仓未配置不阻断）。
 
