@@ -98,5 +98,6 @@ mail-ai 生产期 B 类 bug 8 条（JHH 0 条 bug）：
 3. 独审 finding 的误报标记（当前仅靠 comment 散记）
 4. risk 字段实际分布与升档次数（#29 部署后）
 5. token/成本计量（如计费侧可导出，按 task 归集）
+6. **Haiku 降档独审的漏网率**（#26/#29 部署后）：`risk: standard` 独审跑在 haiku 上——记录 haiku 审过的 standard 任务里，事后被 manual-test/生产逮出的漏网 bug 数（尤其非安全的正确性/假绿测试类，这格不在 #29 安全网内）。缘由：本环境 risk 链从未部署（53 包 risk 出现 0 次），"haiku 是否系统性漏网"无法从存量回答，属前向仪表化，与第 3/4 项（误报标记/risk 分布）同族。判据：若量出 haiku 在 standard 正确性上系统性漏网 → 先试"用 brief 严苛度补"（develop-review 测试保真检查写成显式对抗动作，同 foundation-review 证据化收紧的杠杆），补不上再议升档（改 #26，走破冻评估）。| 附带自 2026-07-12 foundation-review 证据化收紧讨论
 
 **guide 漂移（全-3 顺手项）**：本轮未动，仍待小修。
