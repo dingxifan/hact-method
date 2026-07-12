@@ -4,6 +4,15 @@
 
 ## 历史里程碑
 
+### 2026-07-12 方法论调整：GIT-API 改造 land（穿透 + 边界，替场景矩阵）
+
+> 触发：doc-extract v1 GIT 结果（后端 31/31 全绿 0 命中）+ harvest 2/118，两点实证 + 信息量论证坐实"现状 GIT-API 瞄错靶"。理论分析（承 empirical-harvest `generate-integration-tests` 改造候选）：上游 AC 链 + per-task 对抗独审已清"装配整体跑通吗"，幸存 bug 只剩三缝——(a) 跨模块/管线接缝 (b) 真实外部边界 (c) 真浏览器（web，本轮不动）。现状按接口枚举场景矩阵测的是 safe middle，全绿≈无信息。设计沉淀 `_meta/plans/2026-07-12-git-api-reshape/design.md`。
+
+- **① 穿透替换场景矩阵**（Step2）：少数真端到端流，驱动真实体从入口走到终态、走真实 API+队列+转换、**禁 fixture 抄近路**——踩真实 enabled 边/真队列，"边 enabled=false/状态词汇不符/队列没接"（de-v1-004 类）当场断在推不动处。**数量=原则非硬数字**：每个"不同终态/分支决策"一条、穷举、之外零条（防退回矩阵的再膨胀护栏），随终态数伸缩不随输入种类。**穿透是"as-built 对账"待议发现的机械兜底**（两条待议合流）。
+- **失败 ⚖️ 双路由**（Step3 按流报断点 / Step4）：默认升级不自动 patch；⚖️ CC 判"意图≠as-built → revise-doc(trd)/地基裁决"vs"纯实现 bug → source=integration"，用户可推翻；极窄快速通道仅测试脚本自身写错。
+- **② 边界闸 opt-in**（新增 Step4B）：桩点即边界（per-task"绝不真调付费 API"的桩标记零真调覆盖处）→ **⚖️ 探测 + 🚫 真调**（花钱/凭据必人点头）；用户临时提供真样本（不入库·PII）打一次真调验接线（鉴权/真响应形状/真行为），不测业务正确性；无凭据/环境非静默降级移交 manual-test·deploy-smoke；**在自动绿之外**。
+- **验证方式=自验证**：新形态未跑过=假设，land 后下次 GIT 运行即第一手实测。改造既有机制非新增、冻结相容。web 侧不动（已转人类可选驱动）；GIT-web 瘦身仍待一次真跑。落点：`specs-execution/`+`specs-structural/generate-integration-tests.md`；无 review-brief（GIT 本身是验证步）。
+
 ### 2026-07-12 方法论调整：foundation-review 证据化收紧（G1 探针通用化 + G2 自绿复现化）
 
 > 触发：doc-extract V0 走骨架完整跑通后二轮独审（Codex 独立对抗复核）暴露"声明档 > 实测档"。两轮对比给出干净证据链——一轮 foundation-review（默认模型）签"0 阻断"、把五类**非安全构造级洞**（结构类型可绕/`window.fetch` 可绕/DB 原地覆盖未挡/状态机合法边裸 SQL 可绕/router 可加顶层路由）判无发现；二轮（提示词强制"判构造级前必须亲手撞反例"）判同批为阻断。唯一结构差 = 执行化探针的强约束。**证 brief 严苛度 > 模型大小**（一轮默认模型也漏 = 审查方法问题、非模型能力问题）。

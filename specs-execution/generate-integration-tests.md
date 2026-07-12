@@ -1,7 +1,9 @@
 # exec: generate-integration-tests
 
-> CC 加载本文时，当前任务是在所有 sprint develop 任务合并后，先跑后端 smoke test；smoke test 有结论后，决定是否加跑前端 pinchtab（非视觉基线迭代由用户决定；**涉视觉基线迭代完整档必跑**）。
-> 两档制：**轻量档（默认）** = 后端 curl smoke test → **完整档** = 轻量档 + 前端 pinchtab + 视觉冒烟断言（**涉视觉基线迭代必跑**；纯后端/无视觉基线变更迭代按需）
+> CC 加载本文时，当前任务是在所有 sprint develop 任务合并后，先跑后端穿透流（+ 边界闸按需）；有结论后，决定是否加跑前端 pinchtab（非视觉基线迭代由用户决定；**涉视觉基线迭代完整档必跑**）。
+> 两档制：**轻量档（默认）** = 后端**穿透流 + 边界闸（opt-in）** → **完整档** = 轻量档 + 前端 pinchtab + 视觉冒烟断言（**涉视觉基线迭代必跑**；纯后端/无视觉基线变更迭代按需）
+>
+> **穿透 vs 旧场景矩阵**：本 task 不按接口逐条枚举场景（那是 safe middle，per-task e2e 已覆盖、全绿≈无信息）。上游 AC 链 + per-task 对抗独审已清"装配整体跑通吗"，幸存 bug 只剩接缝——GIT-API 只测两条缝：**穿透**（跨模块/管线内部缝）+ **边界闸**（真实外部缝）。
 
 **上下文密度**：轻量档低。只需读 TRD 接口设计段 + PRD AC；完整档按需追加 ux-flows.md + prototype.html。
 
@@ -10,9 +12,11 @@
 ## 红线
 
 - **跑测试前必须后端环境可达**：Step 3 前确认后端服务 + 数据库就绪
-- **不测已有功能的回归**：只测本期新功能端到端路径和跨模块集成点
+- **不测已有功能的回归**：只测本期新功能端到端路径
+- **穿透禁 fixture 抄近路**：每条穿透流必踩真实 API + 队列 + 转换机制从入口走到终态，不得用 fixture 造中间态——否则测不到接缝（这是穿透相对 per-task e2e 的唯一价值来源）
+- **边界真调 = 🚫**：打真实外部（花钱/凭据）前必须人明确点头；探测边界是 ⚖️、真打是 🚫
 - **完整档前端场景上限 15 条**：超出时优先保留主流程 + 跨模块集成点，边界场景降级 `[不阻断]` 记入 backlog
-- **[阻断] 失败必须走 develop 修复**：不在联调会话中直接改业务逻辑，走 dispatch
+- **[阻断] 失败默认升级、不在联调会话直接改业务逻辑**：走 develop（source=integration）或 revise-doc，见 Step 4
 
 ---
 
@@ -54,17 +58,19 @@
 
 ---
 
-### Step 2：生成后端脚本
+### Step 2：生成后端穿透流
 
-派 Explore subagent 读取 PRD AC + TRD 接口设计段，生成：
-1. 按接口逐条写 `.http` / `curl` 脚本，覆盖正常路径 + 鉴权边界 + 错误码 + 跨模块集成点；保存到 `integration-tests/backend/v{N}-run-all.sh`
-2. 写脚本索引 `integration-tests/scripts-v{N}.md`（后端部分），字段：序号 / 场景描述 / 覆盖 AC
-3. `git add integration-tests/ && git commit -m "test(it): v{N} 后端集成脚本生成" && git push`
+派 Explore subagent 读取 PRD AC **主流程 + 各"不同结局"分支**（不按接口枚举），生成**穿透流**：
 
-**脚本已存在** → 读所有已合并 PR 的「偏离说明」段落：无偏离则直接可用；有字段名 / 路径 / 格式变化 → 定向修正对应脚本，不重写整条场景。
+1. 每条穿透流 = 一个 `.http` / `curl` 脚本序列，驱动**一个真实体从入口走到终态**，全程走**真实 API + 真实队列/转换机制**、**禁 fixture 抄近路**造中间态；每步断言转换真发生，末尾断言终态到达 + 终态产物正确。保存到 `integration-tests/backend/v{N}-run-all.sh`
+2. **穿透流数量 = 原则，非硬上限**：**每个"不同终态 / 分支决策"一条，对这些穷举、之外零条**——随输入种类多加（这种单据/那种字段组合当新场景）= 违规、退回场景矩阵老病。单管线应用通常 ~5-6 条，多管线更多；随真实终态数伸缩、不随输入种类。异常小分支降 backlog。
+3. 写脚本索引 `integration-tests/scripts-v{N}.md`（后端部分），字段：序号 / 穿透流描述 / 起点→终态 / 覆盖 AC
+4. `git add integration-tests/ && git commit -m "test(it): v{N} 后端穿透流生成" && git push`
+
+**脚本已存在** → 读所有已合并 PR 的「偏离说明」段落：无偏离则直接可用；有字段名 / 路径 / 格式变化 → 定向修正对应流，不重写整条。
 
 ```
-✅ 后端脚本生成完成：{N} 条场景。
+✅ 后端穿透流生成完成：{N} 条流（各覆盖一个终态）。
 → 下一步：跑后端测试
 ```
 
@@ -74,9 +80,10 @@
 
 ### Step 3：跑后端测试
 
-读 `integration-tests/scripts-v{N}.md`，提取模块列表，**按模块并行派 subagent**（纯执行+结果上报，指定 `model: "haiku"`）：
-- 每个 subagent 执行该模块下所有 `.http` / `curl` 脚本
-- 返回：每条场景结果（✅/❌）+ HTTP 状态码 + response body 关键字段摘要 + 失败现象及复现步骤
+读 `integration-tests/scripts-v{N}.md`，提取穿透流列表，**按穿透流派 subagent**（纯执行+结果上报，指定 `model: "haiku"`）：
+- 每条流一个 subagent，执行该流的脚本序列，**在推不动处（某步转换失败 / 边不存在 / 队列不消费）即停并报断点**——穿透的价值正在这里
+- 返回：每步结果（✅/❌）+ HTTP 状态码 + 关键字段摘要 + 断在哪一步及现象
+- **流间状态互扰**：各流用独立实体 / 数据前缀隔离；隔离不了则串行跑（穿透流本就少）
 
 全部返回后，汇总写入 `integration-tests/result-{日期}.md`，**同步写 `status.yml` 的 `integration_tests[]`**（每条场景一项）：
 ```yaml
@@ -87,29 +94,31 @@
 
 ### Step 4：处理后端失败
 
-逐条处理 ❌ 条目：
+逐条处理 ❌ 条目。穿透失败**默认升级裁决、不自动 patch**（接缝失败≈契约/地基问题，非打补丁的事）。
 
-**`[阻断]`**（影响主流程）：
+**`[阻断]`**（断在主流程）→ **⚖️ CC 自动判两路（输出判断 + 证据，用户可推翻）**——判据 = "穿透想走的边/态在实际库存在不存在"：
 
-满足快速通道条件（同时满足：无业务逻辑改动 + 原因显而易见）→ 快速通道：
-
-1. 修改代码
-2. 自检（有报错必须修复，不得跳过）：`cd backend && npm run build 2>&1 | tail -5 && npx tsc --noEmit 2>&1 | head -10`
-3. 提交并合并：
-```bash
-git checkout -b fix/it-{desc}
-git add {改动文件}
-git commit -m "fix(it): {描述}"
-git push origin fix/it-{desc}
-git checkout master && git merge fix/it-{desc} && git push origin master
-git branch -d fix/it-{desc}
-```
-
-不满足 → 写 develop 任务包（`source=integration`，urgency 按影响程度），写入 `iterations/vN/queue/{task-id}.md`；同步追加 `status.yml` 的 `tasks[]`；更新 `_meta/sessions/generate-integration-tests-progress.md`
+- **意图 ≠ as-built**（要走的边/状态在实际库不存在或未启用：`enabled=false`、状态词汇不符、队列没接）→ 派 `revise-doc(target=trd)` 或地基裁决——**这类是契约要对齐，不当 code bug 反复改**。写任务包、同步 `status.yml`、暂停该流复测，上游完成后重进 Step 3。
+- **纯实现 bug**（边/态都在、代码写错）→ 写 develop 任务包（`source=integration`，urgency 按影响），入 `iterations/vN/queue/{task-id}.md`；同步 `status.yml` 的 `tasks[]`；更新 `_meta/sessions/generate-integration-tests-progress.md`。
+- **极窄快速通道**（仅**测试脚本自身**写错：断言值 / typo，无业务改动、原因显然）→ 当场修脚本、跑绿即可，不派任务。
 
 **`[不阻断]`**：评估规模写 backlog 或建 B 类任务；不派 source=integration 修复任务
 
-**同一 `[阻断]` 修复后仍失败超过 2 轮** → 判断根因是否在 TRD 设计，若是则创建 `revise-doc(target=trd)` 任务；该场景暂停复测，revise-doc 完成后重新进入 Step 3
+### Step 4B：边界闸（真调冒烟，闸控 opt-in）
+
+**探测（⚖️）**：扫本期 `git diff` / 测试代码里对**外部**打的桩（引擎白名单新增、外部 SDK、外部 HTTP、"绝不真调付费 API"的 Stub / 桩 fetch）——**桩点即零真调覆盖的边界**。列出本期新增/改动的真实边界清单；**无边界 → 输出"本期无外部边界，跳过"，进 Step 4.5**。
+
+**真调（🚫）**：对每条边界，冒烟须**真打外部**（花钱/凭据）。输出并等用户明确回应：
+```
+本期外部边界：{X、Y}。边界冒烟将用你提供的真样本对其各打一次真调（会花钱/用凭据），验"接线对真实世界成立"。是否执行？（提供样本继续 / 跳过 → 移交 manual-test·deploy-smoke）
+```
+🚫 等用户点头 + 提供样本。
+
+**执行（点头后）**：用**用户临时提供的小真样本**（**不入库**——含 PII）对每条边界打**一次真调**，断言**接线成立**：鉴权方式对不对、真响应形状解析对不对、真行为（204 / 超时 / token 格式）与假设符不符——**不测业务正确性**。结果写 `result-{日期}.md` + `status.yml`（标"边界冒烟"）。
+
+**降级（非静默）**：无凭据 / 无环境 / 用户跳过 → 标"边界冒烟未跑、边界 {X} 真调未验"，移交 manual-test / deploy-smoke，**不假装绿**。
+
+**失败**：真调失败 = 接线错 → 升级 `source=integration` develop 带真证据修，不自动 patch。**边界闸在自动绿之外**——其失败产 finding、不卡后端穿透套件的绿。
 
 ---
 
@@ -153,8 +162,9 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的�
 
 ### Step 6：三条件确认
 
-- [ ] 所有已生成测试场景均有明确结论（无"未测"条目）
-- [ ] 主流程无 `[阻断]` 失败（已修复且复测通过）
+- [ ] 所有穿透流均有明确结论（无"未测"条目）
+- [ ] 主流程无 `[阻断]` 失败（已经 develop(source=integration) 修复 / revise-doc 对齐 并复测通过）
+- [ ] 边界清单每条有结论（真调通过 / 降级移交并记录），无"未定"边界
 - [ ] `[不阻断]` 问题已记入 backlog 且已分级
 
 **若运行了完整档**，额外确认：前端 pinchtab 场景已控制在 ≤15 条；**涉视觉基线迭代**的视觉冒烟断言（主色 / 视口外溢 / 关键容器）全部通过或失败已走 develop 修复并复测通过
@@ -181,8 +191,9 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的�
 
 | 触发点 | Subagent 任务 | Prompt 要点 | 失败处理 |
 |--------|-------------|------------|---------|
-| Step 2（后端脚本生成） | Explore 读 PRD AC + TRD 接口，生成 backend curl 脚本 | 读 prd AC + trd 接口设计段；生成 backend/v{N}-run-all.sh；写脚本索引后端部分；返回场景数 | 失败则主线手动生成 |
-| Step 3（按模块并行） | 每模块一个 subagent（纯执行+上报，指定 `model: "haiku"`），执行后端 curl 脚本 | 传入：模块名、.http 脚本列表、后端地址；执行 curl；返回每条结果（✅/❌）+ 状态码 + body 摘要；部分失败仍返回其余结果 | 失败则主线逐条执行 |
+| Step 2（后端穿透流生成） | Explore 读 PRD AC 主流程+分支，生成 backend 穿透流 | 读 prd AC 主流程 + 各"不同结局"分支；按"每终态一条、禁 fixture 抄近路"生成 backend/v{N}-run-all.sh；写脚本索引；返回流数 + 各流起点→终态 | 失败则主线手动生成 |
+| Step 3（按穿透流） | 每条流一个 subagent（纯执行+上报，指定 `model: "haiku"`），执行流脚本序列 | 传入：流描述、脚本序列、后端地址、独立实体/前缀；执行；**推不动处即停报断点**；返回每步结果 + 状态码 + 断点 | 失败则主线逐条执行 |
+| Step 4B 边界闸真调 | **不派 haiku 子代理**——探测 ⚖️ 由主线扫桩点；真调 🚫 由主线在用户点头 + 提供样本后执行 | — | 无凭据/环境则降级移交，非静默 |
 | Step 4.5（完整档·前端） | Explore 读 ux-flows + prototype 生成 pinchtab 脚本；执行 subagent（纯执行+上报，指定 `model: "haiku"`）跑前端场景 | 调用 Skill(pinchtab)；上限 15 条；prototype 软核对覆盖；返回每条结果 | 失败则主线手动生成 / 逐条执行 |
 
 ---
