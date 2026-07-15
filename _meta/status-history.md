@@ -4,6 +4,15 @@
 
 ## 历史里程碑
 
+### 2026-07-14 方法论调整：独立审查 subagent 降档目标 haiku → Sonnet 5（决策#26 参数回调）
+
+> 触发：用户在 doc-extract 项目实测独立审查 subagent 跑在 haiku 上**系统性误报**（把合规写法判成问题、列出不存在的缺口）。误报返工成本抵消降档省的钱，且污染独审 loop 收敛。承 2026-07-12 foundation-review 条目「附带·Haiku 独审质量疑问」——彼处判据"先试 brief 严苛度补、补不上再议升档"针对**漏网**（miss）；本次是**误报**（false positive），brief 收紧只会加重误报，故升档是对症的杠杆，方向自洽。
+
+- **改动范围（用户确认：仅独立审查类）**：纯审查/一致性核对 subagent 的降档档位从 `model: "haiku"` 改为 `model: "sonnet"`（Sonnet 5）。落地 8 处运行时文本：`develop.md`（阶段 B standard 档 + 漏标闭环描述）/ `plan-sprint.md`（task-package-review）/ `draft-prd-vN.md`（prd-review ×2）/ `draft-tech-design.md`（trd-review）/ `draft-ux.md`（prototype-review ×2）。
+- **不动**：纯读取+摘要的 Explore 会话启动 fan-out、`generate-integration-tests` 纯执行+上报 subagent —— 仍留 `haiku`（无审查判断，误报语义不适用，成本敏感）。
+- **档位语义**：Sonnet 5 是 standard 档的新底；sensitive / `source=foundation` 仍不指定 model、继承会话默认模型（当前 Opus）。决策#29 五层防线结构不变，仅"standard 降档"这一档由 haiku 变 sonnet。
+- **性质**：决策#26 参数按实证回调，非新增机制（与 2026-07-08 机制冻结相容）。落点：BRIEF #26 子注 + 8 处运行时文本 + 本记录；无 review-brief 改动（brief 不写 model，model 由派发方 spec 指定）。
+
 ### 2026-07-12 方法论调整：GIT-API 改造 land（穿透 + 边界，替场景矩阵）
 
 > 触发：doc-extract v1 GIT 结果（后端 31/31 全绿 0 命中）+ harvest 2/118，两点实证 + 信息量论证坐实"现状 GIT-API 瞄错靶"。理论分析（承 empirical-harvest `generate-integration-tests` 改造候选）：上游 AC 链 + per-task 对抗独审已清"装配整体跑通吗"，幸存 bug 只剩三缝——(a) 跨模块/管线接缝 (b) 真实外部边界 (c) 真浏览器（web，本轮不动）。现状按接口枚举场景矩阵测的是 safe middle，全绿≈无信息。设计沉淀 `_meta/plans/2026-07-12-git-api-reshape/design.md`。

@@ -294,7 +294,7 @@ CC 问：
 
 ## Step 5：独立对抗审查
 
-派全新 subagent（纯审查/一致性核对，默认指定 `model: "haiku"`），读 `templates/review-briefs/prototype-review.md`（含自读指令），告知本期版本 vN，由 subagent 自读 `prototype-map.md` + `prototype.html`，输出覆盖状态表 + 缺口列表。
+派全新 subagent（纯审查/一致性核对，默认指定 `model: "sonnet"`），读 `templates/review-briefs/prototype-review.md`（含自读指令），告知本期版本 vN，由 subagent 自读 `prototype-map.md` + `prototype.html`，输出覆盖状态表 + 缺口列表。
 
 **结果处理**：
 
@@ -391,7 +391,7 @@ git commit -m "feat(ux): v{N} 交互流程图 + 原型 [{项目名}]"
 
 ## Subagent 使用
 
-**Step 5 独立对抗审查**：派全新 subagent（默认指定 `model: "haiku"`）读 `templates/review-briefs/prototype-review.md`，subagent 自读 `prototype-map.md` + `prototype.html`，不收主线上下文。审查维度改动去改 brief 文件（单一来源）。
+**Step 5 独立对抗审查**：派全新 subagent（默认指定 `model: "sonnet"`）读 `templates/review-briefs/prototype-review.md`，subagent 自读 `prototype-map.md` + `prototype.html`，不收主线上下文。审查维度改动去改 brief 文件（单一来源）。
 
 其余步骤（业务沟通、内部消化、决策对答、原型生成、走查）均为主线工作或对话推进，不使用 subagent。
 
