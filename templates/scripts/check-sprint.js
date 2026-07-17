@@ -315,10 +315,14 @@ function checkSprint(iteration, root) {
   if (stTasks === null) {
     human('三方一致:status', '项目根无 status.yml（存量项目），queue↔status 一致性退回人工兜底');
   } else {
-    const stIds = new Set(stTasks.filter(t => t.source === 'sprint' && t.iteration === iteration).map(t => t.id));
+    // 迭代内 queue 的三个进料口：plan-sprint 产 sprint；generate-integration-tests Step 4 产
+    // integration；manual-test 产 manual-test —— 后两者同样写进 iterations/vN/queue/ 并同步
+    // tasks[]，故一致性比对须一并放行（B 类 bug/optimization 走 b-queue、iteration=null，不在此列）。
+    const ITER_SOURCES = new Set(['sprint', 'integration', 'manual-test']);
+    const stIds = new Set(stTasks.filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration).map(t => t.id));
     const qNotSt = queueIds.filter(id => !stIds.has(id));
     const stNotQ = [...stIds].filter(id => !new Set(queueIds).has(id));
-    if (qNotSt.length) fail('三方一致:status', 'status.yml', `queue 有但 status.yml tasks[] 无（source=sprint,${iteration}）：${qNotSt.join(', ')}`);
+    if (qNotSt.length) fail('三方一致:status', 'status.yml', `queue 有但 status.yml tasks[] 无（source∈{sprint,integration,manual-test},${iteration}）：${qNotSt.join(', ')}`);
     if (stNotQ.length) fail('三方一致:status', 'status.yml', `status.yml 有但 queue 无：${stNotQ.join(', ')}`);
     if (!qNotSt.length && !stNotQ.length) pass('三方一致:status', `queue ↔ status.yml tasks[] 一致`);
   }
