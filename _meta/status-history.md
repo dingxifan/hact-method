@@ -4,6 +4,13 @@
 
 ## 历史里程碑
 
+### 2026-07-17 方法论分析：Kimi Code + Kimi3 1M 适配分析落盘
+
+- **背景**：评估 hact-method 在 Kimi Code + Kimi3 1M 组合下的可行性、所需变化、潜在不足与提升点。
+- **关键修正**：最初基于过时信息认为 Claude 上下文窗口为 200k，得出"Kimi3 1M 有 5 倍上下文优势"的错误结论；实际 Claude Sonnet 4.5/Opus 4.8 均已支持 1M tokens（beta，tier 4）。因此 **上下文窗口不再是 Kimi Code 与 Claude Code 的差异化变量**，核心差异在于工具生态、子 Agent 机制、成本模式、模型行为。
+- **核心结论**：能跑，但需要一次"引擎移植"。核心骨架完全适用，但需重写 subagent 调用层、验证工具链兼容性、重新校准模型行为，并针对 Kimi Code 的配额制重新设计成本策略。潜在收益主要来自 AgentSwarm 批量并行和 Goal 模式，潜在风险主要是生态成熟度不足和成本控制工具缺失。
+- **落盘文件**：`_meta/plans/2026-07-17-kimi-code-kimi3-1m-adaptation-analysis.md`（完整分析）。
+
 ### 2026-07-14 方法论调整：独立审查 subagent 降档目标 haiku → Sonnet 5（决策#26 参数回调）
 
 > 触发：用户在 doc-extract 项目实测独立审查 subagent 跑在 haiku 上**系统性误报**（把合规写法判成问题、列出不存在的缺口）。误报返工成本抵消降档省的钱，且污染独审 loop 收敛。承 2026-07-12 foundation-review 条目「附带·Haiku 独审质量疑问」——彼处判据"先试 brief 严苛度补、补不上再议升档"针对**漏网**（miss）；本次是**误报**（false positive），brief 收紧只会加重误报，故升档是对症的杠杆，方向自洽。

@@ -1,4 +1,4 @@
-﻿# STATUS.md — hact-method
+# STATUS.md — hact-method
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发看板应用**（进行中）
@@ -58,6 +58,7 @@
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
+- 2026-07-17 Kimi Code + Kimi3 1M 适配分析落盘 — 评估 hact-method 在 Kimi Code + Kimi3 1M 下的可行性：核心骨架适用但需"引擎移植"（subagent 调用层/工具链/成本模型重估）；关键修正：Claude 已支持 1M，上下文非差异化变量；落盘 `_meta/plans/2026-07-17-kimi-code-kimi3-1m-adaptation-analysis.md`
 - 2026-07-14 独立审查 subagent 降档目标 haiku → Sonnet 5（决策#26 参数回调）— doc-extract 实测 haiku 独审系统性误报、返工成本抵消降档收益：仅审查/一致性核对类升 sonnet（develop 独审 standard 档 + 4 个 review-brief 派发点），Explore 读文件与 GIT 执行 subagent 仍留 haiku；sensitive/foundation 档不变；非新增机制、冻结相容
 - 2026-07-12 GIT-API 改造 land（穿透 + 边界，替场景矩阵）— doc-extract v1 GIT 31/31 全绿 0 命中 + harvest 2/118 实证"瞄错靶"：穿透流替按接口枚举（每终态一条·禁 fixture 抄近路·撞 de-v1-004 类接缝）+ 失败 ⚖️ 双路由 + 边界闸 opt-in（桩点即边界·🚫 真调）；改造非新增、下次 GIT 运行即自验证；web 侧不动
 - 2026-07-12 foundation-review 证据化收紧（G1 探针通用化 + G2 自绿复现化）— doc-extract V0 二轮独审实证驱动：构造级/机械级声明须以亲手撞过的反例为证、自绿须干净环境复现；证 brief 严苛度 > 模型大小；G3（机械级接自动门）记待议、收紧非新增机制（冻结相容）
