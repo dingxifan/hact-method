@@ -264,7 +264,11 @@ function checkSprint(iteration, root) {
     if (refs.length) {
       const noLine = refs.filter(r => !reLineNum.test(r) || /全文/.test(r));
       if (noLine.length) fail('reference 行号', where, `${p.id}：${noLine.length} 条 reference 无行号或写"全文"（首条：${noLine[0].slice(0, 40)}…）`);
-      if (/frontend/.test(p.layersStr) && !refs.some(r => /ux-flows/i.test(r)))
+      // draft-ux 是**可选**环节（PRD 标 `draft-ux: 需要` 才触发）——ux-flows.md 不存在时，
+      // 前端 AC 的形态权威落在 TRD「交互技术方案」段，此处不得强求引用一份不存在的文件。
+      // 存在时照旧强制（收窄非关闭）。承 v4「source 三口放行」同一处置：检查器不得把可选环节当必选前提。
+      if (/frontend/.test(p.layersStr) && fs.existsSync(path.join(iterDir, 'ux-flows.md'))
+          && !refs.some(r => /ux-flows/i.test(r)))
         fail('reference ux-flows', where, `${p.id}：前端任务 reference 未含 ux-flows 行号条目`);
       if (/backend/.test(p.layersStr) && !refs.some(r => /trd/i.test(r)))
         fail('reference trd', where, `${p.id}：后端任务 reference 未含 trd 行号条目`);
