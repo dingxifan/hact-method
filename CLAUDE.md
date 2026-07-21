@@ -15,11 +15,8 @@
 - skills/（本仓自带的 skill 定义，如 gitee-ops / adversarial-review / verification-loop）
 - templates/（可复用模板）
 - _meta/（研发过程产物：input/、plans/、.current_plan 及历史迭代文档）
-- codex-adapter/（**实验区**，见下方说明；不是方法论核心文档，不参与正常任务加载）
 
 **项目内容不存放在本仓**——每个项目是独立仓库，代码与协调文件（PRD/TRD/任务包/Gate等）合并存放在项目仓根目录下。本仓模板和规范被项目仓引用，但不拥有项目数据。
-
-**`codex-adapter/` 说明**：CC 与 Codex 混合执行的草案实验区，定义任务路由建议、交接包格式和短上下文运行策略，目标是让边界清晰的执行类任务可选交给 Codex 完成。**草案阶段，不改动、不影响本仓其余目录**——`skeleton/`、`specs-structural/`、`specs-execution/`、`templates/`、`guide/` 仍是唯一权威规范来源。遇到此目录不要误判为遗留半成品清理，也不要在未经试点验证前把其内容当作已生效规范执行。详见 `codex-adapter/README.md`。
 
 _meta/plans/ 目录由 planning-with-files-zh skill 自动管理：
 _meta/plans/YYYY-MM-DD-[阶段名]/
