@@ -4,7 +4,8 @@
  *
  * 用途：机械核对 G3 完成判据里**确定性可查**的部分——任务包字段完备 / reference 行号 /
  *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致 /
- *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）。
+ *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）/
+ *      归属真空（任务包声明"这件事不在本包"时，须确有另一个包认领）。
  *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 忠实性——内容真覆盖、非仅 id 在场）机器判不了，
  *      留签字人确认（🧑 段），脚本只把可机械的挡在签字前。
  *
@@ -139,6 +140,54 @@ function sensitiveHits(fm) {
   }
   const text = chunks.join(' ').toLowerCase();
   return SENSITIVE_HINTS.filter(w => text.includes(w.toLowerCase()));
+}
+
+/* ---------- 归属真空：推卸语检测 ----------
+ * 缺陷常落在「A 包不做 ∩ B 包不做」的交集里——两个包各自都合规，没人认领那件事。
+ * 只匹配"移交给别人"的措辞，不匹配普通禁令（`do-not` 里的"不改 X / 不新增 Y"是正常内容）。
+ * 机械可判的只有三件：① 点名的包 id 不在本 sprint queue（推给不存在的包）；② 两包互推（环）；
+ * ③ 未点名任何包 id 的推卸语 → 认领方机器认不出，留 🧑 逐条指认。 */
+const PUNT_HINTS = [
+  // 「不在本包内另查 X」是实现禁令不是移交，排除 内/中/里 后缀
+  /不在本包(?![内中里])/, /不在此包(?![内中里])/, /非本包(负责|职责|范围)/, /本包不(负责|收口|承接|覆盖)/,
+  /(收口|统一|落点|接线|入口|实现)不在(本|此)包/,
+  /留(给)?(后续|下期|下一期|后面|以后|其它包|其他包|另一包)/,
+  /(由|归)\s*[\w一-龥-]{1,24}?包\s*(负责|实现|收口|承接|处理|做)/,
+  /后续包/, /另起(一)?包/, /下期(再|另)?(做|补|处理|收口)/,
+];
+const PUNT_SCAN_FIELDS = ['do-not', 'context'];
+const reTaskIdLike = /\b[a-z][a-z0-9]*(?:-[a-z0-9]+)+-\d{2,3}\b/gi;
+
+/* 返回本包所有推卸语行：{ text, named: 被点名且在 queue 的包 id, ghosts: 被点名但 queue 里没有的 }
+ * 走**原始行**而非 parseFrontmatter 的产物：共用解析器按 YAML 规矩把 ` #` 起的尾串当注释剥掉，
+ * 而任务包正文里 `决策 #25` 这类引用很常见，剥完会把同一行后半段（推卸语常在那）一起吃掉。 */
+function puntLines(file, selfId, queueIds) {
+  const raw = readLines(file);
+  const s = raw.findIndex(l => /^---\s*$/.test(l));
+  if (s < 0) return [];
+  let e = raw.findIndex((l, i) => i > s && /^---\s*$/.test(l));
+  if (e < 0) e = raw.length;
+  const out = [];
+  let curKey = null;
+  for (const ln of raw.slice(s + 1, e)) {
+    const top = /^\s/.test(ln) ? null : ln.match(/^([A-Za-z_][\w-]*):\s?(.*)$/);
+    if (top) curKey = top[1];
+    if (!PUNT_SCAN_FIELDS.includes(curKey)) continue;
+    const line = (top ? top[2] : ln).replace(/^\s*-\s+/, '').trim();
+    if (!line) continue;
+    const hit = PUNT_HINTS.map(re => line.match(re)).find(Boolean);
+    if (!hit) continue;
+    const mentioned = [...new Set(line.match(reTaskIdLike) || [])].filter(x => x !== selfId);
+    // 报文只截推卸语前后各 30 字——整行常上百字，从行首截会看不见命中处
+    const at = hit.index;
+    out.push({
+      field: curKey,
+      text: (at > 30 ? '…' : '') + line.slice(Math.max(0, at - 30), at + 30) + (at + 30 < line.length ? '…' : ''),
+      named: mentioned.filter(x => queueIds.includes(x)),
+      ghosts: mentioned.filter(x => !queueIds.includes(x)),
+    });
+  }
+  return out;
 }
 
 /* ---------- 任务包 AC 行：抽 (源：PRD …) 标签内的所有 AC-nn id ----------
@@ -358,6 +407,31 @@ function checkSprint(iteration, root) {
     if (hits.length)
       human('risk 启发核对', `${p.id}：命中敏感启发词「${[...new Set(hits)].join('、')}」但 risk=${declared || 'standard(缺省)'} —— 确认是否应标 sensitive（决定 develop 独审模型档位；末端预检另按 diff 独立判定兜底）`);
   }
+
+  // 8. 归属真空：声明"这件事不在本包"时，须确有另一个包认领
+  const puntGraph = new Map();          // 本包 → 它点名移交的包 id 集
+  let puntHitCount = 0;
+  for (const p of packages) {
+    const lines = puntLines(p.file, p.id, queueIds);
+    if (!lines.length) continue;
+    puntHitCount += lines.length;
+    const named = new Set();
+    for (const l of lines) {
+      for (const g of l.ghosts)
+        fail('归属真空', p.file, `${p.id}：${l.field} 把「${l.text}…」移交给 ${g}，但本期 queue 无该任务包`);
+      for (const n of l.named) named.add(n);
+      if (!l.named.length && !l.ghosts.length)
+        human('归属真空', `${p.id}（${l.field}）：「${l.text}…」未点名承接的任务包 —— 指认哪个包的 files/AC 认领了它，无则本期无人做`);
+    }
+    puntGraph.set(p.id, named);
+  }
+  for (const [a, outs] of puntGraph) {
+    for (const b of outs) {
+      if (a < b && puntGraph.get(b) && puntGraph.get(b).has(a))
+        fail('归属真空:互推', queueDir, `${a} 与 ${b} 互相声明该件事不在本包 —— 两边都不做，落在交集里`);
+    }
+  }
+  if (puntHitCount === 0) pass('归属真空', '任务包 do-not/context 无"移交他包"措辞');
 
   // 语义残量（留人签）
   human('G3:人签', '疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / 任务包 AC 逐条忠实于其回链的 PRD AC（内容真覆盖，非仅 id 在场）—— 语义判断，由签字人确认');

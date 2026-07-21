@@ -265,7 +265,8 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 | source | 去向 |
 |---|---|
-| `sprint` / `integration` / `manual-test`（A 类） | 写入 项目根 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`；**若为跨切面地基缺口**——新发现的越权/错误类目/作用域漏洞等"跳出地基"——则注明`建议 foundation.md 增补地基关注点`，下期 `draft-tech-design` Step7 据此增补 + 立应有档），由本迭代 `wrap-up-iteration` 第二步统一分流 |
+| `sprint` / `integration` / `manual-test`（A 类）·**规范该怎么改** | 写入 项目根 `feedback.md`（格式：`{日期} \| {发现} \| 建议在 {standards-frontend/backend/shared} 哪节补充`；**若为跨切面地基缺口**——新发现的越权/错误类目/作用域漏洞等"跳出地基"——则注明`建议 foundation.md 增补地基关注点`，下期 `draft-tech-design` Step7 据此增补 + 立应有档），由本迭代 `wrap-up-iteration` 第二步统一分流 |
+| `sprint` / `integration` / `manual-test`（A 类）·**本期代码的具体缺口** | 写入 项目根 `backlog.md`（格式：`- [ ] {日期} \| [欠账] {描述} \| 源：develop {vN} {task-id}`）。指本期该有而无人做的东西：**上期有的能力本期没了**（入口/选项/路径回归）、**跨包交集无人认领**（本包不做、也没见别的包做）、**standards 或 foundation 声明的约束在代码里没有落地手段**。**不写进 feedback.md**——feedback 的出口在 `wrap-up-iteration`（G5 之后），本期验收前拦不住任何东西；`[欠账]` 由 `manual-test` 会话启动读入，G4 前必过一遍 |
 | `bug` / `optimization`（B 类） | **就地分流**：当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
 > 写入项目 `decisions.md` 前先看活跃条目是否已超过 30 条，或最早条目所属迭代是否已过去 5 期以上；若触发阈值，先按文件头约定把纯历史/已取代条目归档到 `decisions-history.md`，再追加本次决策。

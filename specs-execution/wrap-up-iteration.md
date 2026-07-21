@@ -95,6 +95,7 @@
 | 角色工作流 / 规范结构 / 方法论有问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes，由 harvest-notes 后续进待议清单 |
 | 跨项目通用机制问题 | 执行人 hact-notes（标签 `[方法论]`） | 誊入个人 notes |
 | 项目架构决策有遗漏 | 项目根 `decisions.md`（项目仓，不变） | 追加条目 |
+| **本项目具体待办的功能/技术欠账**（非规范、非方法论：能力回归 / 无人认领的交集 / standards 声明在代码里无落地手段） | 项目根 `backlog.md`（`[欠账]`） | 追加条目；已在 backlog 则不重复。**不得因"已记过 feedback"就删** |
 | 无价值 | 直接删除 | — |
 
 > **`[规范]` vs `[checklist]` 判断标准**：feedback 是"以后写代码要遵守某规则"→ `[规范]`；feedback 是"以后自检时要专门核查这一项，否则容易漏"→ `[checklist]`。
@@ -110,7 +111,7 @@
 分流完成后**清空 项目根 `feedback.md`**（保留文件头，清空内容）。
 
 ```
-✅ feedback 分流完成：誊入 notes {N} 条（[规范]{a}/[checklist]{b}/[方法论]{c}）/ decisions.md {M} 条 / 删除 {X} 条。feedback.md 已清空。
+✅ feedback 分流完成：誊入 notes {N} 条（[规范]{a}/[checklist]{b}/[方法论]{c}）/ decisions.md {M} 条 / backlog.md [欠账] {B} 条 / 删除 {X} 条。feedback.md 已清空。
 → 下一步：project.md 合并
 ```
 

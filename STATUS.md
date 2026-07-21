@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发看板应用**（进行中）
-- 上次更新：2026-07-14
+- 上次更新：2026-07-21
 
 ## 各阶段完成情况
 
@@ -58,6 +58,8 @@
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
+- 2026-07-21 归属真空检查 + feedback 载体分池（A1–A3）— doc-extract v4/v5 经验总结驱动：`check-sprint.js` 加第 8 项归属真空（点名不存在的包/两包互推=FAIL，未点名=🧑；4 期实测抓到报告点名的两个头号实例、7 项目回归 0 误报）+ feedback 分池建成 `develop → backlog [欠账] → manual-test G4 前定夺 → 下期 PRD 过账` 链路 + post-V0 地基增补继承 foundation-review 探针纪律；核对中修正报告三处（B2 槽位不空/GIT 未跑、返工包账算错）；三项均修既有机制缺格、非新增，冻结相容
+- 2026-07-18 codex-adapter 草案实验区从 master 移除 — CC+Codex 混合执行草案（2026-07-01 建）不再在 master 维护；Codex runtime-adaptation 战略仍在独立分支，本次不涉及。方法论 master 回归纯 CC 运行时
 - 2026-07-17 Kimi Code + Kimi3 1M 适配分析落盘 — 评估 hact-method 在 Kimi Code + Kimi3 1M 下的可行性：核心骨架适用但需"引擎移植"（subagent 调用层/工具链/成本模型重估）；关键修正：Claude 已支持 1M，上下文非差异化变量；落盘 `_meta/plans/2026-07-17-kimi-code-kimi3-1m-adaptation-analysis.md`
 - 2026-07-14 独立审查 subagent 降档目标 haiku → Sonnet 5（决策#26 参数回调）— doc-extract 实测 haiku 独审系统性误报、返工成本抵消降档收益：仅审查/一致性核对类升 sonnet（develop 独审 standard 档 + 4 个 review-brief 派发点），Explore 读文件与 GIT 执行 subagent 仍留 haiku；sensitive/foundation 档不变；非新增机制、冻结相容
 - 2026-07-12 GIT-API 改造 land（穿透 + 边界，替场景矩阵）— doc-extract v1 GIT 31/31 全绿 0 命中 + harvest 2/118 实证"瞄错靶"：穿透流替按接口枚举（每终态一条·禁 fixture 抄近路·撞 de-v1-004 类接缝）+ 失败 ⚖️ 双路由 + 边界闸 opt-in（桩点即边界·🚫 真调）；改造非新增、下次 GIT 运行即自验证；web 侧不动

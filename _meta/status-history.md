@@ -4,6 +4,25 @@
 
 ## 历史里程碑
 
+### 2026-07-21 方法论调整：归属真空检查 + feedback 载体分池（A1–A3）
+
+> 触发：doc-extract v4/v5 两期经验总结（项目仓 `_meta/reviews/v4-v5-methodology-retrospective.md`）——v5 全面独立审查出 8 阻断 + 16 建议，报告归纳 6 个跨期复现模式并列 A/B/C 三类候选。本轮只做 A1–A3，三项**全是修既有机制的缺格、非新增机制**（与 2026-07-08 冻结相容）。
+
+- **动手前的核对（三处修正报告）**：① 元问题（feedback 载体在漏）**成立且根因更靠上**——`wrap-up-iteration` 分流表 6 个去向里没有一格是"本项目下期要做的欠账"，`backlog.md` 不在目的地清单，而 `develop` 把 A 类超范围发现全导向 `feedback.md`，叠加"分流后必须清空" + wrap-up 在 G5，闭合成黑洞；② 报告 B2「缺一步全局接缝审」**槽位不空**——v5 G4 未签、无 `scripts-v5.md`，根本没跑 `generate-integration-tests`，而 GIT-API 2026-07-12 已改造成"穿透 + 边界"、正在该槽位；③ 报告头号量化证据「v5 返工包 0 vs v4 的 6」**账算错**——v5 有 015~019 五个修复包未计入，真实对比是 6（G4 后发现）vs 5（G4 前发现）。
+- **A1 · feedback 分池 + G4 前出口**：建成完整链路 `develop 发现 → backlog [欠账] → manual-test 会话启动逐条交用户定夺（G4 前唯一出口）→ 留下期的进下期 draft-prd-vN Step 1 定去向（纳入/继续留/不做，无第三种结局）`。改 `develop.md`（A 类去向表拆两行：规范该怎么改 → feedback；本期代码缺口 → backlog `[欠账]`）/ `manual-test.md`（启动读 + Step 2 🚫 逐条定夺）/ `draft-prd-vN.md`（Step 1 v2+ 欠账过账 ⚖️）/ `wrap-up-iteration.md`（分流表补第 6 格 + 播报计数）/ `templates/backlog.md` + `templates/acceptance-report.md` / 两份 structural 同步。
+- **A2 · `check-sprint.js` 第 8 项归属真空**：点名的包 id 不在 queue = FAIL；两包互推 = FAIL；未点名承接方 = `🧑` 逐条指认。只匹配"移交"措辞不匹配普通禁令（`不在本包(?![内中里])` 排除"不在本包内另查 X"）；**punt 扫描走原始行不用 `parseFrontmatter` 产物**——共用解析器按 YAML 规矩剥 ` #` 尾串，而任务包正文 `决策 #25` 这类引用常见，剥完会吃掉同行后半段（报告点名的 de-v4-009 推卸语正在截断点后）。
+- **A2 实测**：doc-extract 逐期命中 v3/v4/v5 各 1 条（v4 的正是报告点名的导出入口缺位、v5 的正是 B1 DOC_TYPES 收口的根）；跨 7 个项目全部迭代回归再多 2 条 🧑、**0 条 FAIL 误报**。
+- **A3 · post-V0 地基增补继承探针纪律**：foundation-review 的证据化探针原只挂 `draft-foundation`（V0 一次性），V1+ 新增关注点走 `draft-tech-design` Step 7 却只写"立应有档"——v5 `foundation.md` 标机械级只实现一个封口即从此缝过。改：Step 7 声明 ≥机械级须二选一（手段已在 → 亲手撞反例验真被挡 / 本期才建 → 登记「待建」交 plan-sprint 拆地基跟进包），给不出则只能立人审级；`plan-sprint` 地基跟进包 AC 必须含反例验证。
+- **本轮不做**：B2（先补跑 GIT 用真实数据定）/ B1 旧假设回查包（真新增机制，先手工试一次）/ B3-B5（等 A1 载体跑过一期）/ A4（项目侧 backlog 债）。三条已记入方法论待议。
+- **落盘**：`_meta/plans/2026-07-21-scope-vacuum-and-feedback-routing/design.md`。
+
+### 2026-07-18 方法论减法：codex-adapter 草案实验区从 master 移除
+
+- **背景**：用户启动一轮方法论「减法」，第一项是把 master 做成干净的 CC 专用版。`codex-adapter/`（2026-07-01 建的「CC + Codex 混合执行」草案实验区，含 README / context-strategy / task-routing-matrix / 三份 handoff 模板 / 四份 `*.codex.md` 短卡 / pilots 两份）从 master 删除。
+- **改动**：`git rm -r codex-adapter/`（12 文件）；删 `CLAUDE.md` 中两处 active 引用（允许目录清单里的 codex-adapter 条目 + `codex-adapter/ 说明` 整段），使运行时正文不再指向已移除目录。
+- **未涉及（明确边界）**：`codex-runtime-adaptation` 战略项目（2026-07-09 立、独立分支、决策未落 master）与其 memory / 待议条目 / 机制冻结豁免**保持不动**——这是比 codex-adapter 更新的方向，本次减法不碰，日后可能并回；2026-07-17 Kimi Code 适配分析亦不动。历史/研究痕迹（本文件旧里程碑、`_meta/plans/*`、`_meta/sessions/*`、`方法论演进说明*`）按写作纪律保留为 canonical 记录，不改写。
+- **口径**：master 的运行时方法论回归纯 CC；Codex 混合执行的探索记录靠 git 历史与独立分支追溯。
+
 ### 2026-07-17 方法论分析：Kimi Code + Kimi3 1M 适配分析落盘
 
 - **背景**：评估 hact-method 在 Kimi Code + Kimi3 1M 组合下的可行性、所需变化、潜在不足与提升点。

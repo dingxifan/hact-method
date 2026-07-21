@@ -34,6 +34,7 @@
 | 反向更新的 PRD / TRD（如有偏离） | `iterations/vN/prd.md` / `trd.md` | 通过 `revise-doc` task 执行 |
 | 更新的 decisions.md | `decisions.md` | 实现细节偏离的沉淀 |
 | 誊入个人 notes 的反馈条目 | `../hact-notes-{name}/notes.md` | feedback 分流：`[规范]`/`[checklist]`/`[方法论]`，由 harvest-notes 后续上提 |
+| 转入 backlog 的欠账条目 | `backlog.md` | feedback 分流：本项目具体待办的功能/技术欠账（`[欠账]`），下期 `plan-sprint` 可见 |
 | 清空的 feedback.md | `feedback.md` | 分流完成后清空 |
 | 更新的 project.md | `project.md` | 本期最终状态快照 |
 | G5 签字 | `iterations/vN/gates.md` | `- [x] G5：迭代收尾完成 — YYYY-MM-DD` |
