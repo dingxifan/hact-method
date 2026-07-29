@@ -3,7 +3,7 @@
   序列化锁定：YAML frontmatter（check-sprint.js 据此 parse）。字段规范见 specs-structural/develop.md §字段规范。
   填写规则：所有 <待填> 必须替换为实值；无依赖的 depends_on 填 []（不是 <待填>）；
            api-contract 仅 layers=[backend] 且接口被前端消费时填，否则整段删除（注释掉的不算填）。
-  注：本文件 frontmatter 即任务包正文；--- 之后正文段可留空（18 字段已在 frontmatter）。
+  注：本文件 frontmatter 即任务包正文；--- 之后正文段可留空（字段均在 frontmatter）。
   视觉地基包：全局 reset + UI 库主题覆盖（设计主色等 token 映射）+ design.md token 全局接线（variables.scss + main/App 入口），
            不属任何业务页。在 frontmatter 加 `baseline: visual` 标记（仅此包加，其余包不加；check-sprint 据此机械核 v1 必有）；
            其余 frontend 任务 depends_on 它。触发与内容见 plan-sprint Step 2。
@@ -23,6 +23,9 @@ description: <待填>        # 格式「当前状态 → 期望状态」，不�
 depends_on: []            # 前置 task-id 列表，无依赖填 []；与 sprint.md 依赖列、status.yml depends_on 三处一致
 files:
   - <待填>                # 必改文件路径，精确到已知行号范围；不预防性列"可能"文件
+supersedes: []            # 本包取代的既有实体，无则 []（不是 <待填>）。一行一条，写清是什么：
+                          # 代码路径（旧实现 / 旧分支 / 已无调用方的模块）、lint 规则 id、spec 文件、decisions #N。
+                          # 填了即欠一笔退役账——develop 交付时逐条给「已下线 / 保留 + 理由」，见 develop §退役账
 acceptance-criteria:
   # 每条须标覆盖的 PRD AC：(源：PRD AC-nn)；可选人读后缀 (源：PRD AC-nn·删除二次确认)，linter 只读 AC-nn；纯技术约束标 (技术)
   # 不可视区(backend/逻辑)任务：每条以 Given/When/Then 可执行例子书写（输入→期望输出），供 develop 1:1 落成测试

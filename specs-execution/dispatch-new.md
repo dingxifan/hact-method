@@ -123,7 +123,7 @@ Then: {期望系统行为}
 
 ## Step 4：写任务包
 
-按 `specs-structural/develop.md §字段规范` 写完整 18 字段任务包，写入 `b-queue/{task-id}.md`，状态 `[可取]`。
+按 `specs-structural/develop.md §字段规范` 写完整任务包（全部字段），写入 `b-queue/{task-id}.md`，状态 `[可取]`。
 
 关键字段确认（写完对照检查）：
 
@@ -139,7 +139,7 @@ Then: {期望系统行为}
 | `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；**含纯加法 schema 变更时**必须写明：最坏情况 / 如何发现 / 如何回滚 |
 | `api-contract`（条件） | 仅 `layers=[backend]` 且新增接口被前端消费时填，否则整段删除（与 develop §字段规范一致） |
 
-**18 字段无空字段方可写入 queue**（schema 变更**不另立字段**——落在上述 `acceptance-criteria` / `known-risks` / `api-contract`，与 develop §字段规范单一真相对齐）。
+**全部字段无空值方可写入 queue**（schema 变更**不另立字段**——落在上述 `acceptance-criteria` / `known-risks` / `api-contract`，与 develop §字段规范单一真相对齐）。
 
 **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 

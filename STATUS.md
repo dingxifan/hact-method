@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·开发看板应用**（进行中）
-- 上次更新：2026-07-21
+- 上次更新：2026-07-28
 
 ## 各阶段完成情况
 
@@ -58,6 +58,7 @@
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
+- 2026-07-28 减法纪律跨过项目边界（注释受众分离 + 退役账）— doc-extract v1–v6 代码审查驱动（源码 4.2x / 测试 11.7x / 注释率 40% / lint 877 行零退役 / 旧引擎零路由仍注册）：诊断修正为「减法纪律只停在本仓边界内」，把「注释受众分离」（本仓 CLAUDE.md 已对自己立过）与「退役账」（`supersedes` → PR 逐条结账 → G5 核对）推给项目侧；顺带清掉「任务包 18 字段」这个 8 文件 11 处的脆性计数；4 条挂在 doc-extract 上的待议重启条件重挂（两条取数窗口＝v6 联调，一次性）；地基关注点自洽复核留设计稿待新项目验证。均属扩面、冻结相容
 - 2026-07-21 归属真空检查 + feedback 载体分池（A1–A3）— doc-extract v4/v5 经验总结驱动：`check-sprint.js` 加第 8 项归属真空（点名不存在的包/两包互推=FAIL，未点名=🧑；4 期实测抓到报告点名的两个头号实例、7 项目回归 0 误报）+ feedback 分池建成 `develop → backlog [欠账] → manual-test G4 前定夺 → 下期 PRD 过账` 链路 + post-V0 地基增补继承 foundation-review 探针纪律；核对中修正报告三处（B2 槽位不空/GIT 未跑、返工包账算错）；三项均修既有机制缺格、非新增，冻结相容
 - 2026-07-18 codex-adapter 草案实验区从 master 移除 — CC+Codex 混合执行草案（2026-07-01 建）不再在 master 维护；Codex runtime-adaptation 战略仍在独立分支，本次不涉及。方法论 master 回归纯 CC 运行时
 - 2026-07-17 Kimi Code + Kimi3 1M 适配分析落盘 — 评估 hact-method 在 Kimi Code + Kimi3 1M 下的可行性：核心骨架适用但需"引擎移植"（subagent 调用层/工具链/成本模型重估）；关键修正：Claude 已支持 1M，上下文非差异化变量；落盘 `_meta/plans/2026-07-17-kimi-code-kimi3-1m-adaptation-analysis.md`

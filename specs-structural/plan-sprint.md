@@ -29,7 +29,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范（18 字段；`risk` 缺省按 `standard`） |
+| 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范（字段清单以该节为准；`risk` 缺省按 `standard`） |
 | sprint.md | `iterations/vN/sprint.md` | 套模板 `templates/sprint.md`（7 列汇总表 + 「## 依赖说明」段；人看的视图，机器侧状态以 status.yml 为准） |
 | G3 签字 | `iterations/vN/gates.md` | `- [x] G3：开发包就绪 — YYYY-MM-DD` |
 | 进度断点（compact 时写入） | `_meta/sessions/plan-sprint-progress.md` | 任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单答案摘要 |

@@ -1,7 +1,7 @@
 # exec: plan-sprint
 
 > 任务：读 TRD 拆 develop 任务，写任务包入 queue，输出 sprint.md，签 G3。三层：**骨架**（任务清单对齐）→ **结构层**（完整任务包）→ **收尾**（sprint.md + G3）。
-> 任务包套结构化模板 `../hact-method-lab/templates/queue/task-package.md`——**模板已带 18 字段格式、AC 回链 tag、例子写法、reference 行号规则；本文只讲过程与判断，不重抄格式**。`check-sprint.js` 据模板 parse。
+> 任务包套结构化模板 `../hact-method-lab/templates/queue/task-package.md`——**模板已带全部字段格式、AC 回链 tag、例子写法、reference 行号规则；本文只讲过程与判断，不重抄格式**。`check-sprint.js` 据模板 parse。
 
 **上下文密度**：高。读多份文件、写多份任务包；骨架确认前不写任务包。
 
@@ -102,7 +102,7 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整 18 字段包（字段权威见 `specs-structural/develop.md §字段规范`）；**字段格式 / AC tag / 例子写法 / reference 行号规则模板已带**。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
+骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；**字段格式 / AC tag / 例子写法 / reference 行号规则模板已带**。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
 
 下表只列**模板讲不了的判断 / 跨文件来源**（中）+ **该字段验证归属**（右，显式标谁机械、谁留人）：
 
@@ -113,6 +113,7 @@
 | `acceptance-criteria` | 不发明无来源 AC（权威=PRD）；**backend** 携精化例子 = 行为·PRD 幕1 / 精度（状态码·错误码·断言）·TRD 幕2，缺幕→`revise-doc(prd/trd)`，只携文本不预写 runnable（物化在 develop）；**frontend** 散文 AC | check-sprint·回链正反向；Step 3.5+签字人·忠实性 |
 | `reference` | **前端**链 ux-flows 场景段、**后端**链 TRD 错误码段 + `# 服务流程:{场景名}` 段（后端失败/状态/校验分支权威在 TRD，draft-ux 红线把后端校验排除在 ux-flows 外）；前后端**同场景名对齐**（UI 反馈 vs 校验/状态对同一分支不重不漏） | check-sprint·行号 ² |
 | `relevant-standards` | 覆盖 `files` 所属强制规范（语义判断，standards 无"文件→规范"映射表） | Step 3.5 第④类 |
+| `supersedes` | 来源 = TRD 里「本期废除 / 改判 / 替换既有实现」的表述 + `decisions.md` 被本期取代的条目。判据是**取代关系**而非改动关系：改一个函数不算，让某实现从此无调用方才算。无则 `[]`——宁可空着，不为凑数写。 | 交付时逐条结账（develop §退役账）；G5 核对 |
 | `api-contract`（`layers=[backend]` 且被前端依赖） | 来源 = TRD 数据模型 + `standards-frontend` 字段需求 + 已写前端任务包草稿（表格列/表单字段）；request 取 TRD query/body，response 取前端实际消费字段（平铺规则在模板）；**全部后端包写完统一向用户确认字段结构** | Step 3.5·推导正确性；用户确认 |
 
 ¹ 团队期加固（暂不做，记 `_meta/plans/方法论待议.md`）：Step 3.5 独审增「共享资产依赖完备性」——交叉比对各包 `files`，≥2 任务碰同一共享文件/表/枚举则验 `depends_on` 边标全；单人串行本人有全局上下文，暂靠 Step 2 交付判定 + 拾取顺序兜。
@@ -164,7 +165,7 @@
 
 每任务一条：`source: sprint`、`type: develop`、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
 
-> 「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是看板应用取数唯一来源；任务包正文（18 字段）不进 YAML，看板应用用到时走 API 现拉。
+> 「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是看板应用取数唯一来源；任务包正文（全部字段）不进 YAML，看板应用用到时走 API 现拉。
 
 ---
 
@@ -204,7 +205,7 @@
 | 触发点 | Subagent 任务 | Prompt 要点 | 失败处理 |
 |--------|-------------|------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件（纯读取+摘要，指定 `model: "haiku"`） | — | 读取失败则主线单独读 |
-| Step 3（任务 >4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整 18 字段 YAML | 失败则主线接管该包 |
+| Step 3（任务 >4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整字段 YAML | 失败则主线接管该包 |
 | Step 3.5 独立审查 | 独立 sub-agent 审任务包保真，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 令 subagent 读该 brief 自执行（自读 prd/trd/standards/queue），只告知 vN；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
 **重要**：subagent 只返回任务包内容，**由主线写入文件**，不让 subagent 直接操作文件系统。
