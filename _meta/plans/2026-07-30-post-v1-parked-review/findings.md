@@ -86,7 +86,7 @@
 | #28 旧假设回查包 | **重挂 file-extract v2**。原挂"重建项目阶段 0/1 盘点旧假设"，但 file-extract 是空库新建，其跨项目搬运的旧假设已由 `conflicts.json` 承接（14 条即那次盘点）。真正的地基反转在 v2（文档引擎落地、真剥离旧引擎）|
 | #32 独审墙钟 `rounds` | 仪器今天已装（`code_reviews[].rounds`），**v1 数据事后不可复原已实测确认**（10 条 CR 全无轮数）。等 v2 首批数据 |
 | #33 Complexity Gate | 与 #30 同批。本轮补一条支持"自报不可信"的实证：`fe-v1-005` 的 `supersedes` 声明「两个占位导出无调用方」，wrap-up 核对实测**只对了一半**——另一个仍有两个真实调用方且删不得。自报不可信在退役账上已当场兑现 |
-| #17 / #18 前后端一致性框架 | 标注：①②（lint 禁重声明 / `check-reusables.js`）已被**地基架构墙实质覆盖**（file-extract 用 dep-cruiser + ESLint 构造级墙 + 负向夹具做到了更强的版本，见决策#25⑤"地基吸走强边必须"）。真正剩的是 ③任务包复用决策字段 ④Step3.5 复用维度 ⑤TRD 交互模式规格 |
+| #17 / #18 前后端一致性框架 | 标注（**2026-07-30 核实后收窄，原判"①② 已被地基架构墙覆盖"是过度声称**）：地基三档吸走的只是**地基件那部分**强边——file-extract 的 dep-cruiser + ESLint 构造级墙确实把「单例 api client 外禁 axios/fetch」「业务页只能是 AppLayout 的 children」「前端不得按 status 推导能做什么、白名单只开单一 mapper」拦成构造级。但**逐项核实**：① 禁 `*Labels`/`*Options` 本地重声明 —— 全仓无此类 lint；② `check-reusables.js`（验登记路径存在 + 废弃资产无引用）—— **全仓无任何 reusables 相关校验脚本**，`reusables.md` 至今零机器校验。<br>**这反而是本轮更值得记的发现**：#17 当初立条的两个根因是「规范无防线」+「**注册表不可信**」，两个月过去、地基层建成，**前者被地基三档解决了，后者原样未动**——`reusables.md` 仍是一张纯靠人写人读的表，且它已被 `draft-tech-design` / `plan-sprint` / 今天新加的 `draft-prd` as-built 核对**当权威源在读**（读的正是「标杆切片登记」）。读它的地方越多，它不可信的代价越大。真正剩的是 ①②③④⑤ 全部，其中 ② 优先级应上调 |
 | #20 checklist 栈子模板拆分 | 解锁条件「出现第二个栈的项目」**事实上已满足**（loxson-salary-new 是 Java/MyBatis），但该项目不由本仓 standards 驱动，收益仍未兑现。维持，条件改写为「本仓驱动的第二栈项目」|
 | #16 TRD shared-type-first | 维持。file-extract 的 `packages/contracts` 单一真相源正是这个形状的实例，但它是**人写的架构决定**、不是 TRD 并行生成的前提；条目原本的动机（降 context 压力并行生成 TRD）至今没被需要过 |
 
