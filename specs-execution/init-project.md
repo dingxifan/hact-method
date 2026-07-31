@@ -78,6 +78,7 @@ echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 - `scripts/check-gate.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
 - `scripts/check-sprint.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
 - `scripts/check-ux.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-ux.js`（draft-ux 产物结构 linter，纯 Node 无外部依赖；`draft-ux` Step 7 签字 commit 时门卫自动核 ux-flows.md 两段结构 + prototype-map.md AC 覆盖表 + prototype.html 存在）
+- `scripts/check-reusables.js`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\check-reusables.js`（`reusables.md` 登记表 linter，纯 Node 无外部依赖；门卫在「改了 reusables.md」或「本次 commit 有文件删除/改名」时自动核登记路径是否还在——该表被 `draft-tech-design`/`plan-sprint`/`draft-prd-vN` 当权威源读，失真则那些检查静默放行）
 - `scripts/pre-commit-hook.sh`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\scripts\pre-commit-hook.sh`（**门卫**——commit 时按 staged 文件路由跑对应 check-\*.js，红则拦 commit；脚本/node 缺失 no-op 放行。作为 tracked 文件入仓使其随 clone 存活；实际生效需装进 `.git/hooks/`，见 Step 4.1）
 - `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `E:\Group-code-lab\hact-method-lab\templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）
 - `.gitattributes`：写入一行 `*.sh text eol=lf`（**必须**——Windows `core.autocrlf=true` 下 .sh 会被 checkout 成 CRLF，门卫脚本 `#!/bin/sh\r` 在 POSIX sh / git hook 下报 bad interpreter；锁 LF 才能跨平台跑）

@@ -10,6 +10,7 @@
 #   iterations/vN/trd.md            → check-docs.js（PRD+TRD 交叉）
 #   iterations/vN/sprint.md|queue/*.md → check-sprint.js vN（只认 .md——.gitkeep 不触发，init 提交 queue 必然为空）
 #   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
+#   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
 #
 # 触发条件依赖共暂存（暗礁）：linter 按 staged 的**产物文件**路由——check-docs 看
 #   prd/trd、check-sprint 看 sprint/queue。签 Gate 时若把产物与 gates.md 分两次 commit
@@ -84,6 +85,17 @@ for dir in $iter_dirs; do
     run scripts/check-ux.js "$ver"
   fi
 done
+
+# --- reusables.md 登记表（check-reusables.js）---
+# 在迭代循环**外**：reusables.md 是项目根跨迭代活文档，不属于任何 vN。
+# 两个触发口，第二个才是主力：
+#   ① 改了表本身 —— 新登记的路径当场核。
+#   ② 本次 commit 删除或改名了任何文件 —— 登记失真的**主要发生方式**不是有人改坏了表，
+#      而是资产被搬走/改名而表没跟着动（此时表纹丝未动，只盯 ① 永远发现不了）。
+if echo "$staged" | grep -qE "^reusables\.md$" \
+   || [ -n "$(git diff --cached --name-only --diff-filter=DR)" ]; then
+  run scripts/check-reusables.js
+fi
 
 if [ "$fail" -ne 0 ]; then
   echo "" >&2
