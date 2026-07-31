@@ -130,6 +130,9 @@ const SENSITIVE_HINTS = [
   // 对外不可撤销副作用
   '扣款', '短信', '邮件', '发信', 'webhook', 'sms',
 ];
+/* 扫描字段白名单。`risk-note`（作者解释"为什么这次命中是误报"的地方）**刻意不在其中**——
+ * 否则解释文字本身必然复述启发词、再次命中，作者只能靠改措辞绕开，而改措辞会削弱说明本身。
+ * 这不违反「只升不降」：既有字段的信号一个没少，只是给误报说明一个不自我触发的落点。*/
 const RISK_SCAN_FIELDS = ['title', 'description', 'acceptance-criteria', 'files', 'known-risks'];
 function sensitiveHits(fm) {
   const chunks = [];
@@ -311,8 +314,11 @@ function checkSprint(iteration, root) {
     // 2. reference 行号 + ux-flows/trd 链
     const refs = listItems(p.fm['reference']);
     if (refs.length) {
-      const noLine = refs.filter(r => !reLineNum.test(r) || /全文/.test(r));
-      if (noLine.length) fail('reference 行号', where, `${p.id}：${noLine.length} 条 reference 无行号或写"全文"（首条：${noLine[0].slice(0, 40)}…）`);
+      // 判据只看「有没有行号」。不得再对正文做 /全文/ 子串测试——reference 的**描述部分**
+      // 完全可能正当地含「全文」二字（如"分类提示全文的归属"），那与"这条 reference 没给行号"
+      // 是两回事；而真写成"prd.md 全文"的条目本就没有行号、已被本判据拦下。
+      const noLine = refs.filter(r => !reLineNum.test(r));
+      if (noLine.length) fail('reference 行号', where, `${p.id}：${noLine.length} 条 reference 无行号（首条：${noLine[0].slice(0, 40)}…）`);
       // draft-ux 是**可选**环节（PRD 标 `draft-ux: 需要` 才触发）——ux-flows.md 不存在时，
       // 前端 AC 的形态权威落在 TRD「交互技术方案」段，此处不得强求引用一份不存在的文件。
       // 存在时照旧强制（收窄非关闭）。承 v4「source 三口放行」同一处置：检查器不得把可选环节当必选前提。
@@ -405,7 +411,7 @@ function checkSprint(iteration, root) {
     if (declared.includes('sensitive')) continue;
     const hits = sensitiveHits(p.fm);
     if (hits.length)
-      human('risk 启发核对', `${p.id}：命中敏感启发词「${[...new Set(hits)].join('、')}」但 risk=${declared || 'standard(缺省)'} —— 确认是否应标 sensitive（决定 develop 独审模型档位；末端预检另按 diff 独立判定兜底）`);
+      human('risk 启发核对', `${p.id}：命中敏感启发词「${[...new Set(hits)].join('、')}」但 risk=${declared || 'standard(缺省)'} —— 确认是否应标 sensitive（决定 develop 独审模型档位；末端预检另按 diff 独立判定兜底）。判定为误报时把理由写进 \`risk-note\` 字段，该字段不参与启发扫描`);
   }
 
   // 8. 归属真空：声明"这件事不在本包"时，须确有另一个包认领

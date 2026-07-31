@@ -17,6 +17,7 @@ task_type: <待填>          # dev-frontend（layers=[frontend]）/ dev-backend�
 # baseline: visual        # 仅「视觉地基包」加此行；普通任务包不写。见顶部说明 + plan-sprint Step 2
 urgency: normal           # normal（默认）/ hotfix
 risk: standard            # standard（默认，审查 subagent 可用轻量模型）/ sensitive（触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）；存疑即 sensitive（只升不降，develop 侧另按有效 risk + diff 独立预检兜底）
+risk-note:                # 可选。check-sprint 的启发词命中而你判定是误报时，理由写这里（如"命中『迁移』只因 files 含历史迁移文件路径，本包不改 schema"）。本字段不参与启发扫描，故解释文字不会再次自我触发
 title: <待填>              # 简短描述，≤15 字
 status: 可取               # plan-sprint 初始写「可取」；流转：可取 → taken-by:{user} → done → merged
 description: <待填>        # 格式「当前状态 → 期望状态」，不写"实现XXX"

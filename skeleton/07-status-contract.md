@@ -103,6 +103,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
   - iteration: v2
     task_id: hact-v2-008         # string，被审 develop 任务 id
     conclusion: 需修订           # enum，通过 / 需修订
+    rounds: 2                    # int ≥1，「审查—整改」跑了几轮（首轮即通过 = 1）。度量用，非判据
     comment: 整体思路对，但有安全隐患  # string，综合评语，可为 null
     issues:                      # 数组，可为空 []
       - severity: 严重           # enum，严重 / 一般 / 建议
@@ -121,7 +122,10 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `tasks[].urgency` | hotfix / null |
 | `integration_tests[].status` | 待执行 / 执行中 / 通过 / 失败 |
 | `code_reviews[].conclusion` | 通过 / 需修订 |
+| `code_reviews[].rounds` | int ≥1（非枚举） |
 | `code_reviews[].issues[].severity` | 严重 / 一般 / 建议 |
+
+> `rounds` 是**度量字段、不参与任何判据**：终态结论只说"最后通过了"，说不出通过前磨了几轮，于是"独审耗时里首轮占多少、整改轮次占多少"这个问题事后不可复原（看板应用忽略未知键，加它不影响取数）。
 
 > CR severity 映射：develop 内置独立审查用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`（阻断在审查 loop 内已修，落 YAML 的多为 `[建议]→建议`）。
 

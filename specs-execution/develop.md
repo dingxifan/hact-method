@@ -231,7 +231,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
 - 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
 - **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 项目根 `status.yml`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）：集合内每个 task 的 `status` 改 `merged`、`pr` 全填同一个 `{N}`；并向 `code_reviews[]` **每任务追加一条审计留痕**——`conclusion: 通过`（独审已通过才合并），`issues` 填独审剩下的「建议」级 finding（映射 `severity: 建议`），无则 `[]`
+- 项目根 `status.yml`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）：集合内每个 task 的 `status` 改 `merged`、`pr` 全填同一个 `{N}`；并向 `code_reviews[]` **每任务追加一条审计留痕**——`conclusion: 通过`（独审已通过才合并），`rounds` 填该任务「审查—整改」实际跑的轮数（首轮即通过 = 1；主线编排时自己数得到，事后无处可查，故当场记），`issues` 填独审剩下的「建议」级 finding（映射 `severity: 建议`），无则 `[]`
   ```bash
   git checkout master && git pull
   git add {集合内任务包文件} iterations/vN/sprint.md status.yml   # sprint.md 仅 source=sprint 时含
