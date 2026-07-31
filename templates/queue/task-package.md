@@ -30,6 +30,9 @@ supersedes: []            # 本包取代的既有实体，无则 []（不是 <�
 acceptance-criteria:
   # 每条须标覆盖的 PRD AC：(源：PRD AC-nn)；可选人读后缀 (源：PRD AC-nn·删除二次确认)，linter 只读 AC-nn；纯技术约束标 (技术)
   # 不可视区(backend/逻辑)任务：每条以 Given/When/Then 可执行例子书写（输入→期望输出），供 develop 1:1 落成测试
+  # backend 验收锚 = **调用方能用它做成事**，不是"我实现了 AC"：写完逐条问一遍「拿这条交付的东西，
+  #   调用方要做的那件事做得成吗」。常见缺口是字段齐了但列表/白名单不放行、状态对了却没有取它的读接口
+  #   ——锚在调用方那侧，缺口才在写包时暴露；锚在自己这侧，它会等到前端撞上来才出现。
   - <待填>
 relevant-standards:
   - <待填>                # 精确指向 standards-{layer}.md / standards-shared.md 的 § 章节（design.md 为 frontend 无条件必读，无需在此列）
