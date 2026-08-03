@@ -34,6 +34,16 @@ function isEmptyVal(v) {
   return t === '' || t.includes(PLACEHOLDER);
 }
 
+// 「涉及实体」的显式无值写法：`无` 或 `无（理由）`。
+//
+// 为什么需要这条：工程债 / 纯工具类功能真的不碰任何数据实体，而两条判据会把它夹死——
+// 槽位留空判「为空或占位」，填「无」又被交叉对账当成实体名去 TRD 找「### 表：无」。
+// 于是唯一的出路变成「随便写个实体名骗过去」，而那正是交叉对账要防的事。
+// 原则：**措辞规避不是修复**，缺出口就把出口开出来，不让后来者去绕。
+function isExplicitNone(v) {
+  return /^无\s*(?:[（(].*[）)])?$/.test((v || '').trim());
+}
+
 // 读文件 → 行数组，并标注每行是否处于 HTML 注释内（注释行不计入内容/槽位）
 function readDoc(path) {
   const raw = fs.readFileSync(path, 'utf8').split(/\r?\n/);
@@ -179,7 +189,7 @@ function checkPRD(path) {
       }
       // 收集实体供交叉对账
       const ent = getSlot(b.lines, '涉及实体');
-      if (ent && !isEmptyVal(ent.val)) {
+      if (ent && !isEmptyVal(ent.val) && !isExplicitNone(ent.val)) {
         ent.val.split(/[,，、]/).map(s => s.trim()).filter(Boolean).forEach(e => entities.push(e));
       }
     }

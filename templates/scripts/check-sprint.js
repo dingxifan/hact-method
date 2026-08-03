@@ -5,7 +5,8 @@
  * 用途：机械核对 G3 完成判据里**确定性可查**的部分——任务包字段完备 / reference 行号 /
  *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致 /
  *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）/
- *      归属真空（任务包声明"这件事不在本包"时，须确有另一个包认领）。
+ *      归属真空（任务包声明"这件事不在本包"时，须确有另一个包认领）/
+ *      审计留痕完备性（已 [merged] 的任务须有 code_reviews[] 条目；缺 rounds 退 🧑）。
  *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 忠实性——内容真覆盖、非仅 id 在场）机器判不了，
  *      留签字人确认（🧑 段），脚本只把可机械的挡在签字前。
  *
@@ -263,6 +264,46 @@ function parseStatusTasks(statusPath) {
   return tasks;
 }
 
+// 迭代内 queue 的三个进料口（三方一致 + 审计留痕两处共用，故提到模块级）。
+const ITER_SOURCES = new Set(['sprint', 'integration', 'manual-test']);
+
+/* ---------- status.yml：抽 code_reviews[] 的 iteration/task_id/rounds（同上容错扫描） ----------
+ * 只取三个键即可判完备性；`comment` 常是长中文单行、`issues:` 是更深缩进的子列表，
+ * 均靠「顶层条目缩进 === baseIndent」这一条挡住，不做完整 YAML AST。 */
+function parseCodeReviews(statusPath) {
+  if (!exists(statusPath)) return null;
+  const out = [];
+  let inBlk = false, baseIndent = null, cur = null;
+  const flush = () => { if (cur) { out.push(cur); cur = null; } };
+  const clean = v => (v || '').trim().replace(/^["']|["']$/g, '').trim();
+  for (const raw of readLines(statusPath)) {
+    const line = raw.replace(/\t/g, '  ');
+    if (/^code_reviews:\s*$/.test(line)) { inBlk = true; continue; }
+    if (!inBlk) continue;
+    if (/^\s*#/.test(line)) continue;                               // 注释行（含顶格 `#` 的 schema 示例块）——
+    // 必须先于下面的"顶层新键"判定：真实 status.yml 在 code_reviews[] 中段夹着顶格注释示例
+    // （doc-extract 即如此），当作块结束会静默丢掉其后的全部条目（实测漏 4 条）。
+    if (/^\S/.test(line) && !/^-/.test(line)) { flush(); break; }   // 顶层新键 → 本块结束
+    if (line.trim() === '') continue;
+    const item = line.match(/^(\s*)-\s+(.*)$/);
+    if (item) {
+      const indent = item[1].length;
+      if (baseIndent === null) baseIndent = indent;
+      if (indent === baseIndent) {
+        flush(); cur = {};
+        const kv = item[2].match(/^([A-Za-z_-]+):\s*(.*)$/);
+        if (kv) cur[kv[1]] = clean(kv[2]);
+        continue;
+      }
+      continue;                                                     // issues[] 等子列表项，跳过
+    }
+    const kv = line.match(/^\s+([A-Za-z_-]+):\s*(.*)$/);
+    if (kv && cur && !(kv[1] in cur)) cur[kv[1]] = clean(kv[2]);    // 首次出现为准，防子块同名键覆盖
+  }
+  flush();
+  return out;
+}
+
 /* ====================== 主校验 ====================== */
 function checkSprint(iteration, root) {
   const iterDir = path.join(root, 'iterations', iteration);
@@ -275,12 +316,13 @@ function checkSprint(iteration, root) {
   if (files.length === 0) { fail('任务包存在', queueDir, 'queue 目录无任务包'); return; }
 
   const packages = [];     // {id, fm, layers, deps, file}
+  let unparsed = 0;        // frontmatter 解析失败数 —— queue 侧集合因此不完整，见下方三方一致
   for (const f of files) {
     const fp = path.join(queueDir, f);
     let fm;
     try { fm = parseFrontmatter(fp); }
-    catch (e) { fail('frontmatter 解析', fp, `解析失败：${e.message}`); continue; }
-    if (!fm) { fail('frontmatter 解析', fp, '未找到 YAML frontmatter（--- 包裹）'); continue; }
+    catch (e) { fail('frontmatter 解析', fp, `解析失败：${e.message}`); unparsed++; continue; }
+    if (!fm) { fail('frontmatter 解析', fp, '未找到 YAML frontmatter（--- 包裹）'); unparsed++; continue; }
     const id = f.replace(/\.md$/, '');
     const layersV = fm['layers'];
     const layers = layersV ? (layersV.items.length ? layersV.items : [scalarText(layersV)])
@@ -358,7 +400,17 @@ function checkSprint(iteration, root) {
   }
 
   // 5. 三方一致：queue ↔ sprint.md ↔ status.yml
+  //
+  // ⚠️ 级联抑制：queue 侧集合来自解析成功的包。若有包 frontmatter 解析失败（存量旧格式仓——
+  // 字段写成 Markdown 列表而非 YAML），它们不在 queueIds 里，比对就会把 sprint.md / status.yml
+  // 里**全部**任务报成"queue 无"——一个根因放大成 N 条下游误报（实测：4 个存量仓里 ~50 条三方
+  // 一致 FAIL 中只有 ~8 条是真漂移，其余全是这条级联）。故解析不全时本项整体退 🧑，不出 FAIL：
+  // 集合本就不可信，基于它下的判断没有证据力。
   const queueIds = packages.map(p => p.id);
+  const stTasks = parseStatusTasks(path.join(root, 'status.yml'));   // 第 9 项也用，故不进抑制块
+  if (unparsed > 0) {
+    human('三方一致', `queue 有 ${unparsed} 个包 frontmatter 解析失败（见上方 FAIL），queue 侧集合不完整 —— 三方一致本轮不比对（避免把一个格式问题放大成 N 条假漂移）；修好解析后重跑即恢复`);
+  } else {
   const spIds = sprintIds(path.join(iterDir, 'sprint.md'));
   if (spIds === null) {
     fail('三方一致:sprint', path.join(iterDir, 'sprint.md'), 'sprint.md 不存在');
@@ -370,14 +422,12 @@ function checkSprint(iteration, root) {
     if (spNotQ.length) fail('三方一致:sprint', path.join(iterDir, 'sprint.md'), `sprint.md 有但 queue 无：${spNotQ.join(', ')}`);
     if (!qNotSp.length && !spNotQ.length) pass('三方一致:sprint', `queue ↔ sprint.md 一致（${queueIds.length} 个任务）`);
   }
-  const stTasks = parseStatusTasks(path.join(root, 'status.yml'));
   if (stTasks === null) {
     human('三方一致:status', '项目根无 status.yml（存量项目），queue↔status 一致性退回人工兜底');
   } else {
     // 迭代内 queue 的三个进料口：plan-sprint 产 sprint；generate-integration-tests Step 4 产
     // integration；manual-test 产 manual-test —— 后两者同样写进 iterations/vN/queue/ 并同步
     // tasks[]，故一致性比对须一并放行（B 类 bug/optimization 走 b-queue、iteration=null，不在此列）。
-    const ITER_SOURCES = new Set(['sprint', 'integration', 'manual-test']);
     const stIds = new Set(stTasks.filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration).map(t => t.id));
     const qNotSt = queueIds.filter(id => !stIds.has(id));
     const stNotQ = [...stIds].filter(id => !new Set(queueIds).has(id));
@@ -385,6 +435,7 @@ function checkSprint(iteration, root) {
     if (stNotQ.length) fail('三方一致:status', 'status.yml', `status.yml 有但 queue 无：${stNotQ.join(', ')}`);
     if (!qNotSt.length && !stNotQ.length) pass('三方一致:status', `queue ↔ status.yml tasks[] 一致`);
   }
+  }   // ← 级联抑制块结束
 
   // 6. 视觉地基包：v1 含前端必有标 `baseline: visual` 的地基包（plan-sprint Step 2）；
   //    vN+1 的「design.md 变更触发」机器判不了 → 退人工。
@@ -439,8 +490,43 @@ function checkSprint(iteration, root) {
   }
   if (puntHitCount === 0) pass('归属真空', '任务包 do-not/context 无"移交他包"措辞');
 
+  // 9. 审计留痕完备性：已 [merged] 的任务须有 code_reviews[] 条目（develop 末端义务，长期要求）
+  //    并须记 rounds（2026-07-30 加的独审轮数仪器）。本项在「标记 [merged]」那次 commit 上触发——
+  //    develop 末端 `git add {任务包} sprint.md status.yml` 已命中 hook 的 sprint/queue 路由，无需改路由。
+  //    实证驱动：file-extract v2 十一个任务全部在仪器落地后合并，rounds 记录数 0、两个任务连条目都没有，
+  //    而无任何机械检查发现——仪器装了不响，与它要解的问题同一失效类。
+  if (stTasks === null) {
+    human('审计留痕', '无 status.yml（存量项目），code_reviews[] 完备性退回人工兜底');
+  } else {
+    const crs = parseCodeReviews(path.join(root, 'status.yml')) || [];
+    // 按 task_id 建索引，`iteration` 只在条目自带时才用来排除——存量仓（mail-ai）的 code_reviews[]
+    // 条目普遍不写 iteration，按 iteration 硬过滤会把它们全判成"无条目"（实测假阳性 8 条）。
+    const crByTask = new Map(crs.filter(c => c.task_id && (!c.iteration || c.iteration === iteration))
+                                .map(c => [c.task_id, c]));
+    const mergedIds = stTasks
+      .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
+      .map(t => t.id);
+    const noEntry = [], noRounds = [], badRounds = [];
+    for (const id of mergedIds) {
+      const cr = crByTask.get(id);
+      if (!cr) { noEntry.push(id); continue; }
+      if (!('rounds' in cr)) { noRounds.push(id); continue; }
+      if (!/^\d+$/.test(cr.rounds) || Number(cr.rounds) < 1) badRounds.push(`${id}(rounds=${cr.rounds})`);
+    }
+    if (noEntry.length)
+      fail('审计留痕', 'status.yml', `已 [merged] 但 code_reviews[] 无条目：${noEntry.join(', ')} —— develop 末端漏写审计留痕`);
+    if (badRounds.length)
+      fail('审计留痕', 'status.yml', `rounds 非 int≥1（见 skeleton/07 值域）：${badRounds.join(', ')}`);
+    if (noRounds.length)
+      human('审计留痕', `有 code_reviews 条目但缺 rounds：${noRounds.join(', ')} —— rounds 是 2026-07-30 新增字段，存量条目普遍无；本期新合并的应补（轮数事后不可复原，只能当场记）`);
+    if (!mergedIds.length)
+      pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
+    else if (!noEntry.length && !badRounds.length && !noRounds.length)
+      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有 code_reviews 条目且 rounds 合法`);
+  }
+
   // 语义残量（留人签）
-  human('G3:人签', '疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / 任务包 AC 逐条忠实于其回链的 PRD AC（内容真覆盖，非仅 id 在场）—— 语义判断，由签字人确认');
+  human('G3:人签','疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / 任务包 AC 逐条忠实于其回链的 PRD AC（内容真覆盖，非仅 id 在场）—— 语义判断，由签字人确认');
 }
 
 /* ---------------- 主流程 ---------------- */
