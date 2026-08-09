@@ -164,13 +164,24 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并计算固定 diff 的 SHA-256。首次 `reviewed_base` 取 preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。
 
-**首次 full review**：主线派全新隔离 subagent 读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree。审查员自读任务包、命中 Standards、固定 diff 与测试，不接收执行者自评；每条 finding 必须给稳定 id、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。
+**首次 full review**：主线派全新隔离 subagent 读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree + 下方生成的 project-relative `review_profile`。审查员自读任务包、命中 Standards、固定 diff 与测试，只执行 profile selected dimensions，不接收执行者自评；每条 finding 必须给稳定 id、dimension、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。Foundation 的 profile 固定为 `foundation-review/v1` 并按专用 brief 全审。
 
 **整改 targeted review**：传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；全新审查员可读前次**独立报告**，但仍不得接收开发者自评。只核这些 finding、反例、受影响回归与两棵 tree 之间的增量 diff，不重做无关逐类审查。若 changed surface 超出允许范围、引入新机制/模块/依赖或发现新根因，本轮报告置 `escalate_to_full: true`，紧接下一轮才升 full。
 
 每轮 dispatch/completion 当场写 `started_at/completed_at/elapsed_minutes`；不得事后估算。round report 本身不计入被审实现 tree，最终随状态提交。
 
 **模型分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 执行 subagent 是写代码/生成任务，保持默认模型；本阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 派发审查 subagent 时指定 `model: "sonnet"`；sensitive 或 `source=foundation` → 不指定 model，继承当前会话默认模型。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
+
+**review profile（非 Foundation 的每次 full 必做）**：有效 risk 与 fixed changed-files 确定后、派审查员前，用项目 `scripts/review-profile.js` 从权威任务包生成不可覆盖的 JSON；A 类写 `iterations/vN/code-reviews/{task-id}/profile-round-{NN}.json`，B 类写 `b-reviews/{task-id}/profile-round-{NN}.json`。命令只传任务包路径、有效 risk 与 `git diff --name-only {preflight base_tree} {reviewed_head}` 的完整文件集合：
+
+```bash
+node scripts/review-profile.js {task-package-path} \
+  --risk {standard|sensitive} \
+  --output {review-report-dir}/profile-round-{NN}.json \
+  --changed-files {fixed changed-files...}
+```
+
+生成失败、profile task-id 不匹配或 selected/omitted 不闭合 → 禁止派审。full round 的 `review_profile` 指向本轮新 profile；targeted 继承最近 full 的路径，不重新选择维度。targeted 扩大 changed surface 时先置 `escalate_to_full`，下一轮基于 preflight base→当前 head 的完整 diff 生成新 profile 再 full。`source=foundation` 继续用专用 `foundation-review.md` 逐关注点全审，不经过普通裁剪器。
 
 **finding 路由与有界复审**：
 
@@ -283,7 +294,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
 - 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
 - **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加一条。保留兼容字段 `rounds`，填写 `code_rounds/spec_rounds/freshness`；另写 `review_report_dir`、`implementation_started_at/completed_at`、`review_started_at/completed_at`、`implementation_minutes/review_minutes/spec_minutes`。时间由编排器事件戳自动计算，禁止事后估算；issues 保留稳定 finding id 与 type/reachability/impact/action。两类轮次与三类墙钟不得互相冒充。
+- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加一条。保留兼容字段 `rounds`，填写 `code_rounds/spec_rounds/freshness`；另写 `review_report_dir`、`review_profile_version`（普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`）、`implementation_started_at/completed_at`、`review_started_at/completed_at`、`implementation_minutes/review_minutes/spec_minutes`。时间由编排器事件戳自动计算，禁止事后估算；issues 保留稳定 finding id、dimension 与 type/reachability/impact/action。两类轮次与三类墙钟不得互相冒充。
   在提交终态前，对集合内每个任务运行 `node scripts/check-sprint.js --review {task-id}`；缺 preflight/report、首轮非 full、targeted 无 finding id/固定 diff、时间账不闭合均先修正，不得靠人工说明放行。该入口不依赖 iteration，B 类同样执行。
   ```bash
   git checkout master && git pull

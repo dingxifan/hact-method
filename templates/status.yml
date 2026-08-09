@@ -53,6 +53,7 @@ code_reviews: []
 #    spec_rounds: 1          # freshness/contract/claim 独立复核数，int >= 0
 #    freshness: revised      # pass / revised；写代码前是否命中过期并完成修订
 #    review_report_dir: iterations/v1/code-reviews/{task-id}  # B 类为 b-reviews/{task-id}
+#    review_profile_version: develop-review-profile/v1        # Foundation 为 foundation-review/v1
 #    implementation_started_at: 2026-08-09T01:00:00Z
 #    implementation_completed_at: 2026-08-09T01:42:00Z
 #    review_started_at: 2026-08-09T01:42:00Z
@@ -62,5 +63,5 @@ code_reviews: []
 #    spec_minutes: 4             # preflight/revise-doc 澄清墙钟，int >= 0
 #    comment: null
 #    issues:
-#      - { id: task-F001, severity: 严重, type: behavior-bug, reachability: current, action: fix-code, impact: ..., description: ..., location: src/x.ts:40 }
+#      - { id: task-F001, dimension: contract, severity: 严重, type: behavior-bug, reachability: current, action: fix-code, impact: ..., description: ..., location: src/x.ts:40 }
 #        # severity: 严重 / 一般 / 建议

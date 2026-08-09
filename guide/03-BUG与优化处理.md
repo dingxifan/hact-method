@@ -112,7 +112,7 @@ task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`。
 | 创建功能分支，推送 Gitee | — |
 | 创建 PR，写 PR 描述 | — |
 
-代码审查内化进 develop，同 A 类：首轮 full，真实缺陷整改后只对稳定 finding id、反例和受影响回归做 targeted review；范围扩大或出现新根因才升级下一轮 full。每轮固定 Git tree/diff 并落报告，implementation/review/spec 墙钟自动记入 `status.yml`；通过通用 review 审计后由 develop 自合并到 master。
+代码审查内化进 develop，同 A 类：首轮 full 前按 task type/layer/risk 与固定 changed files 自动生成 review profile，只审 selected dimensions，省略项和理由留在 JSON、不写 N/A；真实缺陷整改后只对稳定 finding id、反例和受影响回归做 targeted review。范围扩大或出现新根因时，下一轮重算 profile 后升级 full。每轮固定 Git tree/diff 并落报告，implementation/review/spec 墙钟自动记入 `status.yml`；通过通用 review 审计后由 develop 自合并到 master。
 
 **看板应用里**：任务从「进行中」变为「已合并」，`b-tasks.md` 状态同步。
 

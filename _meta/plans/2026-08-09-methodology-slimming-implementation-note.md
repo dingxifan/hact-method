@@ -9,13 +9,14 @@
 
 ## 一句话说明
 
-这轮瘦身没有取消独立审查，也没有降低安全和数据一致性的要求。它主要做了三件事：
+这轮瘦身没有取消独立审查，也没有降低安全和数据一致性的要求。它主要做了四件事：
 
 1. **写代码前先确认任务没有过期**，减少沿着旧任务包做错方向；
 2. **审查发现先分类，再决定该改代码、改文档还是补证据**，不再把所有问题都塞进代码整改；
-3. **第一次完整审，整改后只定向复审受影响部分**，避免每轮都从头做一遍全量对抗审查。
+3. **第一次完整审，整改后只定向复审受影响部分**，避免每轮都从头做一遍全量对抗审查；
+4. **完整审查前按任务类型、代码层和风险自动出题**，不再要求每个任务回答明显不适用的审查维度。
 
-通俗地说，原来的做法更像“发现任何疑点，都让开发者整包返工，再重新全面考试”；现在改成“先判断疑点属于谁，真正的代码缺陷才修代码，补考只考没过的题；如果整改扩大了范围，再重新全面考试”。
+通俗地说，原来的做法更像“所有任务先做同一张大卷；发现任何疑点，都让开发者整包返工，再重新全面考试”；现在改成“系统先根据任务自动出卷，只考相关风险；再判断疑点属于谁，真正的代码缺陷才修代码；补考只考没过的题，如果整改扩大了范围，再重新全面考试”。
 
 ---
 
@@ -64,7 +65,8 @@
 拿到任务包
   → freshness preflight：先确认任务包、代码和验收判据仍然一致
   → 写代码并做目标验证
-  → 首轮 full review：完整独立审查
+  → 根据任务包、风险和实际改动自动生成 review profile
+  → 首轮 full review：按 profile 做完整独立审查
   → finding 分类和路由
       ├─ 真代码/机制缺陷：修复，再做 targeted review
       ├─ 文档或示例错误：修文档，不强迫代码迁就
@@ -87,6 +89,7 @@
 | Freshness preflight | 依赖任务已经改变了代码，执行者仍按旧任务包开工 | 写第一行代码前核对文件、符号、机制、oracle、scope 和退役对象，并落 `preflight.md` | 任务过期时先改任务包或规格，避免代码完成后才返工 |
 | Finding 分类 | 文档漂移、示例错误、未来风险和真实 bug 都叫 blocker | finding 必须写 type、reachability、evidence、impact、action | 不同问题进入不同处理路径，不再默认“改代码” |
 | Full/targeted 两级复审 | 每次整改后都重新完整陌生审查 | 首轮 full；整改轮默认 targeted，只核指定 finding、反例、受影响回归和增量 diff | 减少无关重审，同时保留首次完整审查的覆盖面 |
+| 自动审查画像 | 不论任务类型和代码层，统一回答 DTO、页面设计、N+1、并发等全部问题 | 根据任务包元数据、规范正文、风险和固定 changed files 生成 `review-profile.json`，只打开相关维度 | 完整审查仍然独立，但不再为明显不适用的项目反复写 `N/A` |
 | 稳定审查基线 | 审查者可能看到漂移中的工作区，且不知道上轮审了什么 | 每轮记录固定 `base_ref`、`reviewed_base/head`、diff hash、changed files、prior report 和稳定 finding id | 审查范围可复现，不靠执行者口头描述 |
 | B 类统一入口 | B 类既可走 develop，也可“手动实现后再独审”，后者绕过 preflight | 新 B 任务统一进入 `develop(source=bug/optimization)`；手动 skill 只作已有 diff 的兼容入口 | B 类也拥有和 A 类相同的开工前核对、审查路由和时间记录 |
 | 整改期验证分层 | 每轮整改都可能重复跑完整 build/type/lint/test | 实现和整改期优先跑目标测试、反例和受影响回归；末端再跑一次完整验证 | 减少重复全量验证，但最终合并质量门不变 |
@@ -127,6 +130,27 @@ finding 的默认去向变为：
 - 审查发现了不同于上轮的新根因；
 - 上轮明确写了 `escalate_to_full: true`。
 
+每次非 Foundation 的 full review 开始前，编排器都会自动生成一份不可覆盖的 `review-profile.json`。它相当于本轮审查的“自动出题单”，输入包括：
+
+- 权威任务包中的 `task_type`、`layers`、`source` 和风险等级；
+- `relevant-standards`、API 契约和任务正文中的规范信号；
+- 本轮固定基线里的 `changed_files`，而不是独审时仍在漂移的工作区。
+
+审查维度分成两类：
+
+- **四项核心维度永远保留**：契约与行为、scope 与秘密、测试证据、注释卫生；
+- **九项条件维度按信号开启**：标准规则、机械 enforcement、设计还原、输入与 DTO 去向、查询性能、并发、日志隐私、可维护性、敏感边界。
+
+例如，纯 enforcement/test 任务通常只审四项核心维度加 enforcement，不再回答页面设计、DTO、N+1、并发和生产日志等无关问题；前端页面任务会打开设计还原，后端接口或数据任务会按实际信号打开 DTO、查询性能或并发。
+
+这不是让执行者手工勾选想审什么。`check-sprint.js` 会用当前权威任务包、风险和 fixed changed files 重新计算 profile；有人删掉不想回答的维度、篡改 profile，或者给 full review 复用旧 profile，终态审计都会失败。
+
+裁剪还带有三层保险：
+
+- 信息缺失或元数据无法判断时，默认打开全部 13 个维度；
+- sensitive 只能增加检查，不能被调用参数降级；
+- Foundation 不走普通裁剪，继续使用 `foundation-review/v1` 做专门的完整审查。
+
 ### Targeted review
 
 整改后默认只检查：
@@ -137,6 +161,8 @@ finding 的默认去向变为：
 - 上一棵 reviewed tree 到当前 tree 的增量 diff。
 
 targeted 审查不能偷偷扩成全量审查。它若发现范围扩大，只记录证据并要求下一轮 full。
+
+targeted 不重新生成一张更窄的卷子，而是继承最近一次 full 的 profile，只围绕指定 finding、对应反例、受影响回归和增量 diff 复审。若改动越出原 profile 的范围，就必须升级为新的 full review，并重新生成 profile。
 
 机械上还会检查：
 
@@ -212,6 +238,8 @@ node scripts/check-sprint.js --review {task-id}
 
 因此，“瘦身”不是减少必要测试，也不是把 blocker 降级。它减少的是：错误起步、重复叙述、同根 finding 拆分、无关维度重审，以及规格问题被误送到代码整改。
 
+这里的“完整审查”现在指：对自动 profile 中所有已选维度做完整、独立审查，而不是对所有任务机械套用同一张固定问卷。核心维度、敏感任务加严和信息不足时的 fail-safe 都不会被裁掉。
+
 ---
 
 ## 九、会影响哪些文件和角色
@@ -224,8 +252,9 @@ node scripts/check-sprint.js --review {task-id}
 
 ### 对独审者
 
-- 首轮仍需完整审查；
+- 首轮仍需完整审查，但只执行 profile 中的 `selected_dimensions`；被裁掉的维度不需要逐项写 `N/A`；
 - 必须按根因分类 finding，并写清当前可达性、证据和影响；
+- finding 需要带稳定的 `dimension`，便于机械核对它来自哪个已开启维度；
 - targeted 轮只能审指定 finding 和增量 diff；
 - 不再用不同语法变体重复制造同根 blocker。
 
@@ -235,11 +264,13 @@ node scripts/check-sprint.js --review {task-id}
 - 任务包只写本任务 delta；
 - Standards 只登记长期默认规则，历史和事故迁往 decisions/history；
 - 跨包无人认领问题交给 global seam，而不是塞进任意一个任务包。
+- 不需要在任务包里手工选择或关闭审查维度；只需把任务类型、层、风险、契约和真实 scope 写准确，profile 由工具确定。
 
 ### 对看板和审计
 
 - `status.yml` 多出实现、审查、规格三段耗时；
 - 每轮 review 有独立报告目录；
+- full review 记录 `review_profile_version` 和独立 profile 路径，targeted 必须继承最近一次 full 的 profile；
 - 旧数据保持可读，新任务必须通过严格审计。
 
 ### 对已有项目
@@ -247,6 +278,7 @@ node scripts/check-sprint.js --review {task-id}
 - 本轮只修改了 `hact-method-lab`，没有批量重写 `document-extraction` 或 `file-extract` 的现有 Standards 和任务包；
 - 已经运行中的会话不会自动换方法；
 - 若某个已有项目保存了自己的 `CLAUDE.md` 或 `scripts/check-sprint.js` 副本，需要在启用新流程时同步新版模板，否则只能读到新规范，不能执行新的机械检查。
+- 启用自动画像时，还必须同步新增的 `scripts/review-profile.js`；新项目初始化流程已经会同时安装它和新版 `check-sprint.js`。
 
 ---
 
@@ -278,6 +310,13 @@ node scripts/check-sprint.js --review {task-id}
 - 旧 status 在普通迭代检查中兼容读取，但显式作为新任务终态审计时会因缺字段失败；
 - `check-docs.js`、`check-sprint.js` 语法检查与 `git diff --check` 均通过。
 
+### 自动审查画像
+
+- 单元测试覆盖纯 enforcement、前端 UI、后端 API/data、sensitive 单调加严和元数据缺失五类选择结果，`5/5` 通过；
+- 集成测试覆盖 CLI 生成、拒绝覆盖、合法 full 审计、篡改失败、targeted 正确/错误继承、Foundation 专用哨兵与普通任务禁止冒用，`7/7` 通过；
+- profile 指纹会绑定任务的规范内容，但忽略任务顶层可变的 `status`，所以 `taken-by → merged` 不会让已完成审查无故失效，真实契约变更仍会失效；
+- P0 历史 review 条目继续兼容读取；新版显式 `--review` 终态则必须有合法 profile，避免新任务绕过新门禁。
+
 ---
 
 ## 十一、预期收益与不能提前承诺的部分
@@ -290,6 +329,7 @@ node scripts/check-sprint.js --review {task-id}
 - 整改后不再默认完整重审；
 - 整改期减少重复全量验证；
 - 独审者不再重新猜测 scope 和上轮结论。
+- 纯测试、enforcement、前端或后端任务不再消费明显不适用的审查问题。
 
 但目前不能承诺“4 小时一定降到多少”。`fe-b-008` 中至少两轮都发现了真实机制缺陷，这些修复成本不应被省掉。真正要验证的是：在保持真实缺陷发现率的前提下，无效重审时间是否下降。
 
@@ -307,14 +347,11 @@ node scripts/check-sprint.js --review {task-id}
 
 ## 十二、本轮没有做的事
 
-以下内容不属于本轮 P0，暂未实现：
+自动审查画像原本是 P0 之后最有价值的 P1，本次已经实现并合入正式方法论。以下内容仍未实现：
 
-- 按 task type/layer 自动裁剪不适用的审查维度；
 - 批量迁移两个代表项目已经膨胀的 Standards；
 - 自动计算和展示跨任务的效率趋势看板；
 - 取消独立审查或降低 sensitive 任务的模型/证据要求。
-
-其中第一项是下一步最有价值的 P1：例如纯 enforcement/test 任务没有必要反复回答 DTO 去向、页面设计和 N+1 等明显不适用的审查维度。
 
 ---
 
@@ -326,6 +363,8 @@ node scripts/check-sprint.js --review {task-id}
 - Freshness 记录：`templates/review-briefs/develop-preflight-record.md`
 - 逐轮 full/targeted 报告：`templates/review-briefs/develop-review-round.md`
 - 独审规则：`templates/review-briefs/develop-review.md`、`templates/review-briefs/foundation-review.md`
+- 自动审查画像：`templates/scripts/review-profile.js`
+- 自动画像测试：`templates/scripts/review-profile.test.js`、`templates/scripts/review-profile.integration.test.js`
 - A/B 通用机械审计：`templates/scripts/check-sprint.js --review {task-id}`
 - Standards 新职责：`templates/standards/schema.md`
 - 跨包接缝审查：`templates/review-briefs/global-seam-review.md`

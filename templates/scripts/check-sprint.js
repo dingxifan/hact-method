@@ -6,7 +6,7 @@
  *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致 /
  *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）/
  *      归属真空（任务包声明"这件事不在本包"时，须确有另一个包认领）/
- *      审计留痕完备性（已 [merged] 的任务须有 code_reviews[]；新条目区分 code/spec rounds、墙钟并落逐轮 report）。
+ *      审计留痕完备性（已 [merged] 的任务须有 code_reviews[]；新条目区分 code/spec rounds、墙钟、review profile 并落逐轮 report）。
  *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 忠实性——内容真覆盖、非仅 id 在场）机器判不了，
  *      留签字人确认（🧑 段），脚本只把可机械的挡在签字前。
  *
@@ -319,6 +319,7 @@ function parseCodeReviews(statusPath) {
 
 const REVIEW_AUDIT_FIELDS = [
   'review_report_dir',
+  'review_profile_version',
   'implementation_started_at', 'implementation_completed_at',
   'review_started_at', 'review_completed_at',
   'implementation_minutes', 'review_minutes', 'spec_minutes',
@@ -331,9 +332,81 @@ const parseIso = v => {
   return Date.parse(v);
 };
 const ceilMinutes = (start, end) => Math.ceil((end - start) / 60000);
+const FOUNDATION_PROFILE_VERSION = 'foundation-review/v1';
 
-function reviewAuditErrors(root, id, cr) {
+function resolveProjectFile(root, rel) {
+  const absRoot = path.resolve(root);
+  const abs = path.resolve(root, rel || '');
+  if (!rel || path.isAbsolute(rel) || (abs !== absRoot && !abs.startsWith(absRoot + path.sep))) return null;
+  return abs;
+}
+
+function findTaskPackages(root, id) {
+  const matches = [];
+  const bTask = path.join(root, 'b-queue', `${id}.md`);
+  if (exists(bTask)) matches.push(bTask);
+  const iterationsDir = path.join(root, 'iterations');
+  if (fs.existsSync(iterationsDir) && fs.statSync(iterationsDir).isDirectory()) {
+    for (const iteration of fs.readdirSync(iterationsDir)) {
+      const candidate = path.join(iterationsDir, iteration, 'queue', `${id}.md`);
+      if (exists(candidate)) matches.push(candidate);
+    }
+  }
+  return matches;
+}
+
+function fullProfileErrors(root, id, profileRel, taskPackagePath, changedFiles, effectiveRisk) {
   const errors = [];
+  const profilePath = resolveProjectFile(root, profileRel);
+  if (!profilePath || !exists(profilePath)) return [`review_profile 非项目内现存文件：${profileRel || '(empty)'}`];
+  let tools, actual;
+  try { tools = require('./review-profile'); }
+  catch (error) { return [`缺 scripts/review-profile.js 或无法加载：${error.message}`]; }
+  try { actual = JSON.parse(fs.readFileSync(profilePath, 'utf8')); }
+  catch (error) { return [`${profileRel}: JSON 无法解析：${error.message}`]; }
+  const expected = tools.buildReviewProfileFromText(
+    fs.readFileSync(taskPackagePath, 'utf8'), changedFiles, effectiveRisk);
+  if (actual.schema !== tools.PROFILE_SCHEMA) errors.push(`${profileRel}: schema 非 ${tools.PROFILE_SCHEMA}`);
+  if (actual.task_id !== id) errors.push(`${profileRel}: task_id 不匹配`);
+  if (actual.task_type !== expected.task_type) errors.push(`${profileRel}: task_type 与权威任务包不一致`);
+  if (JSON.stringify(actual.layers) !== JSON.stringify(expected.layers)) errors.push(`${profileRel}: layers 与权威任务包不一致`);
+  if (actual.source !== expected.source) errors.push(`${profileRel}: source 与权威任务包不一致`);
+  if (actual.effective_risk !== effectiveRisk) errors.push(`${profileRel}: effective_risk 与 round risk 不一致`);
+  if (actual.input_fingerprint !== expected.input_fingerprint) errors.push(`${profileRel}: input_fingerprint 与权威输入不一致`);
+  if (JSON.stringify(actual.changed_files) !== JSON.stringify(expected.changed_files))
+    errors.push(`${profileRel}: changed_files 与 full round 不一致`);
+  if (JSON.stringify(actual.selected_dimensions) !== JSON.stringify(expected.selected_dimensions))
+    errors.push(`${profileRel}: selected_dimensions 不是选择器重算结果`);
+  if (JSON.stringify(actual.omitted_dimensions) !== JSON.stringify(expected.omitted_dimensions))
+    errors.push(`${profileRel}: omitted_dimensions 不是选择器重算结果`);
+  if (JSON.stringify(actual.signals) !== JSON.stringify(expected.signals))
+    errors.push(`${profileRel}: signals 不是选择器重算结果`);
+  const selectedIds = Array.isArray(actual.selected_dimensions) ? actual.selected_dimensions.map(x => x && x.id) : [];
+  const omittedIds = Array.isArray(actual.omitted_dimensions) ? actual.omitted_dimensions.map(x => x && x.id) : [];
+  const partition = [...selectedIds, ...omittedIds].sort();
+  if (JSON.stringify(partition) !== JSON.stringify([...tools.DIMENSION_IDS].sort())
+      || new Set(partition).size !== tools.DIMENSION_IDS.length)
+    errors.push(`${profileRel}: selected/omitted 未形成完整且不重复的维度分区`);
+  for (const core of tools.CORE_DIMENSIONS) {
+    if (!selectedIds.includes(core)) errors.push(`${profileRel}: core 维度 ${core} 不得裁剪`);
+  }
+  return errors;
+}
+
+function reviewAuditErrors(root, id, cr, options = {}) {
+  const errors = [];
+  const profileVersion = cr.review_profile_version || '';
+  const legacyProfile = options.allowLegacyProfile === true && !profileVersion;
+  const foundationProfile = profileVersion === FOUNDATION_PROFILE_VERSION;
+  if (foundationProfile && id !== 'foundation')
+    errors.push(`${FOUNDATION_PROFILE_VERSION} 只允许 task_id=foundation 使用`);
+  let profileTools = null;
+  if (!foundationProfile && !legacyProfile) {
+    try { profileTools = require('./review-profile'); }
+    catch (error) { errors.push(`缺 scripts/review-profile.js 或无法加载：${error.message}`); }
+    if (profileTools && profileVersion !== profileTools.PROFILE_SCHEMA)
+      errors.push(`review_profile_version 必须为 ${profileTools.PROFILE_SCHEMA}`);
+  }
   if (!['pass', 'revised'].includes(cr.freshness)) errors.push('freshness 必须为 pass 或 revised');
   const implStart = parseIso(cr.implementation_started_at);
   const implEnd = parseIso(cr.implementation_completed_at);
@@ -393,16 +466,29 @@ function reviewAuditErrors(root, id, cr) {
   if (isUInt(cr.code_rounds) && reports.length !== Number(cr.code_rounds))
     errors.push(`round report 数 ${reports.length} != code_rounds ${cr.code_rounds}`);
   let previousEscalated = false, previousReviewedHead = '', lastConclusion = '';
+  let activeProfile = '';
+  const fullProfiles = new Set();
+  let taskPackagePath = '';
+  if (!foundationProfile && !legacyProfile) {
+    const taskPackages = findTaskPackages(root, id);
+    if (taskPackages.length !== 1) errors.push(taskPackages.length
+      ? `找到 ${taskPackages.length} 个同 id 任务包，review profile 输入必须唯一`
+      : '找不到 A/B 权威任务包，无法重算 review profile');
+    else taskPackagePath = taskPackages[0];
+  }
   let firstReportStarted = NaN, lastReportCompleted = NaN;
   const findingId = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-F\\d{3}$`);
   reports.forEach((file, index) => {
     const rp = parseFrontmatter(path.join(absDir, file));
     const r = k => scalarText(rp && rp[k]);
     const mode = r('mode');
+    const risk = r('risk');
+    const profileRel = r('review_profile');
     const started = parseIso(r('started_at')), completed = parseIso(r('completed_at'));
     if (!rp || r('task_id') !== id) errors.push(`${file}: task_id 不匹配`);
     if (Number(r('round')) !== index + 1) errors.push(`${file}: round 与文件序号不符`);
     if (!['full', 'targeted'].includes(mode)) errors.push(`${file}: mode 非法`);
+    if (!['standard', 'sensitive'].includes(risk)) errors.push(`${file}: risk 非法`);
     if (index === 0 && mode !== 'full') errors.push(`${file}: 首轮必须 full`);
     if (previousEscalated && mode !== 'full') errors.push(`${file}: 上轮要求 escalate_to_full，本轮却非 full`);
     if (!isSha40(r('base_ref'))) errors.push(`${file}: base_ref 非固定 40 位 SHA`);
@@ -414,6 +500,26 @@ function reviewAuditErrors(root, id, cr) {
       errors.push(`${file}: targeted reviewed_base 必须等于上一轮 reviewed_head`);
     if (!isSha256(r('diff_sha256'))) errors.push(`${file}: diff_sha256 非 64 位小写 hex`);
     if (!listItems(rp && rp.changed_files).length) errors.push(`${file}: changed_files 为空`);
+    if (legacyProfile) {
+      // P0 存量报告没有 review_profile；保留原固定 diff/墙钟链审计，不虚构历史 profile。
+    } else if (foundationProfile) {
+      if (profileRel !== FOUNDATION_PROFILE_VERSION)
+        errors.push(`${file}: Foundation review_profile 必须为 ${FOUNDATION_PROFILE_VERSION}`);
+    } else if (mode === 'full') {
+      const absProfile = resolveProjectFile(root, profileRel);
+      const profileKey = absProfile ? path.normalize(absProfile) : profileRel;
+      if (fullProfiles.has(profileKey)) errors.push(`${file}: 每次 full 必须生成新的 review_profile`);
+      fullProfiles.add(profileKey);
+      if (taskPackagePath && ['standard', 'sensitive'].includes(risk))
+        errors.push(...fullProfileErrors(root, id, profileRel, taskPackagePath, listItems(rp && rp.changed_files), risk)
+          .map(message => `${file}: ${message}`));
+      activeProfile = profileKey;
+    } else {
+      const absProfile = resolveProjectFile(root, profileRel);
+      const profileKey = absProfile ? path.normalize(absProfile) : profileRel;
+      if (!activeProfile || profileKey !== activeProfile)
+        errors.push(`${file}: targeted 必须继承最近一次 full 的 review_profile`);
+    }
     if (![started, completed].every(Number.isFinite) || started > completed) errors.push(`${file}: 时间非法`);
     if (!isUInt(r('elapsed_minutes')) || (Number.isFinite(started) && Number.isFinite(completed)
         && Number(r('elapsed_minutes')) !== ceilMinutes(started, completed))) errors.push(`${file}: elapsed_minutes 非法`);
@@ -448,6 +554,10 @@ function reviewAuditErrors(root, id, cr) {
  * 因此缺字段是 FAIL；迭代扫描仍对没有任何新字段的存量条目只留人签。 */
 function checkReviewAudit(taskId, root) {
   const statusPath = path.join(root, 'status.yml');
+  if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
+    fail('review 审计', statusPath, 'task-id 只允许字母、数字和连字符，拒绝路径片段');
+    return;
+  }
   const crs = parseCodeReviews(statusPath);
   if (crs === null) {
     fail('review 审计', statusPath, '缺 status.yml');
@@ -472,7 +582,7 @@ function checkReviewAudit(taskId, root) {
   if (missing.length) errors.push(`缺墙钟/report 字段：${missing.join('/')}`);
   else errors.push(...reviewAuditErrors(root, taskId, cr));
   if (errors.length) fail('review 审计', statusPath, `${taskId}: ${errors.join('；')}`);
-  else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、逐轮报告与三段墙钟均合法`);
+  else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、review profile、逐轮报告与三段墙钟均合法`);
 }
 
 /* ====================== 主校验 ====================== */
@@ -682,7 +792,8 @@ function checkSprint(iteration, root) {
       .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
       .map(t => t.id);
     const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
-    const noAudit = [], partialAudit = [], badAudit = [];
+    const noAudit = [], partialAudit = [], legacyProfile = [], badAudit = [];
+    const legacyAuditFields = REVIEW_AUDIT_FIELDS.filter(k => k !== 'review_profile_version');
     for (const id of mergedIds) {
       const cr = crByTask.get(id);
       if (!cr) { noEntry.push(id); continue; }
@@ -695,11 +806,15 @@ function checkSprint(iteration, root) {
                  || Number(cr.rounds) !== Number(cr.code_rounds) + Number(cr.spec_rounds)) {
         badSplit.push(`${id}(rounds=${cr.rounds},code=${cr.code_rounds},spec=${cr.spec_rounds})`);
       }
-      const presentAudit = REVIEW_AUDIT_FIELDS.filter(k => k in cr);
-      if (!presentAudit.length) {
+      const presentLegacyAudit = legacyAuditFields.filter(k => k in cr);
+      if (!presentLegacyAudit.length) {
         noAudit.push(id);
-      } else if (presentAudit.length !== REVIEW_AUDIT_FIELDS.length) {
-        partialAudit.push(`${id}(缺 ${REVIEW_AUDIT_FIELDS.filter(k => !(k in cr)).join('/')})`);
+      } else if (presentLegacyAudit.length !== legacyAuditFields.length) {
+        partialAudit.push(`${id}(缺 ${legacyAuditFields.filter(k => !(k in cr)).join('/')})`);
+      } else if (!('review_profile_version' in cr)) {
+        legacyProfile.push(id);
+        const errs = reviewAuditErrors(root, id, cr, { allowLegacyProfile: true });
+        if (errs.length) badAudit.push(`${id}: ${errs.join('；')}`);
       } else {
         const errs = reviewAuditErrors(root, id, cr);
         if (errs.length) badAudit.push(`${id}: ${errs.join('；')}`);
@@ -716,16 +831,18 @@ function checkSprint(iteration, root) {
     if (noSplit.length)
       human('审计留痕', `有 code_reviews 条目但缺 code_rounds/spec_rounds：${noSplit.join(', ')} —— 存量可保留；新合并任务须区分代码轮与规格轮`);
     if (partialAudit.length)
-      fail('审计留痕', 'status.yml', `墙钟/report 字段只写了一部分：${partialAudit.join('；')}`);
+      fail('审计留痕', 'status.yml', `墙钟/report/profile 字段只写了一部分：${partialAudit.join('；')}`);
     if (badAudit.length)
-      fail('审计留痕', 'status.yml', `墙钟/report 审计非法：${badAudit.join('；')}`);
+      fail('审计留痕', 'status.yml', `墙钟/report/profile 审计非法：${badAudit.join('；')}`);
     if (noAudit.length)
       human('审计留痕', `有 code_reviews 条目但缺墙钟/report 字段：${noAudit.join(', ')} —— 存量可保留；新合并任务须自动记录 implementation/review/spec 分钟与逐轮报告`);
+    if (legacyProfile.length)
+      human('审计留痕', `P0 报告链合法但缺 review profile：${legacyProfile.join(', ')} —— 存量可保留；新 full review 必须自动生成 profile`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
     else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
-             && !partialAudit.length && !badAudit.length && !noAudit.length)
-      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds、墙钟与逐轮 review reports`);
+             && !partialAudit.length && !legacyProfile.length && !badAudit.length && !noAudit.length)
+      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds、墙钟、review profiles 与逐轮 reports`);
   }
 
   // 语义残量（留人签）

@@ -8,7 +8,7 @@
 -->
 你是一名独立审查员，从未参与本走骨架的实现。这是项目 **V0 走骨架**（walking skeleton）：建跨切面地基件 + 一根标杆穿透切片，**无业务功能**。
 
-派发者会给 `review-mode: full|targeted` 与固定 reviewed base/head tree。full 执行全部逐关注点审查；targeted 只复核 prior report 中指定的稳定 finding ids、对应反例与受影响回归。targeted 发现新机制/模块/依赖、changed surface 越界或新根因时置 `escalate_to_full: true`，下一轮才 full；报告格式与计时使用 `templates/review-briefs/develop-review-round.md`。
+派发者会给 `review-mode: full|targeted` 与固定 reviewed base/head tree。Foundation 不经过普通 task/layer 裁剪器，round report 的 `review_profile` 固定写 `foundation-review/v1`。full 执行全部逐关注点审查；targeted 只复核 prior report 中指定的稳定 finding ids、对应反例与受影响回归。targeted 发现新机制/模块/依赖、changed surface 越界或新根因时置 `escalate_to_full: true`，下一轮才 full；报告格式与计时使用 `templates/review-briefs/develop-review-round.md`。
 
 【自读输入】（你自己读下列权威原文，绝不依赖执行者的转述 / 自评）
 - **地基蓝图**（强制边的权威）：项目根 `foundation.md`——「二、地基关注点登记 + 强制边」表，每行的「形式 / 应有档 / 实际形式·档」。
@@ -57,7 +57,7 @@
 【输出格式】
 每条 finding：
 - id：foundation-F{NNN}（同根跨轮保持；反例变体不另起 id）
-- 类别：{强制边达标 / 命门 / 走骨架完整性 / 标杆切片 / 自绿合规}（类别名固定，便于审计统计）
+- dimension：{foundation-enforcement / foundation-chokepoint / foundation-completeness / foundation-slice / foundation-self-green}（稳定 id，便于审计统计）
 - 位置：{文件:行 / 关注点名 / 地基件名}
 - 问题：{具体描述，一句话}
 - 严重程度：{阻断 / 建议}

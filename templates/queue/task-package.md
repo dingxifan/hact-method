@@ -9,6 +9,8 @@
            其余 frontend 任务 depends_on 它。触发与内容见 plan-sprint Step 2。
   体量预算：normative core 以 8–12KB 为软预算；超过时拆包，或把历史/解释移到 frontmatter 后的 non-normative appendix。
            develop 与独审默认只读 frontmatter；appendix 仅在明确疑点时查。
+  审查维度不在任务包手填：develop 在每次 full 前用 task_type/layers/source/risk、本 frontmatter 与 fixed changed-files
+           生成 review profile；任务包作者不得用自报字段关闭审查维度。
 -->
 ---
 task-id: <待填>            # 唯一标识，命名 {项目缩写}-v{N}-{三位序号}，如 hact-v4-001；对应 sprint.md 行

@@ -4,6 +4,7 @@ task_id: <待填>
 round: 1
 mode: full | targeted
 risk: standard | sensitive
+review_profile: <项目根相对路径；full 新生成 profile-round-NN.json，targeted 继承最近 full；Foundation 固定 foundation-review/v1>
 prior_report: null
 target_finding_ids: []
 base_ref: <固定 commit SHA>
@@ -26,8 +27,8 @@ affected_regressions: []
 changed_surface_allowed: []
 ```
 
-- `full`：按 `develop-review.md` 检查所有适用维度，为每个新根因分配稳定 finding id。
-- `targeted`：只核 `target_finding_ids`、对应反例、受影响回归和本轮增量 diff；不重做无关逐类审查。
+- `full`：按 `review_profile.selected_dimensions` 执行 `develop-review.md` 对应 id；omitted 不输出 N/A。profile 缺失/不闭合即停止。
+- `targeted`：继承最近 full 的 `review_profile`，只核 `target_finding_ids`、对应反例、受影响回归和本轮增量 diff；不重做其他维度。
 - targeted 若发现 changed surface 越界、新机制/模块/依赖或新根因，只记录证据并置 `escalate_to_full: true`，下一轮升 full。
 
 ## Findings
@@ -35,7 +36,7 @@ changed_surface_allowed: []
 ```yaml
 findings: []
 # - id: <task-id>-F001
-#   category: AC忠实性
+#   dimension: contract
 #   severity: blocking | advisory
 #   type: behavior-bug | contract-drift | example-error | enforcement-claim | scope-gap | future-risk | evidence-gap
 #   reachability: current | conditional | unreachable | unknown

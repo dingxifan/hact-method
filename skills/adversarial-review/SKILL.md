@@ -47,7 +47,16 @@ git diff {base_tree} {reviewed_tree}
 
 ### Step 3：启动独立审查 agent
 
-用独立 agent 读取 `../hact-method-lab/templates/review-briefs/develop-review.md` 并按其原文执行。首次告知 task-id、layer、“B 类无 iteration”、`review-mode: full`、base/reviewed tree；agent 自读任务包、diff、命中 Standards、测试和必要源码，不接收开发者自评/实现叙事。
+先按 develop 的有效 risk 规则只升不降；再用固定 `base_tree → reviewed_tree` 的完整 changed-files 生成本轮 full profile：
+
+```bash
+node scripts/review-profile.js b-queue/{task-id}.md \
+  --risk {standard|sensitive} \
+  --output b-reviews/{task-id}/profile-round-{NN}.json \
+  --changed-files {fixed changed-files...}
+```
+
+输出已存在、生成失败、task-id 不匹配或 selected/omitted 不闭合时停止，不靠人工自选维度继续。用独立 agent 读取 `../hact-method-lab/templates/review-briefs/develop-review.md` 并按其原文执行。首次告知 task-id、layer、“B 类无 iteration”、`review-mode: full`、base/reviewed tree 与 project-relative `review_profile`；agent 自读任务包、diff、命中 Standards、测试和必要源码，只执行 profile selected dimensions，不接收开发者自评/实现叙事。
 
 报告写入 `b-reviews/{task-id}/round-{NN}.md`，格式见 `templates/review-briefs/develop-review-round.md`。每个新根因分配稳定 id `{task-id}-F{NNN}`；同根语法变体合并在同一 id 的 evidence 下，不按变体数量制造 blocker。
 
@@ -61,6 +70,6 @@ git diff {base_tree} {reviewed_tree}
 - `global-gap-review/backlog`：新开 owner 或写 backlog，不打回本次独立合规改动；
 - `findings: []` 或仅 advisory：继续 commit。
 
-targeted 轮发现 changed surface 超出上轮允许范围、引入新机制/模块/依赖或出现新根因时，报告写 `escalate_to_full: true`；下一轮才升 full，不在 targeted 轮偷偷扩成全量审查。同一 evidence 未变化时不得换措辞重复 finding；三轮代码复审仍阻断才上报用户。
+targeted 继承最近一次 full 的 `review_profile`。发现 changed surface 超出上轮允许范围、引入新机制/模块/依赖或出现新根因时，报告写 `escalate_to_full: true`；下一轮基于 preflight base→当前 head 的完整 diff 生成新 profile 后才升 full，不在 targeted 轮偷偷扩成全量审查。同一 evidence 未变化时不得换措辞重复 finding；三轮代码复审仍阻断才上报用户。
 
-每轮开始/结束时间由编排器立即记入 report，`elapsed_minutes` 向上取整；禁止事后凭感觉估时。最终把 implementation/review/spec 聚合分钟与 report 目录写入 `status.yml code_reviews[]`，并在提交前运行 `node scripts/check-sprint.js --review {task-id}`；未通过不得提交终态。
+每轮开始/结束时间由编排器立即记入 report，`elapsed_minutes` 向上取整；禁止事后凭感觉估时。最终把 implementation/review/spec 聚合分钟、report 目录与 `review_profile_version: develop-review-profile/v1` 写入 `status.yml code_reviews[]`，并在提交前运行 `node scripts/check-sprint.js --review {task-id}`；未通过不得提交终态。

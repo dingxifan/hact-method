@@ -108,6 +108,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
     spec_rounds: 1               # int ≥0，freshness/contract/claim 独立复核数
     freshness: revised           # enum，pass / revised
     review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
+    review_profile_version: develop-review-profile/v1  # Foundation 为 foundation-review/v1
     implementation_started_at: 2026-08-09T01:00:00Z  # ISO-8601，preflight 通过后当场记录
     implementation_completed_at: 2026-08-09T01:42:00Z # 首轮独审 dispatch 前当场记录
     review_started_at: 2026-08-09T01:42:00Z          # 首轮 full dispatch
@@ -119,6 +120,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
     issues:                      # 数组，可为空 []
       - id: hact-v2-008-F001     # 稳定 finding id；同根变体不另起 id
         severity: 严重           # enum，严重 / 一般 / 建议
+        dimension: contract      # review profile 稳定维度 id，见下
         type: behavior-bug       # enum，见下
         reachability: current    # current / conditional / unreachable / unknown
         action: fix-code         # finding 实际进入的控制流
@@ -143,17 +145,19 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `code_reviews[].spec_rounds` | int ≥0（非枚举） |
 | `code_reviews[].freshness` | pass / revised |
 | `code_reviews[].review_report_dir` | 项目根相对路径；A 类 `iterations/vN/code-reviews/{task-id}`，B 类 `b-reviews/{task-id}` |
+| `code_reviews[].review_profile_version` | 普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`。存量缺失兼容提示，新任务终态审计必填 |
 | `code_reviews[].implementation_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
 | `code_reviews[].review_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
 | `code_reviews[].implementation_minutes/review_minutes/spec_minutes` | int ≥0（非枚举） |
 | `code_reviews[].issues[].severity` | 严重 / 一般 / 建议 |
+| `code_reviews[].issues[].dimension` | 普通 profile：contract / scope-and-secrets / test-evidence / comment-hygiene / standards / enforcement / design-fidelity / input-provenance / query-performance / concurrency / logging-privacy / maintainability / sensitive-boundaries；Foundation：foundation-enforcement / foundation-chokepoint / foundation-completeness / foundation-slice / foundation-self-green |
 | `code_reviews[].issues[].type` | behavior-bug / contract-drift / example-error / enforcement-claim / scope-gap / future-risk / evidence-gap / invariant-failure / claim-failure |
 | `code_reviews[].issues[].reachability` | current / conditional / unreachable / unknown |
 | `code_reviews[].issues[].action` | fix-code / revise-doc / fix-mechanism / downgrade-claim / global-gap-review / backlog / request-evidence |
 
 > 三个 rounds 字段是次数，三个 minutes 字段是墙钟。`rounds` 为兼容总数；implementation 从 preflight 通过到首次 full dispatch，review 从首次 full dispatch 到最终通过（含等待与整改），spec 累加 preflight/revise-doc 澄清时间。时间戳由编排器在事件发生时自动写，分钟向上取整，禁止事后估算；看板应用可忽略未知键。
 >
-> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验缺字段时硬失败，只有迭代级兼容扫描才允许对旧条目留人签。
+> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验会重算每次 full 的 review profile、核 targeted 继承链，并对缺字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
 
 > CR severity 映射：develop 内置独立审查用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`（阻断在审查 loop 内已修，落 YAML 的多为 `[建议]→建议`）。
 
