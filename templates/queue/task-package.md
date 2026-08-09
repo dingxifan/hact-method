@@ -7,6 +7,8 @@
   视觉地基包：全局 reset + UI 库主题覆盖（设计主色等 token 映射）+ design.md token 全局接线（variables.scss + main/App 入口），
            不属任何业务页。在 frontmatter 加 `baseline: visual` 标记（仅此包加，其余包不加；check-sprint 据此机械核 v1 必有）；
            其余 frontend 任务 depends_on 它。触发与内容见 plan-sprint Step 2。
+  体量预算：normative core 以 8–12KB 为软预算；超过时拆包，或把历史/解释移到 frontmatter 后的 non-normative appendix。
+           develop 与独审默认只读 frontmatter；appendix 仅在明确疑点时查。
 -->
 ---
 task-id: <待填>            # 唯一标识，命名 {项目缩写}-v{N}-{三位序号}，如 hact-v4-001；对应 sprint.md 行
@@ -27,28 +29,29 @@ files:
 supersedes: []            # 本包取代的既有实体，无则 []（不是 <待填>）。一行一条，写清是什么：
                           # 代码路径（旧实现 / 旧分支 / 已无调用方的模块）、lint 规则 id、spec 文件、decisions #N。
                           # 填了即欠一笔退役账——develop 交付时逐条给「已下线 / 保留 + 理由」，见 develop §退役账
+ac-format: intent-oracle-v1
 acceptance-criteria:
-  # 每条须标覆盖的 PRD AC：(源：PRD AC-nn)；可选人读后缀 (源：PRD AC-nn·删除二次确认)，linter 只读 AC-nn；纯技术约束标 (技术)
-  # 不可视区(backend/逻辑)任务：每条以 Given/When/Then 可执行例子书写（输入→期望输出），供 develop 1:1 落成测试
+  # 每条是一个 block scalar，须含 intent + oracle；标覆盖的 PRD AC：(源：PRD AC-nn)，纯技术约束标 (技术)。
+  # example 可省；普通 example 只帮助理解、不压过 oracle。仅经写包独审独立复算的例子可标 golden: true，并要求 develop 字面物化。
   # backend 验收锚 = **调用方能用它做成事**，不是"我实现了 AC"：写完逐条问一遍「拿这条交付的东西，
   #   调用方要做的那件事做得成吗」。常见缺口是字段齐了但列表/白名单不放行、状态对了却没有取它的读接口
   #   ——锚在调用方那侧，缺口才在写包时暴露；锚在自己这侧，它会等到前端撞上来才出现。
-  - <待填>
+  - |-
+    (源：PRD AC-nn)
+    intent: <用户可观察结果>
+    oracle: <可执行判据 / 计算方式 / 状态条件>
+    example: <可选；封闭输入与派生结果>
+    golden: false
 relevant-standards:
-  - <待填>                # 精确指向 standards-{layer}.md / standards-shared.md 的 § 章节（design.md 为 frontend 无条件必读，无需在此列）
+  - <待填>                # 只列 applies-if 命中的规则：`RULE-ID · standards-{layer}.md § 条目标题`；design.md 为 frontend 无条件必读，不重复列
 reference:
-  - <待填>                # 文件路径 + 行号（必填，如 L142 或 142-160，拒"全文"/无范围）+ 说明
-  # 前端任务：reference 须含 ux-flows.md 对应功能段行号条目
-  # 后端任务：reference 须含 trd.md 错误码清单段 + # 服务流程：{场景名} 段行号条目
+  - <待填>                # 仅列实现决策必需锚点：文件路径 + 稳定符号/章节锚（优先）或行号 + 说明；拒"全文"
+  # 前端任务：reference 须含 ux-flows.md 对应功能段锚（若文件存在）
+  # 后端任务：reference 须含 trd.md 错误码/服务流程对应章节锚
 context: <待填>           # 关键实现切入点，如 GoalList.vue L142 handleDelete()
-known-risks:
-  - <待填>                # 来自 TRD 或现有代码的实际陷阱，不是猜测
-do-not:
-  - <待填>                # 明确禁止边界，防止范围蔓延
-  - 禁止在代码、PR 描述、完成报告中明文出现 PAT / access token / 密码 / 私钥 / API key  # 通用凭据红线（默认保留）
-escalate-if:
-  - <待填>                # 触发上报的条件
-  - 上下文不足以做实现决策  # 默认保留
+known-risks: []           # 只列本任务新打开/显著放大的实际风险；无则 []
+do-not: []                # 只列本任务真实 scope 边；全局凭据/编码红线不在每包重复；无则 []
+escalate-if: []           # 只列无法从权威原文自行裁决的分支；普通上下文探索不写；无则 []
 # --- 以下仅 layers=[backend] 且该接口被前端消费时填，由 plan-sprint 推导写入；不需要则整段删除 ---
 # api-contract:
 #   endpoint: <待填>       # 如 GET /api/...

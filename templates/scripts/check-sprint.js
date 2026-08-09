@@ -2,17 +2,18 @@
 /*
  * check-sprint.js · hact-method G3（plan-sprint 产物）完成判据 linter（子计划 3c）
  *
- * 用途：机械核对 G3 完成判据里**确定性可查**的部分——任务包字段完备 / reference 行号 /
+ * 用途：机械核对 G3 完成判据里**确定性可查**的部分——任务包字段完备 / reference 稳定锚 /
  *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致 /
  *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）/
  *      归属真空（任务包声明"这件事不在本包"时，须确有另一个包认领）/
- *      审计留痕完备性（已 [merged] 的任务须有 code_reviews[] 条目；缺 rounds 退 🧑）。
+ *      审计留痕完备性（已 [merged] 的任务须有 code_reviews[]；新条目区分 code/spec rounds、墙钟并落逐轮 report）。
  *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 忠实性——内容真覆盖、非仅 id 在场）机器判不了，
  *      留签字人确认（🧑 段），脚本只把可机械的挡在签字前。
  *
  * 用法（在项目仓根目录执行）：
  *   node scripts/check-sprint.js vN          # 项目根 = cwd
  *   node scripts/check-sprint.js vN <项目根>
+ *   node scripts/check-sprint.js --review <task-id> [项目根]  # A/B 通用 review 审计
  *
  * 退出码：有任一 FAIL → 1；全 pass → 0；用法错误 / 自身出错 → 2。
  *
@@ -106,7 +107,7 @@ function parseFrontmatter(p) {
 
 function valEmpty(key, v) {
   if (!v) return true;                                  // 字段缺失
-  if (v.type === 'inline-empty-list') return key !== 'depends_on'; // 仅 depends_on 允许 []
+  if (v.type === 'inline-empty-list') return !['depends_on', 'relevant-standards', 'reference', 'known-risks', 'do-not', 'escalate-if'].includes(key);
   if (v.type === 'list') return v.items.filter(x => x && !x.includes(PLACEHOLDER)).length === 0;
   const t = (v.text || '').trim();
   return t === '' || t.includes(PLACEHOLDER);
@@ -115,8 +116,15 @@ function listItems(v) { return v && v.items ? v.items.filter(x => x && !x.includ
 function scalarText(v) { return v ? (v.text || '') : ''; }
 
 const reLineNum = /L\s*\d+|\d+\s*[-–~]\s*\d+|行\s*\d+/;   // 行号 / 行号区间
+const reSectionAnchor = /(?:§|#)\s*[^\s#]|(?:章节|小节)\s*[:：]/;
+const reSymbolAnchor = /`[^`]+`|(?:class|function|method|symbol)\s*[:：]\s*\S+/i;
+const hasStableAnchor = s => reLineNum.test(s) || reSectionAnchor.test(s) || reSymbolAnchor.test(s);
 const reAcTag = /[（(]\s*源\s*[:：]\s*PRD/;               // (源：PRD…)
 const reTechTag = /[（(]\s*技术\s*[)）]/;                  // (技术)
+const reIntent = /\bintent\s*[:：]/i;
+const reOracle = /\boracle\s*[:：]/i;
+const reExample = /\bexample\s*[:：]/i;
+const reGoldenTrue = /\bgolden\s*[:：]\s*true\b/i;
 
 /* ---------- risk 敏感启发词（安全敏感预检四类，决策#29） ----------
  * 启发式只升不降：命中而任务包未标 risk: sensitive → 🧑 留签字人确认（非 FAIL，允许误报）。
@@ -143,7 +151,12 @@ function sensitiveHits(fm) {
     chunks.push(scalarText(v), ...listItems(v));
   }
   const text = chunks.join(' ').toLowerCase();
-  return SENSITIVE_HINTS.filter(w => text.includes(w.toLowerCase()));
+  return SENSITIVE_HINTS.filter(w => {
+    const needle = w.toLowerCase();
+    // `oracle` 内含字母串 `acl`；ACL 只按独立 token 匹配，避免新 AC schema 让所有任务误升 sensitive。
+    if (needle === 'acl') return /(^|[^a-z0-9_])acl(?=$|[^a-z0-9_])/.test(text);
+    return text.includes(needle);
+  });
 }
 
 /* ---------- 归属真空：推卸语检测 ----------
@@ -267,8 +280,8 @@ function parseStatusTasks(statusPath) {
 // 迭代内 queue 的三个进料口（三方一致 + 审计留痕两处共用，故提到模块级）。
 const ITER_SOURCES = new Set(['sprint', 'integration', 'manual-test']);
 
-/* ---------- status.yml：抽 code_reviews[] 的 iteration/task_id/rounds（同上容错扫描） ----------
- * 只取三个键即可判完备性；`comment` 常是长中文单行、`issues:` 是更深缩进的子列表，
+/* ---------- status.yml：抽 code_reviews[] 的 iteration/task_id/rounds 拆分（同上容错扫描） ----------
+ * 只取顶层键即可判完备性；`comment` 常是长中文单行、`issues:` 是更深缩进的子列表，
  * 均靠「顶层条目缩进 === baseIndent」这一条挡住，不做完整 YAML AST。 */
 function parseCodeReviews(statusPath) {
   if (!exists(statusPath)) return null;
@@ -302,6 +315,164 @@ function parseCodeReviews(statusPath) {
   }
   flush();
   return out;
+}
+
+const REVIEW_AUDIT_FIELDS = [
+  'review_report_dir',
+  'implementation_started_at', 'implementation_completed_at',
+  'review_started_at', 'review_completed_at',
+  'implementation_minutes', 'review_minutes', 'spec_minutes',
+];
+const isUInt = v => /^\d+$/.test(v || '');
+const isSha40 = v => /^[0-9a-f]{40}$/i.test(v || '');
+const isSha256 = v => /^[0-9a-f]{64}$/.test(v || '');
+const parseIso = v => {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(v || '')) return NaN;
+  return Date.parse(v);
+};
+const ceilMinutes = (start, end) => Math.ceil((end - start) / 60000);
+
+function reviewAuditErrors(root, id, cr) {
+  const errors = [];
+  if (!['pass', 'revised'].includes(cr.freshness)) errors.push('freshness 必须为 pass 或 revised');
+  const implStart = parseIso(cr.implementation_started_at);
+  const implEnd = parseIso(cr.implementation_completed_at);
+  const reviewStart = parseIso(cr.review_started_at);
+  const reviewEnd = parseIso(cr.review_completed_at);
+  if (![implStart, implEnd, reviewStart, reviewEnd].every(Number.isFinite)) {
+    errors.push('四个 started/completed 字段须为带时区 ISO-8601');
+  } else {
+    if (implStart > implEnd) errors.push('implementation_started_at 晚于 completed_at');
+    if (implEnd !== reviewStart) errors.push('implementation_completed_at 必须等于 review_started_at，避免墙钟留白或重叠');
+    if (reviewStart > reviewEnd) errors.push('review_started_at 晚于 completed_at');
+    if (isUInt(cr.implementation_minutes)
+        && Number(cr.implementation_minutes) !== ceilMinutes(implStart, implEnd))
+      errors.push('implementation_minutes 与时间戳向上取整结果不符');
+    if (isUInt(cr.review_minutes)
+        && Number(cr.review_minutes) !== ceilMinutes(reviewStart, reviewEnd))
+      errors.push('review_minutes 与时间戳向上取整结果不符');
+  }
+  for (const k of ['implementation_minutes', 'review_minutes', 'spec_minutes']) {
+    if (!isUInt(cr[k])) errors.push(`${k} 须为 int>=0`);
+  }
+
+  const relDir = cr.review_report_dir || '';
+  const absRoot = path.resolve(root);
+  const absDir = path.resolve(root, relDir);
+  if (!relDir || path.isAbsolute(relDir) || (absDir !== absRoot && !absDir.startsWith(absRoot + path.sep))) {
+    errors.push('review_report_dir 须为项目根内相对路径');
+    return errors;
+  }
+  if (!fs.existsSync(absDir) || !fs.statSync(absDir).isDirectory()) {
+    errors.push(`review_report_dir 不存在：${relDir}`);
+    return errors;
+  }
+
+  const preflightPath = path.join(absDir, 'preflight.md');
+  let preflightBaseRef = '', preflightBaseTree = '';
+  if (!exists(preflightPath)) {
+    errors.push('缺 preflight.md');
+  } else {
+    const pf = parseFrontmatter(preflightPath);
+    const p = k => scalarText(pf && pf[k]);
+    preflightBaseRef = p('base_ref');
+    preflightBaseTree = p('base_tree');
+    const pfStart = parseIso(p('started_at')), pfEnd = parseIso(p('completed_at'));
+    if (!pf || p('task_id') !== id) errors.push('preflight task_id 不匹配');
+    if (!['before-code', 'retroactive'].includes(p('timing'))) errors.push('preflight timing 非法');
+    if (!['pass', 'revised'].includes(p('result'))) errors.push('preflight result 未闭合');
+    if (!isSha40(p('base_ref')) || !isSha40(p('base_tree'))) errors.push('preflight base_ref/base_tree 非固定 40 位 SHA');
+    if (![pfStart, pfEnd].every(Number.isFinite) || pfStart > pfEnd) errors.push('preflight 时间非法');
+    if (!isUInt(p('spec_minutes')) || (Number.isFinite(pfStart) && Number.isFinite(pfEnd)
+        && Number(p('spec_minutes')) !== ceilMinutes(pfStart, pfEnd))) errors.push('preflight spec_minutes 非法');
+    if (isUInt(cr.spec_minutes) && isUInt(p('spec_minutes'))
+        && Number(cr.spec_minutes) < Number(p('spec_minutes'))) errors.push('status spec_minutes 小于 preflight 记录');
+  }
+
+  const reports = fs.readdirSync(absDir).filter(f => /^round-\d{2}\.md$/.test(f)).sort();
+  if (isUInt(cr.code_rounds) && reports.length !== Number(cr.code_rounds))
+    errors.push(`round report 数 ${reports.length} != code_rounds ${cr.code_rounds}`);
+  let previousEscalated = false, previousReviewedHead = '', lastConclusion = '';
+  let firstReportStarted = NaN, lastReportCompleted = NaN;
+  const findingId = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-F\\d{3}$`);
+  reports.forEach((file, index) => {
+    const rp = parseFrontmatter(path.join(absDir, file));
+    const r = k => scalarText(rp && rp[k]);
+    const mode = r('mode');
+    const started = parseIso(r('started_at')), completed = parseIso(r('completed_at'));
+    if (!rp || r('task_id') !== id) errors.push(`${file}: task_id 不匹配`);
+    if (Number(r('round')) !== index + 1) errors.push(`${file}: round 与文件序号不符`);
+    if (!['full', 'targeted'].includes(mode)) errors.push(`${file}: mode 非法`);
+    if (index === 0 && mode !== 'full') errors.push(`${file}: 首轮必须 full`);
+    if (previousEscalated && mode !== 'full') errors.push(`${file}: 上轮要求 escalate_to_full，本轮却非 full`);
+    if (!isSha40(r('base_ref'))) errors.push(`${file}: base_ref 非固定 40 位 SHA`);
+    else if (preflightBaseRef && r('base_ref') !== preflightBaseRef) errors.push(`${file}: base_ref 与 preflight 不一致`);
+    if (!isSha40(r('reviewed_base')) || !isSha40(r('reviewed_head'))) errors.push(`${file}: reviewed tree 非 40 位 SHA`);
+    else if (mode === 'full' && preflightBaseTree && r('reviewed_base') !== preflightBaseTree)
+      errors.push(`${file}: full reviewed_base 必须等于 preflight base_tree`);
+    else if (mode === 'targeted' && previousReviewedHead && r('reviewed_base') !== previousReviewedHead)
+      errors.push(`${file}: targeted reviewed_base 必须等于上一轮 reviewed_head`);
+    if (!isSha256(r('diff_sha256'))) errors.push(`${file}: diff_sha256 非 64 位小写 hex`);
+    if (!listItems(rp && rp.changed_files).length) errors.push(`${file}: changed_files 为空`);
+    if (![started, completed].every(Number.isFinite) || started > completed) errors.push(`${file}: 时间非法`);
+    if (!isUInt(r('elapsed_minutes')) || (Number.isFinite(started) && Number.isFinite(completed)
+        && Number(r('elapsed_minutes')) !== ceilMinutes(started, completed))) errors.push(`${file}: elapsed_minutes 非法`);
+    if (!['pass', 'revise', 'evidence-needed'].includes(r('conclusion'))) errors.push(`${file}: conclusion 非法`);
+    if (!['true', 'false'].includes(r('escalate_to_full'))) errors.push(`${file}: escalate_to_full 非布尔`);
+    if (mode === 'targeted') {
+      if (!r('prior_report') || r('prior_report') === 'null') {
+        errors.push(`${file}: targeted 缺 prior_report`);
+      } else if (index === 0 || path.resolve(root, r('prior_report')) !== path.resolve(absDir, reports[index - 1])) {
+        errors.push(`${file}: prior_report 必须指向紧邻上一轮报告`);
+      }
+      const ids = listItems(rp && rp.target_finding_ids);
+      if (!ids.length) errors.push(`${file}: targeted 缺 target_finding_ids`);
+      else if (ids.some(x => !findingId.test(x))) errors.push(`${file}: target_finding_ids 不符合 ${id}-FNNN`);
+    }
+    if (index === 0) firstReportStarted = started;
+    lastReportCompleted = completed;
+    previousReviewedHead = r('reviewed_head');
+    lastConclusion = r('conclusion');
+    previousEscalated = r('escalate_to_full') === 'true';
+  });
+  if (reports.length && Number.isFinite(reviewStart) && firstReportStarted !== reviewStart)
+    errors.push('review_started_at 与首轮 report.started_at 不一致');
+  if (reports.length && Number.isFinite(reviewEnd) && lastReportCompleted !== reviewEnd)
+    errors.push('review_completed_at 与末轮 report.completed_at 不一致');
+  if (reports.length && lastConclusion !== 'pass') errors.push('末轮 report.conclusion 必须为 pass');
+  if (reports.length && previousEscalated) errors.push('末轮仍要求 escalate_to_full，审查尚未闭合');
+  return errors;
+}
+
+/* A/B 共用的单任务 review 审计。显式调用代表当前任务正在走新流程，
+ * 因此缺字段是 FAIL；迭代扫描仍对没有任何新字段的存量条目只留人签。 */
+function checkReviewAudit(taskId, root) {
+  const statusPath = path.join(root, 'status.yml');
+  const crs = parseCodeReviews(statusPath);
+  if (crs === null) {
+    fail('review 审计', statusPath, '缺 status.yml');
+    return;
+  }
+  const matches = crs.filter(c => c.task_id === taskId);
+  if (matches.length !== 1) {
+    fail('review 审计', statusPath, matches.length
+      ? `${taskId} 有 ${matches.length} 个 code_reviews[] 条目，必须唯一`
+      : `${taskId} 无 code_reviews[] 条目`);
+    return;
+  }
+  const cr = matches[0];
+  const errors = [];
+  if (!isUInt(cr.rounds) || Number(cr.rounds) < 1) errors.push('rounds 须为 int>=1');
+  if (!isUInt(cr.code_rounds) || Number(cr.code_rounds) < 1) errors.push('code_rounds 须为 int>=1');
+  if (!isUInt(cr.spec_rounds)) errors.push('spec_rounds 须为 int>=0');
+  if (isUInt(cr.rounds) && isUInt(cr.code_rounds) && isUInt(cr.spec_rounds)
+      && Number(cr.rounds) !== Number(cr.code_rounds) + Number(cr.spec_rounds))
+    errors.push('rounds 必须等于 code_rounds + spec_rounds');
+  const missing = REVIEW_AUDIT_FIELDS.filter(k => !(k in cr));
+  if (missing.length) errors.push(`缺墙钟/report 字段：${missing.join('/')}`);
+  else errors.push(...reviewAuditErrors(root, taskId, cr));
+  if (errors.length) fail('review 审计', statusPath, `${taskId}: ${errors.join('；')}`);
+  else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、逐轮报告与三段墙钟均合法`);
 }
 
 /* ====================== 主校验 ====================== */
@@ -353,25 +524,23 @@ function checkSprint(iteration, root) {
       if (valEmpty('api-contract', p.fm['api-contract']))
         fail('api-contract 必填', where, `${p.id}：backend 且被前端任务 depends_on 消费，api-contract 须填（当前缺/占位/仍注释）`);
     }
-    // 2. reference 行号 + ux-flows/trd 链
+    // 2. reference 稳定锚 + ux-flows/trd 链
     const refs = listItems(p.fm['reference']);
     if (refs.length) {
-      // 判据只看「有没有行号」。不得再对正文做 /全文/ 子串测试——reference 的**描述部分**
-      // 完全可能正当地含「全文」二字（如"分类提示全文的归属"），那与"这条 reference 没给行号"
-      // 是两回事；而真写成"prd.md 全文"的条目本就没有行号、已被本判据拦下。
-      const noLine = refs.filter(r => !reLineNum.test(r));
-      if (noLine.length) fail('reference 行号', where, `${p.id}：${noLine.length} 条 reference 无行号（首条：${noLine[0].slice(0, 40)}…）`);
+      const noAnchor = refs.filter(r => !hasStableAnchor(r));
+      if (noAnchor.length) fail('reference 稳定锚', where, `${p.id}：${noAnchor.length} 条 reference 无符号/章节/行号锚（首条：${noAnchor[0].slice(0, 40)}…）`);
       // draft-ux 是**可选**环节（PRD 标 `draft-ux: 需要` 才触发）——ux-flows.md 不存在时，
       // 前端 AC 的形态权威落在 TRD「交互技术方案」段，此处不得强求引用一份不存在的文件。
       // 存在时照旧强制（收窄非关闭）。承 v4「source 三口放行」同一处置：检查器不得把可选环节当必选前提。
       if (/frontend/.test(p.layersStr) && fs.existsSync(path.join(iterDir, 'ux-flows.md'))
           && !refs.some(r => /ux-flows/i.test(r)))
-        fail('reference ux-flows', where, `${p.id}：前端任务 reference 未含 ux-flows 行号条目`);
+        fail('reference ux-flows', where, `${p.id}：前端任务 reference 未含 ux-flows 稳定锚`);
       if (/backend/.test(p.layersStr) && !refs.some(r => /trd/i.test(r)))
-        fail('reference trd', where, `${p.id}：后端任务 reference 未含 trd 行号条目`);
+        fail('reference trd', where, `${p.id}：后端任务 reference 未含 trd 稳定锚`);
     }
     // 3. AC 正向 tag + 逐条 id 存在性
     const acs = listItems(p.fm['acceptance-criteria']);
+    const acFormat = scalarText(p.fm['ac-format']);
     for (const ac of acs) {
       const hasSrc = reAcTag.test(ac), hasTech = reTechTag.test(ac);
       if (!hasSrc && !hasTech)
@@ -384,9 +553,15 @@ function checkSprint(iteration, root) {
           if (prdIds && !prdIds.has(id)) fail('AC 正向:悬空', where, `${p.id}：AC 回链 ${id} 在 PRD 不存在（打错号/已退休）`);
         }
       }
+      if (acFormat === 'intent-oracle-v1') {
+        if (!reIntent.test(ac) || !reOracle.test(ac))
+          fail('AC intent/oracle', where, `${p.id}：新格式 AC 必须同时含 intent 与 oracle —— ${ac.slice(0, 50)}…`);
+        if (reGoldenTrue.test(ac) && !reExample.test(ac))
+          fail('AC golden', where, `${p.id}：golden: true 但缺 example —— ${ac.slice(0, 50)}…`);
+      }
     }
   }
-  if (findings.filter(f => f.level === 'fail').length === 0) pass('任务包字段/AC/reference', `${packages.length} 个任务包字段完备、reference 含行号、AC 均带回链 tag`);
+  if (findings.filter(f => f.level === 'fail').length === 0) pass('任务包字段/AC/reference', `${packages.length} 个任务包字段完备、reference 含稳定锚、AC 回链与新格式合法`);
 
   // 4. AC 逐条反向覆盖：PRD 每个 AC-nn 被 ≥1 任务包 tag 引用（替代旧功能级——逐条严格强于功能级）
   if (prdIds === null) {
@@ -506,12 +681,29 @@ function checkSprint(iteration, root) {
     const mergedIds = stTasks
       .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
       .map(t => t.id);
-    const noEntry = [], noRounds = [], badRounds = [];
+    const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
+    const noAudit = [], partialAudit = [], badAudit = [];
     for (const id of mergedIds) {
       const cr = crByTask.get(id);
       if (!cr) { noEntry.push(id); continue; }
       if (!('rounds' in cr)) { noRounds.push(id); continue; }
       if (!/^\d+$/.test(cr.rounds) || Number(cr.rounds) < 1) badRounds.push(`${id}(rounds=${cr.rounds})`);
+      if (!('code_rounds' in cr) || !('spec_rounds' in cr)) {
+        noSplit.push(id);
+      } else if (!/^\d+$/.test(cr.code_rounds) || Number(cr.code_rounds) < 1
+                 || !/^\d+$/.test(cr.spec_rounds) || Number(cr.spec_rounds) < 0
+                 || Number(cr.rounds) !== Number(cr.code_rounds) + Number(cr.spec_rounds)) {
+        badSplit.push(`${id}(rounds=${cr.rounds},code=${cr.code_rounds},spec=${cr.spec_rounds})`);
+      }
+      const presentAudit = REVIEW_AUDIT_FIELDS.filter(k => k in cr);
+      if (!presentAudit.length) {
+        noAudit.push(id);
+      } else if (presentAudit.length !== REVIEW_AUDIT_FIELDS.length) {
+        partialAudit.push(`${id}(缺 ${REVIEW_AUDIT_FIELDS.filter(k => !(k in cr)).join('/')})`);
+      } else {
+        const errs = reviewAuditErrors(root, id, cr);
+        if (errs.length) badAudit.push(`${id}: ${errs.join('；')}`);
+      }
     }
     if (noEntry.length)
       fail('审计留痕', 'status.yml', `已 [merged] 但 code_reviews[] 无条目：${noEntry.join(', ')} —— develop 末端漏写审计留痕`);
@@ -519,10 +711,21 @@ function checkSprint(iteration, root) {
       fail('审计留痕', 'status.yml', `rounds 非 int≥1（见 skeleton/07 值域）：${badRounds.join(', ')}`);
     if (noRounds.length)
       human('审计留痕', `有 code_reviews 条目但缺 rounds：${noRounds.join(', ')} —— rounds 是 2026-07-30 新增字段，存量条目普遍无；本期新合并的应补（轮数事后不可复原，只能当场记）`);
+    if (badSplit.length)
+      fail('审计留痕', 'status.yml', `rounds 拆分非法或总数不相等：${badSplit.join(', ')}`);
+    if (noSplit.length)
+      human('审计留痕', `有 code_reviews 条目但缺 code_rounds/spec_rounds：${noSplit.join(', ')} —— 存量可保留；新合并任务须区分代码轮与规格轮`);
+    if (partialAudit.length)
+      fail('审计留痕', 'status.yml', `墙钟/report 字段只写了一部分：${partialAudit.join('；')}`);
+    if (badAudit.length)
+      fail('审计留痕', 'status.yml', `墙钟/report 审计非法：${badAudit.join('；')}`);
+    if (noAudit.length)
+      human('审计留痕', `有 code_reviews 条目但缺墙钟/report 字段：${noAudit.join(', ')} —— 存量可保留；新合并任务须自动记录 implementation/review/spec 分钟与逐轮报告`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
-    else if (!noEntry.length && !badRounds.length && !noRounds.length)
-      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有 code_reviews 条目且 rounds 合法`);
+    else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
+             && !partialAudit.length && !badAudit.length && !noAudit.length)
+      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds、墙钟与逐轮 review reports`);
   }
 
   // 语义残量（留人签）
@@ -531,19 +734,25 @@ function checkSprint(iteration, root) {
 
 /* ---------------- 主流程 ---------------- */
 function main() {
-  const [iteration, rootArg] = process.argv.slice(2);
-  const root = rootArg || process.cwd();
-  if (!iteration || !/^v\d+$/.test(iteration)) {
-    console.error('用法: node check-sprint.js <vN> [项目根]');
+  const args = process.argv.slice(2);
+  const reviewMode = args[0] === '--review';
+  const subject = reviewMode ? args[1] : args[0];
+  const root = (reviewMode ? args[2] : args[1]) || process.cwd();
+  if (!subject || (!reviewMode && !/^v\d+$/.test(subject))) {
+    console.error('用法: node check-sprint.js <vN> [项目根]\n'
+      + '   或: node check-sprint.js --review <task-id> [项目根]');
     process.exit(2);
   }
-  try { checkSprint(iteration, root); }
+  try {
+    if (reviewMode) checkReviewAudit(subject, root);
+    else checkSprint(subject, root);
+  }
   catch (e) { console.error('check-sprint 自身出错（非产物问题）:', e.message); process.exit(2); }
 
   const fails = findings.filter(f => f.level === 'fail');
   const passes = findings.filter(f => f.level === 'pass');
   const humans = findings.filter(f => f.level === 'human');
-  console.log(`\n=== check-sprint (${iteration}) 报告 ===`);
+  console.log(`\n=== check-sprint (${reviewMode ? `review:${subject}` : subject}) 报告 ===`);
   console.log(`通过 ${passes.length} 项 / 失败 ${fails.length} 项\n`);
   if (fails.length) {
     console.log('❌ FAIL:');

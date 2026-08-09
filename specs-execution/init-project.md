@@ -69,7 +69,7 @@ echo "" > "E:/Group-code-lab/{name}/b-queue/.gitkeep"
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，看板应用取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
 **特殊桩（不走 templates/）**：
-- 项目根 `standards-shared.md` / 项目根 `standards-frontend.md` / 项目根 `standards-backend.md`：**项目根跨迭代活文档**，建空桩（一行标题 + 「待 V0 draft-foundation 播种」注），内容由 **V0 `draft-foundation`** 首期播种（存量未走 V0 则首期 `draft-tech-design` 兜底）、之后每期原地增补
+- 项目根三份 Standards：建空桩；V0 `draft-foundation` 按 `templates/standards/schema.md` 首播当前稳定默认规则（存量由 draft-tech-design 兜底），后续只更新当前真值
 
 同时写入以下文件：
 - `CLAUDE.md`：内容复制自 `E:\Group-code-lab\hact-method-lab\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充

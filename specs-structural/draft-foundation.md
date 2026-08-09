@@ -31,7 +31,7 @@
 |------|------|------|
 | foundation.md（更新） | `{name}/foundation.md` | 「二」表「实际形式·档」列逐行回填；实际档 ≥ 应有档，安全项=构造级（项目根活文档，原地更新） |
 | foundation-design.md | `{name}/iterations/v0/foundation-design.md` | 走骨架设计：地基件清单 + 作用域构造级落地机制 + 标杆穿透切片（供 develop 建造的薄设计） |
-| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | **首期播种**（含测试基建约定 + 视觉地基约定）；项目根跨迭代活文档，此后原地增补 |
+| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 按 Standards schema 首播当前稳定默认规则；此后原地更新当前真值，不追加版本史 |
 | project.md（技术层） | `{name}/project.md` | 栈 / 数据库 / 模块划分 / 测试框架 |
 | decisions.md | `{name}/decisions.md` | 关键架构决策（栈理由 / 各地基件形式 / 安全项构造级机制） |
 | gates.md | `{name}/iterations/v0/gates.md` | G2 签署 |

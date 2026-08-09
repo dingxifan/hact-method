@@ -7,15 +7,16 @@
   - 每条 Acceptance Criteria 标全局唯一 `AC-nn`（跨功能连续编号，不按功能从 1 重号）。
     append-only：增删 AC 时 id 永不复用、允许留空号；删一条即退休其号，其余不动。
     任务包 AC 用 `(源：PRD AC-nn)` 回链此 id（check-sprint 据此机械核逐条覆盖）。
-  - 每条有行为的 AC 紧跟一行行为例子 `例：Given … / When … / Then …`（测试脊柱幕 1，spec-by-example）。
-    例子是 CC 起草、产品验证的「应发生什么」，自然语言、不写实现；纯视觉美学 AC（如配色）可省。
-    下游：TRD 幕 2 给不可视区例子补技术精度（状态码/错误码），develop 物化成可运行测试。
-    例子是散文约定（不进 linter 槽位），但「有行为的 AC 写不出例子＝坏 AC」当场暴露。
+  - 每条有行为的 AC 拆三层：`intent`（用户可观察结果）/ `oracle`（如何判定满足）/ `example`（可选派生说明）。
+    intent 与 oracle 是规范真值；example 默认不高于 oracle。下游 plan-sprint 只有在封闭输入下独立复算通过，才可把例子标为 golden 并要求字面测试。
+    写不出 oracle 通常说明 AC 模糊；example 与 oracle 算不一致时修 example，不让代码迁就。
   - `涉及实体` 列出的实体名，须在 TRD `### 表：{名}` 有对应表（linter 跨文件对账）。
-  - 提示写在 HTML 注释里（linter 忽略）；删掉示例占位块后再交付。
+  - 提示写在 HTML 注释里（linter 忽略）；交付时保留 `ac-format` 标记，其余提示/占位块删除。
 -->
 
 # PRD · v{N} · {项目名}
+
+<!-- ac-format: intent-oracle-v1 -->
 
 <!--
   v2+ 必加「变更摘要」（v1 删除本注释块）：文件开头加
@@ -51,8 +52,10 @@
 **涉及实体**：<待填>
 **场景描述**：<待填>
 **Acceptance Criteria**：
-- AC-01：<待填>
-  - 例：Given <前置/输入> / When <动作> / Then <期望结果>
+- AC-01：
+  - intent：<用户可观察结果>
+  - oracle：<可独立复算/判断的条件>
+  - example：<可选；Given 前置/输入 / When 动作 / Then 按 oracle 派生的结果>
 **明确排除**：<待填>
 
 <!-- 复制上面整块「### 功能：」追加更多功能 -->

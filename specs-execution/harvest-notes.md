@@ -64,7 +64,7 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 
 ## 第二步：去重择优
 
-对收割篮逐条，对照公共层现有内容（`templates/standards/*`、`templates/checklists/*`、`方法论待议.md`）判断：
+对收割篮逐条，对照公共层现有内容（`templates/standards/*`、`templates/checklists/*`、`方法论待议.md`）判断。`[规范]` 先按 `templates/standards/schema.md` 过准入；未达到跨任务、长期稳定门槛的项目事实不上提为公共 Standards：
 
 | 情况 | 处理 |
 |---|---|
@@ -72,6 +72,7 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 | 多人提同一问题 | 合并为一条，取最完整措辞 |
 | 单人、通用、有价值 | 采纳 |
 | 单人、仅个人/单项目相关、不通用 | 不上提，游标备注"已阅未采" |
+| `[规范]` 未过 Standards 准入，但事故/建议有复用价值 | 改投 `_meta/plans/方法论待议.md`，不写入 layer 候选库 |
 
 ```
 ✅ 去重择优完成：采纳 {M} 条 / 合并 {K} 组 / 丢弃 {X} 条
@@ -86,7 +87,7 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 
 | 来源标签 | 目的地 | 操作 |
 |---|---|---|
-| `[规范]` | `templates/standards/{backend\|frontend\|shared}.md`（按内容归层；跨层条目写入独立的 `shared.md`） | 追加条目 |
+| `[规范]` | `templates/standards/{backend\|frontend\|shared}.md`（按内容归层；跨层条目写入 `shared.md`） | 按 schema 写成可独立选择的候选规则；更新同类当前规则，不追加版本/事故叙事 |
 | `[checklist]` | `templates/checklists/{backend\|frontend}-checklist.md` | 追加至对应分类 `[ ]` |
 | `[方法论]` | `_meta/plans/方法论待议.md` | 追加 `- [ ] {日期} \| {问题} \| 来源：{成员} notes harvest` |
 

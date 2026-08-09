@@ -1,7 +1,7 @@
 # 跨层通用规范（shared）
 
-> 由 draft-tech-design 基于 TRD 播种到**项目根** `standards-shared.md`（跨迭代活文档，vN+1 原地增补）。
-> 本模板提供骨架和常见约定，项目启动时按实际填写。
+> 本文件是候选规则库。播种到项目根 `standards-shared.md` 时先读 `schema.md`，只选择通过准入门槛的当前稳定默认，并改写成 `id / applies-if / rule / grade / enforcement / override / superseded-when`；禁止整节复制或按版本追加。
+> 本模板提供常见候选，不是项目 Standards 的最终形态。
 > 不重复 standards-frontend.md / standards-backend.md 中已有的单层约束。
 
 ---

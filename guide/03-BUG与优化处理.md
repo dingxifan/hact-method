@@ -107,12 +107,12 @@ task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`。
 
 | AI（CC）做 | 你做 |
 |---|---|
-| 读取任务包，定位问题代码 | 提供复现环境（bug 场景） |
+| 写代码前做 freshness preflight，确认任务包、当前代码与 oracle 仍一致 | 提供复现环境（bug 场景） |
 | 修复 / 优化代码，通过自检 | 确认修复结果符合验收标准 |
 | 创建功能分支，推送 Gitee | — |
 | 创建 PR，写 PR 描述 | — |
 
-代码审查内化进 develop（per-task 独立对抗审查）同 A 类，通过后由 develop 自合并到 master。
+代码审查内化进 develop，同 A 类：首轮 full，真实缺陷整改后只对稳定 finding id、反例和受影响回归做 targeted review；范围扩大或出现新根因才升级下一轮 full。每轮固定 Git tree/diff 并落报告，implementation/review/spec 墙钟自动记入 `status.yml`；通过通用 review 审计后由 develop 自合并到 master。
 
 **看板应用里**：任务从「进行中」变为「已合并」，`b-tasks.md` 状态同步。
 

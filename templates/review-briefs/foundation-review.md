@@ -1,11 +1,14 @@
 <!--
-  V0 走骨架独立对抗审查 brief · develop 主循环「阶段 B」在 source=foundation 时消费 · live 引用（不入项目仓）
+  V0 走骨架独立证据审查 brief · develop 主循环「阶段 B」在 source=foundation 时消费 · live 引用（不入项目仓）
   命名规范：templates/review-briefs/{被审产物}-review.md（本文审走骨架的代码实现 = git diff + 测试 vs 地基蓝图/走骨架设计）。
-  派发：develop 主线在走骨架执行 subagent 跑完「建+自绿」后，派一个全新 subagent 读本文件按指令执行，只告知本期为 V0 走骨架。
+  派发：develop 主线在走骨架执行 subagent 跑完「建+自绿」后，首轮派全新 subagent 做 full；整改轮给 prior report、finding ids
+       与固定 Git tree 做 targeted。只告知权威审查输入，不提供执行者自评。
        subagent 全新隔离上下文——据本 brief 自读权威原文，绝不接收执行者的自评 / 总结 / 实现叙事（喂自评即丧失独立性）。
   改动审查维度去改本文件（单一来源），不在 spec 正文重述。
 -->
 你是一名独立审查员，从未参与本走骨架的实现。这是项目 **V0 走骨架**（walking skeleton）：建跨切面地基件 + 一根标杆穿透切片，**无业务功能**。
+
+派发者会给 `review-mode: full|targeted` 与固定 reviewed base/head tree。full 执行全部逐关注点审查；targeted 只复核 prior report 中指定的稳定 finding ids、对应反例与受影响回归。targeted 发现新机制/模块/依赖、changed surface 越界或新根因时置 `escalate_to_full: true`，下一轮才 full；报告格式与计时使用 `templates/review-briefs/develop-review-round.md`。
 
 【自读输入】（你自己读下列权威原文，绝不依赖执行者的转述 / 自评）
 - **地基蓝图**（强制边的权威）：项目根 `foundation.md`——「二、地基关注点登记 + 强制边」表，每行的「形式 / 应有档 / 实际形式·档」。
@@ -15,8 +18,8 @@
 - **编码约定**：`standards-{shared,frontend,backend}.md`（V0 首播）。
 - **自绿证据**：build / type / lint / test 结果；标杆切片的端到端测试。
 
-【默认假设】
-地基**没顶到位**——最常见的失败是"安全项被建在弱边上"（成熟项目实证：数据隔离手写 where、漏一行就泄数据，且全绿、过审）。你的任务是找出"实际档 < 应有档""违规其实写得出来""走骨架缺件或过度建造"的地方。**存疑即判阻断，不放行。**
+【审查立场】
+严格验证每个地基声明，但先区分：不变式真被打穿是 `invariant-failure`；真实不变式已由等价机制保证、只是文档把档位或唯一手段写错，是 `claim-failure`。安全项证据不足可阻断推进，但须标 `evidence-gap → request-evidence`，不得伪装成已证实代码缺陷。
 
 【逐类检查】（每类必须有明确结论，不允许跳过）
 
@@ -29,7 +32,7 @@
      - **机械级** = 有 lint/检查会红——**同样亲手写违规、跑检查、必须真红**（确认规则真存在、真接线，不是只写在 standards 里没配；规则有洞、别名可绕 = 未达）。
      - **人审级** = 只靠人看。
    - **探针纪律**：临时反例写临时路径（项目外 scratch 或 `*.tmp`）、跑完即删，**绝不进 commit**；为跑探针临时改的任何配置（如依赖 build approval）跑完**还原**。单工作树 + develop 末端会提交，探针不清理会漏进 master。
-   - **判级**：实测档 < 应有档 → 阻断；安全项未达构造级 → 阻断（最高优先）。
+   - **判级**：可达反例打穿 invariant 且实测档 < 应有档 → `invariant-failure` 阻断并修机制；反例被另一层等价机制挡住、仅声明的 mechanism/grade 不准确 → `claim-failure`，修文档/降声明，不强迫代码改成指定 helper/service。
    - **覆盖率自证**：枚举完声明 `foundation.md 关注点数 N + 本表行数`；行数 < N = 审查未完成。N **只数已填实的关注点行**——`<领域涌现项，从「一」补>` 等未替换的占位空行不计入 N（项目无领域涌现项时 N 即技术内生那几行）。
 
 2. **命门自检（逐关注点）**：对每块问一句——"**一个图省事的人在这顺手写，会合规吗？**"答"不会"且该块应有档 ≥ 机械级 → 说明形式没顶到位，finding。
@@ -53,9 +56,15 @@
 
 【输出格式】
 每条 finding：
+- id：foundation-F{NNN}（同根跨轮保持；反例变体不另起 id）
 - 类别：{强制边达标 / 命门 / 走骨架完整性 / 标杆切片 / 自绿合规}（类别名固定，便于审计统计）
 - 位置：{文件:行 / 关注点名 / 地基件名}
 - 问题：{具体描述，一句话}
 - 严重程度：{阻断 / 建议}
+- type：{invariant-failure / claim-failure / evidence-gap}
+- reachability：{current / conditional / unreachable / unknown}
+- evidence：{反例路径与结果 / 等价机制证据 / 尚缺证据}
+- impact：{当前不变式后果；claim-only 写“行为无变化，声明失真”}
+- action：{fix-mechanism / revise-doc / downgrade-claim / request-evidence}
 
-某类无发现时明确写「{类别}：无发现」；全部无发现输出 `findings: []`。**强制边达标类必须附那张逐关注点穷举表**（否则视为审查未完成）。禁止输出「整体看起来不错」等总结性正面评价。
+full 模式某类无发现时明确写「{类别}：无发现」；全部无发现输出 `findings: []`，强制边达标类必须附逐关注点穷举表。targeted 只写目标 finding 的 `verified-closed/open`、反例/回归和是否升 full。`claim-failure` 的代码改动文件数必须为 0，只复核声明与真实机制一致性。

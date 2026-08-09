@@ -32,6 +32,7 @@ mkdir -p "iterations/v0"
 - `_meta/input/` 背景材料
 - 项目根 `project.md` / `decisions.md` / `reusables.md`
 - `../hact-method-lab/templates/standards/backend.md` / `frontend.md`
+- `../hact-method-lab/templates/standards/schema.md`（项目 Standards 的职责、准入与条目格式）
 
 **首次定栈**（V0 必为首期）：询问用户技术栈偏好（语言 / 框架 / 数据库 / UI 库），确认后写入项目根 `project.md` 技术层，后续迭代复用、不再问。
 
@@ -115,17 +116,17 @@ mkdir -p "iterations/v0"
 
 ### Step 4：维护项目 Standards（首期播种）
 
-三份 `standards-{shared,frontend,backend}.md` 是**项目根跨迭代活文档**，V0 **首期播种**（此后各迭代原地增补）。TRD 确认后启动 **2 个并行 subagent** 处理 frontend / backend，主线处理 shared。
+三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，V0 首期播种，此后原地更新当前真值，不追加版本史。启动 2 个并行 subagent 处理 frontend / backend，主线处理 shared。
 
-**来源规则（三源）**：从 `../hact-method-lab/templates/standards/{layer}.md`（栈无关通用）挑本项目相关项写入（不全量复制）+ 按本 V0 选定的栈（Step 1 确认、入 `project.md` 技术层）叠加对应**栈子模板** `templates/standards/{layer}-{栈}.md`（如 `frontend-vue3.md` / `backend-nestjs.md`；**项目栈无对应子模板 → 仅用通用模板**，栈特定约定直接写项目 standards）+ 并入执行人个人 notes（`../hact-notes-{name}/notes.md`）`[规范]` 标签条目（并入前对照公共模板去重）。notes 不存在 / 无 `[规范]` → 前两源。与公共模板某条冲突 → 以本项目决策为准，记 `decisions.md`。
+**来源规则（三源）**：公共 layer 候选 + 当前栈候选 + 执行人个人 notes `[规范]`。所有候选先过 `templates/standards/schema.md` 准入门槛，再改写成带稳定 id、`applies-if / rule / grade / enforcement / override / superseded-when` 的项目条目；不全量复制。未通过的业务契约、Foundation 不变式、机制登记、历史或临时缺口分别迁往其权威对象。notes 不存在或无合格候选则跳过；与项目现有决定冲突时以项目决定为准并记 `decisions.md`。
 
 **测试基建约定（不可省）**：`standards-backend.md` 必含「测试框架约定」一节——框架选型 + `npm run test`（或等价）命令 + 测试文件位置。这是后续 develop 把不可视区 AC 落成可运行测试的前提；没有它 develop 的测试步无处落地。在此确立框架，并写入 `project.md` 技术层。
 
 **视觉地基约定（含前端时不可省）**：`standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种取全）——① style lint 禁硬编码字面值（颜色/间距/字号）② UI 库主题覆盖（设计主色映射进项目 UI 库的主题变量、禁库默认主色；具体变量名见栈子模板）③ 单一全局样式入口。这是 V0 develop 建「视觉地基件」、frontend-checklist 机械核、视觉冒烟断言三处的共同 owner。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
 
-> **本步只搬不改**：standards 暂按公共模板形态播种，「每条标执行者（构造/机械/人审）」的诚实化是后续单独议题，V0 不做。
+> **强制档诚实化**：`grade` 高于人审级时必须给真实 enforcement id；给不出机制时降为人审级或迁入 waiver/backlog，不得把期望档写成已实现事实。Foundation 已登记的不变式与探针不在 Standards 重复展开。
 
-三份汇总后检查无重复 / 无矛盾 / 覆盖架构轮廓所有关键约束。Subagent 返回空 / 跑偏 / 超时 → 主线接管该份，记原因。
+三份汇总后检查：每条字段完整、无重复/矛盾、正文无版本史/任务号/事故叙事；架构轮廓中的不变式由 Foundation 覆盖，不要求复制进 Standards。Subagent 返回空 / 跑偏 / 超时 → 主线接管该份，记原因。
 
 ---
 

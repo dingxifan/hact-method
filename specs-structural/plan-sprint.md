@@ -43,9 +43,9 @@
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] TRD 每个模块都有对应的 develop 任务包
 - [ ] **【linter】** 所有任务包既有机械字段完整、无空字段（`risk` 缺省按 `standard`，不做机械校验）；`layers=[backend]` 且有前端消费的任务包 `api-contract` 已填写（presence 由 linter 验，字段结构正确性经用户确认）
-- [ ] **【linter】** 字段保真自检通过：`reference` 每条含行号（拒"全文"/无范围）；前端任务 reference 含 ux-flows 行号条目；后端任务 reference 含 TRD 行号条目
-- [ ] **【linter】** AC 正向回链 + 逐条反向覆盖：每条任务包 AC 带 `(源：PRD AC-nn)` 或 `(技术)` tag、回链 id 在 PRD 存在，且 PRD 每条 AC（AC-nn）被某任务包 AC 引用（逐条覆盖机械核；逐条**忠实性**仍留 Step 3.5 独审 + 签字人）
-- [ ] 任务包独立对抗审查通过（AC忠实性 / AC完备性 / api-contract / relevant-standards覆盖 / 视觉地基完备性 五类无 [阻断]，或阻断已修复 / 已转 revise-doc）
+- [ ] **【linter】** 字段保真自检通过：`reference` 每条含文件 + 稳定符号/章节/行号锚；前端任务含 ux-flows 锚（若文件存在），后端任务含 TRD 锚
+- [ ] **【linter】** AC 正向回链 + intent/oracle 格式 + 逐条反向覆盖通过；普通 example 不作字面权威，`golden: true` 已由 Step 3.5 独立复算
+- [ ] 任务包独立审查通过；`example-error` 已在写包期修正，contract/spec finding 已按 action 路由，不留到 develop 代码整改
 - [ ] **【linter】** 视觉地基包（本期含 frontend 任务时）：v1 必有标 `baseline: visual` 的视觉地基包（`check-sprint.js` 硬核 FAIL）；vN+1 的 design.md 变更触发地基跟进包由 Step 3.5 独审 + 签字人确认（机器退人工）
 - [ ] **【linter】** 归属真空：任务包 `do-not`/`context` 声明"这件事不在本包"时确有另一个包认领（`check-sprint.js` 核；点名不存在的包 / 两包互推 = FAIL，未点名承接方 = `🧑` 逐条指认）
 - [ ] **【linter】** 依赖关系已标注（任务包 `depends_on` 在册，无依赖填 `[]`）

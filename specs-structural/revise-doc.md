@@ -1,10 +1,10 @@
 # task: revise-doc
 
-**discipline**: 派生于 `target`——`prd` → `product`；`trd` / `standards` → `architecture`
+**discipline**: 派生于 `target`——`prd` → `product`；`trd` / `foundation` / `standards` → `architecture`
 **Gate**: —
 **属性**: `target` · `reason`
 
-> 修订一份已签 Gate 的产物文档（PRD / TRD / standards），记录原因，通知下游。
+> 修订一份已签 Gate 的产物文档（PRD / TRD / Foundation / Standards），记录原因，通知下游。
 
 ---
 
@@ -23,7 +23,7 @@
 
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
-| `target` | enum | ✅ | `prd` / `trd` / `standards`（决定 discipline 和修订对象） |
+| `target` | enum | ✅ | `prd` / `trd` / `foundation` / `standards`（决定 discipline 和修订对象） |
 | `reason` | string | ✅ | 修订原因：触发来源 + 具体问题（如"develop task-003 发现接口响应字段缺失"） |
 
 ---
@@ -32,7 +32,7 @@
 
 | 产物 | 路径 | 格式 |
 |------|------|------|
-| 修订后的目标文档 | `iterations/vN/prd.md` / `trd.md` / `standards-*.md` | 原文件直接修改，commit 记录变更 |
+| 修订后的目标文档 | `iterations/vN/prd.md` / `trd.md` / 项目根 `foundation.md` / `standards-*.md` | 原文件直接修改，commit 记录变更 |
 | backlog 修订条目 | `backlog.md` | `- [修订] {日期} \| target={target} \| {改了什么} \| 原因：{reason}` |
 | 级联 revise-doc 任务包（PRD 修订影响 TRD 时） | `iterations/vN/queue/{task-id}.md` | revise-doc(target=trd) 任务包 |
 | 受影响的 develop 任务包更新（trd/standards 修订影响 queue 时） | `iterations/vN/queue/{task-id}.md` | 在任务包备注「已修订，请重新拾取」 |
@@ -56,7 +56,7 @@
 
 | 上游 task | 触发场景 | 格式 |
 |-----------|---------|------|
-| `develop` | 发现 TRD / standards 有歧义，偏离记录触发修订；或内置独立审查 loop 超界、根因在文档层 | backlog `[偏离]` 条目 / 审查 finding |
+| `develop` | 发现 contract/claim 漂移，或独立审查按 `revise-doc/downgrade-claim` 路由 | 审查 finding（含 type/evidence/action） |
 | `manual-test` | 验收失败根因在 PRD 定义 | 验收报告条目 |
 | 用户 | 主动要求修订 | 对话 |
 | `wrap-up-iteration` | 偏离对账时发现 backlog `[偏离]` 需反向更新文档 | backlog.md `[偏离]` 条目 |

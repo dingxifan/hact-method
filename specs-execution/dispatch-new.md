@@ -10,7 +10,7 @@
 ## 红线
 
 - **B 类判定有疑问时，倾向升级 A 类**：宁可多走流程，不遗漏产品决策
-- **AC 行为例子写不出来不写任务包**：bug 复现路径不清晰 / optimization 期望行为不具体，先追问到能写出清晰的 Given/When/Then 为止；无法复现的 bug 在任务包 `known-risks` 标注
+- **intent/oracle 写不清不写任务包**：bug 复现路径不清晰或 optimization 判据不可验证时先追问；普通 example 可省。无法复现的 bug 记为 evidence-gap，不伪装成 behavior-bug
 - **`urgency=hotfix` 写完立即通知**：不等积累，立即告知相关 develop 执行人优先拾取
 
 ---
@@ -77,7 +77,7 @@
 
 **`layer=frontend` 额外（两个 source 均适用）**：对应画面 / 交互在 `design.md` 的节点或 `prototype.html` 的路径（不确定可留空）。
 
-🚫 等用户提供信息；**收到回答后先判断能否据此写出清晰的 Given/When/Then 行为例子——不能则继续追问，禁止带模糊信息进下一步。**
+🚫 等用户提供信息；收到回答后先判断能否写清 intent 与可验证 oracle；不能则继续追问，禁止带模糊判据进下一步。
 
 ---
 
@@ -97,11 +97,12 @@ CC 基于 Step 2 信息主动起草；循环直到用户明确确认后才进 St
 ```
 行为契约草稿：
 
-【AC 行为例子】
-Given: {前置条件}
-When: {动作 / 事件}
-Then: {期望系统行为}
-（逐条列出，覆盖主路径 + 关键边界 / 异常路径；条数按实际需要）
+【AC】
+intent: {用户可观察结果}
+oracle: {可验证判据}
+example: {可选；按 oracle 派生的封闭示例}
+golden: false
+（逐条列出；只有独立复算通过的封闭例子才可改为 golden: true）
 
 【do-not 禁动边界】
 - {不应受影响的相邻行为}
@@ -115,7 +116,7 @@ Then: {期望系统行为}
 无对应规格时：明确写「无对应设计规格，以 do-not 边界为准」
 ```
 
-**写不出某条 AC 行为例子 → 返回 Step 2 追问，不带模糊信息进下一步。**
+写不出 intent/oracle → 返回 Step 2 追问；只缺 example 不阻断。
 
 🚫 等用户确认；有修正则更新后重提，直到明确确认
 
@@ -133,7 +134,7 @@ Then: {期望系统行为}
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
 | `urgency` | Step 3 判断结果 |
 | `risk` | 默认 `standard`；若触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用，则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29——B 类无 G3 检查器，误标由 develop 有效 risk 判定 + 末端 diff 独立预检兜底） |
-| `acceptance-criteria` | 直接使用 Step 3.5 确认的 Given/When/Then 行为例子；**含纯加法 schema 变更（Step 1 判定）时**额外加一条：「TRD 已更新（`iterations/vN/trd.md` {对应章节}）」 |
+| `acceptance-criteria` | 按 `intent-oracle-v1` 写 Step 3.5 确认的 intent/oracle；example 可选，未经独立复算保持 `golden: false`。纯加法 schema 变更另加技术 AC 指向已更新 TRD 章节 |
 | `do-not` | 直接使用 Step 3.5 确认的禁动边界列表 |
 | `files` | Step 3.5 初步估填的预计改动文件 / 组件清单 |
 | `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；**含纯加法 schema 变更时**必须写明：最坏情况 / 如何发现 / 如何回滚 |

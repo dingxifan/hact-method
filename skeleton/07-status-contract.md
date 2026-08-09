@@ -103,10 +103,26 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
   - iteration: v2
     task_id: hact-v2-008         # string，被审 develop 任务 id
     conclusion: 需修订           # enum，通过 / 需修订
-    rounds: 2                    # int ≥1，「审查—整改」跑了几轮（首轮即通过 = 1）。度量用，非判据
+    rounds: 2                    # int ≥1，兼容总轮次 = code_rounds + spec_rounds
+    code_rounds: 1               # int ≥1，代码证据审查实际运行数
+    spec_rounds: 1               # int ≥0，freshness/contract/claim 独立复核数
+    freshness: revised           # enum，pass / revised
+    review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
+    implementation_started_at: 2026-08-09T01:00:00Z  # ISO-8601，preflight 通过后当场记录
+    implementation_completed_at: 2026-08-09T01:42:00Z # 首轮独审 dispatch 前当场记录
+    review_started_at: 2026-08-09T01:42:00Z          # 首轮 full dispatch
+    review_completed_at: 2026-08-09T02:18:00Z        # 最终独审通过
+    implementation_minutes: 42   # int ≥0，ceil(completed-started)
+    review_minutes: 36           # int ≥0，含独审等待与审查期间整改
+    spec_minutes: 4              # int ≥0，preflight/revise-doc 澄清墙钟总和
     comment: 整体思路对，但有安全隐患  # string，综合评语，可为 null
     issues:                      # 数组，可为空 []
-      - severity: 严重           # enum，严重 / 一般 / 建议
+      - id: hact-v2-008-F001     # 稳定 finding id；同根变体不另起 id
+        severity: 严重           # enum，严重 / 一般 / 建议
+        type: behavior-bug       # enum，见下
+        reachability: current    # current / conditional / unreachable / unknown
+        action: fix-code         # finding 实际进入的控制流
+        impact: 登录态可绕过       # 当前可观察后果；未知写 unknown
         description: token 没校验过期
         location: src/auth.ts:40 # string 文件:行号，可为 null
 ```
@@ -123,9 +139,21 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `integration_tests[].status` | 待执行 / 执行中 / 通过 / 失败 |
 | `code_reviews[].conclusion` | 通过 / 需修订 |
 | `code_reviews[].rounds` | int ≥1（非枚举） |
+| `code_reviews[].code_rounds` | int ≥1（非枚举） |
+| `code_reviews[].spec_rounds` | int ≥0（非枚举） |
+| `code_reviews[].freshness` | pass / revised |
+| `code_reviews[].review_report_dir` | 项目根相对路径；A 类 `iterations/vN/code-reviews/{task-id}`，B 类 `b-reviews/{task-id}` |
+| `code_reviews[].implementation_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
+| `code_reviews[].review_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
+| `code_reviews[].implementation_minutes/review_minutes/spec_minutes` | int ≥0（非枚举） |
 | `code_reviews[].issues[].severity` | 严重 / 一般 / 建议 |
+| `code_reviews[].issues[].type` | behavior-bug / contract-drift / example-error / enforcement-claim / scope-gap / future-risk / evidence-gap / invariant-failure / claim-failure |
+| `code_reviews[].issues[].reachability` | current / conditional / unreachable / unknown |
+| `code_reviews[].issues[].action` | fix-code / revise-doc / fix-mechanism / downgrade-claim / global-gap-review / backlog / request-evidence |
 
-> `rounds` 是**度量字段、不参与任何判据**：终态结论只说"最后通过了"，说不出通过前磨了几轮，于是"独审耗时里首轮占多少、整改轮次占多少"这个问题事后不可复原（看板应用忽略未知键，加它不影响取数）。
+> 三个 rounds 字段是次数，三个 minutes 字段是墙钟。`rounds` 为兼容总数；implementation 从 preflight 通过到首次 full dispatch，review 从首次 full dispatch 到最终通过（含等待与整改），spec 累加 preflight/revise-doc 澄清时间。时间戳由编排器在事件发生时自动写，分钟向上取整，禁止事后估算；看板应用可忽略未知键。
+>
+> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验缺字段时硬失败，只有迭代级兼容扫描才允许对旧条目留人签。
 
 > CR severity 映射：develop 内置独立审查用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`（阻断在审查 loop 内已修，落 YAML 的多为 `[建议]→建议`）。
 

@@ -34,6 +34,7 @@
 - 项目根 `reusables.md`
 - `../hact-method-lab/templates/standards/backend.md`
 - `../hact-method-lab/templates/standards/frontend.md`
+- `../hact-method-lab/templates/standards/schema.md`（项目 Standards 的职责、准入与条目格式）
 
 **技术偏好确认**：
 - 从 项目根 `project.md` 技术层读取已有选型，不重新询问——**新项目的栈由 V0 `draft-foundation` 先于本任务确立**。
@@ -212,35 +213,32 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 增补后该关注点的底料由 `plan-sprint` 拆「地基跟进包」、`develop` 建（见 plan-sprint 视觉地基包规则的 foundation.md 变更触发支）。**无新跨切面关注点 → 本步跳过，foundation.md 不动。**
 
-> **存量守卫（未走 V0、无 foundation.md 的项目）**：本步整体跳过——新跨切面约定仍按下方 standards 增补即可，**不为此新建 foundation.md**（地基登记是 V0 项目的活；存量项目要补地基蓝图是单独决定，不在本步顺手做，避免增补一个不存在的文件）。
+> **存量守卫（未走 V0、无 foundation.md 的项目）**：本步整体跳过；只有通过 Standards 准入的稳定默认才更新下方当前规则表，不为此顺手新建 foundation.md。
 
-三份 `standards-{shared,frontend,backend}.md` 是**项目根的跨迭代活文档**（非迭代内产物，与 项目根 `decisions.md` / 项目根 `reusables.md` / 项目根 `design.md` 同级），单一真相源。**新项目已由 V0 `draft-foundation` 首期播种 → 本任务（V1+）走原地增补**；存量项目未走 V0、standards 仍空桩时本任务首期播种（兜底）。TRD 确认后，启动 **2 个并行 subagent** 处理 frontend / backend；主线同时处理 shared。
+三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**。新项目已由 V0 首播时，本任务只原地更新当前真值；存量空桩才首播。禁止按 vN 追加历史段。TRD 确认后，启动 2 个并行 subagent 处理 frontend / backend；主线同时处理 shared。
 
-**Standards 来源规则**（三源：通用模板 + 栈子模板 + 执行人个人 notes）：
-- **首期播种**（项目根 `standards-*.md` 仍是 init 空桩——**仅存量项目未走 V0 地基阶段时**；新项目 V0 已首播，不走此支）：从 `../hact-method-lab/templates/standards/{layer}.md`（栈无关通用）挑选本期 TRD 相关项写入，不全量复制；再按 项目根 `project.md` 技术层选对应**栈子模板** `templates/standards/{layer}-{栈}.md`（如 `frontend-vue3.md` / `backend-nestjs.md`）叠加挑选栈特定项。**项目栈无对应子模板 → 仅用通用模板**，栈特定约定按本期 TRD 直接写进项目 standards
-- **迭代增补**：直接在项目根现有 `standards-*.md` 上**原地**追加 / 修订本期 TRD 新增的约定，不复制整份、不另起迭代副本
-- **双源补充**：再取执行人个人 notes（`../hact-notes-{name}/notes.md`）中 `[规范]` 标签、与本 layer 相关的条目并入项目 standards——让本人已积累、尚未经 harvest-notes 上提的规范当期即生效
-  - **去重**：并入前对照公共模板 + 项目根现有 standards，**已收录的同条目不重复并入**（避免 vN+1 重复注入），只补未收录的
-  - notes 不存在 / 无 `[规范]` 条目 → 仅用公共模板 + 现有 standards
-  - 与现有 standards 同项但建议不同 → 保留现有版本，把不同建议记入 项目根 `feedback.md` 走分流，不当场覆盖
-  - 与公共模板 `templates/standards/` 某条冲突（区别于现有项目 standards 冲突）→ 以本期 TRD 决策为准，在 项目根 `decisions.md` 说明冲突和理由；写入前先按 `decisions.md` 文件头约定检查是否触发归档阈值
+**Standards 来源规则**（三源：通用候选 + 栈候选 + 执行人个人 notes）：
+- 所有候选先按 `templates/standards/schema.md` 分类与准入；只有跨任务、长期稳定的默认约束进入 Standards，并改写成完整规则条目。
+- 首期播种只选择本项目适用项，不整节复制。项目栈无对应子模板时，仅从通用候选与已确认的长期栈约束生成。
+- 迭代维护只更新、替换或新增当前规则；不新增 vN 标题。版本契约回 TRD，Foundation 不变式回 Foundation，机制位置回 check/test/config，历史回 decisions，临时缺口回 waiver/backlog。
+- notes 候选同样先过准入并去重；与现有规则冲突时保留当前规则，把候选送 `feedback.md`；与公共候选冲突但项目有明确决定时，以项目决定为准并记 `decisions.md`。
 
 **Subagent prompt 要点**（frontend / backend 各一份）：
 - 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md`（+ 项目栈对应的 `{layer}-{栈}.md` 栈子模板，如有）+ 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
-- 输出：本期适用的规范条目，格式与模板一致，不生成模板中没有的条目类型；并入 notes 条目前先对照公共模板 / 现有 standards 去重
-- 主线负责写文件（项目根 `standards-{layer}.md` 原地播种 / 增补），不让 subagent 直接写文件
+- 输出：本期适用的当前规则条目；每条含稳定 id、`applies-if / rule / grade / enforcement / override / superseded-when`。不得输出 AC、版本史、任务号、事故叙事、当前代码行号或临时补偿纪律
+- 主线负责写项目根 `standards-{layer}.md`（首播或当前态更新），不让 subagent 直接写文件
 
 > 本步 frontend / backend subagent 属 standards 内容生成任务，保持默认模型，不套 Step 5 审查类轻量模型规则。
 
-主线处理项目根 `standards-shared.md`（命名规范 / 错误码 / API 响应格式 / 权限模型），首期播种 / 迭代增补同上规则。
+主线处理项目根 `standards-shared.md`。错误码表、接口字段与接口权限属于本期契约时留在 TRD；只有跨任务稳定默认按同一 schema 进入 shared Standards。
 
-**测试基建约定（不可视区测试的地基，不可省）**：项目根 `standards-backend.md` 必含「测试框架约定」一节——测试框架选型 + `npm run test`（或等价）命令 + 测试文件位置约定。这是 develop 把不可视区 AC（Given/When/Then 例子）落成可运行测试的前提（核心抓手 A）；没有它，develop 的 `npm run test` 步无处落地。
-- 新项目：测试框架已由 V0 `draft-foundation` 确立（standards-backend「测试框架约定」已在）→ 本期沿用、按需增补。
+**测试基建约定（不可视区测试的地基，不可省）**：项目根 `standards-backend.md` 必含测试机制规则（框架 + 命令 + 测试位置 + enforcement id）。这是 develop 把不可视区 intent/oracle 落成 runnable test 的前提。
+- 新项目：测试框架已由 V0 确立 → 本期沿用；机制变化时更新同一规则，不另加版本段。
 - 存量项目（未走 V0）：在此确立框架，写入 standards-backend 与 项目根 `project.md` 技术层；若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop.md` 阶段 A 测试基建缺失处理）。
 
-**视觉地基约定（可视区地基，含前端时不可省）**：**新项目由 V0 `draft-foundation` 首播确立、本期沿用/增补；存量项目未走 V0 时在此首播（兜底）。** 项目根 `standards-frontend.md` 必含三条强制（模板 `templates/standards/frontend.md` §设计系统已带，播种时取全）——① style lint 禁硬编码字面值规则（颜色/间距/字号）② UI 库主题覆盖约定（设计主色映射进项目 UI 库的主题变量、禁库默认主色；具体变量名见栈子模板）③ 单一全局样式入口（应用入口引 reset + 全局变量文件）。这是 plan-sprint 拆「视觉地基包」、frontend-checklist 段一机械核、generate-integration-tests 视觉冒烟断言三处的共同 owner；缺它则 token 定义了无人接线、全站主色仍是库默认。具体 stylelint 规则属技术栈层，按本项目 UI 库写实。
+**视觉地基约定（可视区地基，含前端时不可省）**：新项目由 V0 首播，本期沿用或更新同一规则；存量项目在此首播。项目 Standards 以规则 id 引用视觉地基的 enforcement，Foundation 承接全局入口/主题强制档，design.md 承接具体 token 真值，不在 Standards 重复三份全文。
 
-三份汇总后检查：无重复条目 / 无相互矛盾 / 覆盖 TRD 提到的所有关键约束。
+三份汇总后检查：字段完整、无重复/矛盾、无版本追加史；TRD 关键契约留在 TRD，不以“覆盖所有 TRD 细节”为目标。
 
 **Subagent 失败判定**：以下任一情况视为失败，主线接管该份 standards：
 - subagent 返回内容为空或格式完全不符合模板结构
@@ -306,7 +304,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 |--------|-------------|---------|
 | 会话启动 | Explore 并行读 6 份输入文件（纯读取+摘要，指定 `model: "haiku"`） | 读取失败则主线单独读，不阻断 |
 | Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 失败则主线自审降级，不阻断 |
-| Step 7 standards 维护 | 2 个并行 subagent 各处理一份（frontend / backend 的播种 / 增补） | 失败则主线接管该份，记录原因 |
+| Step 7 standards 维护 | 2 个并行 subagent 各处理一份（frontend / backend 首播或当前态更新） | 失败则主线接管该份，记录原因 |
 
 > **Step 5 与 Step 4 分工**：Step 4 linter 机械核结构 / 覆盖类【linter】判据；Step 5 验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），两者不重叠。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。
 
@@ -319,6 +317,6 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 **断点续做**：
 - 读 `iterations/vN/trd.md` 判断写到哪一段（按 7 段结构对照）
-- 读项目根 `standards-*.md` 判断本期增补是否已落（活文档，看是否含本期 TRD 新约定）
+- 读项目根 `standards-*.md` 判断本期命中的稳定默认是否已更新；本期契约仍留 TRD，不以 Standards 含本期全部约定为完成信号
 - 读 `iterations/vN/gates.md` 判断 G2 是否已签
 - 从未完成的段落或文件继续

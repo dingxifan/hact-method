@@ -102,7 +102,7 @@
 - **完成判据**: TRD 完整 + 3 份 standards 完整 + 在任务尾部询问"要不要签 G2"
 - **主要产物**: 4 份文件——
   - `iterations/vN/trd.md`（迭代内）
-  - 项目根 `standards-shared.md`（跨迭代活文档，v1 播种 / vN+1 增补）
+  - 项目根 `standards-shared.md`（跨迭代当前稳定默认规则表；按 id 增量加载）
   - 项目根 `standards-frontend.md`（同上）
   - 项目根 `standards-backend.md`（同上）
 - **关联 Gate**: **G2**（可选签于任务尾部）
@@ -153,7 +153,7 @@
   - `layers=[frontend]` → `dev-frontend`
   - `layers=[backend]` → `dev-backend`
   - `layers=[shared]` → 由分配者在任务包中指定 task_type
-- **完成判据**: 代码完成 + per-task 独立对抗审查通过 + 全量绿 + PR `[merged]`（develop 自审自合并到 master，无独立 pr-review；安全敏感改动留 architecture 人工裁决）
+- **完成判据**: 写代码前 preflight + 代码完成 + 首次 full/整改 targeted 独立证据审查通过 + 末端全量绿 + PR `[merged]`（develop 自审自合并到 master，无独立 pr-review；安全敏感改动留 architecture 人工裁决）
 - **主要产物**: PR（已合并）+ 代码改动 + 测试 + `code_reviews[]` 审计留痕
 - **关联 Gate**: —
 - **属性**:
@@ -246,6 +246,8 @@
 - **主要产物**: 新 develop 任务包（source=bug 或 source=optimization）
 - **关联 Gate**: —
 - **属性**: `target-source`（bug / optimization）
+
+> dispatch-new 只派包，不实现。新 B 包必须交给 `develop(source=bug/optimization)`；`adversarial-review` 仅兼容用户明确要求接管的已有手动 diff，且仍须有 preflight 记录。
 
 详见 `specs-structural/dispatch-new.md`。
 

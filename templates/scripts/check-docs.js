@@ -135,6 +135,7 @@ const DRAFT_UX_ENUM = ['需要', '不需要'];
 
 function checkPRD(path) {
   const lines = readDoc(path);
+  const strictAcFormat = lines.some(ln => /ac-format:\s*intent-oracle-v1/.test(ln.text));
   const sections = splitSections(lines);
   const file = path;
 
@@ -175,8 +176,8 @@ function checkPRD(path) {
       else if (isEmptyVal(ux.val) || !DRAFT_UX_ENUM.includes(ux.val.trim()))
         fail('PRDdraftux枚举', `${file}:${ux.line}`, `${tag} draft-ux 取值「${ux.val.trim()}」非法，须 ∈ {需要,不需要}`);
       else pass('PRDdraftux枚举', `${tag} draft-ux=${ux.val.trim()}`);
-      // AC ≥1（非占位列表项），且每条标全局唯一 AC-nn（append-only，跨功能连续，不强制无空号）
-      const acItems = b.lines.filter(ln => !ln.commented && reListItem.test(ln.text) && !ln.text.includes(PLACEHOLDER));
+      // AC ≥1：只取顶格列表项；intent/oracle/example 是缩进子项，不得误算成额外 AC。
+      const acItems = b.lines.filter(ln => !ln.commented && /^[-*]\s+/.test(ln.text) && !ln.text.includes(PLACEHOLDER));
       if (acItems.length === 0) fail('PRD功能AC存在', where, `${tag} 无有效 Acceptance Criteria 条目`);
       else pass('PRD功能AC存在', `${tag} 有 ${acItems.length} 条 AC`);
       for (const ln of acItems) {
@@ -186,6 +187,16 @@ function checkPRD(path) {
         const id = m[1];
         if (acIds.has(id)) { acBad = true; fail('PRD AC id 唯一', `${file}:${ln.n}`, `AC id「${id}」重号（另见 ${file}:${acIds.get(id)}）`); }
         else acIds.set(id, ln.n);
+        const at = b.lines.indexOf(ln);
+        let end = b.lines.length;
+        for (let j = at + 1; j < b.lines.length; j++) {
+          if (!b.lines[j].commented && /^[-*]\s+/.test(b.lines[j].text)) { end = j; break; }
+        }
+        const detail = b.lines.slice(at + 1, end).filter(x => !x.commented).map(x => x.text).join('\n');
+        const hasIntent = /^\s+[-*]\s+intent\s*[:：]\s*\S+/mi.test(detail) && !detail.match(/^\s+[-*]\s+intent.*<待填>/mi);
+        const hasOracle = /^\s+[-*]\s+oracle\s*[:：]\s*\S+/mi.test(detail) && !detail.match(/^\s+[-*]\s+oracle.*<待填>/mi);
+        if (strictAcFormat && (!hasIntent || !hasOracle))
+          fail('PRD AC intent/oracle', `${file}:${ln.n}`, `${id} 缺有效 intent 或 oracle（example 可省）`);
       }
       // 收集实体供交叉对账
       const ent = getSlot(b.lines, '涉及实体');

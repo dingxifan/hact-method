@@ -61,7 +61,7 @@
 - [ ] **【linter·枚举】** 每个功能 `draft-ux` 取值合法（∈ {需要, 不需要}）；**含新页面或多分支交互流程的功能是否应标 `需要`，由人核**（linter 只验枚举，不验该不该是"需要"）
 - [ ] **【linter】** 每个功能已标注 `涉及实体`（读写的数据实体，逗号分隔；纯展示写"无"）
 - [ ] **【linter】** 每个功能至少 1 条 Acceptance Criteria
-- [ ] 每条**有行为的** AC 已写 `Given/When/Then` 行为例子（测试脊柱·幕 1；纯视觉美学 AC 可省）——语义判据，由签字人核（例子是散文约定，乙-1 不进 linter；presence 机械核留乙-3）
+- [ ] 每条有行为的 AC 已拆 `intent + oracle`；example 可选且与 oracle 一致，不把例子当高于判据的真值
 - [ ] 有新页面 / 新交互 / ≥3 个状态：已在 acceptance criteria 中覆盖交互规格
 - [ ] project.md 产品层已更新
 - [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）

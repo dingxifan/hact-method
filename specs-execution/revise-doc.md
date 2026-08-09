@@ -1,6 +1,6 @@
 # exec: revise-doc
 
-> CC 加载本文时，当前任务是对一份已签 Gate 的文档（PRD / TRD / standards）做最小化修订，记录原因，判断下游影响。
+> CC 加载本文时，当前任务是对一份已签 Gate 的文档（PRD / TRD / Foundation / Standards）做最小化修订，记录原因，判断下游影响。
 > 已签 Gate 不撤销，只记录变更；修订范围严格最小化，不借机重写或扩展。
 
 **上下文密度**：低–中。只读目标文档 + backlog，不加载代码。
@@ -26,7 +26,7 @@
 （创建 revise-doc 任务包时，由触发方按此规范生成 task-id 写入任务包）
 
 读任务包，确认：
-- `target`：`prd` / `trd` / `standards`
+- `target`：`prd` / `trd` / `foundation` / `standards`
 - `reason`：修订原因（触发来源 + 具体问题）
 
 ---
@@ -39,6 +39,7 @@
 |--------|---------|
 | `prd` | `iterations/vN/prd.md` |
 | `trd` | `iterations/vN/trd.md` |
+| `foundation` | 项目根 `foundation.md` |
 | `standards` | 项目根 `standards-{backend\|frontend\|shared}.md`（跨迭代活文档，由 reason 决定具体文件） |
 
 定位 `reason` 所指的具体段落，输出：
@@ -96,15 +97,13 @@
 | target | 判断逻辑 | 动作 |
 |--------|---------|------|
 | `prd` | 是否影响 TRD 的接口 / 数据结构？ | 是 → 创建 `revise-doc(target=trd)` 任务包，写入 queue；不在本会话改 TRD |
-| `trd` | 是否影响已派发的 queue 任务包？ | 是 → 更新对应任务包的 `relevant-standards` / `acceptance-criteria` 字段，在任务包备注「TRD 已修订，请重新拾取」 |
-| `standards` | 是否影响进行中的 develop task？ | 是 → 在对应任务包 `relevant-standards` 字段追加变更说明 |
+| `trd` | 是否影响已派发的 queue 任务包？ | 是 → 更新对应任务包的 intent/oracle/reference，在任务包备注「TRD 已修订，请重新拾取」 |
+| `foundation` | 是 claim-only 还是 invariant 变化？ | claim-only → 只更新声明/机制锚；invariant 变化 → 新开地基跟进任务，禁止静默要求当前包扩 scope |
+| `standards` | 是否影响进行中的 develop task？ | 是 → 更新对应规则 id/条目引用；变更说明留修订记录，不塞进 `relevant-standards` |
 
-**AC 漂移兜底**（target=prd 改了某条 AC 文本，或 target=trd 导致任务包 AC 需更新时）：plan-sprint 的任务包独立对抗审查是**规划时一次性**的，覆盖不到此处的二次漂移。因此本步须对**受本次修订影响的任务包**重跑一次 AC 对账——逐条核对其 `acceptance-criteria` 回链的 PRD AC（`(源：PRD ...)`）是否仍忠实、完整；不一致则更新任务包 AC 与回链，并在任务包备注「AC 已随 PRD/TRD 修订对齐，请重新拾取」。这专门兜"中途 PRD/TRD 变更导致任务包 AC 再漂移"——develop 据任务包 AC（不可视区为 Given/When/Then 例子）写测试，AC 漂了测试就在测错的东西，故修订时须同步对齐。
+**AC 漂移兜底**：对受影响任务包重跑 intent/oracle 对账；example 按 oracle 复算。intent/oracle 变化才更新测试契约；仅 example 算错则改 example 或取消 golden，不创建代码整改。只复核受影响 AC，不重跑完整任务包/代码审查。
 
-**修订影响已 [merged] 的 develop PR**（该 PR 代码已合并但与修订内容不一致）：
-- 创建新的 develop 任务包（`source=sprint`，urgency 按影响程度），说明需要修正已合并代码以与修订后文档对齐
-- 在 项目根 `backlog.md` 追加 `[偏离]` 条目，留 `wrap-up-iteration` 偏离对账时处理
-- 不回滚已合并 PR
+**修订涉及已 [merged] PR**：先按 intent/invariant 复核运行行为。实现已满足而文档落后时，代码改动文件数必须为 0；只有新权威 intent/invariant 明确改变且当前行为不满足时，才创建新的 develop 任务并记 `[偏离]`。不回滚已合并 PR。
 
 无下游影响 → 记录「无下游影响」，继续 Step 6。
 

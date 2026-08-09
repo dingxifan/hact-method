@@ -1,7 +1,7 @@
 # exec: plan-sprint
 
 > 任务：读 TRD 拆 develop 任务，写任务包入 queue，输出 sprint.md，签 G3。三层：**骨架**（任务清单对齐）→ **结构层**（完整任务包）→ **收尾**（sprint.md + G3）。
-> 任务包套结构化模板 `../hact-method-lab/templates/queue/task-package.md`——**模板已带全部字段格式、AC 回链 tag、例子写法、reference 行号规则；本文只讲过程与判断，不重抄格式**。`check-sprint.js` 据模板 parse。
+> 任务包套结构化模板 `../hact-method-lab/templates/queue/task-package.md`——模板已带字段格式、AC 的 intent/oracle/example/golden 写法与 reference 稳定锚规则；本文只讲过程与判断。`check-sprint.js` 据模板 parse。
 
 **上下文密度**：高。读多份文件、写多份任务包；骨架确认前不写任务包。
 
@@ -18,7 +18,7 @@
 **必读文件**（Explore subagent 并行读，默认指定 `model: "haiku"`）：
 - `iterations/vN/prd.md`（AC 来源——任务包 AC 须回链至此，G2 后开发链中段唯一回看 PRD 的窗口）
 - `iterations/vN/trd.md`
-- 项目根 `standards-shared.md` / 项目根 `standards-frontend.md` / 项目根 `standards-backend.md`
+- 项目根三份 Standards：先只读条目 id + `applies-if`，再打开与本期任务候选匹配的条目；不把整份正文灌入每个写包上下文
 - 项目根 `reusables.md`（避免任务包重复指派已有实现）
 - 项目根 `decisions.md`
 - `iterations/vN/ux-flows.md`（若存在，供前端任务包 `reference`）
@@ -102,7 +102,7 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；**字段格式 / AC tag / 例子写法 / reference 行号规则模板已带**。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
+骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；字段格式、AC 权威层级与 reference 锚规则由模板承接。每包只写相对 as-built 的 delta，normative core 超过 8–12KB 时拆包或迁 non-normative appendix。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
 
 下表只列**模板讲不了的判断 / 跨文件来源**（中）+ **该字段验证归属**（右，显式标谁机械、谁留人）：
 
@@ -110,28 +110,28 @@
 |------|------|------|
 | `depends_on` | Step 2 已确认依赖（与 sprint.md 依赖列、status.yml 三处一致）；共享资产消费（共用表/枚举/类型）消费方→source-of-truth 任务（反查得出，不另存消费方列表） | check-sprint·在册 ¹ |
 | `risk` | 默认 `standard`；若任务触及 develop 合并前安全敏感预检四类之一（权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29）。缺省即 standard，存量任务包不回填 | Step 3.5 独审第⑥类 + check-sprint 启发 🧑；develop 侧按有效 risk 兜底 |
-| `acceptance-criteria` | 不发明无来源 AC（权威=PRD）；**backend** 携精化例子 = 行为·PRD 幕1 / 精度（状态码·错误码·断言）·TRD 幕2，缺幕→`revise-doc(prd/trd)`，只携文本不预写 runnable（物化在 develop）；**frontend** 散文 AC | check-sprint·回链正反向；Step 3.5+签字人·忠实性 |
-| `reference` | **前端**链 ux-flows 场景段、**后端**链 TRD 错误码段 + `# 服务流程:{场景名}` 段（后端失败/状态/校验分支权威在 TRD，draft-ux 红线把后端校验排除在 ux-flows 外）；前后端**同场景名对齐**（UI 反馈 vs 校验/状态对同一分支不重不漏） | check-sprint·行号 ² |
-| `relevant-standards` | 覆盖 `files` 所属强制规范（语义判断，standards 无"文件→规范"映射表） | Step 3.5 第④类 |
+| `acceptance-criteria` | 不发明无来源 AC。每条拆 `intent`（PRD 行为）+ `oracle`（PRD/TRD 判据）；`example` 可省且默认非权威。仅封闭输入、可独立复算并在 Step 3.5 通过的例子标 `golden: true` | check-sprint·回链/格式；Step 3.5 独立复算与忠实性 |
+| `reference` | 只链实现决策必需锚；优先章节/符号，行号仅在无稳定锚时使用。前端链 ux-flows 对应场景（若存在），后端链 TRD 错误/服务流程对应章节 | check-sprint·稳定锚 ² |
+| `relevant-standards` | 从条目 `applies-if` 匹配当前 delta，只列规则 id + 条目标题；不重述规则、机制和事故历史 | Step 3.5 第④类 |
 | `supersedes` | 来源 = TRD 里「本期废除 / 改判 / 替换既有实现」的表述 + `decisions.md` 被本期取代的条目。判据是**取代关系**而非改动关系：改一个函数不算，让某实现从此无调用方才算。无则 `[]`——宁可空着，不为凑数写。 | 交付时逐条结账（develop §退役账）；G5 核对 |
 | `api-contract`（`layers=[backend]` 且被前端依赖） | 来源 = TRD 数据模型 + `standards-frontend` 字段需求 + 已写前端任务包草稿（表格列/表单字段）；request 取 TRD query/body，response 取前端实际消费字段（平铺规则在模板）；**全部后端包写完统一向用户确认字段结构** | Step 3.5·推导正确性；用户确认 |
 
 ¹ 团队期加固（暂不做，记 `_meta/plans/方法论待议.md`）：Step 3.5 独审增「共享资产依赖完备性」——交叉比对各包 `files`，≥2 任务碰同一共享文件/表/枚举则验 `depends_on` 边标全；单人串行本人有全局上下文，暂靠 Step 2 交付判定 + 拾取顺序兜。
-² 机械卡边界：`relevant-standards` 属语义、`files` 行号指向尚未写出的目标文件（"已知则填"）→ 均机械查不了，不在 check-sprint。
+² `relevant-standards` 的语义匹配与 golden 例子复算留 Step 3.5；check-sprint 只核 reference 存在稳定锚。
 
 > 写包自检（提前跑、门卫兜底）：模板字段无空（`api-contract` 仅 backend 且有前端消费时填；`risk` 缺省按 `standard` 处理，不接 linter）+ AC 双向对账（纵向每条回链某 PRD AC / 横向 PRD 每条 AC 被某包覆盖）由 `check-sprint` 逐条机械核（Step 4.7）——此处早发现失配即补、不静默放过；逐条**忠实性**（内容真覆盖、非仅 id 在场）留 Step 3.5 + 签字人。
 
 ```
 ✅ 任务包写完：共 [N] 个，全部入 queue。
-→ 下一步：任务包独立对抗审查
+→ 下一步：任务包独立证据审查
 ```
 
 ---
 
-### Step 3.5：任务包独立对抗审查
+### Step 3.5：任务包独立证据审查
 
-**派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "sonnet"`），令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读** prd.md / trd.md / standards / queue（隔离上下文，不传写包叙事与拆分理由）。任务包 >4 个**按包分批**派，利于 loop 收敛。
-> brief 查六类（**AC 忠实性 / AC 完备性 / api-contract 推导正确性 / relevant-standards 覆盖 / 视觉地基完备性 / risk 标注核对**），默认假设"任务包有问题"、输出问题清单非盖章。审查维度原文固化在 brief 文件、改维度去改 brief（单一来源），此处不重述。
+**派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "sonnet"`），令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN。审查员自读 PRD/TRD/queue；Standards 先扫 id + applies-if，再打开命中/疑似漏选条目，不默认全读。任务包 >4 个按包分批派。
+> brief 查 AC 忠实/完备、oracle/example 可复算、api-contract、Standards 匹配、视觉地基与 risk。审查维度原文固化在 brief 文件，此处不重述。
 
 **【loop 逻辑】**（主线拿到 subagent findings 后的处置）
 
@@ -139,7 +139,8 @@
 |---|---|
 | `findings: []` | 退出，进入 Step 4 |
 | 只有 `[建议]` | 记入 项目根 `feedback.md`（供 wrap-up 分流）；退出，进入 Step 4 |
-| 有 `[阻断]` | 主线修对应任务包（改 AC 回链 / 补漏覆盖的 PRD AC / 修 api-contract），重审 |
+| `example-error` | 修 example 或取消错误的 `golden`；只复核该 AC，不进入 develop 代码整改 |
+| 有其它 `[阻断]` | 按 finding action 修任务包或发 `revise-doc`；只重审变化面 |
 | 同一 `[阻断]` 修 3 次仍出现 | 停止 loop，上报用户；判断根因——若在 TRD（漂移点①：TRD 丢了 AC）则创建 `revise-doc(target=trd)`，不在本会话硬改 |
 
 ```
@@ -171,7 +172,7 @@
 
 ### Step 4.7：签 G3 前 · 完成判据自检（提前跑，门卫兜底）
 
-签 G3 前主动在项目仓根跑 `node scripts/check-sprint.js vN`，把 G3 全部【linter】判据机械核到绿：既有必填字段完备（`risk` 缺省按 `standard`，不做必填校验；但敏感启发词命中而未标 `sensitive` 会列入 `🧑` 段提示）/ `reference` 含行号（前端 ux-flows、后端 trd 条目）/ AC 带 `(源：PRD AC-nn)`·`(技术)` 回链 tag + 逐条 id 存在性 + 逐条反向覆盖 / `depends_on` 在册 / queue↔sprint.md↔status.yml 三方一致。红 → 按报告逐条修任务包、重跑到绿。这步是**提前自查**；Step 5 签字 commit 时 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷偷签字"机制上做不到，故不再写强制散文。
+签 G3 前主动在项目仓根跑 `node scripts/check-sprint.js vN`，把 G3 全部【linter】判据机械核到绿：必填字段 / reference 稳定锚 / AC 回链与 intent-oracle 格式 / 逐条反向覆盖 / depends_on / 三方一致。敏感启发词仍列 `🧑`。红则逐条修并重跑；pre-commit 门卫在签字 commit 再兜一次。
 
 脚本 `🧑` 段语义残量由签字人确认：疑点已逐条确认、TRD 每模块都有任务包、Step 3.5 独审无遗留阻断、任务包 AC 逐条**忠实**于回链的 PRD AC（内容真覆盖，非仅 id 在场）。
 

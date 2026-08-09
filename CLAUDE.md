@@ -86,7 +86,7 @@ E:\Group-code-lab\{project-name}\
 ├── project.md               ← 跨迭代项目快照
 ├── decisions.md             ← 架构决策记录
 ├── design.md                ← 视觉规格
-├── standards-shared.md      ← 跨层编码规范（项目级活文档，v1 播种 / vN+1 原地增补）
+├── standards-shared.md      ← 跨层稳定默认规则（项目级当前态；按 applies-if/id 增量加载）
 ├── standards-frontend.md    ← 前端编码规范（同上）
 ├── standards-backend.md     ← 后端编码规范（同上，含测试框架约定）
 ├── reusables.md             ← 可复用资产

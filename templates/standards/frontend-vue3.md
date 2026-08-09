@@ -1,7 +1,7 @@
 # 前端编码规范 · 技术栈子模板（Vue 3 + Element Plus + Pinia + Vite）
 
 > **栈子模板**：本文件只放 Vue 3 / Element Plus / Pinia / Vite / SCSS 栈特定的写法与陷阱；栈无关原则在通用模板 `frontend.md`。
-> 播种时（draft-foundation V0 首播 / draft-tech-design 存量兜底）按 `project.md` 技术层选用本文件，与通用模板**叠加**挑选写入项目根 `standards-frontend.md`；项目用其他栈且无对应子模板 → 仅用通用模板，栈特定约定直接写项目根 standards。
+> 本文件是栈特定候选规则库。播种时按 `project.md` 技术层选用，与通用模板叠加后按 `schema.md` 准入并改写为规则条目；禁止整节复制。项目用其他栈且无对应子模板时，仅从通用候选与已确认的长期栈约束生成。
 
 ---
 

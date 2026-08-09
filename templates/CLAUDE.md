@@ -22,7 +22,7 @@
 | `dispatch-new` | `../hact-method-lab/specs-execution/dispatch-new.md` | B 类 |
 | `revise-doc` | `../hact-method-lab/specs-execution/revise-doc.md` | B 类 |
 
-> B 类任务手动实现后、commit 前，调用 `adversarial-review` skill 做独立对抗审查（diff ≥ 15 行且改了代码文件时）。
+> B 类任务包创建后统一由 `develop` 拾取（`source=bug/optimization`），复用写代码前 freshness preflight、独立证据审查和有界复审；不得默认绕过 develop 手动实现。仅用户明确要求接管已有手动 diff 时，才用 `adversarial-review` 兼容入口；该 skill 必须先核 `b-reviews/{task-id}/preflight.md`，缺失时先补做并如实标 `retroactive`，不得把事后核对伪装成写代码前已通过。
 
 ## 个人工具（人工触发，不在主线流程）
 

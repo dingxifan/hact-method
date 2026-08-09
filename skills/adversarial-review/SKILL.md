@@ -1,13 +1,14 @@
 ---
 name: adversarial-review
-description: 对当前代码改动做独立对抗审查。commit 前调用，传入 task-id 获取 AC；审查 agent 只看 AC + diff，不带实现上下文。发现 blocker → 修完再提交；建议 → 写 backlog。B 类任务手动实现后、git commit 前必须调用（diff ≥ 15 行且改了代码文件时）。
+description: B 类已有手动 diff 的兼容证据审查。先核 freshness preflight，再复用 develop-review 的 full/targeted report 与 finding 路由；新 B 任务默认走 develop。
 ---
 
-# Adversarial Review Skill
+# Independent Evidence Review Skill
 
-## 何时调用
+## 定位与触发
 
-- B 类任务手动实现完成，**git commit 之前**
+- 新 B 任务**不从本 skill 开始**：加载 `specs-execution/develop.md`，按 `source=bug/optimization` 走完整 develop。
+- 仅用户明确要求接管已有手动 diff 时，在 **git commit 之前**调用本兼容入口。
 - diff 涉及代码文件（非纯状态文件），且改动 ≥ 15 行
 - **跳过条件**（满足任意一条则不调用）：
   - 所有改动仅限 `b-queue/`、`status.yml`、`b-tasks.md`、`backlog.md`
@@ -16,6 +17,14 @@ description: 对当前代码改动做独立对抗审查。commit 前调用，传
 
 ## 步骤
 
+### Step 0：freshness preflight 记录（独审前硬前置）
+
+权威检查表只引用 `../hact-method-lab/specs-execution/develop.md` 的「freshness preflight」，不在本 skill 复制第二份。记录写入 `b-reviews/{task-id}/preflight.md`，格式见 `templates/review-briefs/develop-preflight-record.md`。
+
+- **尚未改代码**：先完成 preflight，记录 `timing: before-code`、当前 `base_ref` 与 `base_tree`，结果为 `pass/revised` 后才可实现。
+- **已有 diff 但无记录**：必须标 `timing: retroactive` 并补做。若发现 reference/机制/do-not/oracle/scope 漂移，先按 action 修任务包、改实现计划或 blocked；关闭前不得启动昂贵独审。
+- 禁止补一张假 `before-code` 记录来掩盖顺序错误。preflight 是纠偏门，不是审计贴纸。
+
 ### Step 1：获取 AC
 
 ```bash
@@ -23,96 +32,35 @@ description: 对当前代码改动做独立对抗审查。commit 前调用，传
 # 优先用用户传入的 task-id，否则找 b-tasks.md 中最近 [done]/[taken-by] 行
 ```
 
-读取 `b-queue/{task-id}.md` 的 `## acceptance_criteria` 章节。  
-若找不到任务包，直接让用户描述本次改动目标（2–3 句），作为 AC 替代。
+读取 `b-queue/{task-id}.md` 的 YAML frontmatter，使用 `acceptance-criteria` 的 intent/oracle、risk、files、do-not 与 relevant-standards。找不到任务包时停止审查并补任务包；不以临时口述替代权威输入。
 
-### Step 2：获取 diff
+### Step 2：建立可复审的 Git 检查点
 
 ```bash
-git diff          # unstaged
-git diff --cached # staged
+# 仅在确认工作区没有本任务外改动后，按 changed-files 精确暂存
+git add -- {changed-files}
+git write-tree     # reviewed_tree；preflight 记录中的 base_tree 是任务起点
+git diff {base_tree} {reviewed_tree}
 ```
 
-两者合并。若均为空，运行 `git diff HEAD~1 HEAD`（已提交但未推送时）。
+把 `base_tree/reviewed_tree/diff_sha256/changed-files` 写进 round report。若已有本地提交，则可直接用两个 commit SHA；不得用会变化的 `HEAD~1` 文字替代固定 SHA。发现本任务外改动时停止，让用户先分离工作树，不把它们顺手暂存进审查对象。
 
 ### Step 3：启动独立审查 agent
 
-用 `Agent` 工具（`subagent_type: claude`）启动独立 agent，**只传 AC + diff**，不附加任何实现上下文、任务包内容或开发过程说明。（例外：类6 穷举需要时，agent 可自行读取请求 DTO + service 源码文件——那是权威源码、非开发者的自评/叙事，不破坏独立性。禁止的是喂"实现思路/自评"，不是禁止读源码。）
+用独立 agent 读取 `../hact-method-lab/templates/review-briefs/develop-review.md` 并按其原文执行。首次告知 task-id、layer、“B 类无 iteration”、`review-mode: full`、base/reviewed tree；agent 自读任务包、diff、命中 Standards、测试和必要源码，不接收开发者自评/实现叙事。
 
-Agent 收到的 prompt：
-
-```
-你是一名独立审查员，从未见过这段代码的开发过程和实现思路。
-
-【Acceptance Criteria】
-{AC 列表，逐条编号}
-
-【代码改动（git diff）】
-{diff 完整内容}
-
-【默认假设】
-代码存在问题。你的任务是找出所有失败方式，不是确认代码是否正确。
-
-【逐类检查】（每类必须有明确结论，不允许跳过）
-
-1. AC 覆盖：每条 AC 是否有对应实现？逐条核对，找出遗漏或实现偏差。
-2. 边界情况：输入为 null / 空值 / 极值时代码会怎样？
-3. 错误处理：失败路径是否正确处理？有没有吞异常、静默失败？
-4. 安全性：权限绕过、注入风险、数据隔离漏洞、未校验的用户输入？
-5. 逻辑正确性：业务逻辑是否与 AC 一致？条件判断有没有错误？
-6. 用户输入去向追踪（穷举式 / 方向 B，仅 backend 改动适用；无后端 DTO 写 N/A）：对涉及的每个请求 DTO 的**每个前端可提交字段穷举一行**，不得跳过/抽样/"其余同上"——盲区靠"让某字段显得可跳过"藏身，逐个逼问即消灭隐形。
-   - 全集 = DTO class 可提交属性（带 `@Is*` 等校验装饰的字段），从 dto 文件数出；**不是**实体/表字段。
-   - **若 diff 未含完整 DTO/service**：你可直接读取请求 DTO 文件 + 消费它的 service 方法全文（这是权威源码、非开发叙事，读取不损独立性）。
-   - 每字段必答（读 DTO+service 填，file:line 为证）：字段名 | service 在哪消费（file:line / 「从不读取」）| 是否被覆盖 | 结论（正常/finding）。
-   - finding 行写具体追踪："前端提交 {字段}={值} → {file:line} 被丢弃/覆盖 → {具体结局}"。
-   - 判级：字段在 DTO、service 从不读且无注释，或被「非用户提交、非系统上下文」的值覆盖 → finding；任务包未声明归属权 → 建议（SUGGESTION）；已声明 user-owned 而被忽略 → 阻断（BLOCKER）。
-   - 不算 finding（噪声纪律）：不在 DTO 的服务端字段（user_id from JWT / 审计 / updated_at）、条件消费（`dto.x ?? 默认`）、有注释说明重建/忽略、字段名异但语义对应且被消费。
-
-某类无发现时，明确写：「{类别}：无发现」
-禁止输出总结性正面评价。
-
-【返回格式】
-🚫 BLOCKER（必须修完才能提交）：
-- {具体描述，含文件:行号}
-
-💡 SUGGESTION（建议，不阻断提交）：
-- {具体描述}
-
-无 blocker 时写：「BLOCKER：无」
-
-> 类6（用户输入去向追踪）的发现，描述前缀加 `[去向追踪]` 标签（便于日后从 backlog 统计命中率）。
-```
+报告写入 `b-reviews/{task-id}/round-{NN}.md`，格式见 `templates/review-briefs/develop-review-round.md`。每个新根因分配稳定 id `{task-id}-F{NNN}`；同根语法变体合并在同一 id 的 evidence 下，不按变体数量制造 blocker。
 
 ### Step 4：处理结果
 
-**有 BLOCKER**：
-- 列出每条，我逐一修复
-- 修完后重新运行 `git diff` 确认已解决
-- 若 blocker 涉及 `escalate-if` 条件（如"发现 DB 层数据异常"），停止，通知用户
+按 finding `action` 处理：
 
-**只有 SUGGESTION**：
-- 写入 `backlog.md`，格式：
-  ```
-  - [ ] {今天日期} | [CR-建议] {描述} | 来源：{task-id 或 manual}
-  ```
-- 直接继续 commit
+- `fix-code/fix-mechanism` 且 blocking：修对应行为；下一轮传 `review-mode: targeted`、prior report、finding ids、上一/当前 reviewed tree，只复审这些根因、反例与受影响回归；
+- `revise-doc/downgrade-claim`：代码文件数为 0，只复核文档/声明；
+- `request-evidence`：证据面未变化前不改代码；
+- `global-gap-review/backlog`：新开 owner 或写 backlog，不打回本次独立合规改动；
+- `findings: []` 或仅 advisory：继续 commit。
 
-**无任何发现**：
-- 直接继续 commit，无需额外操作
+targeted 轮发现 changed surface 超出上轮允许范围、引入新机制/模块/依赖或出现新根因时，报告写 `escalate_to_full: true`；下一轮才升 full，不在 targeted 轮偷偷扩成全量审查。同一 evidence 未变化时不得换措辞重复 finding；三轮代码复审仍阻断才上报用户。
 
-## 输出示例
-
-```
-📋 对抗审查结果（krm-b-006）
-
-🚫 BLOCKER（1 条）
-- ContentPanel.vue:820 __item-label 颜色仍为 secondary，与容器 primary 形成层级反转
-  → 修复：将 color: $color-text-secondary 改为 $color-text-primary 或与容器保持一致
-
-💡 SUGGESTION（2 条）
-- #72777e 对白底对比度 4.511:1，余量极小；建议改为 #6d7278（4.74:1）
-- OrgReviewView.vue:175 硬编码 #8f959e 与变量不同步
-
-已将 2 条建议写入 backlog.md。
-修复 blocker 后即可 commit。
-```
+每轮开始/结束时间由编排器立即记入 report，`elapsed_minutes` 向上取整；禁止事后凭感觉估时。最终把 implementation/review/spec 聚合分钟与 report 目录写入 `status.yml code_reviews[]`，并在提交前运行 `node scripts/check-sprint.js --review {task-id}`；未通过不得提交终态。

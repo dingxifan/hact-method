@@ -6,7 +6,7 @@
 
 | skill | 用途 | 主要调用点 |
 |-------|------|-----------|
-| `adversarial-review` | commit 前独立对抗审查（只看 AC + diff） | B 类任务手动实现后、diff ≥ 15 行时（各项目 CLAUDE.md 约定） |
+| `adversarial-review` | B 类已有手动 diff 的兼容审查；复用 develop 的 preflight、finding 路由与 full/targeted report | 用户明确要求接管手动 diff，且 diff ≥ 15 行时；新 B 包默认走 `develop` |
 | `gitee-ops` | Gitee 远端 PR/分支操作，替代 gh CLI | develop 自合并、人工 PR 操作 |
 | `verification-loop` | 构建/类型/lint/测试/安全/diff 六阶段机械验证 | 推 PR 前、联调前（pre-integration-check） |
 
