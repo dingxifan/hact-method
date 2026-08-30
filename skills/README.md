@@ -8,6 +8,7 @@
 |-------|------|-----------|
 | `adversarial-review` | B 类已有手动 diff 的兼容审查；复用 develop 的 preflight、finding 路由与 full/targeted report | 用户明确要求接管手动 diff，且 diff ≥ 15 行时；新 B 包默认走 `develop` |
 | `gitee-ops` | Gitee 远端 PR/分支操作，替代 gh CLI | develop 自合并、人工 PR 操作 |
+| `hact-conn` | 连接与凭据统一寻址：`connections.yml`（入库·零机密）+ `~/.hact/secrets.env`（机器本地·永不入库） | gitee-ops 取 token、deploy 取服务器坐标、init-project 播种、任何要连 DB / 第三方 API 的任务 |
 | `verification-loop` | 构建/类型/lint/测试/安全/diff 六阶段机械验证 | 推 PR 前、联调前（pre-integration-check） |
 
 ## 推荐安装：用户级软链接
@@ -15,6 +16,7 @@
 ```bash
 ln -s /path/to/hact-method-lab/skills/adversarial-review ~/.claude/skills/adversarial-review
 ln -s /path/to/hact-method-lab/skills/gitee-ops          ~/.claude/skills/gitee-ops
+ln -s /path/to/hact-method-lab/skills/hact-conn          ~/.claude/skills/hact-conn
 ln -s /path/to/hact-method-lab/skills/verification-loop  ~/.claude/skills/verification-loop
 ```
 

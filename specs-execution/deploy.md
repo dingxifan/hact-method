@@ -3,7 +3,7 @@
 > CC 加载本文时，当前任务是将已验收的代码部署到目标环境，验证服务正常。
 > 默认合并部署：一次包含所有已验收改动（A 类迭代 + B 类 normal + hotfix）。
 
-**上下文密度**：中。需读 `deployment.config`，执行若干 shell 命令，全程在主线操作，不派 subagent。
+**上下文密度**：中。需读 `connections.yml`（连到哪）+ `deployment.config`（怎么构建重启），执行若干 shell 命令，全程在主线操作，不派 subagent。
 
 ---
 
@@ -24,14 +24,17 @@
 
 读任务包，确认 `target`（目标环境，如 `prod` / `staging`）。触发前置（A 类 G4 已签 / B 类积累批量 / hotfix 须 `dispatch` 授权）见 structural `前置条件` + 红线。
 
-**首次部署（`deployment.config` 不存在）**：先建 `deployment.config`，填入以下字段，commit 后继续：
+**先确认连接可用**：跑 `node scripts/check-conn.js check --live`。红则先修连接再谈部署——连不上服务器时后面每一步都会以更难读的形态失败。服务器坐标从 `connections.yml` 取：`ssh.{target}.mcp-alias`（走 SSH MCP 时用它）/ `ssh.{target}.host` / `ssh.{target}.app-dir`（服务器上的仓库目录）。连接与凭据的分层约定见 hact-conn skill。
+
+**首次部署（`deployment.config` 不存在）**：先建 `deployment.config`，只填**命令侧**字段，commit 后继续：
 ```
-server-address=
 build-command=
 health-check-url=
 restart-command=
 auto-restart=false
 ```
+
+> 服务器地址归 `connections.yml` 的 `ssh.{target}.host`。存量项目的 `deployment.config` 里若还有 `server-address=`，按兼容值读，并提示用户迁进 `connections.yml`（两处都有时以 `connections.yml` 为准）。
 
 读 `deployment.config`，确认配置完整。`auto-restart` 为可选字段：
 - `true`：该环境允许构建成功后自动执行 `restart-command`（如 staging、静态发布、无停机 reload、已约定发布窗口）。

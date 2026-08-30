@@ -4,6 +4,41 @@
 
 ## 历史里程碑
 
+### 2026-08-30 方法论减法：hact-app（看板应用）全面退场 + 路径漂移治理 + 阶段表压缩
+
+> 触发：用户就 2026-08-29 连接层落地追问「CC_TOKEN 是干什么的」「本机是否已有各项目所需的 token/SSH 事实信息」「项目之间信息不一致会怎样」。三问各自炸出一件事。
+
+- **CC_TOKEN 查清即判死**：它是看板应用 `/api/cc/*` 的静态 Bearer 令牌，只在 `init-project` Step 5 用（注册项目 + 查 sync-events），值 `dev-cc-token-for-testing`、明文入库。查证时发现 **hact-app 仓在本机已不存在**，待议清单里也早记着「最后一次提交 2026-06-03」。用户据此判定 hact-app 已死、相关内容整体移除。
+- **hact-app 退场的改动面（活文档，历史档不动）**：`specs-execution/init-project.md` **Step 5 整段删除**（109 行：注册 / webhook / clone 等待 / 空 commit 验证）并把 Step 6→5、Step 7→6 连同全部内部交叉引用重编号；`specs-structural/init-project.md` 的产物行与完成判据换成 `connections.yml`；`_meta/hact-config.md` 去掉标题、看板地址与 CC_TOKEN（**明文共享密钥就此出库**）；`skeleton/07` 把 `status.yml` 的定位从「人与看板应用共同的单一事实」改写为「人与检查器共同的单一事实」（消费者＝`check-sprint.js`/`check-gate.js`，**status.yml 本身保留**）；`skeleton/06` Gate 子状态由「UI 展示」改为「聚合视图」；guide 00 三层结构压成两层、删「看板应用：团队看板」整章，guide 01 删「第三步注册 / 第四步验证」两节，guide 02/03 删 16+6 行「**看板应用里**：…」旁注并改写 4 处正文。
+- **阶段表压缩（用户拍板）**：原第三阶段「开发看板应用」**判为已取消**，后续阶段顺延——现为四阶段（搭骨架 ✅ / 结构层规范 ✅ / 执行层规范 🔄 边用边补 / 团队引入 🔄 进行中）。**原第五→第四阶段「团队引入」由「未开始」改判「进行中」**（依据：2026-07-11 已给 8 名成员 lab 开发者权限），完成标志去掉看板应用、改为「至少一名开发者独立完成一个 task 全流程（拉包 → develop → 独立审查 → 合并）」。BRIEF 阶段表的「状态」列此前本就陈旧（第一阶段还写着"进行中"），一并按 STATUS 同步。历史里程碑中的旧阶段编号**不回改**，在 STATUS 与 BRIEF 各留一条对照说明。
+- **路径漂移治理（62 处）**：`E:\Group-code-lab\` 这个目录**根本不存在**——spec 里 31 处硬编码全是死路径。真实布局是 `E:\projects\`（9 个项目仓 + hact-method-lab + hact-notes-dingxifan）。活文档全量改正；`E:\group-code\hact-notes-*` → `E:\projects\hact-notes-*`（14 处）。`E:\group-code\hact-method\`（旧基线）真实存在，保留不动。**`human-ai-col` 本机亦无检出**——CLAUDE.md/BRIEF.md 里指向 `../human-ai-col/` 的设计依据链接是悬空指针，已在 STATUS 仓库拓扑里标注。待议清单第 29 条两个月前就记过这个漂移，一直没人治。
+- **顺带修掉 hact-conn 自己的一个缺口（handle 撞名）**：用户问「项目之间信息不一致会怎样」，盘真实数据时撞出——`connections.yml` 每项目一份、天然吃得下不一致，但 `~/.hact/secrets.env` 是**全机扁平命名空间**，而初版模板给的是项目无关的 `HACT_DB_PROD_PASSWORD`。**反例是现成的**：mail-ai 与 org-krm-v2 都有 `DB_PASSWORD`、都在 `47.110.94.114`、连的是不同的库，照模板填会**静默覆盖**。修法＝handle 分两类（身份类跟人走可共用 / 项目资源类必须带项目前缀）+ `check-conn.js` 新增第 4 项检查（`db.*`/`api.*` 下未带项目前缀 → 🧑），项目 token 由 git remote 仓名推导，实测通过。
+- **本机连接事实盘点（回答"你到底有没有这些信息"）**：Gitee token ✅ 有（32 位，来源是 **Windows 用户环境变量**、不在 shell profile），9 仓同 owner 一份通吃；SSH 私钥有一把 `id_ed25519`，但**无 `~/.ssh/config`**、**MCP servers 一个都没配**——即 BRIEF 工具依赖表里列为必备的「SSH MCP」在本机从未存在，deploy 一直靠 `ssh` CLI 跑，规范与现实脱节至少到今天（这正是新增的 `mcp-alias` 🧑 检查要抓的，而它抓到的第一个实例就是"全都没有"）。私钥的 `644` 是 Git Bash 在 NTFS 上的渲染假象，icacls 显示真实 ACL 只有 SYSTEM/Administrators/Administrator，**无风险**，`chmod` 在此为空操作。
+- **项目间不一致的实况（本轮盘出的数据）**：4 个项目挤在 `47.110.94.114`（doc-extract:8084 / file-extract:8085 / mail-ai:3001 / org-krm-v2:8083），loxson-salary-new 在 `47.96.22.19`，**awuchi 根本没有服务器**（Electron 桌面应用）；file-extract 已自行发明 `[local-wsl]`/`[test-remote]` 分节语法（一个项目两套连接，新 schema 的 `ssh.<env>.*` 天然覆盖）；字段名各不相同（`app-dir` vs `jar-remote`+`frontend-remote` vs 无）；凭据形态从 0 个（awuchi）到 21 个（mail-ai）。**file-extract 的 `deployment.config` 里自己写了「本文件进 git：只放地址、路径、端口、命令，不放任何密钥」——它独立发明了 hact-conn 的同一条规则**，是这套分层真实有需求的最强佐证。
+- **待议清单**：关闭 1 条（「hact-app 消费侧·三条合一」——载体正式退役，三项判为**不做**而非押后；其中有价值的 status.yml 机械校验已由 `check-sprint.js` 第 9 项与 `check-gate.js` 在本仓侧承担）。未结 21 条。
+- **harness 侧**：`~/.claude/settings.json` 增 `permissions`（`additionalDirectories` 覆盖 `E:\projects` 与 `~/.hact`；allow 放行 chmod 与 `check-conn.js`；**deny `Read(~/.ssh/id_*)`——私钥永不进上下文**），并把 `autoMode.environment` 里写死的单仓 `file-extract` 改为多仓实况。原文件备份在 `~/.claude/settings.json.bak-2026-08-29`。
+- **性质**：纯减法 + 事实校正，无新增流程机制，与 2026-07-08 冻结相容。
+
+---
+
+### 2026-08-29 方法论调整：连接与凭据统一寻址（hact-conn）
+
+> 触发：用户提「每个项目要连 Gitee、SSH 服务器等，缺一个相对统一的方法来发布、调用、存储这些信息」。
+
+- **盘出的现状——散在五处，且互相不知道对方存在**：① Gitee PAT 走环境变量 `GITEE_ACCESS_TOKEN`，取不到**回退读项目 `backend/.env`**（把个人凭据塞进应用运行时配置，语义错位、易随 `.env` 误提交；同一行读取逻辑在 `gitee-ops` 里复制了 6 遍）；② 同一个 token 另有一条路——`init-project` Step 4.4 / 5.3 / 5.4 **三处交互式索要**，还声明"仅本次使用，不写入任何文件"，于是每次立项都要人去 Gitee 重翻；③ 看板 base-url + CC_TOKEN **明文入库**在 `_meta/hact-config.md`；④ 服务器地址等只住 `deployment.config`、**首次 deploy 才创建**，且里面**没有"怎么连上去"那一段**；⑤ SSH 连接只是 Claude Code 的一个 MCP alias，**项目↔alias 的映射无处登记**——`guide/02`、`guide/03` 只写"通过 SSH MCP 连接服务器"，哪个 alias 全靠口口相传。DB / 第三方 key 则无任何约定。
+- **诊断**：缺的不是"一个文件"，是**命名（怎么称呼一个连接）/ 分层（机密与非机密分住哪）/ 调用（各 spec 统一从哪取，而非各写各的回退）**三件事。
+- **方案 · 按机密性劈两层**：`{项目仓根}/connections.yml`（入库、**零机密**，坐标 + `${secret:NAME}` 引用，点分寻址 `gitee.token` / `ssh.prod.app-dir` / `db.prod.password`）+ `~/.hact/secrets.env`（**永不入库**、chmod 600、`HACT_` 前缀 shell 安全 handle、全项目共用）。`deployment.config` **并存分工**不吸收（用户选）：分工按性质切——连接坐标归前者，构建/重启/健康检查命令留后者；`server-address` 因此归前者，存量文件里的旧值降为**兼容读**（两处都有以 `connections.yml` 为准），不强制迁移。
+- **零打断迁移**：解析顺序为「进程环境变量 → `~/.hact/secrets.env` → 历史别名」，`HACT_GITEE_TOKEN` 认 `GITEE_ACCESS_TOKEN`。本机实测——现有 shell 里那个环境变量被回退链直接认下，来源标注为"环境变量 GITEE_ACCESS_TOKEN"，不改任何东西即可继续跑。
+- **为什么是可执行的 check 而不是纯规范**：失效形态早有先例——2026-08-03 撞过"门卫装了没响、无人发现"，2026-07-30 撞过"`reusables.md` 零机器校验、读它的地方越来越多"。连接配置属同一类：**写在散文里的约定，谁都以为别人在守**。故三条 FAIL（**零机密**——已知 token 形态 + 机密语义字段裸串，这是唯一致命失效、一旦 commit 出去只能靠轮换补救 / **引用完备**——直接说缺哪个 handle、往哪补 / **凭据落位**——`~/.hact` 不在任何 git 工作树内）+ 两条 🧑（POSIX 权限位，Windows 跳过；**MCP alias 在本机 MCP 配置里是否找得到**——正对"换机"，它是唯一不随 `secrets.env` 走的东西）。`--live` 才发外部请求，门卫不带，离线/慢网不 brick 提交。
+- **载体**：`skills/hact-conn/SKILL.md` 是**用法契约**（无脚本副本），脚本住 `templates/scripts/check-conn.js`，随 `init-project` 铺进项目仓 `scripts/`——与既有 5 个 `check-*.js` 同渠道，门卫才路由得到。播种内容的真相源是 `templates/connections.yml`：脚本在本仓内直接读它（实测播种结果与模板逐字节相同），被拷进项目仓后才退回内嵌副本。
+- **改动面**：新增 `templates/scripts/check-conn.js`（`get`/`env`/`check`/`init`）、`templates/connections.yml`、`skills/hact-conn/SKILL.md`、`guide/06-连接与凭据配置.md`；`pre-commit-hook.sh` 加 `connections.yml` 路由；`gitee-ops` 六处 token 读取改统一入口并**删掉 `backend/.env` 回退**；`init-project` Step 3 播种两文件、Step 4.4 改为"先查统一源、取到就不问"、Step 5 三处"复用 Step 4.4 token"改为经统一入口取；`deploy` 执行/结构双规范按新分工改；`CLAUDE.md` 目录树 + `BRIEF.md` 工具依赖表 + `skills/README.md` 同步。
+- **验证（按 2026-07-12 证据化规矩，负向为主，全部亲手撞过）**：13 组——全配齐绿；含 `#` 的密码经 `get` 取回不被当行内注释截断；明文 Gitee PAT（32 hex）与 OpenAI 形态 key 双双 FAIL；非硬形态裸密码（`password:` 下 23 位串）启发式 FAIL；`~/.ssh/id_hact` 路径值不误报；`${secret:X}` 无值 FAIL 并指名补哪行；`secrets.env` 落 git 工作树内 FAIL；`connections.yml` 缺失 FAIL 并给 init 指令；仅有历史环境变量时正常解析；`init` → `check` 往返绿且无副本漂移。**门卫三态实测**：提交明文凭据**被拦下且未产生 commit**、改成 `${secret:}` 后放行、不碰 `connections.yml` 的提交不触发。
+- **与 2026-07-08 机制冻结的关系**：判为**相容**。冻结对象是流程机制（新 task type / Gate / 审查层 / subagent 派发点），本次一个都没加；改动全部落在工具依赖层与既有门卫的一条路由上，性质同 2026-07-30 `check-reusables.js`、2026-08-03 `check-sprint.js` 第 9 项——给**已在运行的动作**补机械防线。
+- **留给下一轮**：① **看板 CC_TOKEN 仍明文躺在 `_meta/hact-config.md`**（本版范围外，用户圈定的覆盖面不含它），收敛需轮换一次 token 并牵动 Step 5 与所有已注册项目；② `--live` 的 SSH 探测走 `ssh` CLI，走 MCP alias 部署的项目会落 🧑 而非 pass（脚本查不到 harness 侧会话状态）；③ **存量仓尚未分发** `check-conn.js` 与 `connections.yml`——按 2026-08-17 对 `check-reusables` 的同类判断，等并发项目低峰、与门卫分发同批做。
+- 设计稿 `_meta/plans/2026-08-29-connection-registry/design.md`。
+
+---
+
 ### 2026-08-03 扇出条按数据关闭 + 审计留痕机械化 + 门卫首次真部署
 
 > 触发：用户问「develop 一次开发多个包时，能不能并成 wave，按 wave 发独审与检测、不逐包推 PR」。查证一路展开成三件事，主线是同一个：**方法论里写了但没在跑的机制，比缺的机制多**。

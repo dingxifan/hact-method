@@ -11,6 +11,7 @@
 #   iterations/vN/sprint.md|queue/*.md → check-sprint.js vN（只认 .md——.gitkeep 不触发，init 提交 queue 必然为空）
 #   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
 #   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
+#   connections.yml                 → check-conn.js（零机密 + 凭据引用完备 + 凭据落位安全）
 #
 # 触发条件依赖共暂存（暗礁）：linter 按 staged 的**产物文件**路由——check-docs 看
 #   prd/trd、check-sprint 看 sprint/queue。签 Gate 时若把产物与 gates.md 分两次 commit
@@ -95,6 +96,14 @@ done
 if echo "$staged" | grep -qE "^reusables\.md$" \
    || [ -n "$(git diff --cached --name-only --diff-filter=DR)" ]; then
   run scripts/check-reusables.js
+fi
+
+# --- connections.yml 零机密 + 引用完备（check-conn.js）---
+# 只在改了该文件时触发。核心是拦「真凭据被写进入库文件」——这是本文件唯一的致命失效，
+# 且一旦 commit 出去就只能靠轮换补救，必须挡在 commit 前而非事后。
+# 不跑 --live：门卫不发外部请求（离线 / 慢网下不能 brick 提交）。
+if echo "$staged" | grep -qE "^connections\.yml$"; then
+  run scripts/check-conn.js check
 fi
 
 if [ "$fail" -ne 0 ]; then

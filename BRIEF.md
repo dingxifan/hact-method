@@ -35,11 +35,12 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 | 阶段 | 目标 | 完成标志 | 状态 |
 |---|---|---|---|
-| 第一阶段：搭骨架 | skeleton/ 下完成方法论骨架 | 用户身份模型 / 角色清单 / 工作区 / 任务全谱 / 状态机 / Gate 全部完稿 | 进行中 |
-| 第二阶段：写结构层规范 | specs-structural/ 下完成每种 task.type 的契约 | 每个 type 有完成判据 / 所属 Gate / 产物形态定义 | 未开始 |
-| 第三阶段：开发看板应用 | 用 hact-method 走完一遍 PRD/TRD/Gate 流程，开发出看板应用（v1 看板的精神继承） | 看板应用部署上线，5 个 Gate 签完 | 未开始 |
-| 第四阶段：写执行层规范 | specs-execution/ 下补每种 task 的具体做法 | 看板应用跑起来后边用边补 | 未开始 |
-| 第五阶段：团队引入 | 真实开发者通过看板应用跑通完整任务流 | 至少一名开发者独立完成一个 task 全流程 | 未开始 |
+| 第一阶段：搭骨架 | skeleton/ 下完成方法论骨架 | 用户身份模型 / 角色清单 / 工作区 / 任务全谱 / 状态机 / Gate 全部完稿 | ✅ 完成（2026-05-07） |
+| 第二阶段：写结构层规范 | specs-structural/ 下完成每种 task.type 的契约 | 每个 type 有完成判据 / 所属 Gate / 产物形态定义 | ✅ 完成（2026-05-08） |
+| 第三阶段：写执行层规范 | specs-execution/ 下补每种 task 的具体做法 | 主线 task 执行规范齐备，并由真实项目边用边补 | 🔄 边用边补 |
+| 第四阶段：团队引入 | 真实开发者按本方法独立跑通任务流 | 至少一名开发者独立完成一个 task 全流程（拉包 → develop → 独立审查 → 合并） | 🔄 进行中 |
+
+> 原「开发看板应用」阶段已取消（2026-08-30）：配套看板应用停更、CC_TOKEN 与 webhook 链路失效，相关机制已从方法论移除。其原本承担的"用本方法走完整流程"验证职责，已由 mail-ai / doc-extract / file-extract / JHH-Nortion 等真实项目承担。此后阶段编号顺延，历史记录中的"第三/四/五阶段"按旧编号理解。
 
 ## 约束条件
 - 时间：无固定 deadline，验证可用为第一目标
@@ -65,9 +66,10 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 15. **任务范围扩到全流程**：PRD 起草、TRD 起草、standards 写作、联调脚本、修复任务、部署任务全部 task 化
 16. **users.role 退化为权限标记**：只管"能不能写"，与流程角色解绑
 17. **迭代是项目下一等公民**：目录结构 `projects/{项目}/iterations/vN/` 反映这一层级——跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks / **standards**）留项目根，迭代内产物（prd / trd / iteration Gate 状态 / sprint）入迭代目录。目录与未来看板应用数据模型 `projects → iterations → sprints/tasks` 同构。取消 v1 沿用的 product/ tech/ 角色风目录（与任务驱动模型冲突）
-   > 落地修正（2026-05-08）：hact-method 改为纯方法论仓，仓内 `projects/` 目录移除；每个项目改为 `E:\Group-code-lab\{项目}\` 下的独立仓，协调文件合并进项目仓根。本决策的层级模型（projects → iterations → sprints/tasks）不变，仅物理路径由 `projects/{项目}/iterations/vN/` 调整为项目仓根的 `iterations/vN/`。
+   > 落地修正（2026-05-08）：hact-method 改为纯方法论仓，仓内 `projects/` 目录移除；每个项目改为 `E:\projects\{项目}\` 下的独立仓，协调文件合并进项目仓根。本决策的层级模型（projects → iterations → sprints/tasks）不变，仅物理路径由 `projects/{项目}/iterations/vN/` 调整为项目仓根的 `iterations/vN/`。
    > standards 归位（2026-06-20）：`standards-{shared,frontend,backend}.md` 由「迭代内产物」改为「跨迭代项目级活文档」，物理路径从 `iterations/vN/standards-*.md` 移到项目根。理由：standards 是代码库级编码约定、本质跨迭代，per-iteration 重生成产生副本链 + 真相源含糊 + 并行迭代约定漂移；改为单一源（v1 播种、vN+1 原地增补），与 decisions/reusables/design 同级，历史基线靠 git。所有消费者（plan-sprint/develop/manual-test/revise-doc）改读项目根。
    > v0 例外（2026-06-29，决策#25）：迭代不再隐含绑 PRD/G1——**v0 走骨架是合法的无 PRD 迭代**（仅签 G2(v0)、无 G1/G3-5）。projects→iterations→sprints/tasks 层级模型不变，只是 v0 这一期不含功能侧 Gate；标准功能迭代（v1+）仍 G1→G5。
+   > 看板应用退场（2026-08-30）：原文「与未来看板应用数据模型同构」的那个消费者已不存在（应用停更、链路失效，相关机制已从方法论移除）。**层级模型 projects → iterations → sprints/tasks 不变**——它现在的机器侧消费者是项目根 `status.yml` 与 `check-sprint.js` / `check-gate.js`。
 18. **task → discipline 是 1:N；user → discipline 是 M:N**（路径 X）：每个 task 挂**单一**主 discipline（schema 上 `tasks.discipline` 是单值字段）；每个用户可被授权多个 discipline（schema 上 `user_disciplines` 是 junction 表）。跨学科辅助知识由 spec 文本跨引用相邻子规范来补，不在 schema 表达。理由：27 个 task 里真跨学科的极少（≤2），M:N 的 schema 复杂度对实际场景投资回报低；wrap-up-iteration 这种"看似跨学科"的任务实际是机械化分流，1 分钟内可完成，无需拆子任务
 19. **权限模型 = user-discipline 关联（废弃 user.role）**：新增 `user_disciplines (user_id, discipline_id)` junction 表达"用户被授权做哪类 discipline 的任务"。拉取准入 = `task.discipline ∈ user.disciplines`（task 侧 1:N，user 侧 M:N）；任务级写权限由 taken-by 决定。管理性操作不另开后门——立项是独立 task `init-project`(management)；Gate 签字合并入最近前置任务（G1 在 draft-prd-vN/product，G2 在 draft-tech-design/architecture，G3 在 plan-sprint/dispatch，G4 在 manual-test/product，G5 在 wrap-up-iteration/management），通过 user 授权决定谁能拉
 20. **复杂工作不强行预定义为 task type**：任务驱动模型不要求"所有动作都是任务"，只要求"被反复执行的、有清晰 spec 的动作是任务"。例：方法论调整本身是发散性工作，没清晰 spec——由有 `management` discipline 授权的 user 在 hact-method 工作区按需直接做，无固定任务包。本原则适用于所有低频+复杂+难标准化的活动
@@ -76,7 +78,7 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
    > 权限口径调整（2026-07-11）：`hact-method-lab` 已对团队 8 名成员开放**开发者**权限（管理者决定，允许直接贡献方法论改动），原文"开发者全程不需要、也无权 push hact-method"收窄为"**无权写 master**"——master 设 Gitee 保护分支（开发者不可直推/force-push/删除，PR 合并权在管理员），成员贡献走 feature 分支 + PR、管理者合并把关。notes + harvest-notes 仍是个人积累上提的主路径不变，PR 是方法论文档的直接贡献通道，两者并存。
 22. **个人 notes 写入是权限模型的有限例外**：notes 写入不走"拉取准入 = task.discipline ∈ user.disciplines"——它是个人资产，权限绑 user 身份（本人写、管理者只读）。一旦经 harvest-notes 上提进公共层，后续修改回归常规 `management` 模型。harvest-notes 本身是固定 task（机械化收割），与决策#20"方法论调整是发散性工作、无固定 task"边界分清：harvest 只搬运/提炼，方法论的实质改动仍在发散性会话里做
 23. **双源规范（设计甲）**：`draft-tech-design` 维护项目 standards（v1 播种 / vN+1 增补）时，除公共 `templates/standards` 外，再并入执行人本人 hact-notes 的 `[规范]`（对照公共模板 / 项目根现有 standards 去重），让本人尚未上提的规范当期即生效。理由：当前架构与开发高度重叠，生成端执行人≈真实开发者。团队分化后是否扩展到 develop 加载端（设计乙）+ checklist 对称（O1），留方法论待议
-24. **砍除独立 pr-review，代码审查内化进 develop（merge-on-push）**（2026-06-20）：废除 `pr-review` task type + `review` discipline（discipline 9→8、task 13→12）。理由：develop 执行模型翻转后已内置 **per-task 独立对抗审查 subagent**（自读权威原文=任务包/diff/standards/测试，绝不收执行体自评），把原 pr-review 的内容复审（standards 合规 / 测试保真 / AC 忠实 / 设计保真）全部接管且更早（per-task vs 末端批量）——独立审查现做完即由 develop **自合并到 master**（提交 PR 后立即 merge），状态 `[done]` 退为瞬态、终态 `[merged]` 由 develop 自身落定。**治理代价明确接受**：master 写入无第二人工门，仅**安全敏感改动**（权限/认证/数据隔离）保留一道 `architecture` discipline 人工裁决（develop 末端 escape-hatch）。审计留痕 `code_reviews[]` 改由 develop 末端写（看板应用 `CRDrawer.vue` 兼容不变）；跨 PR 共性 feedback 并入 wrap-up。审查知识落 `templates/review-briefs/develop-review.md`。团队引入期（第五阶段）若需恢复独立人工 merge 门可再评估
+24. **砍除独立 pr-review，代码审查内化进 develop（merge-on-push）**（2026-06-20）：废除 `pr-review` task type + `review` discipline（discipline 9→8、task 13→12）。理由：develop 执行模型翻转后已内置 **per-task 独立对抗审查 subagent**（自读权威原文=任务包/diff/standards/测试，绝不收执行体自评），把原 pr-review 的内容复审（standards 合规 / 测试保真 / AC 忠实 / 设计保真）全部接管且更早（per-task vs 末端批量）——独立审查现做完即由 develop **自合并到 master**（提交 PR 后立即 merge），状态 `[done]` 退为瞬态、终态 `[merged]` 由 develop 自身落定。**治理代价明确接受**：master 写入无第二人工门，仅**安全敏感改动**（权限/认证/数据隔离）保留一道 `architecture` discipline 人工裁决（develop 末端 escape-hatch）。审计留痕 `code_reviews[]` 改由 develop 末端写（写入 `status.yml`，字段见 skeleton/07）；跨 PR 共性 feedback 并入 wrap-up。审查知识落 `templates/review-briefs/develop-review.md`。团队引入期（第五阶段）若需恢复独立人工 merge 门可再评估
 
 25. **地基层 + V0 走骨架（A 类项目 init 后、V1 前先建跨切面地基）**（2026-06-29）：补一个被「按页/按功能切包」天然漏掉的**结构盲区**——EP 主题覆盖 / 全局 reset / 错误信封 / 数据隔离这类**跨切面公共件不属于任何业务页**（视觉地基 2026-06-28 是其第一个被打疼的实例）。模型：**地基的形式由"业务代码怎么碰它"决定**（说它=共享类型 / 穿过它=单例瓶颈 / 住进它=外壳 / 被它笼罩=环境基线 / 往里填=脚手架）；**强制边三档**（构造上不可能 > 机械探测 > 人审）是同一件事的背面——命门「**一个图省事的人顺手写出来，多大概率合规？**」；两进料口（**技术内生**=跨项目复发、可清单化 / **领域涌现**=从早期探讨摸）；准入门槛=已证明跨切面 + 稳定。**新管线**：`init-project`（加共识讨论步 → 播种 `foundation.md` 地基蓝图）→ **V0 走骨架**（`draft-foundation` 设计·签 G2(v0) + `develop(source=foundation)` 建——穿透前端→API→DB 的最小空壳 + 一根标杆切片）→ V1（PRD 挂领域地图 / draft-ux 填 token 真值进 V0 框架 / draft-tech-design 瘦身：读栈+standards 增补 / plan-sprint 视觉地基包按「框架(V0)/值(V1)」二分）。**关键判断**：① **新建 `draft-foundation` 不拆 draft-tech-design**（两者身子不相交：V0 无 PRD/AC）；② **develop 不拆、`source=foundation` 做成一味**（与 develop 共享执行+独审+合并核心、只差进料口 = sub7 拆了又撤的格，与①相反）；③ Gate 复用 **G2(v0)**、不加新 Gate；④ **代码生成机制删**（本环境 CC 即生成器，劳动已消，确定性一致由 ②③④ 兜——标杆模块因此升为 CC 漂移主防线）；⑤ standards/reusables **载荷重分配**（地基吸走强边「必须」，二者降为人审残量 + 可选复用 + 标杆指针）。task 12→13（draft-foundation；discipline 仍 8）。**存量兼容**：tech-design 的首期簇（栈/standards 首播/测试基建/视觉地基约定）保留为「未走 V0 的存量项目」兜底。审查知识落 `templates/review-briefs/foundation-review.md`（逐关注点穷举验实际档≥应有档 + 命门）。设计沉淀见 `_meta/plans/2026-06-29-foundation-walking-skeleton/`
    > 审查收紧（2026-07-12，foundation-review 证据化）：构造级/机械级声明须以**亲手撞过的反例**为证（判构造级前写绕过代码跑检查、必须真被挡，原只绑安全项 → 通用到每个 ≥机械级声明），自绿须**审查员在干净环境亲自复现**（区分仓库不可移植=阻断 / 审查环境特性=不阻断）——**收紧现有 foundation-review 门、非新增机制**（与 2026-07-08 机制冻结相容，正是冻结在等的"库存过一轮真实迭代"驱动）。实证：doc-extract V0 二轮独审——一轮默认模型"读代码判断"漏五类非安全构造级洞、二轮"必须撞反例"抓住，证 brief 严苛度 > 模型大小。G3（机械级是否强制接自动门/CI）记方法论待议、随第五阶段真人 push 重评。设计沉淀见 `_meta/plans/2026-07-12-foundation-review-probe-tightening/`
@@ -102,8 +104,9 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 | **pinchtab skill** | generate-integration-tests 前端场景脚本 | 通过 superpowers 安装 |
 | **simplify skill** | develop 自检阶段，检查冗余实现 | 通过 superpowers 安装 |
 | **pic skill** | 联调前全面检查（`/pic`） | 通过 superpowers 安装 |
-| **gitee-ops skill** | Gitee PR 操作（`/gitee-ops`，禁止使用 gh CLI） | 通过 superpowers 安装 + 配置 Gitee token |
-| **SSH MCP** | deploy 阶段执行远端命令 | 在 Claude Code MCP 配置中添加 SSH server alias |
+| **gitee-ops skill** | Gitee PR 操作（`/gitee-ops`，禁止使用 gh CLI） | 通过 superpowers 安装；token 由 hact-conn 统一寻址 |
+| **hact-conn skill** | 连接与凭据统一寻址（Gitee token / SSH 服务器 / DB / 第三方 API key） | 软链本仓 `skills/hact-conn`；一次性配好机器本地 `~/.hact/secrets.env`（永不入库），各项目 `connections.yml` 只写坐标与 `${secret:NAME}` 引用 |
+| **SSH MCP** | deploy 阶段执行远端命令 | 在 Claude Code MCP 配置中添加 SSH server alias；alias 名登记进项目 `connections.yml` 的 `ssh.{target}.mcp-alias` |
 
 ### 服务器端工具
 

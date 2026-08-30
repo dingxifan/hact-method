@@ -56,8 +56,8 @@
 > 立项：新建项目目录结构和初始配置文件。
 
 - **discipline**: `management`
-- **完成判据**: `E:\Group-code-lab\{项目}\` 仓目录结构创建完成；占位文件就位；git 初始化完成（详见 `specs-structural/init-project.md`）
-- **主要产物**: `E:\Group-code-lab\{项目}\` 完整目录树（含 `iterations/`）
+- **完成判据**: `E:\projects\{项目}\` 仓目录结构创建完成；占位文件就位；git 初始化完成（详见 `specs-structural/init-project.md`）
+- **主要产物**: `E:\projects\{项目}\` 完整目录树（含 `iterations/`）
 - **关联 Gate**: —
 - **属性**: `project-name`（字符串）
 

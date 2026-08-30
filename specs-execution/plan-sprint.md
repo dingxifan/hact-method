@@ -166,7 +166,7 @@
 
 每任务一条：`source: sprint`、`type: develop`、`iteration: vN`、`sprint: {编号}`，初始 `status: 可取`、`assigned_to: null`、`pr: null`，其余字段（id / title / discipline / layer / parent_id / depends_on / delivery / urgency）取自刚写的任务包与 sprint.md。
 
-> 「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是看板应用取数唯一来源；任务包正文（全部字段）不进 YAML，看板应用用到时走 API 现拉。
+> 「状态 vs 文件」分离的落点：sprint.md 是人看的视图，status.yml 是机器侧取数唯一来源（`check-sprint.js` / `check-gate.js`）；任务包正文（全部字段）不进 YAML，留在任务包文件里供人读。
 
 ---
 

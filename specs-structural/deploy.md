@@ -13,7 +13,7 @@
 - **常规部署（A 类迭代）**：G4 已签（manual-test 通过）
 - **B 类独立部署**：无进行中的 A 类迭代时，B 类 [merged] 任务积累到一定程度，由有 `dispatch` discipline 的用户主动触发；无需 G4
 - **hotfix 快速通道**：`urgency=hotfix` 的 develop 任务 [merged] 后，可不等 G4，由有 `dispatch` discipline 的用户授权后立即部署
-- **文件**：`deployment.config`（服务器地址 / 启动命令 / 健康检查端点 / 重启自动化策略等，首次部署时创建）
+- **文件**：`connections.yml`（服务器坐标 / SSH 凭据引用，`init-project` 播种）+ `deployment.config`（构建命令 / 健康检查端点 / 重启命令与自动化策略，首次部署时创建）
 
 ---
 
@@ -30,7 +30,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 部署日志 | `deploy-log.md` | 格式见 `../hact-method-lab/templates/deploy-log.md`（追加，不覆盖） |
-| deployment.config（首次） | `deployment.config` | 键值对配置文件，必填 `server-address` / `build-command` / `health-check-url` / `restart-command`；可选 `auto-restart` |
+| deployment.config（首次） | `deployment.config` | 键值对配置文件，必填 `build-command` / `health-check-url` / `restart-command`；可选 `auto-restart`。服务器坐标不在此列，归 `connections.yml` 的 `ssh.{target}.*` |
 
 ---
 

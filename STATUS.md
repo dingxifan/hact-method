@@ -1,8 +1,8 @@
 # STATUS.md — hact-method
 
 ## 当前状态
-- 当前阶段：**第三阶段·开发看板应用**（进行中）
-- 上次更新：2026-08-03
+- 当前阶段：**第三阶段·写执行层规范**（边用边补）+ **第四阶段·团队引入**（进行中）
+- 上次更新：2026-08-30
 
 ## 各阶段完成情况
 
@@ -10,27 +10,19 @@
 |------|------|---------|
 | 第一阶段·搭骨架 | ✅ 完成 | 2026-05-07 |
 | 第二阶段·写结构层规范 + 主线执行规范 | ✅ 完成 | 2026-05-08 |
-| 第三阶段·开发看板应用 | 🔄 进行中 | — |
-| 第四阶段·写执行层规范（剩余7份）| ⏸️ 边用边补 | — |
-| 第五阶段·团队引入 | ⏸️ 未开始 | — |
+| 第三阶段·写执行层规范 | 🔄 边用边补 | — |
+| 第四阶段·团队引入 | 🔄 进行中 | — |
 
-## 本阶段进展（第二阶段，2026-05-08 完成）
+> 阶段编号变更（2026-08-30）：原第三阶段「开发看板应用」**已取消**——配套看板应用停更（最后提交 2026-06-03）、CC_TOKEN 与 webhook 链路失效，相关机制已从方法论全面移除。其后阶段编号顺延（原第四→第三、原第五→第四）。**本文件「历史里程碑」及 `_meta/status-history.md` 中出现的"第三/四/五阶段"沿用旧编号**，不回改。
 
-- **specs-structural/**：13 份任务契约全部完成（develop / pr-review / draft-prd-vN / draft-tech-design / plan-sprint / revise-doc / dispatch-new / generate-integration-tests / manual-test / deploy / wrap-up-iteration / init-project / harvest-notes）
-- **specs-execution/**：13 份执行规范全部完成（init-project / draft-prd-vN / draft-tech-design / plan-sprint / develop / pr-review / manual-test / deploy / wrap-up-iteration / dispatch-new / generate-integration-tests / revise-doc / harvest-notes）；经评审修复 + 业务流程一致性检查
-- **templates/**：初始化完成（standards/backend.md + standards/frontend.md + design.md + reusables.md + feedback.md + retrospectives.md）
-- **重构**：hact-method 改为纯方法论仓（移除 projects/ 目录）；项目协调文件合并进各自项目仓
-- **CLAUDE.md 更新**：补充工作区使用指南（何时在 hact-method 开会话 / 何时在项目仓开会话）
-- **Gitee 推送**：https://gitee.com/dingxifan/hact-method
+## 本阶段进展
 
-## 第三阶段当前进展（2026-05-08）
-
-- `init-project` 已执行：`E:\group-code\hact-app\` 创建完成，_meta/input/background.md 已放入
-- `draft-prd-vN` 进行中：已在 hact-app 工作区开启 PRD 会话
+- **第三阶段（执行层规范）**：不再由单一项目驱动。执行规范由真实项目边用边补——mail-ai / doc-extract / file-extract / JHH-Nortion / org-krm-v2 / awuchi 等仓均按本方法运行，每轮收关把发现回灌 `_meta/plans/方法论待议.md` 与本仓规范。
+- **第四阶段（团队引入）**：8 名成员已获 `hact-method-lab` 开发者权限（2026-07-11，见决策#21 权限口径调整），master 为保护分支、贡献走 PR。完成标志＝至少一名开发者独立完成一个 task 全流程（拉包 → develop → 独立审查 → 合并）。
 
 ## 下一个起点
 
-在 `E:\group-code\hact-app\` 工作区继续 `draft-prd-vN`（PRD 未完成）。
+按待议清单（`_meta/plans/方法论待议.md`）推进；连接层的存量仓分发（`check-conn.js` + `connections.yml`）等用户通知后统一做。
 
 ## 仓库拓扑
 
@@ -38,26 +30,30 @@
 
 | 仓库 | 路径 | 分支 | 角色 |
 |------|------|------|------|
-| **hact-method-lab**（本仓，独立） | `/home/administrator/group-coding/hact-method-lab`（WSL 原生路径） | `master` | 当前唯一在用的方法论主线，独立仓库、独立历史 |
-| hact-method（旧版基线，未受影响） | `E:\group-code\hact-method\`（挂载于 WSL `/mnt/e/group-code/hact-method`） | `master` | **旧方法**对照基线，原样冻结保留，仓库本身未删除、未改动 |
-| hact-app | `E:\group-code\hact-app\` | — | hact-app 代码 + 协调文件（用户自行推送） |
-| human-ai-col | `E:\group-code\human-ai-col\` | — | v1 方法论（冻结，gitee.com/dingxifan/human-ai-col，与上面两者是不同世代） |
+| **hact-method-lab**（本仓，独立） | `E:\projects\hact-method-lab\` | `master` | 当前唯一在用的方法论主线，独立仓库、独立历史 |
+| hact-method（旧版基线，未受影响） | `E:\group-code\hact-method\` | `master` | **旧方法**对照基线，原样冻结保留，仓库本身未删除、未改动 |
+| 各项目仓 | `E:\projects\{项目名}\` | `master` | 按本方法运行的真实项目（mail-ai / doc-extract / file-extract / JHH-Nortion / org-krm-v2 / awuchi），远端均在 `gitee.com/dingxifan/` |
+| hact-notes-{姓名} | `E:\projects\hact-notes-{姓名}\` | `master` | 成员个人积累仓（私有，决策#21） |
+| human-ai-col | 本机已无本地检出（远端 `gitee.com/dingxifan/human-ai-col`） | — | v1 方法论（冻结，与上面两者是不同世代）。CLAUDE.md / BRIEF.md 里指向 `../human-ai-col/` 的设计依据链接因此是悬空指针，需要时重新 clone |
 
 > 迁移记录（2026-07-06）：把 `method-lab` 分支（含继承自旧 `hact-method` master 的全部历史 + 之后的全部独立演进，共 261 commit，tip `15971c3`）完整推送到新建的空仓 `gitee.com/dingxifan/hact-method-lab` 的 `master` 分支。随后把本地 `hact-method-lab` 目录从旧仓库的 linked worktree 转成该新仓库的独立 clone（原 worktree 目录整体重命名为 `hact-method-lab.oldworktree` 暂留几天做安全网，未提交的 `_meta/sessions/` 已手动搬入新目录），并清理了旧仓库 `.git/worktrees/` 里失效的 worktree 登记。旧仓库 `hact-method` 里的 `method-lab` 分支未删除（历史遗留，无害，不再更新）。
 >
-> 历史备注（迁移前，供追溯）：`method-lab` 曾完整包含旧 master 的 51 个 commit（领先 17）；reset 前的本地 master tip `8304136` 曾用 tag `master-pre-reset-8304136` 钉住。`hact-method-lab` worktree 曾于 2026-07-05 从 `E:\Group-code-lab\hact-method-lab\` 迁到 WSL 原生路径——这次（2026-07-06）是在那次路径迁移基础上做的仓库独立化，两次是不同性质的操作（前者只挪路径，后者切断了与旧仓库的对象库依赖）。
+> 历史备注（迁移前，供追溯）：`method-lab` 曾完整包含旧 master 的 51 个 commit（领先 17）；reset 前的本地 master tip `8304136` 曾用 tag `master-pre-reset-8304136` 钉住。`hact-method-lab` worktree 曾于 2026-07-05 从 `E:\Group-code-lab\hact-method-lab\` 迁到 WSL 原生路径——这次（2026-07-06）是在那次路径迁移基础上做的仓库独立化，两次是不同性质的操作（前者只挪路径，后者切断了与旧仓库的对象库依赖）。此后本仓又从 WSL 原生路径搬回 Windows 侧 `E:\projects\hact-method-lab\`（当前位置，2026-08-30 核实；该次搬迁此前未记录）。
 
 ## 已知风险
 
 | 风险 | 可能性 | 影响 | 应对 |
 |------|--------|------|------|
-| 看板应用开发中发现骨架/规范有结构性缺陷 | 中 | 高 | 看板应用即压力测试，发现问题即修规范 |
+| 真实项目跑动中发现骨架/规范有结构性缺陷 | 中 | 高 | 在跑的 8 个项目即持续压力测试，每轮收关把发现回灌待议清单与规范 |
+| 连接层（`check-conn.js` + `connections.yml`）尚未分发到存量仓 | 高 | 中 | 已知且刻意押后（并发项目在跑，动门卫有中断风险）；待用户通知后与门卫分发同批做 |
 | exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 13/13 全部完成，已通过评审和一致性检查 |
 
 ## 历史里程碑（索引，全文见 [`_meta/status-history.md`](_meta/status-history.md)）
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
+- 2026-08-30 hact-app（看板应用）全面退场 + 路径漂移治理 + 阶段表压缩 — 三问炸出三件事：CC_TOKEN 查清即判死（hact-app 仓本机已不存在、最后提交 2026-06-03），看板机制从 init-project Step 5 起全面移除（109 行整段删、Step 重编号、明文 CC_TOKEN 出库、status.yml 消费者改判为 check-*.js）；`E:\Group-code-lab\` **这个目录根本不存在**，31 处硬编码全是死路径，活文档 62 处全量校正（human-ai-col 亦无本地检出，设计依据指针悬空已标注）；阶段表压缩为四阶段（原第三阶段「开发看板应用」取消、编号顺延），团队引入由「未开始」改判「进行中」。顺带修掉 hact-conn 自身的 handle 撞名缺口（mail-ai 与 org-krm-v2 同名 DB_PASSWORD 会静默覆盖，实证反例）。盘出两条实况：**SSH MCP 在本机从未配过**（规范列为必备、deploy 一直靠 ssh CLI）；file-extract 的 deployment.config 自己写过「本文件进 git，不放任何密钥」——独立发明了同一条规则。纯减法，冻结相容
+- 2026-08-29 连接与凭据统一寻址（hact-conn）— 补一个从未有过单一真相源的层：Gitee PAT / SSH / DB / 第三方 key 散在五处，其中**项目↔SSH alias 的映射根本无处登记**、换机不可复现。按机密性劈两层（`connections.yml` 入库零机密 + `~/.hact/secrets.env` 机器本地永不入库），`deployment.config` 并存分工保留命令侧。载体＝`skills/hact-conn` + `templates/scripts/check-conn.js`，随 init-project 铺进项目仓、接进 pre-commit 门卫；三条 FAIL + 两条 🧑（含 MCP alias 在场性——换机唯一不随凭据文件走的东西）。解析链认历史 `GITEE_ACCESS_TOKEN`，零打断迁移。13 组用例以负向为主全部亲手撞过，门卫三态实测。看板 CC_TOKEN 明文入库本版未纳入；存量仓待分发。判与机制冻结相容（无新 task type / Gate / discipline / subagent）
 - 2026-08-03 扇出条按数据关闭 + 审计留痕机械化 + 门卫首次真部署 — file-extract v2 首批 `rounds` 数据驱动：扇出条按它自己写死的判据（3:3，不满足"绝大多数 rounds=1"）**降级为不做**；同时撞出**仪器装了没响**——`rounds` 07-30 落地、v2 十一包全在其后合并却 0/11 记录、两包连 `code_reviews[]` 条目都没有、无任何机械检查发现。落地＝`check-sprint.js` 第 9 项审计留痕完备性（9 仓 dry-run 18 条砍到 8 条真命中，撞出两处解析缺陷）+ 级联抑制（一个格式代差曾放大成 ~50 条假漂移）+ 反向上游 `isExplicitNone`。**最大发现是门卫本身没在跑**：8 仓中 4 仓无 hook、`check-reusables` 零仓接入；已给 file-extract / doc-extract / JHH-Nortion / mail-ai 四仓真部署并做真触发测试（一放行一拦下）。wave 批量提案判否（回退决策#24），拆出的两条成立项另记待议。清单 29→32 条。全部改动冻结相容
 - 2026-07-30 file-extract V1 收关复核：待议清单全量重判 + 四处落地 — 第二个完整 V0→V1 项目收关驱动：28 条未结全过一遍，减法 28→23（#13「质量模型转向可测试性」判为已实质落地、#14「develop 拆分」判为不做、两条 GIT 条目取数窗口用完即关、hact-app 三条合一）；四处落地＝v1 就地收割（`rounds` 仪器 / PRD 核 as-built / `risk-note`）、GIT 三处措辞 +「全绿也要契约对账」可达性闸、`check-reusables.js`（6 仓扫描 0 误报 1 真命中）、#29 三条 checklist。**穿透流的产出主类型判明为契约漂移而非缺陷**（两栈两阶段一致，code bug 各 0）。两处原判经核实推翻并记档。全部改动冻结相容；#30 押后至 file-extract v2；harvest 专项（317 条）本期未做
 - 2026-07-28 减法纪律跨过项目边界（注释受众分离 + 退役账）— doc-extract v1–v6 代码审查驱动（源码 4.2x / 测试 11.7x / 注释率 40% / lint 877 行零退役 / 旧引擎零路由仍注册）：诊断修正为「减法纪律只停在本仓边界内」，把「注释受众分离」（本仓 CLAUDE.md 已对自己立过）与「退役账」（`supersedes` → PR 逐条结账 → G5 核对）推给项目侧；顺带清掉「任务包 18 字段」这个 8 文件 11 处的脆性计数；4 条挂在 doc-extract 上的待议重启条件重挂（两条取数窗口＝v6 联调，一次性）；地基关注点自洽复核留设计稿待新项目验证。均属扩面、冻结相容

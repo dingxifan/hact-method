@@ -12,9 +12,9 @@
 
 | 工作区 | 心态 | 物理形态 |
 |---|---|---|
-| **hact-method** | 方法论 | `E:\Group-code-lab\hact-method-lab\` |
-| **项目根** | 项目 | `E:\Group-code-lab\{project-name}\`（项目仓根目录） |
-| **hact-notes** | 个人积累 | `E:\group-code\hact-notes-{姓名}\`（每人独立私有仓） |
+| **hact-method** | 方法论 | `E:\projects\hact-method-lab\` |
+| **项目根** | 项目 | `E:\projects\{project-name}\`（项目仓根目录） |
+| **hact-notes** | 个人积累 | `E:\projects\hact-notes-{姓名}\`（每人独立私有仓） |
 
 ---
 
@@ -52,7 +52,7 @@
 - `wrap-up-iteration`（含 G5 签字）
 - `dispatch-new`（B 类入口：派新 BUG / 优化）
 
-**物理形态**：项目仓根目录（`E:\Group-code-lab\{project-name}\`），代码与协调文件合并存放。
+**物理形态**：项目仓根目录（`E:\projects\{project-name}\`），代码与协调文件合并存放。
 
 **文件权限**：
 - **可写**：当前项目仓的所有内容（代码 + 协调文件）
@@ -65,7 +65,7 @@
 
 **触发场景**：开发循环中随手记录自己的经验——踩过的坑、想沉淀的编码规范、自检易漏项、对方法论的反思。不依赖任何 task，随时可记。
 
-**物理形态**：每人一个私有仓 `hact-notes-{姓名}`，建在**团队 Gitee 组织**下（由 init-project Step4.5 自动创建，只加本人为 push 协作者），clone 到本地 `E:\group-code\hact-notes-{姓名}\`，与项目仓同层。
+**物理形态**：每人一个私有仓 `hact-notes-{姓名}`，建在**团队 Gitee 组织**下（由 init-project Step4.5 自动创建，只加本人为 push 协作者），clone 到本地 `E:\projects\hact-notes-{姓名}\`，与项目仓同层。
 
 **为什么独立私有仓**：个人积累是"对自己的总结"，带私人性质。单一共享仓会因 git 整仓 clone 导致人人本地揣全员草稿，与"私人"冲突——故每人一仓，本人独享。
 

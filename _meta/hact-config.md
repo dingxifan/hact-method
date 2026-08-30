@@ -1,11 +1,9 @@
-# 看板应用全局配置
+# hact-method 全局配置
 
-> 团队共用，提交进仓库。CC 在 init-project Step 5 时直接读取，无需向用户询问。
+> 团队共用，提交进仓库。**只放非机密配置**——凭据一律走 `~/.hact/secrets.env`（机器本地、永不入库，见 `guide/06-连接与凭据配置.md`）。
 
 | 配置项 | 值 |
 |--------|-----|
-| 看板应用部署地址 | `http://47.110.94.114` |
-| CC_TOKEN | `dev-cc-token-for-testing` |
 | notes-org（个人积累仓所在 Gitee 命名空间） | `dingxifan`（**Gitee 企业版**，企业全名"苏州立刻电子商务有限公司"，id=16378871）。⚠️ 是企业（enterprise）不是组织（org）：建仓用 `POST /enterprises/dingxifan/repos`，**不要**用 `/orgs/...`（会 404）。仓库地址形如 `gitee.com/dingxifan/hact-notes-{姓名}`。 |
 
 ---
@@ -16,16 +14,16 @@
 
 | 成员（login / 显示名） | notes 仓地址 | 本地路径 |
 |---|---|---|
-| dingxifan_admin（dingxifan·管理员） | gitee.com/dingxifan/hact-notes-dingxifan_admin | E:\group-code\hact-notes-dingxifan_admin |
-| winniemw（Winnie） | gitee.com/dingxifan/hact-notes-winniemw | E:\group-code\hact-notes-winniemw |
-| WayneLu（陆伟平） | gitee.com/dingxifan/hact-notes-WayneLu | E:\group-code\hact-notes-WayneLu |
-| colin_zheng（郑磊） | gitee.com/dingxifan/hact-notes-colin_zheng | E:\group-code\hact-notes-colin_zheng |
-| xiaobainote（XL） | gitee.com/dingxifan/hact-notes-xiaobainote | E:\group-code\hact-notes-xiaobainote |
-| zhang_cheng_1377（张程） | gitee.com/dingxifan/hact-notes-zhang_cheng_1377 | E:\group-code\hact-notes-zhang_cheng_1377 |
-| lu-ailu（陆爱露） | gitee.com/dingxifan/hact-notes-lu-ailu | E:\group-code\hact-notes-lu-ailu |
-| ba-xiansheng（Jason） | gitee.com/dingxifan/hact-notes-ba-xiansheng | E:\group-code\hact-notes-ba-xiansheng |
-| axiaoke（葛春林） | gitee.com/dingxifan/hact-notes-axiaoke | E:\group-code\hact-notes-axiaoke |
-| dingxifan（dingxifan） | gitee.com/dingxifan/hact-notes-dingxifan | E:\Group-code-lab\hact-notes-dingxifan |
+| dingxifan_admin（dingxifan·管理员） | gitee.com/dingxifan/hact-notes-dingxifan_admin | E:\projects\hact-notes-dingxifan_admin |
+| winniemw（Winnie） | gitee.com/dingxifan/hact-notes-winniemw | E:\projects\hact-notes-winniemw |
+| WayneLu（陆伟平） | gitee.com/dingxifan/hact-notes-WayneLu | E:\projects\hact-notes-WayneLu |
+| colin_zheng（郑磊） | gitee.com/dingxifan/hact-notes-colin_zheng | E:\projects\hact-notes-colin_zheng |
+| xiaobainote（XL） | gitee.com/dingxifan/hact-notes-xiaobainote | E:\projects\hact-notes-xiaobainote |
+| zhang_cheng_1377（张程） | gitee.com/dingxifan/hact-notes-zhang_cheng_1377 | E:\projects\hact-notes-zhang_cheng_1377 |
+| lu-ailu（陆爱露） | gitee.com/dingxifan/hact-notes-lu-ailu | E:\projects\hact-notes-lu-ailu |
+| ba-xiansheng（Jason） | gitee.com/dingxifan/hact-notes-ba-xiansheng | E:\projects\hact-notes-ba-xiansheng |
+| axiaoke（葛春林） | gitee.com/dingxifan/hact-notes-axiaoke | E:\projects\hact-notes-axiaoke |
+| dingxifan（dingxifan） | gitee.com/dingxifan/hact-notes-dingxifan | E:\projects\hact-notes-dingxifan |
 
 ---
 

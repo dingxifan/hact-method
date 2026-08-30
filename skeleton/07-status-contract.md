@@ -1,20 +1,20 @@
 # 07 · status.yml 状态契约
 
-> 本文件定义**项目根** `status.yml` 的字段、类型、枚举与取值，是**人与看板应用共同的单一事实**。
-> 看板应用直接 `YAML.parse(status.yml)` 取数，不再解析任何叙述性 markdown。
+> 本文件定义**项目根** `status.yml` 的字段、类型、枚举与取值，是**人与检查器共同的单一事实**。
+> 机器侧消费者（`check-sprint.js` / `check-gate.js`，以及任何后续取数工具）直接 `YAML.parse(status.yml)`，不解析任何叙述性 markdown。
 > 设计依据：`_meta/plans/2026-05-31-status-contract/design.md`。
 
 ---
 
 ## 一、为什么有这份契约
 
-看板应用原先靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.md` 复选框来取状态。这些是「为人写的叙述性 markdown」，CC 每次生成时排版会漂移，导致看板应用持续取错数。
+机器侧取数如果靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.md` 复选框，就是在读「为人写的叙述性 markdown」——CC 每次生成时排版会漂移，取数持续出错。
 
 **解法**：把「机器要的结构化状态」从「人看的叙述文档」里彻底分离，单独落到一份 schema 锁死的 `status.yml`。
 
 **核心原则（判定一个数据进不进 YAML）：**
-> 凡是 UI 上以「字段 / 列 / 角标 / 计数」出现的 → 进 `status.yml`；
-> 凡是以「文档正文」出现、需点开才看的 → 不进 YAML，由看板应用用到时走 API 现拉。
+> 凡是**要被机械核对或计数**的（状态、Gate 签署、任务归属、轮次、耗时）→ 进 `status.yml`；
+> 凡是以「文档正文」出现、只供人阅读的 → 不进 YAML，留在 markdown 里。
 
 ---
 
@@ -36,14 +36,14 @@
 - **创建**：`init-project` 从模板创建一次，含 `iterations.v1.gates`（全未签）+ 空 `tasks[]`。
 - **更新**：此后每个状态转移由所属 exec spec「做一个填一个」（见第五节）。
 - **健壮性**：任何更新步骤写入前若文件不存在（历史项目、断点等），先从 `templates/status.yml` 补建再写，不报错中断。
-- **不动现有 markdown**：`sprint.md`/`gates.md`/`queue/*.md` 保留为「人看的视图」，看板应用不再读它们，两边漂移也不影响取数。
+- **不动现有 markdown**：`sprint.md`/`gates.md`/`queue/*.md` 保留为「人看的视图」，机器侧不读它们取状态；两边漂移由 `check-sprint.js` 的三方一致检查兜住。
 
 ---
 
 ## 四、字段契约
 
 ```yaml
-project: 看板应用                # string，项目名
+project: {项目名}                # string，项目名
 schema: 1                        # int，本契约 schema 版本号；字段演进靠它兼容
 generated_by: cc                 # string，固定 cc
 
@@ -129,7 +129,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
         location: src/auth.ts:40 # string 文件:行号，可为 null
 ```
 
-### 枚举对齐（与看板应用 TRD 数据模型一致）
+### 枚举对齐
 
 | 字段 | 枚举值 |
 |---|---|
@@ -155,17 +155,17 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `code_reviews[].issues[].reachability` | current / conditional / unreachable / unknown |
 | `code_reviews[].issues[].action` | fix-code / revise-doc / fix-mechanism / downgrade-claim / global-gap-review / backlog / request-evidence |
 
-> 三个 rounds 字段是次数，三个 minutes 字段是墙钟。`rounds` 为兼容总数；implementation 从 preflight 通过到首次 full dispatch，review 从首次 full dispatch 到最终通过（含等待与整改），spec 累加 preflight/revise-doc 澄清时间。时间戳由编排器在事件发生时自动写，分钟向上取整，禁止事后估算；看板应用可忽略未知键。
+> 三个 rounds 字段是次数，三个 minutes 字段是墙钟。`rounds` 为兼容总数；implementation 从 preflight 通过到首次 full dispatch，review 从首次 full dispatch 到最终通过（含等待与整改），spec 累加 preflight/revise-doc 澄清时间。时间戳由编排器在事件发生时自动写，分钟向上取整，禁止事后估算；下游消费者可忽略未知键。
 >
 > 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验会重算每次 full 的 review profile、核 targeted 继承链，并对缺字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
 
 > CR severity 映射：develop 内置独立审查用两级 `[阻断]/[建议]`，写入 YAML 时映射为 `[阻断]→严重`、`[建议]→建议`（阻断在审查 loop 内已修，落 YAML 的多为 `[建议]→建议`）。
 
-### 不进 YAML（看板应用走 API 现拉）
+### 不进 YAML（留在 markdown 里，供人阅读）
 任务包字段正文、`description`、`completion_report`、`output`、PRD/TRD/sprint/联调报告正文。
 
 ### CR issue 内联（已查证定案）
-CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API。依据：`develop` 内置独立审查把逐条 issue 写进 Gitee PR comment，仓库内无含结构化 issue 的文件可供 API 拉取；看板应用前端 `CRDrawer.vue` 已就绪、期望 `{ conclusion, issues[], comment }`，内联后即可用。（2026-06-20 起 CR 由 develop 自审写入，非独立 pr-review。）
+CR 的 conclusion + comment + issues[] 全部内联进 `status.yml`，不走 API。依据：`develop` 内置独立审查把逐条 issue 写进 Gitee PR comment，仓库内无含结构化 issue 的文件可供外部拉取，内联进 `status.yml` 后即可用。（2026-06-20 起 CR 由 develop 自审写入，非独立 pr-review。）
 
 ---
 

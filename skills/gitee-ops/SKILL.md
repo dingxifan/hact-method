@@ -20,8 +20,9 @@ REMOTE=$(git remote get-url origin)
 OWNER=$(echo "$REMOTE" | sed 's|git@gitee.com:||; s|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo "$REMOTE" | sed 's|.*/||' | sed 's|\.git||')
 
-# 优先读环境变量 GITEE_ACCESS_TOKEN（可配置为 shell profile 全局变量），无则回退读项目根目录 backend/.env
-GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
+# token 统一寻址（见 hact-conn skill）：connections.yml → ~/.hact/secrets.env。
+# 取不到时脚本在 stderr 说明缺什么；存量仓未铺 scripts/check-conn.js 则回退历史环境变量。
+GITEE_TOKEN=$(node scripts/check-conn.js get gitee.token) || GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-}"
 
 echo "owner=$OWNER repo=$REPO token_len=${#GITEE_TOKEN}"
 ```
@@ -37,7 +38,7 @@ echo "owner=$OWNER repo=$REPO token_len=${#GITEE_TOKEN}"
 ### 查看开放 PR 列表
 
 ```bash
-GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
+GITEE_TOKEN=$(node scripts/check-conn.js get gitee.token) || GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -53,7 +54,7 @@ for p in prs: print(f'PR #{p[\"number\"]} [{p[\"head\"][\"label\"]}] → {p[\"ba
 ### 创建 PR
 
 ```bash
-GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
+GITEE_TOKEN=$(node scripts/check-conn.js get gitee.token) || GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -98,7 +99,7 @@ curl -s -o /dev/null -w "%{http_code}" -X POST \
 #### 步骤 3：合并
 
 ```bash
-GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
+GITEE_TOKEN=$(node scripts/check-conn.js get gitee.token) || GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -115,7 +116,7 @@ curl -s -X PUT "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/$PR_NUMBER/mer
 #### 批量合并脚本（多个 PR）
 
 ```bash
-GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
+GITEE_TOKEN=$(node scripts/check-conn.js get gitee.token) || GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -135,7 +136,7 @@ done
 ### 查看单条 PR 详情
 
 ```bash
-GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-$(grep GITEE_ACCESS_TOKEN backend/.env 2>/dev/null | cut -d= -f2 | tr -d '\r\n ')}"
+GITEE_TOKEN=$(node scripts/check-conn.js get gitee.token) || GITEE_TOKEN="${GITEE_ACCESS_TOKEN:-}"
 REMOTE=$(git remote get-url origin)
 OWNER=$(echo $REMOTE | sed 's|https://gitee.com/||' | cut -d/ -f1)
 REPO=$(echo $REMOTE | sed 's|.*/||' | sed 's|\.git||')
@@ -147,7 +148,7 @@ curl -s "https://gitee.com/api/v5/repos/$OWNER/$REPO/pulls/{number}?access_token
 
 - **绝不使用 `gh` CLI** — 它不支持 Gitee
 - **所有 curl 调用用 Bash 工具**，不用 PowerShell（避免别名和 BOM 问题）
-- token 优先读环境变量 `GITEE_ACCESS_TOKEN`（全局配置一次即可），无则回退读项目根目录 `backend/.env` 的 `GITEE_ACCESS_TOKEN` 字段
+- token 走 **hact-conn 统一寻址**：`node scripts/check-conn.js get gitee.token`（真值在 `~/.hact/secrets.env`，全机配一次）。**不要读 `backend/.env`**——那是应用运行时配置，不是个人凭据的存放处
 - owner / repo 从 `git remote get-url origin` 提取，不要硬编码
 - API 根路径：`https://gitee.com/api/v5/`
 - merge_method 可选值：`merge`（保留提交历史）/ `squash`（合并为单提交）/ `rebase`
@@ -173,7 +174,8 @@ rebase 完成后 PR 的 `mergeable` 会自动变回 `true`，再走 test→revie
 
 | 错误 | 原因 | 处理 |
 |------|------|------|
-| 401 Unauthorized | token 错误或读取时带了多余空格/换行 | 确认 `tr -d '\r\n '` 已去除，重新读取 |
+| 401 Unauthorized | token 错误或已过期 | `node scripts/check-conn.js check --live` 实打验一次；失效则重新生成并更新 `~/.hact/secrets.env` |
+| `token_len=0` | 凭据未配置 | 按 `check-conn` 的 stderr 提示补 `~/.hact/secrets.env`，勿硬编码 |
 | 404 Not Found | owner/repo 路径错误 | 用 `git remote get-url origin` 重新确认 |
 | 422 Unprocessable | head 分支不存在或已合并 | 先 `git branch -a` 确认分支名 |
 | PR 已存在 | 重复创建 | 先查列表确认是否已有同 head 的开放 PR |

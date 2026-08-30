@@ -95,8 +95,6 @@ CC 写完整任务包，放入 `b-queue/{task-id}.md`，同时在 `b-tasks.md` �
 
 task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`。
 
-**看板应用里**：新任务出现在开发者看板，状态「待认领」；`b-tasks.md` 的变更通过 Webhook 同步，B 类任务与 A 类任务在同一看板，可按标签筛选。
-
 ---
 
 ## § 2 开发（develop, source=bug / optimization）
@@ -113,8 +111,6 @@ task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`。
 | 创建 PR，写 PR 描述 | — |
 
 代码审查内化进 develop，同 A 类：首轮 full 前按 task type/layer/risk 与固定 changed files 自动生成 review profile，只审 selected dimensions，省略项和理由留在 JSON、不写 N/A；真实缺陷整改后只对稳定 finding id、反例和受影响回归做 targeted review。范围扩大或出现新根因时，下一轮重算 profile 后升级 full。每轮固定 Git tree/diff 并落报告，implementation/review/spec 墙钟自动记入 `status.yml`；通过通用 review 审计后由 develop 自合并到 master。
-
-**看板应用里**：任务从「进行中」变为「已合并」，`b-tasks.md` 状态同步。
 
 ---
 
@@ -133,8 +129,6 @@ task-id 命名格式：`{项目缩写}-b-{三位序号}`，如 `hact-b-001`。
 3. 重启服务（pm2 / nginx）
 4. curl 健康检查端点，确认服务正常
 5. 写入部署日志
-
-**看板应用里**：部署记录实时写入，可查看本次 hotfix 的部署详情及包含内容。
 
 ---
 

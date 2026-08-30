@@ -1,5 +1,5 @@
 ﻿# status.yml · 机器侧状态契约（项目根，由 init-project 创建一次）
-# 字段定义见 ../hact-method-lab/skeleton/07-status-contract.md。看板应用直接 YAML.parse 取数。
+# 字段定义见 ../hact-method-lab/skeleton/07-status-contract.md。机器侧消费者（check-sprint.js / check-gate.js）直接 YAML.parse 取数。
 # 写入纪律：每次只改对应字段，其余不动；显式写 null，不省略键。
 # 总规则：凡往 iterations/vN/queue/ 写任务包处，同步往 tasks[] 追加一条；状态流转按 task-id 改。
 

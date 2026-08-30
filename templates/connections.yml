@@ -1,0 +1,39 @@
+# connections.yml · 本项目的外部连接登记
+#
+# 入库、**零机密**——机密只写 ${secret:NAME} 引用，真值放 ~/.hact/secrets.env（机器本地、永不入库）。
+# 分工：本文件回答「连到哪、用哪份凭据」；deployment.config 回答「怎么构建、怎么重启、怎么验活」。
+# 校验：node scripts/check-conn.js check [--live]
+# 取值：node scripts/check-conn.js get <点分路径>      例：get gitee.token / get ssh.prod.app-dir
+#
+# 用不到的段整段删掉，不要留空段。
+#
+# ⚠️ handle 命名分两类——`~/.hact/secrets.env` 是**全机共用的扁平命名空间**，撞名 = 静默覆盖：
+#   · 身份类（跟人走，跨项目共用一份）：HACT_GITEE_TOKEN、HACT_SSH_<别名>_PASSPHRASE
+#   · 项目资源类（跟项目走，**必须带项目前缀**）：HACT_<项目名大写>_DB_PASSWORD、HACT_<项目名大写>_API_<服务>_KEY
+#   反例：两个项目都用 HACT_DB_PROD_PASSWORD 连各自的库 → 后填的把先填的顶掉，且没有任何报错。
+
+gitee:
+  remote: origin                       # owner/repo 由 git remote 推导，不在此硬编码
+  token: ${secret:HACT_GITEE_TOKEN}
+
+# ssh:
+#   prod:
+#     mcp-alias: <Claude Code 里配的 SSH server 名>   # deploy 走 MCP 时用它；换机需重配，check 会提示
+#     host: <ip 或域名>
+#     user: <登录用户>
+#     identity-file: ~/.ssh/id_xxx
+#     passphrase: ${secret:HACT_SSH_PROD_PASSPHRASE}  # 私钥无口令则删掉本行
+#     app-dir: /srv/<项目名>                          # 服务器上的仓库目录，deploy 在此 git pull
+
+# db:
+#   prod:
+#     host: 127.0.0.1
+#     port: 3306
+#     name: <库名>
+#     user: <账号>
+#     password: ${secret:HACT_<项目名大写>_DB_PROD_PASSWORD}
+
+# api:
+#   <服务名>:
+#     base-url: https://...
+#     key: ${secret:HACT_<项目名大写>_API_<服务名大写>_KEY}

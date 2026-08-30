@@ -51,7 +51,7 @@
 | 形态 | 软锁靠 |
 |---|---|
 | 文件式（`queue/*.md`）| git push 时序——任务包改动 push 后第一个 push 成功即获锁；后到者 push 冲突 → 重选任务 |
-| web 式（看板应用）| 数据库 UPDATE WHERE 条件加 `status='可取'`——并发请求只有一个 `affected_rows=1`，其他得 0 → 重选 |
+| web 式（若未来有配套应用）| 数据库 UPDATE WHERE 条件加 `status='可取'`——并发请求只有一个 `affected_rows=1`，其他得 0 → 重选 |
 
 **冲突处理**：
 

@@ -32,7 +32,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 
 | 场景 | 说明 |
 |------|------|
-| 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `E:\Group-code-lab\{project-name}\` |
+| 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `E:\projects\{project-name}\` |
 | 方法论调整（修改 skeleton / specs / templates） | 在本仓执行，直接编辑方法论文件。信息来源见下方「方法论调整信息来源」 |
 | 收割个人积累上提（`harvest-notes`） | 在本仓执行，遍历成员 notes 仓只读收割，去重择优写入公共层（templates/standards、templates/checklists、方法论待议） |
 | 跨项目浏览 / 对比 | 在本仓执行 |
@@ -60,7 +60,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 
 ### 何时在项目仓开 CC 会话
 
-项目仓创建后，**以下所有任务都在项目仓（`E:\Group-code-lab\{project-name}\`）中执行**：
+项目仓创建后，**以下所有任务都在项目仓（`E:\projects\{project-name}\`）中执行**：
 
 | 任务 | 说明 |
 |------|------|
@@ -73,7 +73,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 ### 项目仓结构（init-project 创建）
 
 ```
-E:\Group-code-lab\{project-name}\
+E:\projects\{project-name}\
 ├── [代码文件]               ← 前后端代码
 ├── iterations/
 │   └── vN/
@@ -82,7 +82,7 @@ E:\Group-code-lab\{project-name}\
 │       ├── gates.md
 │       └── queue/               ← 任务包（该迭代）
 │           └── done/
-├── status.yml               ← 机器侧状态契约（项目级单文件，看板应用取数源，init-project 建，见 skeleton/07）
+├── status.yml               ← 机器侧状态契约（项目级单文件，check-sprint.js / check-gate.js 取数源，init-project 建，见 skeleton/07）
 ├── project.md               ← 跨迭代项目快照
 ├── decisions.md             ← 架构决策记录
 ├── design.md                ← 视觉规格
@@ -93,7 +93,8 @@ E:\Group-code-lab\{project-name}\
 ├── backlog.md               ← 积压与偏离
 ├── feedback.md              ← 各阶段反馈
 ├── b-tasks.md               ← B 类任务总账
-├── deployment.config        ← 首次部署时创建
+├── connections.yml          ← 外部连接登记（Gitee/SSH/DB/第三方 API）：入库·零机密，机密只写 ${secret:NAME}，真值在机器本地 ~/.hact/secrets.env
+├── deployment.config        ← 构建/重启/健康检查命令，首次部署时创建（服务器坐标归 connections.yml）
 └── deploy-log.md            ← 部署记录
 ```
 
@@ -117,11 +118,12 @@ E:\Group-code-lab\{project-name}\
 - **brainstorming skill 不适用**：项目内的分析讨论即为 brainstorming 阶段
 - **planning-with-files-zh skill 适用**：_meta/plans/ 目录由该 skill 管理
 
-## 当前阶段：第三阶段·开发看板应用
+## 当前阶段：第三阶段·写执行层规范（边用边补）+ 第四阶段·团队引入（进行中）
 
-- 第一阶段（搭骨架）✅：skeleton/ 下 6 份骨架文档
-- 第二阶段（结构层规范）✅：specs-structural/ 下 13 份任务契约 + specs-execution/ 下 13 份执行规范
-- 第三阶段（开发看板应用）进行中：用本方法论走完 PRD→TRD→sprint→develop 完整流程，开发看板应用
+- 第一阶段（搭骨架）✅：skeleton/ 下 7 份骨架文档
+- 第二阶段（结构层规范）✅：specs-structural/ 下任务契约 + specs-execution/ 下执行规范
+- 第三阶段（执行层规范）🔄：由真实项目（mail-ai / doc-extract / file-extract / JHH-Nortion 等）边用边补
+- 第四阶段（团队引入）🔄：8 名成员已有 hact-method-lab 开发者权限；完成标志是至少一名开发者独立跑通一个 task 全流程
 
 ## 与 human-ai-col 的关系
 - `../human-ai-col/` 是 v1 方法论仓库，已冻结，仅维护存量项目（simple-auth 等）
