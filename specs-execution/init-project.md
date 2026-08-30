@@ -88,6 +88,8 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）
 - `.gitattributes`：写入一行 `*.sh text eol=lf`（**必须**——Windows `core.autocrlf=true` 下 .sh 会被 checkout 成 CRLF，门卫脚本 `#!/bin/sh\r` 在 POSIX sh / git hook 下报 bad interpreter；锁 LF 才能跨平台跑）
 
+> ⚠️ **只有立项（新建空仓）才能整份复制门卫脚本。向存量仓分发模板更新时必须「合并而非覆盖」**——项目仓会在门卫里加自有检查（file-extract 的 `pnpm verify:architecture` 构造级墙 + 负向反例 + `lint:style`，org-krm-v2 的 `NODE_BIN` 回退），一次 `cp` 就把它们连同 `.git/hooks/` 里的副本一并抹掉，而且**不报错**：commit 照常通过，只是墙没了。分发前先 `diff` 仓内现版与模板，把模板的新增项手工并进去，装完**真触发一次**确认自有检查仍在跑。
+
 ---
 
 ### Step 4：Git 初始化 + 远端绑定
