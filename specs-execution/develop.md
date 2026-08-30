@@ -162,6 +162,12 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 执行 subagent 返回 `done` 后，编排器立即记录 `review_started_at`。A 类 round report 写 `iterations/vN/code-reviews/{task-id}/round-{NN}.md`，B 类写 `b-reviews/{task-id}/round-{NN}.md`，格式用 `templates/review-briefs/develop-review-round.md`。
 
+> **撞到本任务外的改动时怎么办**（实测 2026-08-30，三个仓同时中招）：另一个会话在同一工作树里提交了与本任务无关的改动，diff 因此不干净。两条合法出路——
+> - **让它成为合法基线**：若那条误落 commit 恰好以本任务的认领 commit 为父，直接把 `master` 快进到它并推送，本任务分支据此重锚基线，被审 diff 就只剩本任务文件。**无历史改写、无重复 commit、原 SHA 与作者信息保留**，是最省事的一种。
+> - **父不在 master 时**：只能由改动方 `cherry-pick` 到 master，本任务分支保留副本（合并时是空 diff，不冲突）。
+>
+> 两种都要在 preflight 留痕里如实记一笔「基线重锚 + 原因」，不得把它混进本任务的交付叙述。
+
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并计算固定 diff 的 SHA-256。首次 `reviewed_base` 取 preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。
 
 **首次 full review**：主线派全新隔离 subagent 读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree + 下方生成的 project-relative `review_profile`。审查员自读任务包、命中 Standards、固定 diff 与测试，只执行 profile selected dimensions，不接收执行者自评；每条 finding 必须给稳定 id、dimension、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。Foundation 的 profile 固定为 `foundation-review/v1` 并按专用 brief 全审。

@@ -59,6 +59,24 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 - 每轮方法论调整收尾时自查：本轮往上述文件新增的文字里有没有混进历史注解
 - **一律相对路径，禁盘符**：本方法多人共用，各人工作区根不同（盘符、目录名都不一样），写死绝对路径在别人机器上即失效，且不报错——只让 CC 找不到文件后自行发挥。约定见 `skeleton/02-workspaces.md` §目录约定；`scripts/check-paths.js` 机械把关，已接进本仓 pre-commit 门卫。历史档（`_meta/`）与 `STATUS.md` 不在此列——它们记录既成事实，写具体路径是对的
 
+### 跨仓基础设施改动：一律用临时 worktree，永不碰目标仓主工作树
+
+给多个项目仓分发仓级设施（门卫脚本、`connections.yml`、`deployment.config`、检查器）时，**不得在目标仓的主工作树里 `git add` / `commit` / `checkout` / `stash`**。正确做法：
+
+```bash
+git -C {项目仓} worktree add {临时目录} master   # 或 main
+# 在临时工作树里改文件、提交、推送
+git -C {项目仓} worktree remove {临时目录}
+```
+
+**为什么必须这样**（2026-08-30 实测，六仓分发时三仓同时中招）：
+
+1. **落点会错**。项目仓常有别的会话在跑 `develop`、检出在任务分支上。「就地提交」会把仓级设施提交到那条任务分支——随该任务的 PR 并进 master，污染交付 diff 与偏离核查。
+2. **更严重的是冲掉在制品**。共用工作树时对方可能有执行 subagent 正在改文件，`checkout` / `stash` / `add -A` 会毁掉尚未 commit 的工作，**而且不会有任何 git 报错**。
+3. 临时 worktree 同时解决这两件事；只把落点「显式指定 master」不够——那仍然要动别人的工作树。
+
+分发前先 `ListAgents` 看目标仓有没有活跃会话；有则先打招呼再动手。分发本身**必须合并而非覆盖**（见 `specs-execution/init-project.md` Step 4.1 的警告）——项目仓会在门卫里加自有检查。
+
 ### 何时在项目仓开 CC 会话
 
 项目仓创建后，**以下所有任务都在项目仓（`../{project-name}/`）中执行**：
