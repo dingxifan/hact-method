@@ -66,7 +66,7 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 15. **任务范围扩到全流程**：PRD 起草、TRD 起草、standards 写作、联调脚本、修复任务、部署任务全部 task 化
 16. **users.role 退化为权限标记**：只管"能不能写"，与流程角色解绑
 17. **迭代是项目下一等公民**：目录结构 `projects/{项目}/iterations/vN/` 反映这一层级——跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks / **standards**）留项目根，迭代内产物（prd / trd / iteration Gate 状态 / sprint）入迭代目录。目录与未来看板应用数据模型 `projects → iterations → sprints/tasks` 同构。取消 v1 沿用的 product/ tech/ 角色风目录（与任务驱动模型冲突）
-   > 落地修正（2026-05-08）：hact-method 改为纯方法论仓，仓内 `projects/` 目录移除；每个项目改为 `E:\projects\{项目}\` 下的独立仓，协调文件合并进项目仓根。本决策的层级模型（projects → iterations → sprints/tasks）不变，仅物理路径由 `projects/{项目}/iterations/vN/` 调整为项目仓根的 `iterations/vN/`。
+   > 落地修正（2026-05-08）：hact-method 改为纯方法论仓，仓内 `projects/` 目录移除；每个项目改为 `../{项目}/` 下的独立仓，协调文件合并进项目仓根。本决策的层级模型（projects → iterations → sprints/tasks）不变，仅物理路径由 `projects/{项目}/iterations/vN/` 调整为项目仓根的 `iterations/vN/`。
    > standards 归位（2026-06-20）：`standards-{shared,frontend,backend}.md` 由「迭代内产物」改为「跨迭代项目级活文档」，物理路径从 `iterations/vN/standards-*.md` 移到项目根。理由：standards 是代码库级编码约定、本质跨迭代，per-iteration 重生成产生副本链 + 真相源含糊 + 并行迭代约定漂移；改为单一源（v1 播种、vN+1 原地增补），与 decisions/reusables/design 同级，历史基线靠 git。所有消费者（plan-sprint/develop/manual-test/revise-doc）改读项目根。
    > v0 例外（2026-06-29，决策#25）：迭代不再隐含绑 PRD/G1——**v0 走骨架是合法的无 PRD 迭代**（仅签 G2(v0)、无 G1/G3-5）。projects→iterations→sprints/tasks 层级模型不变，只是 v0 这一期不含功能侧 Gate；标准功能迭代（v1+）仍 G1→G5。
    > 看板应用退场（2026-08-30）：原文「与未来看板应用数据模型同构」的那个消费者已不存在（应用停更、链路失效，相关机制已从方法论移除）。**层级模型 projects → iterations → sprints/tasks 不变**——它现在的机器侧消费者是项目根 `status.yml` 与 `check-sprint.js` / `check-gate.js`。

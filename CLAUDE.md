@@ -32,7 +32,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 
 | 场景 | 说明 |
 |------|------|
-| 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `E:\projects\{project-name}\` |
+| 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `../{project-name}/` |
 | 方法论调整（修改 skeleton / specs / templates） | 在本仓执行，直接编辑方法论文件。信息来源见下方「方法论调整信息来源」 |
 | 收割个人积累上提（`harvest-notes`） | 在本仓执行，遍历成员 notes 仓只读收割，去重择优写入公共层（templates/standards、templates/checklists、方法论待议） |
 | 跨项目浏览 / 对比 | 在本仓执行 |
@@ -57,10 +57,11 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 - **正文只写**：做什么 + 必要的一句操作性 why（帮助遵循的短理由）+ `决策#N` 短指针（指 BRIEF，不展开叙事）+ 设计沉淀路径指针（一行）
 - **不入正文**：日期出处（"守 2026-06-16"）、退役机制对照（"砍除 X 后"）、迁移注记（"原 Step X 已并入"）、事故代号、内部计划代号（"子计划 3c""sub7"）——这些的 canonical 记录住 BRIEF 决策 / `_meta/status-history.md` / `_meta/plans/` 设计稿，git 历史可追溯，**不在运行时文本里复述**
 - 每轮方法论调整收尾时自查：本轮往上述文件新增的文字里有没有混进历史注解
+- **一律相对路径，禁盘符**：本方法多人共用，各人工作区根不同（盘符、目录名都不一样），写死绝对路径在别人机器上即失效，且不报错——只让 CC 找不到文件后自行发挥。约定见 `skeleton/02-workspaces.md` §目录约定；`scripts/check-paths.js` 机械把关，已接进本仓 pre-commit 门卫。历史档（`_meta/`）与 `STATUS.md` 不在此列——它们记录既成事实，写具体路径是对的
 
 ### 何时在项目仓开 CC 会话
 
-项目仓创建后，**以下所有任务都在项目仓（`E:\projects\{project-name}\`）中执行**：
+项目仓创建后，**以下所有任务都在项目仓（`../{project-name}/`）中执行**：
 
 | 任务 | 说明 |
 |------|------|
@@ -73,7 +74,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 ### 项目仓结构（init-project 创建）
 
 ```
-E:\projects\{project-name}\
+../{project-name}/
 ├── [代码文件]               ← 前后端代码
 ├── iterations/
 │   └── vN/

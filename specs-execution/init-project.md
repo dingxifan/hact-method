@@ -3,7 +3,7 @@
 > CC 加载本文时，当前任务是为新项目创建独立仓库（代码 + 协调文件合并）。
 
 **上下文密度**：低。机械化操作为主（Step 1–4、6），单次会话可完整完成；唯 Step 5「项目共识讨论」是发散环节（读背景、摸全貌、填地基蓝图），骑在本 task 内、不另起 task（决策#20）。
-**执行位置**：hact-method 工作区；创建目标在 `E:\projects\{name}\`。
+**执行位置**：hact-method 工作区；创建目标在 `../{name}/`。
 
 ---
 
@@ -13,7 +13,7 @@
 
 ## 会话启动
 
-开场说：「我将为新项目创建独立仓库（`E:\projects\{name}\`），代码和协调文件合并存放。请确认项目名称（英文或拼音，kebab-case）——名称确认后不再更改。」
+开场说：「我将为新项目创建独立仓库（`../{name}/`），代码和协调文件合并存放。请确认项目名称（英文或拼音，kebab-case）——名称确认后不再更改。」
 
 🚫 等用户给出项目名称
 
@@ -21,15 +21,17 @@
 
 ## 执行步骤
 
+> **路径约定**：本文所有路径均相对。`templates/`、`_meta/` 相对方法论仓根；项目仓一律 `../{name}/`——三类仓同级并住工作区根（见 `../hact-method-lab/skeleton/02-workspaces.md`），故 `cd "../{name}"` 在方法论仓内与已切进项目仓内都解析到同一处。**不得写盘符或绝对路径**：本方法多人共用，各人工作区根不同。
+
 ### Step 1：名称校验
 
-检查 `E:\projects\` 下是否已有同名目录。
+检查本仓上级目录（工作区根）下是否已有名为 `{name}` 的目录。
 
 - 有冲突 → 告知用户，请求重新命名，回到 🚫
 - 无冲突 → 继续
 
 ```
-✅ 名称校验通过：`E:\projects\{name}\` 不存在冲突。
+✅ 名称校验通过：`../{name}/` 不存在冲突。
 → 下一步：创建目录结构
 继续？
 ```
@@ -41,11 +43,11 @@
 ### Step 2：创建目录结构
 
 ```bash
-mkdir -p "E:/projects/{name}/iterations/v1/queue/done"
-mkdir -p "E:/projects/{name}/b-queue"
-mkdir -p "E:/projects/{name}/_meta/input"
-mkdir -p "E:/projects/{name}/_meta/sessions"
-mkdir -p "E:/projects/{name}/scripts"
+mkdir -p "../{name}/iterations/v1/queue/done"
+mkdir -p "../{name}/b-queue"
+mkdir -p "../{name}/_meta/input"
+mkdir -p "../{name}/_meta/sessions"
+mkdir -p "../{name}/scripts"
 ```
 
 > `_meta/input/`：背景材料、上下文文档（非交付物，供任务会话加载）；`_meta/sessions/`：各任务跨会话接续文件（`{task-type}-progress.md`）；`b-queue/`：B 类任务包（项目级，跨迭代，不依赖活跃迭代）。
@@ -53,15 +55,15 @@ mkdir -p "E:/projects/{name}/scripts"
 Git 不跟踪空目录，必须写入占位文件：
 
 ```bash
-echo "" > "E:/projects/{name}/iterations/v1/queue/done/.gitkeep"
-echo "" > "E:/projects/{name}/b-queue/.gitkeep"
+echo "" > "../{name}/iterations/v1/queue/done/.gitkeep"
+echo "" > "../{name}/b-queue/.gitkeep"
 ```
 
 ---
 
 ### Step 3：写入占位文件
 
-**复制自 `E:\projects\hact-method-lab\templates\{产物名}.md`**，把文件内 `{项目名}` 替换为实际项目名，写完确认非空（templates/ 是格式单一真相源，structural §主要产物 只列指针）：
+**复制自 `templates\{产物名}.md`**，把文件内 `{项目名}` 替换为实际项目名，写完确认非空（templates/ 是格式单一真相源，structural §主要产物 只列指针）：
 
 - 项目根 `project.md` / 项目根 `reusables.md` / 项目根 `b-tasks.md` / 项目根 `decisions.md` / 项目根 `backlog.md` / 项目根 `feedback.md`
 - 项目根 `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
@@ -72,18 +74,18 @@ echo "" > "E:/projects/{name}/b-queue/.gitkeep"
 - 项目根三份 Standards：建空桩；V0 `draft-foundation` 按 `templates/standards/schema.md` 首播当前稳定默认规则（存量由 draft-tech-design 兜底），后续只更新当前真值
 
 同时写入以下文件：
-- `CLAUDE.md`：内容复制自 `E:\projects\hact-method-lab\templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
-- `.claude/commands/gitee-ops.md`：内容复制自 `E:\projects\hact-method-lab\templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
-- `scripts/check-docs.js`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
-- `scripts/check-gate.js`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
-- `scripts/check-sprint.js`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
-- `scripts/review-profile.js`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\review-profile.js`（develop full review 的确定性维度选择器；`check-sprint.js --review` 同模块重算 selected/omitted，故必须与 check-sprint 一起铺设）
-- `scripts/check-ux.js`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\check-ux.js`（draft-ux 产物结构 linter，纯 Node 无外部依赖；`draft-ux` Step 7 签字 commit 时门卫自动核 ux-flows.md 两段结构 + prototype-map.md AC 覆盖表 + prototype.html 存在）
-- `scripts/check-reusables.js`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\check-reusables.js`（`reusables.md` 登记表 linter，纯 Node 无外部依赖；门卫在「改了 reusables.md」或「本次 commit 有文件删除/改名」时自动核登记路径是否还在——该表被 `draft-tech-design`/`plan-sprint`/`draft-prd-vN` 当权威源读，失真则那些检查静默放行）
-- `scripts/check-conn.js`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\check-conn.js`（连接与凭据的统一寻址 + 体检，纯 Node 无外部依赖；`gitee-ops` 取 token / `deploy` 取服务器坐标 / 任何要连数据库或第三方 API 的任务都经它取值，门卫在「改了 connections.yml」时自动核零机密与引用完备）
-- `connections.yml`：内容复制自 `E:\projects\hact-method-lab\templates\connections.yml`（**本项目外部连接登记**——入库、零机密，机密只写 `${secret:NAME}` 引用，真值在机器本地 `~/.hact/secrets.env`。用不到的段整段删掉）
-- `scripts/pre-commit-hook.sh`：内容复制自 `E:\projects\hact-method-lab\templates\scripts\pre-commit-hook.sh`（**门卫**——commit 时按 staged 文件路由跑对应 check-\*.js，红则拦 commit；脚本/node 缺失 no-op 放行。作为 tracked 文件入仓使其随 clone 存活；实际生效需装进 `.git/hooks/`，见 Step 4.1）
-- `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `E:\projects\hact-method-lab\templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）
+- `CLAUDE.md`：内容复制自 `templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
+- `.claude/commands/gitee-ops.md`：内容复制自 `templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
+- `scripts/check-docs.js`：内容复制自 `templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
+- `scripts/check-gate.js`：内容复制自 `templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
+- `scripts/check-sprint.js`：内容复制自 `templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
+- `scripts/review-profile.js`：内容复制自 `templates\scripts\review-profile.js`（develop full review 的确定性维度选择器；`check-sprint.js --review` 同模块重算 selected/omitted，故必须与 check-sprint 一起铺设）
+- `scripts/check-ux.js`：内容复制自 `templates\scripts\check-ux.js`（draft-ux 产物结构 linter，纯 Node 无外部依赖；`draft-ux` Step 7 签字 commit 时门卫自动核 ux-flows.md 两段结构 + prototype-map.md AC 覆盖表 + prototype.html 存在）
+- `scripts/check-reusables.js`：内容复制自 `templates\scripts\check-reusables.js`（`reusables.md` 登记表 linter，纯 Node 无外部依赖；门卫在「改了 reusables.md」或「本次 commit 有文件删除/改名」时自动核登记路径是否还在——该表被 `draft-tech-design`/`plan-sprint`/`draft-prd-vN` 当权威源读，失真则那些检查静默放行）
+- `scripts/check-conn.js`：内容复制自 `templates\scripts\check-conn.js`（连接与凭据的统一寻址 + 体检，纯 Node 无外部依赖；`gitee-ops` 取 token / `deploy` 取服务器坐标 / 任何要连数据库或第三方 API 的任务都经它取值，门卫在「改了 connections.yml」时自动核零机密与引用完备）
+- `connections.yml`：内容复制自 `templates\connections.yml`（**本项目外部连接登记**——入库、零机密，机密只写 `${secret:NAME}` 引用，真值在机器本地 `~/.hact/secrets.env`。用不到的段整段删掉）
+- `scripts/pre-commit-hook.sh`：内容复制自 `templates\scripts\pre-commit-hook.sh`（**门卫**——commit 时按 staged 文件路由跑对应 check-\*.js，红则拦 commit；脚本/node 缺失 no-op 放行。作为 tracked 文件入仓使其随 clone 存活；实际生效需装进 `.git/hooks/`，见 Step 4.1）
+- `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）
 - `.gitattributes`：写入一行 `*.sh text eol=lf`（**必须**——Windows `core.autocrlf=true` 下 .sh 会被 checkout 成 CRLF，门卫脚本 `#!/bin/sh\r` 在 POSIX sh / git hook 下报 bad interpreter；锁 LF 才能跨平台跑）
 
 ---
@@ -92,7 +94,7 @@ echo "" > "E:/projects/{name}/b-queue/.gitkeep"
 
 **4.1 本地初始化 + 装门卫：**
 ```bash
-cd "E:/projects/{name}"
+cd "../{name}"
 git init
 # 装 pre-commit 门卫（.git/hooks 不随 clone 走，故源文件已 tracked 在 scripts/，此处装进生效位）
 cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
@@ -176,7 +178,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 个人 notes 仓**跟人、跨项目**——每人一个，建在**团队 Gitee 命名空间**下，不随项目重复创建。
 
-先确认命名空间：从 `E:\projects\hact-method-lab\_meta\hact-config.md`「全局配置」读取 `notes-org`（当前值 `dingxifan`）；缺失则向用户询问一次并补写入配置。
+先确认命名空间：从 `_meta\hact-config.md`「全局配置」读取 `notes-org`（当前值 `dingxifan`）；缺失则向用户询问一次并补写入配置。
 
 > ⚠️ **`dingxifan` 是 Gitee 企业版（enterprise）不是组织（org）**：建仓必须用 `POST /enterprises/{notes-org}/repos`，用 `/orgs/...` 会 404。
 
@@ -198,7 +200,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
      -d "access_token={token}&permission=push"
    ```
 
-   建好后用 `templates/hact-notes/notes.md` 初始化该仓 `notes.md`（clone → 写入 → push），并提示成员 clone 到本地 `E:\projects\hact-notes-{username}\`
+   建好后用 `templates/hact-notes/notes.md` 初始化该仓 `notes.md`（clone → 写入 → push），并提示成员 clone 到本地 `../hact-notes-{username}\`
 3. 把成员写入 hact-config.md「成员个人积累仓登记表」（仓地址 `gitee.com/{notes-org}/hact-notes-{username}`）+「收割游标」表（游标初始"尚未收割"）
 
 > 权限模型：仓私有；只本人是 push 协作者 → 其他开发者无权限；管理者作为企业 admin 对所有 notes 仓天然只读 → 正好用于 `harvest-notes` 收割。已存在的成员直接跳过创建，只确保已登记。
@@ -238,7 +240,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 **5.5 提交：**
 ```bash
-cd "E:/projects/{name}"
+cd "../{name}"
 git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git push
 ```
 
@@ -256,7 +258,7 @@ git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git pus
 
 ```
 ✅ init-project 完成：
-- 本地仓库：E:\projects\{name}\
+- 本地仓库：../{name}/
 - 远端：{gitee-url}
 - 地基蓝图：foundation.md（已播种）
 - 连接登记：connections.yml（已播种，`check-conn.js check` 通过）
@@ -287,4 +289,4 @@ git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git pus
 
 ## 断点续做
 
-检查 `E:\projects\{name}\` 目录是否存在及哪些文件已创建；从未完成的步骤继续。
+检查 `../{name}/` 目录是否存在及哪些文件已创建；从未完成的步骤继续。

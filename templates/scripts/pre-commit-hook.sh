@@ -32,7 +32,9 @@ if ! command -v node >/dev/null 2>&1; then
   exit 0
 fi
 
-staged=$(git diff --cached --name-only)
+# core.quotepath 默认 true：非 ASCII 文件名会被转义并加引号输出，前导引号会让 ^ 锚定的
+# 路由正则全部落空（hact-method-lab 实测：中文名的 guide/ 整条路由形同虚设）。故显式关掉。
+staged=$(git -c core.quotepath=false diff --cached --name-only)
 [ -z "$staged" ] && exit 0
 
 fail=0

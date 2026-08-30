@@ -11,19 +11,21 @@
 ## 成员个人积累仓登记表
 
 > 由 `init-project`（或成员上线时）登记；`harvest-notes` 遍历此表收割。管理者对这些仓只读。
+>
+> **不登记本地路径**——它由约定推导：任一仓的同级目录 `../hact-notes-{login}/`。各人工作区根不同，写死即在别人机器上失效（见 `skeleton/02-workspaces.md` §目录约定）。
 
-| 成员（login / 显示名） | notes 仓地址 | 本地路径 |
-|---|---|---|
-| dingxifan_admin（dingxifan·管理员） | gitee.com/dingxifan/hact-notes-dingxifan_admin | E:\projects\hact-notes-dingxifan_admin |
-| winniemw（Winnie） | gitee.com/dingxifan/hact-notes-winniemw | E:\projects\hact-notes-winniemw |
-| WayneLu（陆伟平） | gitee.com/dingxifan/hact-notes-WayneLu | E:\projects\hact-notes-WayneLu |
-| colin_zheng（郑磊） | gitee.com/dingxifan/hact-notes-colin_zheng | E:\projects\hact-notes-colin_zheng |
-| xiaobainote（XL） | gitee.com/dingxifan/hact-notes-xiaobainote | E:\projects\hact-notes-xiaobainote |
-| zhang_cheng_1377（张程） | gitee.com/dingxifan/hact-notes-zhang_cheng_1377 | E:\projects\hact-notes-zhang_cheng_1377 |
-| lu-ailu（陆爱露） | gitee.com/dingxifan/hact-notes-lu-ailu | E:\projects\hact-notes-lu-ailu |
-| ba-xiansheng（Jason） | gitee.com/dingxifan/hact-notes-ba-xiansheng | E:\projects\hact-notes-ba-xiansheng |
-| axiaoke（葛春林） | gitee.com/dingxifan/hact-notes-axiaoke | E:\projects\hact-notes-axiaoke |
-| dingxifan（dingxifan） | gitee.com/dingxifan/hact-notes-dingxifan | E:\projects\hact-notes-dingxifan |
+| 成员（login / 显示名） | notes 仓地址 |
+|---|---|
+| dingxifan_admin（dingxifan·管理员） | gitee.com/dingxifan/hact-notes-dingxifan_admin |
+| winniemw（Winnie） | gitee.com/dingxifan/hact-notes-winniemw |
+| WayneLu（陆伟平） | gitee.com/dingxifan/hact-notes-WayneLu |
+| colin_zheng（郑磊） | gitee.com/dingxifan/hact-notes-colin_zheng |
+| xiaobainote（XL） | gitee.com/dingxifan/hact-notes-xiaobainote |
+| zhang_cheng_1377（张程） | gitee.com/dingxifan/hact-notes-zhang_cheng_1377 |
+| lu-ailu（陆爱露） | gitee.com/dingxifan/hact-notes-lu-ailu |
+| ba-xiansheng（Jason） | gitee.com/dingxifan/hact-notes-ba-xiansheng |
+| axiaoke（葛春林） | gitee.com/dingxifan/hact-notes-axiaoke |
+| dingxifan（dingxifan） | gitee.com/dingxifan/hact-notes-dingxifan |
 
 ---
 

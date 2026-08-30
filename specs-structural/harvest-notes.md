@@ -16,7 +16,7 @@
 - **权限**：对成员 notes 仓**只读**；对 hact-method 公共层可写
 - **文件**：
   - `_meta/hact-config.md`（成员仓登记表 + 收割游标）
-  - 各成员本地仓 `E:\projects\hact-notes-{name}\notes.md`（只读）
+  - 各成员本地仓 `../hact-notes-{name}\notes.md`（只读）
 
 ---
 
