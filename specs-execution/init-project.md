@@ -99,6 +99,8 @@ cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-c
 git add .
 git commit -m "feat: 初始化项目 {name}"
 ```
+> ⚠️ **先查 `core.hooksPath`**：`git config --get core.hooksPath` 有值（husky 等工具会设成 `.husky/_`）时，Git **完全忽略 `.git/hooks/`**——上面这条 cp 会"安装成功"却永不执行，且无任何报错。此时改为把 `sh scripts/pre-commit-hook.sh` 追加进该 hooksPath 对应的 `pre-commit` 脚本末尾（退出码原样传出）。装完必须**真触发一次**验证，不能只看文件在不在。
+>
 > **门卫随 clone 的兜底**：`.git/hooks/` 是本地态、不入版本控制。队友 clone 本仓后须跑一次 `cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit` 才有门卫。未装 = 退回 honor-system（linter 仍可手动跑），与 `--no-verify` 同属"护栏非密码锁"——是合作者的强制出路，非安全边界。
 
 **4.2 强制获取 Gitee 远端地址：**
