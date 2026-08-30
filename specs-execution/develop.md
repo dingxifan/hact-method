@@ -172,6 +172,9 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 > 不得用 `git checkout --` / 删文件 / `git stash` 处置它：**留着不提交是可逆的，还原和删除是不可逆的**，两者代价差一个量级，而对「不混进 diff」这个目标的贡献完全相同。实测 2026-08-30：一个会话据本条字面依据把来源不明的 `scripts/pre-commit-hook.sh` 改动 `git checkout --` 还原、并删掉了新脚本（虽留了底到 scratchpad），另一个会话遇到同样情况选择「既不提交也不回退、原样留着并上报」——后者是本条要求的处置。
 > 另：**文件 mtime 不是归因证据**。它只能证明「那时被写过」，证明不了「谁写的」；据 mtime 落在自己 subagent 运行窗口内就断定是自己人所为，实测已致误判。归因不明时按上一段留着并上报，不猜。
 
+> **「工作树干净」必须连 `git stash list` 一起看。** 凡以「工作树不含本任务外改动」为前提的判据（本节固定 `base_tree`、preflight 的工作树核对等），只查 `git status` 会读出**假干净**：改动被 stash 后 `git status` 就是干净的，而那些改动随时可能 pop 回来、落进你随后固定的 tree 里。实测 2026-08-30：某会话的执行 subagent 对自己在制品做了一次 stash-pop，工作树有二十余分钟处在「看起来干净、实则 3175 行悬在 stash 里」的状态；期间若有另一个会话据 `git status` 判定"干净"并据此固定审查对象，得到的是一个假前提。
+> 加固很便宜：`git status --porcelain` 与 `git stash list` **同时为空**才算干净；非空时先弄清那些 stash 属于谁、会不会 pop 回来，再决定是否继续。
+
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并计算固定 diff 的 SHA-256。首次 `reviewed_base` 取 preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。
 
 **首次 full review**：主线派全新隔离 subagent 读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree + 下方生成的 project-relative `review_profile`。审查员自读任务包、命中 Standards、固定 diff 与测试，只执行 profile selected dimensions，不接收执行者自评；每条 finding 必须给稳定 id、dimension、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。Foundation 的 profile 固定为 `foundation-review/v1` 并按专用 brief 全审。
