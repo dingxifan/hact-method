@@ -12,6 +12,7 @@
 #   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
 #   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
 #   connections.yml                 → check-conn.js（零机密 + 凭据引用完备 + 凭据落位安全）
+#   任何 staged 文件                → check-secrets.js（反查 ~/.hact/secrets.env 的真值）
 #
 # 触发条件依赖共暂存（暗礁）：linter 按 staged 的**产物文件**路由——check-docs 看
 #   prd/trd、check-sprint 看 sprint/queue。签 Gate 时若把产物与 gates.md 分两次 commit
@@ -106,6 +107,14 @@ fi
 # 不跑 --live：门卫不发外部请求（离线 / 慢网下不能 brick 提交）。
 if echo "$staged" | grep -qE "^connections\.yml$"; then
   run scripts/check-conn.js check
+fi
+
+# --- 真凭据反查（check-secrets.js）---
+# 无条件对**所有** staged 文件跑——泄露的主要发生方式不是改 connections.yml，
+# 而是把真值当例子抄进文档 / 示例 / 脚本（实测：9 条凭据散在 6 仓 16 个文件，
+# 最长 114 天无人发现）。判据是真值本身，不猜哪些字段像机密。
+if [ -n "$staged" ]; then
+  run scripts/check-secrets.js
 fi
 
 if [ "$fail" -ne 0 ]; then
