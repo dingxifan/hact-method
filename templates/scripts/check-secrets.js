@@ -117,9 +117,19 @@ function main() {
   console.log('\n=== check-secrets 报告 ===');
   console.log(`比对 ${secrets.length} 条真值 / 扫描 ${files.length} 个文件 / 命中 ${hits.length} 个\n`);
 
-  if (!hits.length) { console.log('✅ 未发现真凭据被写入文件\n'); process.exit(0); }
+  // 绿色只能读作「无我持有的凭据泄露」，不能读作「本仓无泄露」——门卫的输出比头部注释
+  // 更容易被当成结论用，限定语必须打在输出里。
+  if (!hits.length) {
+    console.log(`✅ 未发现**本机持有的** ${secrets.length} 条凭据被写入文件`);
+    console.log('   注意：这不等于「本仓无泄露」。不在 ~/.hact/secrets.env 里的凭据');
+    console.log('   （服务器 SSH 口令、数据库 root 密码、他人机器上的 key）本检查器一律看不见。');
+    console.log('   实测漏过：docs/deployment-manual.md 里的 SSH 密码与 MySQL root 密码。');
+    console.log('   人工审查（develop 独审的 scope-and-secrets 维度）不可替代。\n');
+    process.exit(0);
+  }
 
   console.log('❌ FAIL：文件中出现了 ~/.hact/secrets.env 里的**真实凭据**');
+  console.log('   （命中数是下限——持有面之外的凭据本检查器看不见）');
   for (const h of hits) {
     console.log(`  ${h.file.replace(/\\/g, '/')}`);
     console.log(`      命中: ${h.handles.join(' , ')}`);   // 只报 handle 名，绝不打印值

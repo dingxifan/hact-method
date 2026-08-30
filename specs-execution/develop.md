@@ -167,6 +167,10 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 > - **父不在 master 时**：只能由改动方 `cherry-pick` 到 master，本任务分支保留副本（合并时是空 diff，不冲突）。
 >
 > 两种都要在 preflight 留痕里如实记一笔「基线重锚 + 原因」，不得把它混进本任务的交付叙述。
+>
+> **判据：保留，不得删除或还原。** 本规范说的「分离工作树」意思是**别把别人的改动混进你的 diff**，不是「清掉它」。改动若尚未 commit（躺在工作树里、无 commit 可归因），**原样留在原地不提交**即可满足这个目的——`git add -- {本任务 changed-files}` 本就只暂存本任务文件，别人的改动自然不会进你的 diff。
+> 不得用 `git checkout --` / 删文件 / `git stash` 处置它：**留着不提交是可逆的，还原和删除是不可逆的**，两者代价差一个量级，而对「不混进 diff」这个目标的贡献完全相同。实测 2026-08-30：一个会话据本条字面依据把来源不明的 `scripts/pre-commit-hook.sh` 改动 `git checkout --` 还原、并删掉了新脚本（虽留了底到 scratchpad），另一个会话遇到同样情况选择「既不提交也不回退、原样留着并上报」——后者是本条要求的处置。
+> 另：**文件 mtime 不是归因证据**。它只能证明「那时被写过」，证明不了「谁写的」；据 mtime 落在自己 subagent 运行窗口内就断定是自己人所为，实测已致误判。归因不明时按上一段留着并上报，不猜。
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并计算固定 diff 的 SHA-256。首次 `reviewed_base` 取 preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。
 
