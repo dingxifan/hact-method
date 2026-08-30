@@ -30,7 +30,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 部署日志 | `deploy-log.md` | 格式见 `../hact-method-lab/templates/deploy-log.md`（追加，不覆盖） |
-| deployment.config（首次） | `deployment.config` | 键值对配置文件，必填 `build-command` / `health-check-url` / `restart-command`；可选 `auto-restart`。服务器坐标不在此列，归 `connections.yml` 的 `ssh.{target}.*` |
+| deployment.config（首次） | `deployment.config` | 键值对配置文件，必填 `build-command` / `build-artifact`（构建产物路径，供 Step 4.5 产物闸核对存在性与新鲜度）/ `health-check-url` / `restart-command`；可选 `auto-restart`。服务器坐标不在此列，归 `connections.yml` 的 `ssh.{target}.*` |
 
 ---
 
@@ -38,6 +38,7 @@
 
 - [ ] 本地构建验证通过
 - [ ] 服务器构建成功
+- [ ] 构建产物闸通过（产物存在，且不早于本次拉取的 HEAD 提交时间——退出码不作数）
 - [ ] 服务重启成功
 - [ ] 健康检查端点返回正常
 - [ ] 服务器日志无异常错误

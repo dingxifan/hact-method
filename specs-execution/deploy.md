@@ -11,6 +11,7 @@
 
 - **禁止在服务器上直接修改代码**：唯一合法路径是本地修改 → `git push` → 服务器 `git pull`
 - **构建失败不重启服务**：保留旧版本运行，记录错误上报，等修复后重走步骤
+- **判据是产物不是退出码**：上一条的「构建失败」不能只看 `build-command` 的退出码——**构建根本没跑**（有人直接 `pm2 restart`）或跑了但产物没落地时，退出码判据完全无效（没执行的命令不会返回非零）。必须以 `build-artifact` 存在且**新于本次拉取的 HEAD 提交时间**为准。实测事故：某前端 `.next` 缺失，`next start` 每次立即退出、pm2 无延迟重启，累计 **574 次「Could not find a production build」+ 17 次 EADDRINUSE**（重启太密，端口未释放就自撞），而三道"构建失败"闸一道都没响——因为构建从来没被执行过。
 - **健康检查未通过不算完成**：服务重启成功不等于部署成功，必须健康检查通过才记录结果
 - **hotfix 快速通道须有授权**：urgency=hotfix 的任务需有 `dispatch` discipline 用户授权后才能不等 G4 部署
 
@@ -29,6 +30,7 @@
 **首次部署（`deployment.config` 不存在）**：先建 `deployment.config`，只填**命令侧**字段，commit 后继续：
 ```
 build-command=
+build-artifact=
 health-check-url=
 restart-command=
 auto-restart=false
@@ -94,6 +96,8 @@ git pull
 
 **构建失败** → 保留旧版本运行，**不执行 Step 5**，记录错误，上报，等修复后重走 Step 3–7。
 
+> 退出码为 0 **不等于**可以重启——必须先过 Step 4.5 产物闸。
+
 ```
 ✅ 服务器构建完成。
 → {auto-restart=true 或非 prod：自动进入 Step 5 / prod 且 auto-restart=false：等待确认重启}
@@ -101,11 +105,37 @@ git pull
 
 🚫 **仅当 `target=prod` 且 `auto-restart` 不是 `true` 时**，等用户确认重启。其余情况自动继续。
 
+
+---
+
+## Step 4.5：构建产物闸（🚫 不可跳过）
+
+Step 4 的退出码只证明「命令跑完了」，不证明「产物落地了」，更不证明「命令真的被执行过」。本闸以事实为准：
+
+```bash
+A={build-artifact}            # deployment.config 中的产物路径
+HEAD_TS=$(git log -1 --format=%ct)                    # 本次拉取的 HEAD 提交时间
+[ -e "$A" ] || { echo "❌ 产物不存在：$A"; exit 1; }
+ART_TS=$(stat -c %Y "$A")
+[ "$ART_TS" -ge "$HEAD_TS" ] || { echo "❌ 产物早于本次代码（产物 $(date -d @$ART_TS '+%F %T') < HEAD $(date -d @$HEAD_TS '+%F %T')）——构建未真正执行"; exit 1; }
+echo "✅ 产物闸通过：$A"
+```
+
+- **产物不存在** → 阻断，**不执行 Step 5**。此时若重启，进程会启动即退出、被进程管理器无延迟拉起，形成紧密重启循环（实测 574 次），且日志被刷屏、端口自撞（EADDRINUSE）。
+- **产物早于 HEAD 提交时间** → 阻断。说明本次构建没真跑，服务器上是上一版产物，重启只会把旧版本重新拉起来，而健康检查照样通过——**这是最危险的一种"部署成功"**。
+- `build-artifact` 未配置（存量项目）→ 输出 🧑 提示并要求本次补上，不静默跳过。
+
+> 为什么不并进 Step 4：Step 4 的判据是命令退出码（自报），本闸的判据是文件系统事实。两者失效方式不同——退出码对「命令没被执行」完全无效，必须分开落判。
+
 ---
 
 ## Step 5：重启服务
 
 执行 `deployment.config` 中的 `restart-command`（如 `pm2 restart {app}`）。
+
+**进程管理器配置的两条硬要求**（首次部署时确认，之后不必每次查）：
+- **设重启上限与退避**：pm2 默认无限次、无延迟重启。启动即失败的进程会被瞬间拉起上百次，把日志刷满、端口自撞。配 `--max-restarts 5 --restart-delay 5000`，让它失败几次就停下来报错，而不是空转。
+- **别用 shell 包装启动命令**：`bash -c "npx xxx start"` 会让进程管理器监管那层 bash 而非真正的服务进程，信号传递与重启行为都不干净。直接指向可执行入口（如 `node_modules/next/dist/bin/next` + args `start -p 3002`）。
 
 ---
 
