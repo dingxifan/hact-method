@@ -106,6 +106,8 @@ git commit -m "feat: 初始化项目 {name}"
 > ⚠️ **先查 `core.hooksPath`**：`git config --get core.hooksPath` 有值（husky 等工具会设成 `.husky/_`）时，Git **完全忽略 `.git/hooks/`**——上面这条 cp 会"安装成功"却永不执行，且无任何报错。此时改为把 `sh scripts/pre-commit-hook.sh` 追加进该 hooksPath 对应的 `pre-commit` 脚本末尾（退出码原样传出）。装完必须**真触发一次**验证，不能只看文件在不在。
 >
 > **门卫随 clone 的兜底**：`.git/hooks/` 是本地态、不入版本控制。队友 clone 本仓后须跑一次 `cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit` 才有门卫。未装 = 退回 honor-system（linter 仍可手动跑），与 `--no-verify` 同属"护栏非密码锁"——是合作者的强制出路，非安全边界。
+>
+> **门卫模板修订后，存量仓要重装两跳**：`.git/hooks/pre-commit` 是安装时的**快照**，两跳都不会自己动——① hact-method 的模板改了，项目仓 tracked 的 `scripts/pre-commit-hook.sh` 不会自动跟（须按上面「合并而非覆盖」手工并入）；② 就算 ① 做了、`git pull` 把 `scripts/` 拉新了，`.git/hooks/` 里那份仍是旧的，须重跑一次上面的 cp。漏掉任一跳，仓里看着是新门卫、实际跑的是旧的，且**不报错**。重装后**真触发一次**确认。
 
 **4.2 强制获取 Gitee 远端地址：**
 

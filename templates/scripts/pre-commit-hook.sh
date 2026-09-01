@@ -49,11 +49,20 @@ run() {  # run <脚本> <参数...>：脚本存在才跑；红则置 fail
 
 # 抽出 staged 路径里涉及的迭代版本目录（去重）
 iter_dirs=$(echo "$staged" \
-  | grep -oE '^iterations/v[0-9]+/' \
+  | grep -oE '^iterations/v[0-9]+(\.[0-9]+)*/' \
   | sort -u)
 
+# 兜底：staged 有 iterations/ 文件、却一个迭代目录都没识别出来（畸形目录名如 v1. / vX）——
+# 正则追不完畸形输入，但静默 no-op 会让下面四个检查器整期无声不跑（点号版本即如此漏过）。
+# 只警告不拦：别把畸形路径变成提交拦路石。
+if [ -z "$iter_dirs" ] && echo "$staged" | grep -q '^iterations/'; then
+  echo "⚠️  pre-commit: staged 含 iterations/ 文件，但未识别出任何迭代目录（期望 iterations/vN/ 或 iterations/vN.M/）。" >&2
+  echo "   本次 check-docs / check-sprint / check-gate / check-ux 全部未跑（放行）。请核对目录名形态。" >&2
+fi
+
 for dir in $iter_dirs; do
-  ver=$(echo "$dir" | grep -oE 'v[0-9]+')   # vN
+  # 点号版本必须整取：只取到 v1 会让下游检查器拿着不存在的迭代号去查，比不跑更坏
+  ver=$(echo "$dir" | grep -oE 'v[0-9]+(\.[0-9]+)*')   # vN 或 vN.M
 
   # --- PRD / TRD 结构 + 交叉（check-docs.js）---
   prd_staged=$(echo "$staged" | grep -qE "^${dir}prd\.md$" && echo y || echo n)

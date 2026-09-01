@@ -14,8 +14,8 @@ const path = require('path');
 const ver  = process.argv[2];
 const root = process.argv[3] || '.';
 
-if (!ver || !/^v\d+$/.test(ver)) {
-  console.error('用法：node scripts/check-ux.js <vN> [根目录]');
+if (!ver || !/^v\d+(\.\d+)*$/.test(ver)) {
+  console.error('用法：node scripts/check-ux.js <vN|vN.M> [根目录]');
   process.exit(2);
 }
 

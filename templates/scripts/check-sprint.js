@@ -855,8 +855,8 @@ function main() {
   const reviewMode = args[0] === '--review';
   const subject = reviewMode ? args[1] : args[0];
   const root = (reviewMode ? args[2] : args[1]) || process.cwd();
-  if (!subject || (!reviewMode && !/^v\d+$/.test(subject))) {
-    console.error('用法: node check-sprint.js <vN> [项目根]\n'
+  if (!subject || (!reviewMode && !/^v\d+(\.\d+)*$/.test(subject))) {
+    console.error('用法: node check-sprint.js <vN|vN.M> [项目根]\n'
       + '   或: node check-sprint.js --review <task-id> [项目根]');
     process.exit(2);
   }
