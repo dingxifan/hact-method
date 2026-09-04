@@ -18,7 +18,7 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 | B 类 | 走简化 4 关 | 无 Gate；恒定 2 会期（BUG 处理 + 功能优化） |
 | 多迭代 | 串行（vN+1 不早于 vN G3） | 并行（A 类约束放宽，B 类不受限） |
 | 部署 | 按迭代分散触发 | 默认合并部署（master 上"已验过"commit 一次性部署） |
-| 联调 | 人工跑清单 | CC 自动化（curl + pinchtab + 失败自动写修复） |
+| 联调 | 人工跑清单 | AI 驱动穿透流 + 浏览器场景；具体执行器由运行时映射选择 |
 
 ## 关键干系人
 
@@ -51,16 +51,16 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 1. **摒弃角色身份模型，改用 discipline 知识聚类**：discipline 不是身份、不是路由，只是任务知识的聚类维度。具体 discipline 清单不预设，由 04 任务全谱自然涌现（详见 skeleton/03 + 04）
 2. **工作区 3 个**：hact-method / 项目根 / hact-notes（个人积累；2026-05-31 因决策#21 增设，原为 2 个，见 `skeleton/02-workspaces.md`）
-3. **任务驱动**：人无身份，CC 加载工作规范靠任务声明
+3. **任务驱动**：人无身份，AI 运行时加载工作规范靠任务声明
 4. **B 类没 Gate**：只有任务流 + b-tasks.md 总账
 5. **B 类入口**：项目根"派新 BUG / 派新优化"
 6. **B 类恒定 2 会期**：BUG 处理 + 功能优化，不需要起/关
 7. **hotfix 不独立**：是任务包 urgency 属性，归 BUG 会期
 8. **部署默认合并**：master 上所有"已验过"commit 一次性部署
 9. **部署归项目根**：原则不破，所有迭代/B 类都遵循
-10. **联调 CC 自动化**：curl + pinchtab，失败自动写修复
+10. **联调自动化**：后端穿透流 + 浏览器场景，失败按证据写修复任务；具体驱动只住运行时映射
 11. **修订归项目根**：编排心态归编排区
-12. **CC 启动协议状态推断**：从文件状态推断子阶段，不在 iteration 文件加显式标记
+12. **共同启动协议状态推断**：从文件状态推断子阶段，不在 iteration 文件加显式运行时标记
 13. **任务是一等公民，Gate 退为聚合视图**：Gate N = 所属 task 集合的状态聚合
 14. **task.type 是路由键**：决定加载哪份 standards、所属 Gate、完成判据
 15. **任务范围扩到全流程**：PRD 起草、TRD 起草、standards 写作、联调脚本、修复任务、部署任务全部 task 化
@@ -92,21 +92,13 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 29. **安全敏感判定多层化（risk 不信自报，只升不降）**（2026-07-08）：决策#24（develop 自审自合并）+ #26（`risk: standard` 独审降档 haiku）+ `risk` 由 plan-sprint/dispatch-new 自报且 check-sprint 不校验，三者叠加出一条无机械拦截的合并链——漏标 sensitive 的任务包 → haiku 审 → 自动进 master；B 类连 G3 检查器都没有。修正为**五层防线**，`risk` 自报不再是安全档位的单点输入：① 填包规则「存疑即 sensitive」（plan-sprint / dispatch-new / 任务包模板）；② plan-sprint Step 3.5 独审 brief 增第⑥类「risk 标注核对」（包内容触及四类而标 standard = 阻断，改标即修）；③ `check-sprint.js` 敏感启发词核对（词面命中而未标 sensitive → `🧑` 段提示；启发式有误报，不做 FAIL）；④ develop 阶段 B 按**有效 risk**定模型档位（自报 sensitive ∨ 主线按四类语义扫任务包命中 → 不降档 + 回改字段）；⑤ 末端安全敏感预检**基于 diff 独立判定、不读 risk 自报**+ 漏标闭环（判定触及但曾被降档审过 → 先重派默认模型独审，再进 architecture 裁决）。①②③ 住 A 类 G3 链，④⑤ source 无关、同时兜 B 类。误报代价 = 多花一次默认模型独审，相对 #26 的降档收益可接受；启发词表单一来源住 `check-sprint.js`（机械层），develop 侧用四类语义判断、不复制词表。
 
+30. **Claude Code + Codex 双运行时，共享一份方法论正文**（2026-09-04）：`CLAUDE.md` / `AGENTS.md` 是薄入口，共同启动、任务路由、任务包、`status.yml`、Gate、固定审查证据和检查器不分叉；专属模型、代理、浏览器和代码托管实现只住 `templates/runtime/{cc,codex}.md`。运行时属于会话能力，不进入任务状态。隔离审查缺失时不得同会话自审替代；共享写集重叠默认串行。GPT-5.6 长上下文用于跨文档收敛与证据账本，不把整仓预加载或长输出当目标。决策#24/#26/#28/#29 中的具体模型与代理词只保留历史背景，当前执行以本决策及运行时映射为准。
+
 ## 工具依赖
 
-使用 hact-method 前需一次性配置以下工具，配置完成后无需重复操作：
+使用 hact-method 前需配置 Git、Node.js 与项目技术栈所需工具。隔离单元、浏览器场景、远端命令和代码托管操作的具体配置不在本 Brief 复制，分别以 `templates/runtime/cc.md`、`templates/runtime/codex.md` 为准；启动时由 `templates/runtime/preflight.md` 实测能力，不因配置文件存在就声称可用。
 
-### 开发机 / CC 工具
-
-| 工具 | 调用位置 | 安装 / 配置方式 |
-|------|---------|----------------|
-| **superpowers** | 所有 skill 的基础框架 | 按 superpowers 官方文档安装 |
-| **pinchtab skill** | generate-integration-tests 前端场景脚本 | 通过 superpowers 安装 |
-| **simplify skill** | develop 自检阶段，检查冗余实现 | 通过 superpowers 安装 |
-| **pic skill** | 联调前全面检查（`/pic`） | 通过 superpowers 安装 |
-| **gitee-ops skill** | Gitee PR 操作（`/gitee-ops`，禁止使用 gh CLI） | 通过 superpowers 安装；token 由 hact-conn 统一寻址 |
-| **hact-conn skill** | 连接与凭据统一寻址（Gitee token / SSH 服务器 / DB / 第三方 API key） | 软链本仓 `skills/hact-conn`；一次性配好机器本地 `~/.hact/secrets.env`（永不入库），各项目 `connections.yml` 只写坐标与 `${secret:NAME}` 引用 |
-| **SSH MCP** | deploy 阶段执行远端命令 | 在 Claude Code MCP 配置中添加 SSH server alias；alias 名登记进项目 `connections.yml` 的 `ssh.{target}.mcp-alias` |
+项目共同要求：`connections.yml` 只保存坐标与 `${secret:NAME}` 引用，真凭据留机器本地；浏览器或远端能力缺失时必须记录未运行原因，不能伪造通过。
 
 ### 服务器端工具
 

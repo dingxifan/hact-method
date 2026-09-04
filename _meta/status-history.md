@@ -4,6 +4,18 @@
 
 ## 历史里程碑
 
+### 2026-09-04 Claude Code + Codex 双运行时适配
+
+- **触发**：现有方法论长期绑定 Claude Code 的代理类型、模型名、工具名和入口协议；团队将同时使用 Claude Code 与 Codex，需利用 GPT-5.6 的长上下文能力，但不能让任务、Gate 或状态按运行时分叉。
+- **共同控制面**：新增 `templates/runtime/interfaces.md`、`preflight.md` 与 `templates/boot-protocol.md`；根/模板 `CLAUDE.md`、`AGENTS.md` 变为薄入口。运行时只在会话进度或审查报告可选留出处，不进入任务包、`status.yml` 或 Gate。
+- **Codex 5.6 映射**：项目级 `.codex/agents/` 提供 Luna 只读调查、Terra 实现、Terra 普通审查、Sol 敏感审查四角色；模型不可用时预检须显式报告同级替代，不静默换档。执行规范、结构契约、骨架与 review brief 已去除专属代理/模型/浏览器驱动词，默认中立检查覆盖全部共同正文。
+- **上下文策略**：1M 级上下文用于跨文档语义收敛、V0 as-built 对账和规范审计；仍先定范围与证据账本，不把整仓无选择预载。128K 输出不是报告配额，长过程压缩为可检查产物。
+- **顺带补格**：B 类固定 `contract-impact: none`，公共契约变更硬升级；V0→V1+ 新增紧凑 `as-built-ledger.md`；任务包新增 `asset-writes`，同文件/同资产无依赖路径即 FAIL；新增 active/tracked/template 三方 hook 漂移探针，只报告不覆盖。
+- **验证**：中立检查、Codex agent 模板检查、四组新增正反夹具、review-profile 原有 12 例全部通过。A（CC→CC→CC）、B（Codex→Codex→Codex）、C（CC→CC→Codex）、D（Codex→CC→CC）四种协议演练的任务包、状态、Gate、审查结论规范化哈希一致。
+- **边界**：当前环境不能伪造真实 Claude Code 团队会话；本次完成的是方法论与模板验收。真实 C/D 场景须在非生产项目逐仓授权后执行并回填，存量项目未分发、未覆盖任何 hook 或配置。
+
+---
+
 ### 2026-08-30 方法论减法：hact-app（看板应用）全面退场 + 路径漂移治理 + 阶段表压缩
 
 > 触发：用户就 2026-08-29 连接层落地追问「CC_TOKEN 是干什么的」「本机是否已有各项目所需的 token/SSH 事实信息」「项目之间信息不一致会怎样」。三问各自炸出一件事。

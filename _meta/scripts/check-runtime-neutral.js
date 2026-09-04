@@ -13,6 +13,9 @@ const defaults = [
   'specs-structural',
   'skeleton',
   'templates/review-briefs',
+  'templates/checklists',
+  'templates/design.md',
+  'guide/02-一期完整流程.md',
 ];
 const targets = process.argv.slice(2).length > 0 ? process.argv.slice(2) : defaults;
 
