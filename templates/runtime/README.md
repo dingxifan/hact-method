@@ -5,7 +5,7 @@
 | 文件 | 职责 | 谁读取 |
 |---|---|---|
 | `interfaces.md` | 中立能力定义、产物不变量与降级规则 | 所有执行规范和入口 |
-| `preflight.md` | 会话启动时的运行时声明与能力协商 | 共同启动协议 |
+| `preflight.md` | 任务路由确定后的运行时声明复述与按需能力协商 | 共同启动协议 |
 | `cc.md` | Claude Code 的具体实现映射 | `CLAUDE.md` 入口 |
 | `codex.md` | Codex 的具体实现映射 | `AGENTS.md` 入口 |
 

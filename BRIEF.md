@@ -94,9 +94,13 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 30. **Claude Code + Codex 双运行时，共享一份方法论正文**（2026-09-04）：`CLAUDE.md` / `AGENTS.md` 是薄入口，共同启动、任务路由、任务包、`status.yml`、Gate、固定审查证据和检查器不分叉；专属模型、代理、浏览器和代码托管实现只住 `templates/runtime/{cc,codex}.md`。运行时属于会话能力，不进入任务状态。隔离审查缺失时不得同会话自审替代；共享写集重叠默认串行。GPT-5.6 长上下文用于跨文档收敛与证据账本，不把整仓预加载或长输出当目标。决策#24/#26/#28/#29 中的具体模型与代理词只保留历史背景，当前执行以本决策及运行时映射为准。
 
+31. **强模型时代只删重复编排，不删治理边界**（2026-09-04）：运行时能力协商后移到 `task.type` 推断与单份规范加载之后，只检查当前任务实际命中的能力；freshness 无漂移时只留固定锚与一行摘要，发生漂移才展开证据与路由；事件时间戳是 implementation / review / round 耗时的单一真相源，不再持久化可计算的派生分钟，只有跨多段累计的 `spec_minutes` 保留。V0 仍由人类在 init-project 中自主决定走或跳；Gate、首次独立完整审查、固定 diff、共享资产冲突约束与最终全量验证不变。
+
+32. **双运行时内部闭合必须由真实证据而非同源声明证明**（2026-09-04）：独立审查发现双入口虽已共用正文，但 develop 专属命令残留、G1→G3 路由断层、TRD 独审冲突、假 Git SHA 可过和同源 handoff canonical 等问题，首轮结论 `block`。修复后：启动以机器可核状态矩阵覆盖；代码托管/模型词只住映射；任务认领核依赖已 merged；每任务取独立 base tree，前序 accepted 文件以 blob 防二次污染；B 类在固定 diff 上核契约；V0 异常须 closed + 闭合锚且未知不可冒充关闭；review 审计要求当前仓真实 Git 对象并重算 hash/files/finding 闭合；四场景使用 schema-complete 独立夹具并做变异测试；hook、初始化和前后端联调证据均有负向检查。五轮独立复审最终结论 `pass`。自动夹具只证明内部契约，不替代真实 CC↔Codex 试点。
+
 ## 工具依赖
 
-使用 hact-method 前需配置 Git、Node.js 与项目技术栈所需工具。隔离单元、浏览器场景、远端命令和代码托管操作的具体配置不在本 Brief 复制，分别以 `templates/runtime/cc.md`、`templates/runtime/codex.md` 为准；启动时由 `templates/runtime/preflight.md` 实测能力，不因配置文件存在就声称可用。
+使用 hact-method 前需配置 Git、Node.js 与项目技术栈所需工具。隔离单元、浏览器场景、远端命令和代码托管操作的具体配置不在本 Brief 复制，分别以 `templates/runtime/cc.md`、`templates/runtime/codex.md` 为准；任务路由确定后由 `templates/runtime/preflight.md` 按需实测能力，不因配置文件存在就声称可用。
 
 项目共同要求：`connections.yml` 只保存坐标与 `${secret:NAME}` 引用，真凭据留机器本地；浏览器或远端能力缺失时必须记录未运行原因，不能伪造通过。
 

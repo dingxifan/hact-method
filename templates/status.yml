@@ -58,9 +58,7 @@ code_reviews: []
 #    implementation_completed_at: 2026-08-09T01:42:00Z
 #    review_started_at: 2026-08-09T01:42:00Z
 #    review_completed_at: 2026-08-09T02:18:00Z
-#    implementation_minutes: 42  # ceil(completed-started)，int >= 0
-#    review_minutes: 36          # 含独审等待与审查期间整改，int >= 0
-#    spec_minutes: 4             # preflight/revise-doc 澄清墙钟，int >= 0
+#    spec_minutes: 4             # preflight/revise-doc 多段规格澄清累计墙钟，int >= 0；implementation/review 分钟由时间戳按需计算
 #    comment: null
 #    issues:
 #      - { id: task-F001, dimension: contract, severity: 严重, type: behavior-bug, reachability: current, action: fix-code, impact: ..., description: ..., location: src/x.ts:40 }

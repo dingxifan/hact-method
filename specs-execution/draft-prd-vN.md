@@ -38,7 +38,7 @@
 
 **加载上下文**：首期读 `_meta/input/background.md`（如有）+ 项目根 `foundation.md`（**地基蓝图·领域地图**——核心实体 / 主数据 / 贯穿全局作用域；本期功能挂其核心实体、不另起领域，与 V0 已立的地基一致；**不存在则跳过**——仅存量项目无此文件；新项目无论走/跳 V0，foundation.md 均已由 init 播种）；迭代读 项目根 `project.md`（已有现状 + 已排除功能）。
 
-**[走过 V0 时] 核 as-built 并落证据账本**：上述必读件全是**设计侧**文档，而 V0 走骨架的产出是**代码与迁移**。`iterations/v0/` 存在时，按 `templates/as-built-ledger.md` 生成 `iterations/vN/as-built-ledger.md`，只记录本期触及的实体、状态枚举、队列、转换边与地基关注点：① 设计声明；② `reusables.md` 标杆切片登记；③ 迁移/实体/状态机/队列定义的路径或符号锚；④ 实际观察；⑤ 一致/漂移/未知；⑥ 动作。**本期功能若触及其中任一事实，方案须与已落地承载一致**；漂移或未知在落笔前走 `revise-doc`/补证据关闭，不得在 PRD 里另起一套。账本是证据索引，不复制原文或整仓摘要。
+**[走过 V0 时] 核 as-built 并落证据账本**：上述必读件全是**设计侧**文档，而 V0 走骨架的产出是**代码与迁移**。`iterations/v0/` 存在时，按 `templates/as-built-ledger.md` 生成 `iterations/vN/as-built-ledger.md`，只记录本期触及的实体、状态枚举、队列、转换边与地基关注点：① 设计声明；② `reusables.md` 标杆切片登记；③ 迁移/实体/状态机/队列定义的路径或符号锚；④ 实际观察；⑤ 一致/漂移/未知；⑥ 闭合状态；⑦ 动作；⑧ 闭合证据。**本期功能若触及其中任一事实，方案须与已落地承载一致**；`未知`只允许调查中，补证后必须改判为一致或漂移；漂移在落笔前走 `revise-doc` 关闭并留下锚，不得以 `open/blocked`、“需补证据”或“未知 + closed”进入 PRD。账本是证据索引，不复制原文或整仓摘要。
 
 开场：「本次完成 v{N} PRD，分三层：对齐方向骨架 → 逐功能写契约 → 清零开放问题签 G1。」确认版本号后开始。
 
@@ -126,7 +126,7 @@
 
 ```bash
 node scripts/check-docs.js --prd iterations/vN/prd.md
-node scripts/check-as-built-ledger.js vN
+node ../hact-method-lab/templates/scripts/check-as-built-ledger.js vN .
 ```
 
 红 → 按报告逐条修 `prd.md` 重跑到绿。这步是**提前自查**；Step 8 签字 commit 时 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷偷签字"机制上做不到，故不再写强制散文。

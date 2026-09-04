@@ -25,6 +25,19 @@ function effectiveHook(root) {
   return path.join(hooksPath, 'pre-commit');
 }
 
+function delegatesTracked(source) {
+  return String(source || '').split(/\r?\n/).some(line => {
+    const command = line.trim();
+    if (!command || command.startsWith('#')) return false;
+    return /^(?:(?:exec|sh|bash)\s+)?(?:\.\/)?scripts\/pre-commit-hook\.sh(?:\s|$)/.test(command);
+  });
+}
+
+function isExecutable(file) {
+  if (process.platform === 'win32') return true;
+  return (fs.statSync(file).mode & 0o111) !== 0;
+}
+
 function inspect(root, methodRoot) {
   const tracked = path.join(root, 'scripts', 'pre-commit-hook.sh');
   const active = effectiveHook(root);
@@ -42,7 +55,11 @@ function inspect(root, methodRoot) {
   } else {
     const activeBody = fs.readFileSync(active);
     result.activeHash = hash(activeBody);
-    const delegates = /(?:^|[\/\\])scripts[\/\\]pre-commit-hook\.sh|scripts\/pre-commit-hook\.sh/.test(activeBody.toString('utf8'));
+    const delegates = delegatesTracked(activeBody.toString('utf8'));
+    if (!isExecutable(active)) {
+      result.state = 'degraded';
+      result.signals.push('active-not-executable');
+    }
     if (Buffer.compare(trackedBody, activeBody) === 0) result.install = 'exact-copy';
     else if (delegates) result.install = 'delegates-tracked';
     else {
@@ -62,6 +79,7 @@ function inspect(root, methodRoot) {
         result.signals.push('template-project-drift');
       }
     } else {
+      result.state = 'degraded';
       result.signals.push('template-not-found');
     }
   }
@@ -100,4 +118,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { inspect };
+module.exports = { inspect, delegatesTracked };

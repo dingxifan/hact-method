@@ -22,8 +22,8 @@
 **前置检查：draft-ux 是否就绪**
 
 读 `iterations/vN/prd.md`，扫描所有功能的 `draft-ux` 字段：
-- 有任何功能标记 `draft-ux: 需要`，且 `iterations/vN/prototype.html` 不存在 → 阻断：「⚠️ PRD 中有功能需要交互原型，请先完成 draft-ux 再启动技术设计。」
-- 全部标记 `draft-ux: 不需要`，或 `prototype.html` 已存在 → 继续
+- 有任何功能标记 `draft-ux: 需要`，且 `prototype.html` / `prototype-map.md` / `ux-flows.md` 任一不存在 → 阻断：「⚠️ PRD 中有功能需要交互原型，但 UX 三件套未齐，请先续做 draft-ux 再启动技术设计。」
+- 全部标记 `draft-ux: 不需要`，或 UX 三件套均已存在 → 继续
 
 **必读文件**（可用只读调查单元并行读取并返回带路径摘要；不可用则主线顺序读）：
 - `iterations/vN/prd.md`
@@ -303,7 +303,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 | 触发点 | 隔离单元任务 | 失败处理 |
 |--------|-------------|---------|
 | 会话启动 | 只读调查单元并行读 6 份输入文件（纯读取+带路径摘要） | 读取失败则主线单独读，不阻断 |
-| Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 失败则主线自审降级，不阻断 |
+| Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 重派一次仍失败则 `blocked`，不得主线自审替代 |
 | Step 7 standards 维护 | 2 个隔离执行单元各处理一份不重叠文件（frontend / backend 首播或当前态更新） | 失败则主线接管该份，记录原因 |
 
 > **Step 5 与 Step 4 分工**：Step 4 linter 机械核结构 / 覆盖类【linter】判据；Step 5 验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），两者不重叠。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。

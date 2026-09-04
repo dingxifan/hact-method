@@ -4,6 +4,30 @@
 
 ## 历史里程碑
 
+### 2026-09-04 双运行时全面独审与内部闭合
+
+- **审查起点**：在双运行时改造完成后派全新上下文独审员，以 `master@7c28db4` 到最终工作树为对象，不读取实施者结论。首轮判 `block`：1×S0、7×S1、4×S2；自动检查虽全绿，但暴露多项同源自证和假 SHA 覆盖。
+- **控制平面**：中立 develop 清除 `/gitee-ops` / 模型词；启动协议补 V0、B 类与 G1→UX→G2→G3→开发→联调→收尾机器状态矩阵；TRD 独审失败统一为重派后 blocked；中立检查增加任务包与专属词/冲突语义反向哨兵。
+- **执行边界**：新增 `check-sprint --ready` 核外部依赖 merged 与同批拓扑；批次 freshness 改为逐任务取 base；新增 `--worktree-from-reports`，要求 prior report 是 final/pass、fixed diff 可复现，并逐文件核当前 index/worktree blob 等于 reviewed_head，挡住 accepted 同路径二次污染。
+- **证据真实性**：review 审计改用真实 Git commit/tree，重算 `git diff --binary` SHA-256、changed files 与任务 files，追踪 open blocking finding 闭合；integration fixture 改用真实临时 Git 仓，负例覆盖假 tree/hash、open blocker、累计越界 diff、targeted 链和 Foundation sentinel。
+- **契约与地基**：B 类删除“纯加法 schema”遗留口径，`check-b-task --diff` 核真实路径、导出 enum/API/DDL 与既有 exported interface/type/DTO 成员；V0 ledger 增闭合状态/证据并禁止 `未知 + closed`。
+- **运行时与证据落盘**：hook 只认可真实命令委托，注释/无执行位/模板缺失均降级；新项目默认双运行时，`check-runtime-project` 校验双入口、共享 Gitee 说明与 agent 名称/description/model/effort/sandbox/instructions；联调统一 `integration-tests/evidence/vN/{场景-id}/`，后端、边界和浏览器均需真实证据或未运行原因。
+- **handoff 检验**：A/B/C/D 四场景改为独立、schema-complete 产物夹具，绑定当前任务包必填字段和 review 审计字段；单场景 Gate、缺 task files、缺 review_report_dir 变异必须被主校验拒绝。它证明静态契约，不冒充真实外部运行时执行。
+- **收敛结果**：五轮独立复审依次为 `block → block → block → pass-with-findings → pass`。最终无仓内 blocker 或可操作 finding；剩余只是真实账号模型、隔离上下文、Gitee/浏览器/远端能力与 C/D 项目交接试点假设。未向任何项目仓分发、未覆盖 hook 或配置。
+
+---
+
+### 2026-09-04 强模型时代编排纯减法
+
+- **触发**：用户在完成 GPT-5.6 双运行时适配后，要求复核旧模型时代是否留下过度设计；随后明确 V0 保持可跳过且由人类自主判断，只实施不改变质量边界的纯减法。
+- **按任务预检**：入口先加载运行时映射，共同启动完成同步、`task.type` 推断和单份规范加载，再只检查该任务实际命中的能力。无关的浏览器、远端或代码托管能力不再为填满固定清单而探测；入口顺序由交接检查器机械验证。
+- **freshness 紧凑化**：`result: pass` 只保留固定 `base_ref/base_tree`、事件时间与一行正常摘要；只有 `revised/blocked` 才展开漂移面、证据与 finding 路由。开工前纠偏门仍在，未闭合 finding 仍阻断实现。
+- **时间单一来源**：implementation、review 与每轮 report 只保存事件时间戳，删除完全可计算的 `implementation_minutes`、`review_minutes`、`elapsed_minutes`；跨多次 preflight/revise-doc 累计的 `spec_minutes` 继续保留。检查器不再要求派生字段，并兼容存量 status 中的旧字段。
+- **不变量**：V0 走/跳继续由人类拍板；Gate、首次独立完整审查、targeted 复审、固定 diff、共享资产冲突约束和合并前全量验证均未修改。未向任何项目仓分发或覆盖 hook。
+- **验证**：review-profile 单元 5/5、集成 7/7、四组模板正反夹具、运行时中立检查、Codex agent 配置检查及 A/B/C/D 交接协议演练全部通过；兼容审查 skill 通过等价结构校验（官方 Python validator 因环境缺 PyYAML 无法启动）。
+
+---
+
 ### 2026-09-04 Claude Code + Codex 双运行时适配
 
 - **触发**：现有方法论长期绑定 Claude Code 的代理类型、模型名、工具名和入口协议；团队将同时使用 Claude Code 与 Codex，需利用 GPT-5.6 的长上下文能力，但不能让任务、Gate 或状态按运行时分叉。

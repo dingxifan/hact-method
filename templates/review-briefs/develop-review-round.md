@@ -10,11 +10,10 @@ target_finding_ids: []
 base_ref: <固定 commit SHA>
 reviewed_base: <commit/tree SHA>
 reviewed_head: <commit/tree SHA>
-diff_sha256: <64 位小写 hex>
+diff_sha256: <`git diff --binary reviewed_base reviewed_head` 原始字节的 SHA-256，64 位小写 hex>
 changed_files: []
 started_at: <ISO-8601>
 completed_at: <ISO-8601>
-elapsed_minutes: 0
 escalate_to_full: false
 conclusion: pass | revise | evidence-needed
 ---
@@ -46,4 +45,6 @@ findings: []
 #   status: open | verified-closed | advisory
 ```
 
-同一根因的调用语法/输入变体合并到同一 id 的 evidence，不按变体数增加 finding。`started_at/completed_at` 由编排器在事件发生时写入，`elapsed_minutes = ceil((completed-started)/60s)`，不得事后估算。
+同一根因的调用语法/输入变体合并到同一 id 的 evidence，不按变体数增加 finding。`started_at/completed_at` 由编排器在事件发生时写入；逐轮耗时按需由两者计算，不重复持久化分钟字段。
+
+报告中的 `reviewed_base/reviewed_head` 必须是当前仓真实存在的 commit/tree；`changed_files` 与 `diff_sha256` 必须从这两个对象机械重算。`conclusion: pass` 时不得残留 `severity: blocking + status: open`；targeted 报告须逐条回写每个 `target_finding_ids` 的关闭或仍开放状态。

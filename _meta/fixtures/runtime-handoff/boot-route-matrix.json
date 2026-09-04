@@ -1,0 +1,19 @@
+{
+  "cases": [
+    { "signal": "phase=v0;G2=0", "expected": "draft-foundation" },
+    { "signal": "phase=v0;G2=1;foundation=unmerged", "expected": "develop(source=foundation)" },
+    { "signal": "phase=v0;foundation=merged", "expected": "continue-v1" },
+    { "signal": "class=B;status=available", "expected": "develop(source=bug/optimization)" },
+    { "signal": "class=B;status=active", "expected": "develop(source=bug/optimization)" },
+    { "signal": "phase=v1;G1=0", "expected": "draft-prd-vN" },
+    { "signal": "phase=v1;G1=1;G2=0;ux=required;outputs=incomplete", "expected": "draft-ux" },
+    { "signal": "phase=v1;G1=1;G2=0;ux=ready", "expected": "draft-tech-design" },
+    { "signal": "phase=v1;G2=1;G3=0", "expected": "plan-sprint" },
+    { "signal": "phase=v1;G3=1;G4=0;tasks=available", "expected": "develop" },
+    { "signal": "phase=v1;G3=1;G4=0;tasks=active", "expected": "develop" },
+    { "signal": "phase=v1;G3=1;G4=0;tasks=merged;integration=missing", "expected": "generate-integration-tests" },
+    { "signal": "phase=v1;G3=1;G4=0;tasks=merged;integration=present", "expected": "manual-test" },
+    { "signal": "phase=v1;G4=1;G5=0", "expected": "wrap-up-iteration" },
+    { "signal": "phase=v1;G5=1", "expected": "wait" }
+  ]
+}

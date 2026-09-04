@@ -54,7 +54,7 @@
 **source=bug/optimization 进料（B 类）**
 
 - B 类由 `dispatch-new` 写入 `b-queue/` 后，统一从本 `develop` 入口拾取；一次只取用户点名的一个 task-id，不与 sprint 批次混跑。
-- 认领前运行 `node scripts/check-b-task.js b-queue/{task-id}.md`。缺脚本的存量仓人工核 `contract-impact=none`，且 `files` 不含已签 PRD/TRD/Foundation/Standards/design、迁移/schema/公共契约路径；命中即阻断并转 `revise-doc` 或新 A 类迭代，不得边写代码边改契约。
+- 认领前运行 `node ../hact-method-lab/templates/scripts/check-b-task.js b-queue/{task-id}.md --root .`，直接使用已同步的方法论当前版。另人工核 `contract-impact=none`，且 `files` 不含已签 PRD/TRD/Foundation/Standards/design、迁移/schema/公共契约路径；命中即阻断并转 `revise-doc` 或新 A 类迭代，不得边写代码边改契约。
 - 无 Gate、无 sprint.md、无 iteration；任务包路径为 `b-queue/{task-id}.md`，审查/预检记录目录为 `b-reviews/{task-id}/`，分支名与 PR 粒度均为 `{task-id}`。
 - 状态 `[可取]` 时认领并同步 `status.yml`；`[taken-by]` 时按断点续做对账。状态已 `[done]/[merged]` 则先说明现状，不重复实现。
 - 主循环、freshness preflight、独立审查、末端全量和状态更新照常；所有文中的 vN 参数对 B 类替换为“无 iteration”。
@@ -62,11 +62,19 @@
 
 **拾取任务（source=sprint）：形成任务集**
 
-读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按 `交付` 字段分两路。**两路共用估量标准**：以「主线编排 + 末端全量检测不触发 compact」为截止线，按各任务 `files` 估改动面取前缀子集；超出估量线的任务留 `[可取]` 下轮拾取。
+读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按 `交付` 字段分两路。候选任务只有在以下条件满足时才算可拾取：其 `depends_on` 要么已 `[merged]`，要么同时进入本轮任务集且排在它之前；跨 layer 或未纳入本轮的依赖必须先合并。**两路共用估量标准**：以「主线编排 + 末端全量检测不触发 compact」为截止线，按各任务 `files` 估改动面取前缀子集；超出估量线的任务留 `[可取]` 下轮拾取。
 
 - **交付=串行**：取本 layer 全部 `[可取]` 串行任务，按 task-id 升序，估量后取头部前缀。每个串行任务各自一个 PR，会话内串行完成（每任务跑完「主循环+末端」后切回 master，再启下一个）。
-- **交付=可并行**：本 layer 无 `[可取]` 串行任务时，取本 layer 全部 `[可取]` 可并行任务，按依赖序，估量后取依赖序前缀子集（前缀天然依赖闭合）。全部可并行任务共一个 PR。
+- **交付=可并行**：本 layer 无 `[可取]` 串行任务时，取本 layer 全部就绪的 `[可取]` 可并行任务，按依赖拓扑序，估量后取依赖闭合的前缀子集。全部可并行任务共一个 PR。
 - **阻断**：本 layer 有 `交付=串行` 任务处于 `[done]`（PR 已推未合并到 master）且有 `可并行` 任务依赖它 → 停止：「⚠️ {task-id}（串行）PR 尚未合并到 master，依赖它的可并行任务暂不可拾取，请先完成该串行任务的 develop 会话（含合并）。」
+
+形成候选集合后、认领前运行：
+
+```bash
+node ../hact-method-lab/templates/scripts/check-sprint.js --ready {task-id-1},{task-id-2},... .
+```
+
+非 0 表示存在未合并外部依赖、集合未依赖闭合或顺序错误；重新选集，不得先认领再等依赖。
 
 估量完成后直接通知用户并进入认领（无需等确认）：
 ```
@@ -89,7 +97,7 @@
   git checkout master && git pull
   ```
 
-> 禁止从其他任务分支切（禁止 stacked PR）。唯一例外：depends_on 指向尚未合并到 master 的前置任务时，从该前置分支切。
+> 禁止从其他任务分支切（禁止 stacked PR）。前置任务未合并且不在同一批次时，本任务不可拾取；不得从前置任务分支绕过就绪检查。
 > 多会话并行时同名分支已存在 → git 立即报错：停止，告知用户另一会话已认领同批任务，澄清后再继续。
 
 `branch` 字段写入 status.yml：可并行任务认领时统一写入；串行任务随各自分支建立时逐步写入。认领 commit：
@@ -100,9 +108,12 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 ```
 （push 随首次代码 commit 一起推送，无需单独 push）
 
-**freshness preflight（写第一行代码前）**
+**freshness preflight（当前任务写第一行代码前）**
 
-对集合内每个任务做一次轻量核对，只查依赖合并后可能变化的面：
+任务进入主循环时逐个执行，不在批次开头一次性为全部任务预写。这样同分支批次中，前一任务已通过审查的 tree 会成为下一任务的 `base_tree`，两棵 tree 的 diff 只含当前任务。只查依赖合并后可能变化的面：
+
+- 本批首任务先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --worktree-from-reports none .`；
+- 后续任务传入此前每个已通过任务的最终 round report（逗号分隔）。检查器只允许这些报告声明的 accepted changed files，以及各自 review 目录中的 preflight/profile/round 产物；其他 dirty path 或任一 stash 均阻断。
 
 - `files` 是否仍是当前落点，`reference` 的符号/章节/行号锚是否仍存在；
 - 上游是否已完成本包原计划新建的机制，或改变了接口、状态、阈值；
@@ -112,7 +123,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 
 **先建审计锚**：编排器在事件发生时取 ISO-8601 时间，不让执行者事后估算。A 类记录写 `iterations/vN/code-reviews/{task-id}/preflight.md`，B 类写 `b-reviews/{task-id}/preflight.md`，格式用 `templates/review-briefs/develop-preflight-record.md`。开始核对时记录 `started_at`；确认工作树不含本任务外改动后，记录固定 `base_ref=$(git rev-parse HEAD)` 与当前 `base_tree=$(git write-tree)`。
 
-未命中则记 `freshness: pass`、`timing: before-code` 后继续。命中时在改代码前按根因处理：`example-error / contract-drift` 修任务包或发 `revise-doc`，`scope-gap` 补承接任务；只复核变化的契约，不跑代码审查。修订闭合后重新 preflight；需用户裁决时返回 blocked。结束时写 `completed_at/result/spec_minutes`，其中分钟数按事件时间差向上取整；此处产生的轮次计入 `spec_rounds`，不计 `code_rounds`。
+未命中则记 `freshness: pass`、`timing: before-code` 和一行正常摘要后继续，不逐面填表。命中时才展开漂移面、证据与路由，并在改代码前按根因处理：`example-error / contract-drift` 修任务包或发 `revise-doc`，`scope-gap` 补承接任务；只复核变化的契约，不跑代码审查。修订闭合后重新 preflight；需用户裁决时返回 blocked。结束时写 `completed_at/result`；事件时间戳是单一真相源，终态 `spec_minutes` 汇总 preflight / revise-doc 等多段规格墙钟。此处产生的轮次计入 `spec_rounds`，不计 `code_rounds`。
 
 preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失时，**禁止写代码**。断点接管已有 diff 却无记录时只能补 `timing: retroactive` 并先纠偏，不得倒填成 before-code。
 
@@ -129,7 +140,7 @@ preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失�
 
 ## 主循环：逐任务「执行 → 独立审查」（per task，依赖序串行）
 
-> **可并行任务集**：对每个任务按依赖序串行走「隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突），全部通过后进末端（一次）。**串行任务多个**：每个任务各自串行完成「主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
+> **可并行任务集**：对每个任务按依赖拓扑序串行走「工作树白名单核对 → 该任务 freshness preflight → 隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突）。当前任务通过后保留其 accepted implementation tree；其审计目录保持未暂存，下一任务由白名单检查识别，不把报告混入 `base_tree`。下一任务再取新的 preflight `base_tree`，不得复用批次起点。全部通过后进末端（一次）。**串行任务多个**：每个任务各自串行完成「preflight + 主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
 
 ### 阶段 A · 隔离执行单元（读懂 → 计划 → 写 → 自绿）
 
@@ -155,7 +166,7 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
    blocked: { reason: "do-not 边界拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红 / 测试基建缺失", detail: "..." }  # status=blocked 时填
    ```
 
-隔离执行单元返回 `done` 时，编排器立即记录 `implementation_completed_at`，并以两时间戳向上取整得到 `implementation_minutes`。这段只计算首次实现；从第一轮独审开始到最终通过的整改与等待统一计入 review wall-clock，避免重叠。
+隔离执行单元返回 `done` 时，编排器立即记录 `implementation_completed_at`。实现墙钟由 `implementation_started_at/completed_at` 按需计算，不重复持久化分钟字段。这段只覆盖首次实现；从第一轮独审开始到最终通过的整改与等待属于 review wall-clock，避免重叠。
 
 > **测试基建缺失**（项目无测试运行器）：隔离执行单元返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 项目根 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 隔离审查单元按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
 
@@ -173,16 +184,15 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 > 不得用 `git checkout --` / 删文件 / `git stash` 处置它：**留着不提交是可逆的，还原和删除是不可逆的**，两者代价差一个量级，而对「不混进 diff」这个目标的贡献完全相同。实测 2026-08-30：一个会话据本条字面依据把来源不明的 `scripts/pre-commit-hook.sh` 改动 `git checkout --` 还原、并删掉了新脚本（虽留了底到 scratchpad），另一个会话遇到同样情况选择「既不提交也不回退、原样留着并上报」——后者是本条要求的处置。
 > 另：**文件 mtime 不是归因证据**。它只能证明「那时被写过」，证明不了「谁写的」；据 mtime 落在自己执行单元运行窗口内就断定是自己人所为，实测已致误判。归因不明时按上一段留着并上报，不猜。
 
-> **「工作树干净」必须连 `git stash list` 一起看。** 凡以「工作树不含本任务外改动」为前提的判据（本节固定 `base_tree`、preflight 的工作树核对等），只查 `git status` 会读出**假干净**：改动被 stash 后 `git status` 就是干净的，而那些改动随时可能 pop 回来、落进你随后固定的 tree 里。实测 2026-08-30：某会话的隔离执行单元对自己在制品做了一次 stash-pop，工作树有二十余分钟处在「看起来干净、实则 3175 行悬在 stash 里」的状态；期间若有另一个会话据 `git status` 判定"干净"并据此固定审查对象，得到的是一个假前提。
-> 加固很便宜：`git status --porcelain` 与 `git stash list` **同时为空**才算干净；非空时先弄清那些 stash 属于谁、会不会 pop 回来，再决定是否继续。
+> **「工作树无污染」必须连 `git stash list` 一起看。** 首任务要求 index/worktree/stash 全空；同分支后续任务允许两类已归因状态：① 前序已通过任务 final report 的 `changed_files`（accepted implementation，已暂存）② 这些任务各自 review 目录里的未暂存审计产物。除此之外任何 dirty path 都是污染；任一 stash 都阻断。不要凭肉眼读 `git status`，统一用上方 `--worktree-from-reports` 当前版检查器。
 
-**固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并计算固定 diff 的 SHA-256。首次 `reviewed_base` 取 preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。
+**固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并按 `git diff --binary {reviewed_base} {reviewed_head}` 的原始字节计算 SHA-256。首次 `reviewed_base` 取**当前任务** preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。B 类在派审前另运行 `node ../hact-method-lab/templates/scripts/check-b-task.js {task-package} --diff {reviewed_base} {reviewed_head} --root .`，用方法论当前版检查器对实际固定 diff 复核共享契约边界；非 0 退出 B 类并升级，不得继续独审。
 
 **首次 full review**：主线派隔离审查单元读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree + 下方生成的 project-relative `review_profile`。审查员自读任务包、命中 Standards、固定 diff 与测试，只执行 profile selected dimensions，不接收执行者自评；每条 finding 必须给稳定 id、dimension、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。Foundation 的 profile 固定为 `foundation-review/v1` 并按专用 brief 全审。
 
 **整改 targeted review**：传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；全新审查员可读前次**独立报告**，但仍不得接收开发者自评。只核这些 finding、反例、受影响回归与两棵 tree 之间的增量 diff，不重做无关逐类审查。若 changed surface 超出允许范围、引入新机制/模块/依赖或发现新根因，本轮报告置 `escalate_to_full: true`，紧接下一轮才升 full。
 
-每轮 dispatch/completion 当场写 `started_at/completed_at/elapsed_minutes`；不得事后估算。round report 本身不计入被审实现 tree，最终随状态提交。
+每轮 dispatch/completion 当场写 `started_at/completed_at`；逐轮耗时按需由时间戳计算，不重复持久化分钟字段。round report 本身不计入被审实现 tree，最终随状态提交。
 
 **能力分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 是写代码/生成任务，使用当前运行时映射的执行档；阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 普通审查档；sensitive 或 `source=foundation` → 高能力审查档。具体模型只在运行时映射表定义。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
 
@@ -209,7 +219,7 @@ node scripts/review-profile.js {task-package-path} \
 
 `findings: []` 或仅 advisory 即通过。只有 action 为 `fix-code/fix-mechanism` 的 blocking finding 进入代码整改 loop。每实际运行一次 full/targeted 独审计一个 `code_round`；同一代码根因最多 3 个 code rounds，同一 finding 的 evidence 面未变化时禁止换措辞重复上报。超界后按根因发 revise-doc 或 escape-hatch。
 
-最终通过时编排器立即写 `review_completed_at`，`review_minutes = ceil((review_completed_at-review_started_at)/60s)`；它有意包含独审等待和审查期间整改，正是用户真实感知的 review wall-clock。
+最终通过时编排器立即写 `review_completed_at`；review wall-clock 由 `review_started_at/completed_at` 按需计算，包含独审等待和审查期间整改，不重复持久化分钟字段。
 
 ### escape-hatch（执行 / 审查返回 blocked 时）
 
@@ -267,7 +277,7 @@ git commit -m "{见上}"
 git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领时已锁定
 ```
 
-用 `/gitee-ops` 创建 PR（远端为 Gitee，禁止 gh CLI）。PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
+执行代码托管操作创建 PR；平台入口与禁用工具以当前运行时映射为准。PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
 
 ```markdown
 ## {单元素集：task-id：任务标题 ／ 多元素集：v{N} {layer}层批量实现，含 task-id-1 / task-id-2 …}
@@ -298,21 +308,21 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 > - **对外不可撤销副作用**（扣款 / 发信 / 短信 / 第三方写入——发出去收不回）
 >
 > 预检**基于实际 diff 独立判定，不读任务包 `risk` 自报**（决策#29）——逐类对照 `git diff` 的路径与改动内容（鉴权/守卫/中间件文件、迁移/schema 文件、金额/计费字段计算、外发调用），存疑按触及处理。
-> **漏标闭环**：预检判定触及，但该任务阶段 B 曾按 standard 降档（sonnet）审查 → 说明 risk 漏标——先按 sensitive **重派默认模型独审**（重审通过才进人工裁决），并改正任务包与 status.yml 的 `risk`。
+> **漏标闭环**：预检判定触及，但该任务阶段 B 曾按 standard 审查档执行 → 说明 risk 漏标——先按 sensitive **重派高能力审查档**（重审通过才进人工裁决），并改正任务包与 status.yml 的 `risk`。
 > 这是合并前唯一保留的人工治理门（其余代码质量已由 per-task 独审兜，决策#24）。改动不触及上述任一类别 → 直接合并。
 
-**合并**：用 `/gitee-ops` 调 merge API 把 PR 合并到 master（develop 自审自合并，无独立 pr-review）。合并失败（冲突等）→ 报告用户，不强合。
+**合并**：执行代码托管操作，把 PR 在服务端合并到 master（develop 自审自合并，无独立 pr-review）。合并失败（冲突等）→ 报告用户，不强合。
 
 ### 更新状态（合并后写在 master）
 
 merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
 - 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
 - **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加一条。保留兼容字段 `rounds`，填写 `code_rounds/spec_rounds/freshness`；另写 `review_report_dir`、`review_profile_version`（普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`）、`implementation_started_at/completed_at`、`review_started_at/completed_at`、`implementation_minutes/review_minutes/spec_minutes`。时间由编排器事件戳自动计算，禁止事后估算；issues 保留稳定 finding id、dimension 与 type/reachability/impact/action。两类轮次与三类墙钟不得互相冒充。
-  在提交终态前，对集合内每个任务运行 `node scripts/check-sprint.js --review {task-id}`；缺 preflight/report、首轮非 full、targeted 无 finding id/固定 diff、时间账不闭合均先修正，不得靠人工说明放行。该入口不依赖 iteration，B 类同样执行。
+- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加一条。保留兼容字段 `rounds`，填写 `code_rounds/spec_rounds/freshness`；另写 `review_report_dir`、`review_profile_version`（普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`）、`implementation_started_at/completed_at`、`review_started_at/completed_at` 与累计 `spec_minutes`。implementation/review 墙钟由时间戳按需计算，不持久化派生分钟；`spec_minutes` 因可能累计多段 preflight/revise-doc 继续保留。时间由编排器在事件发生时写，禁止事后估算；issues 保留稳定 finding id、dimension 与 type/reachability/impact/action。两类轮次与三类墙钟不得互相冒充。
+  在提交终态前，对集合内每个任务运行方法论当前版 `node ../hact-method-lab/templates/scripts/check-sprint.js --review {task-id} .`；缺 preflight/report、首轮非 full、targeted 无 finding id/固定 diff、时间账不闭合均先修正，不得靠人工说明放行。该入口不依赖 iteration，B 类同样执行。
   ```bash
   git checkout master && git pull
-  node scripts/check-sprint.js --review {task-id}   # 集合内逐个执行，全部通过后继续
+  node ../hact-method-lab/templates/scripts/check-sprint.js --review {task-id} .   # 集合内逐个执行，全部通过后继续
   git add {集合内任务包文件} {code-review/preflight reports} iterations/vN/sprint.md status.yml   # sprint.md 仅 source=sprint 时含
   git commit -m "chore(sprint): {task-id-list} 标记 [merged]，PR #{N}"
   git push origin master

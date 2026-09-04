@@ -113,9 +113,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
     implementation_completed_at: 2026-08-09T01:42:00Z # 首轮独审 dispatch 前当场记录
     review_started_at: 2026-08-09T01:42:00Z          # 首轮 full dispatch
     review_completed_at: 2026-08-09T02:18:00Z        # 最终独审通过
-    implementation_minutes: 42   # int ≥0，ceil(completed-started)
-    review_minutes: 36           # int ≥0，含独审等待与审查期间整改
-    spec_minutes: 4              # int ≥0，preflight/revise-doc 澄清墙钟总和
+    spec_minutes: 4              # int ≥0，preflight/revise-doc 多段规格澄清墙钟总和；implementation/review 分钟由时间戳按需计算
     comment: 整体思路对，但有安全隐患  # string，综合评语，可为 null
     issues:                      # 数组，可为空 []
       - id: hact-v2-008-F001     # 稳定 finding id；同根变体不另起 id
@@ -148,14 +146,14 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `code_reviews[].review_profile_version` | 普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`。存量缺失兼容提示，新任务终态审计必填 |
 | `code_reviews[].implementation_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
 | `code_reviews[].review_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
-| `code_reviews[].implementation_minutes/review_minutes/spec_minutes` | int ≥0（非枚举） |
+| `code_reviews[].spec_minutes` | int ≥0（非枚举）；多段规格澄清累计值 |
 | `code_reviews[].issues[].severity` | 严重 / 一般 / 建议 |
 | `code_reviews[].issues[].dimension` | 普通 profile：contract / scope-and-secrets / test-evidence / comment-hygiene / standards / enforcement / design-fidelity / input-provenance / query-performance / concurrency / logging-privacy / maintainability / sensitive-boundaries；Foundation：foundation-enforcement / foundation-chokepoint / foundation-completeness / foundation-slice / foundation-self-green |
 | `code_reviews[].issues[].type` | behavior-bug / contract-drift / example-error / enforcement-claim / scope-gap / future-risk / evidence-gap / invariant-failure / claim-failure |
 | `code_reviews[].issues[].reachability` | current / conditional / unreachable / unknown |
 | `code_reviews[].issues[].action` | fix-code / revise-doc / fix-mechanism / downgrade-claim / global-gap-review / backlog / request-evidence |
 
-> 三个 rounds 字段是次数，三个 minutes 字段是墙钟。`rounds` 为兼容总数；implementation 从 preflight 通过到首次 full dispatch，review 从首次 full dispatch 到最终通过（含等待与整改），spec 累加 preflight/revise-doc 澄清时间。时间戳由编排器在事件发生时自动写，分钟向上取整，禁止事后估算；下游消费者可忽略未知键。
+> 三个 rounds 字段是次数。`rounds` 为兼容总数；implementation 从 preflight 通过到首次 full dispatch，review 从首次 full dispatch 到最终通过（含等待与整改），两者由各自时间戳按需计算，不另存派生分钟。`spec_minutes` 累加可能分散在 preflight/revise-doc 的规格澄清时间，无法由一对边界时间戳表达，故继续持久化。时间戳由编排器在事件发生时写，禁止事后估算；下游消费者可忽略未知键。
 >
 > 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验会重算每次 full 的 review profile、核 targeted 继承链，并对缺字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
 

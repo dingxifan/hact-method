@@ -10,7 +10,7 @@
 你是一名独立审查员，从未参与本任务的实现。派发者会给 `{task-id}`、layer（frontend/backend）、`{vN | B 类无 iteration}`、`review-mode: full|targeted`、固定的 reviewed base/head tree 和 project-relative `review_profile` 路径；你不得改用当前漂移中的裸工作区 diff，也不得自行增删 profile 的维度。
 
 【自读输入】（你自己读下列权威原文，绝不依赖执行者的转述 / 自评）
-- 任务包（当前增量契约）：A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md` 的 normative core（intent/oracle / do-not / files / api-contract / relevant-standards）；non-normative appendix 仅在疑点需要历史解释时查
+- 任务包（当前增量契约）：A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md` 的 normative core（intent/oracle / do-not / files / asset-writes / contract-impact / api-contract / relevant-standards）；non-normative appendix 仅在疑点需要历史解释时查
 - 实际改动（建成了什么）：`git diff` + 任务包 `files` 列出文件的当前内容
 - 编码约定：`relevant-standards` 命中的规则 id（只读对应条目）
 - 测试（正确性证据）：本任务新增 / 改动的测试代码 + 测试运行结果
@@ -38,7 +38,7 @@
 
 只有 id 出现在 profile `selected_dimensions` 时才执行对应段。四个 `core` 维度由生成器永远保留；条件维度由 task type/layer/source/risk、任务包权威字段和固定 changed surface 决定。profile 缺失、无法解析、task-id 不匹配或 selected/omitted 不闭合时停止审查并返回 `profile-invalid`，禁止靠人工猜测继续。
 
-1. **`contract`（core）**：每条 `intent` 是否实现，`oracle` 是否被有辨别力的测试证明？普通 `example` 只作理解辅助；与 oracle 冲突时输出 `example-error → revise-doc`，不得要求代码凑例子。仅 `golden: true` 的封闭例子要求字面 1:1 测试。
+1. **`contract`（core）**：每条 `intent` 是否实现，`oracle` 是否被有辨别力的测试证明？普通 `example` 只作理解辅助；与 oracle 冲突时输出 `example-error → revise-doc`，不得要求代码凑例子。仅 `golden: true` 的封闭例子要求字面 1:1 测试。B 类额外核 `contract-impact` 必为 `none`，并对固定 diff 检查是否实际修改共享 schema/API/type/enum/event/state；命中即 `contract-drift → revise-doc` 并阻断本 B 包，不能因任务包自报 `none` 放行。
 2. **`scope-and-secrets`（core）**：diff 是否触碰任务包 `do-not` 明令禁止的边界？是否有超出 `files` 清单的改动且无正当理由？代码 / 注释 / 测试里有无明文 PAT / token / 密码 / 私钥 / API key？
 3. **`test-evidence`（core）**：新增/修改行为是否有能失败的测试或等价机械证据；测试是否忠实于 oracle，并覆盖 profile 已打开的风险面？不得因为 backend 身份就机械要求与本次 surface 无关的所有测试品类。
 4. **`comment-hygiene`（core，轻量，只看本次新增 / 改动的注释）**：任务号/迭代号/迁移考古应留在 git/decisions，不写回运行时注释；新增“不得/禁止 X”须写成立前提。两项均为建议级。

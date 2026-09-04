@@ -20,6 +20,8 @@
 - **第三阶段（执行层规范）**：不再由单一项目驱动。执行规范由真实项目边用边补——mail-ai / doc-extract / file-extract / JHH-Nortion / org-krm-v2 / awuchi 等仓均按本方法运行，每轮收关把发现回灌 `_meta/plans/方法论待议.md` 与本仓规范。
 - **第四阶段（团队引入）**：8 名成员已获 `hact-method-lab` 开发者权限（2026-07-11，见决策#21 权限口径调整），master 为保护分支、贡献走 PR。完成标志＝至少一名开发者独立完成一个 task 全流程（拉包 → develop → 独立审查 → 合并）。
 - **双运行时适配（2026-09-04）**：方法论正文已改为 Claude Code / Codex 共用协议，两个薄入口、运行时能力协商、Codex 5.6 角色模板与四场景自动交接演练已完成；真实团队试点尚需在非生产项目完成至少一次跨运行时交接。
+- **强模型纯减法（2026-09-04）**：能力预检后移到任务路由之后并只核实际所需能力；freshness 正常路径压成一行摘要；implementation/review/round 的派生分钟字段退场、统一由事件时间戳按需计算，跨多段累计的 `spec_minutes` 保留。V0、Gate、独立审查和最终验证未改。
+- **双运行时全面独审修复（2026-09-04）**：首次全面独审结论 `block`（1×S0、7×S1、4×S2）；经五轮“修复→独立复核”收敛为 `pass`，仓内启动/路由/审查证据/并发边界/兼容诊断与静态 handoff 契约已闭合。真实项目试点仍未执行。
 
 ## 下一个起点
 
@@ -55,6 +57,8 @@
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
 - 2026-09-04 Claude Code + Codex 双运行时适配 — 共同能力接口/预检/启动协议 + 双薄入口 + Codex 5.6 四角色模板；执行规范全面中立化；同步补齐 B 类契约升级、V0 证据账本、共享写集冲突与门卫漂移信号；A/B/C/D 四场景协议演练哈希一致，真实跨运行时项目试点待做
+- 2026-09-04 强模型时代编排纯减法 — 能力预检改为任务路由后按需检查；freshness 无漂移只留紧凑摘要；删除可由事件时间戳计算的 implementation/review/round 派生分钟，保留累计 spec 墙钟；V0/Gate/独审/最终验证不动
+- 2026-09-04 双运行时全面独审与内部闭合 — 首轮 `block`（12 findings）→ 五轮独立复核后 `pass`；补齐中立命令、全状态路由、真实 Git diff/finding 闭合、任务依赖/工作树白名单、B 契约、V0 ledger、联调证据、hook、初始化诊断及 schema-complete handoff 变异测试；外部实机试点仍待做
 - 2026-08-30 hact-app（看板应用）全面退场 + 路径漂移治理 + 阶段表压缩 — 三问炸出三件事：CC_TOKEN 查清即判死（hact-app 仓本机已不存在、最后提交 2026-06-03），看板机制从 init-project Step 5 起全面移除（109 行整段删、Step 重编号、明文 CC_TOKEN 出库、status.yml 消费者改判为 check-*.js）；`E:\Group-code-lab\` **这个目录根本不存在**，31 处硬编码全是死路径，活文档 62 处全量校正（human-ai-col 亦无本地检出，设计依据指针悬空已标注）；阶段表压缩为四阶段（原第三阶段「开发看板应用」取消、编号顺延），团队引入由「未开始」改判「进行中」。顺带修掉 hact-conn 自身的 handle 撞名缺口（mail-ai 与 org-krm-v2 同名 DB_PASSWORD 会静默覆盖，实证反例）。盘出两条实况：**SSH MCP 在本机从未配过**（规范列为必备、deploy 一直靠 ssh CLI）；file-extract 的 deployment.config 自己写过「本文件进 git，不放任何密钥」——独立发明了同一条规则。纯减法，冻结相容
 - 2026-08-29 连接与凭据统一寻址（hact-conn）— 补一个从未有过单一真相源的层：Gitee PAT / SSH / DB / 第三方 key 散在五处，其中**项目↔SSH alias 的映射根本无处登记**、换机不可复现。按机密性劈两层（`connections.yml` 入库零机密 + `~/.hact/secrets.env` 机器本地永不入库），`deployment.config` 并存分工保留命令侧。载体＝`skills/hact-conn` + `templates/scripts/check-conn.js`，随 init-project 铺进项目仓、接进 pre-commit 门卫；三条 FAIL + 两条 🧑（含 MCP alias 在场性——换机唯一不随凭据文件走的东西）。解析链认历史 `GITEE_ACCESS_TOKEN`，零打断迁移。13 组用例以负向为主全部亲手撞过，门卫三态实测。看板 CC_TOKEN 明文入库本版未纳入；存量仓待分发。判与机制冻结相容（无新 task type / Gate / discipline / subagent）
 - 2026-08-03 扇出条按数据关闭 + 审计留痕机械化 + 门卫首次真部署 — file-extract v2 首批 `rounds` 数据驱动：扇出条按它自己写死的判据（3:3，不满足"绝大多数 rounds=1"）**降级为不做**；同时撞出**仪器装了没响**——`rounds` 07-30 落地、v2 十一包全在其后合并却 0/11 记录、两包连 `code_reviews[]` 条目都没有、无任何机械检查发现。落地＝`check-sprint.js` 第 9 项审计留痕完备性（9 仓 dry-run 18 条砍到 8 条真命中，撞出两处解析缺陷）+ 级联抑制（一个格式代差曾放大成 ~50 条假漂移）+ 反向上游 `isExplicitNone`。**最大发现是门卫本身没在跑**：8 仓中 4 仓无 hook、`check-reusables` 零仓接入；已给 file-extract / doc-extract / JHH-Nortion / mail-ai 四仓真部署并做真触发测试（一放行一拦下）。wave 批量提案判否（回退决策#24），拆出的两条成立项另记待议。清单 29→32 条。全部改动冻结相容

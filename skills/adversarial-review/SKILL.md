@@ -72,4 +72,4 @@ node scripts/review-profile.js b-queue/{task-id}.md \
 
 targeted 继承最近一次 full 的 `review_profile`。发现 changed surface 超出上轮允许范围、引入新机制/模块/依赖或出现新根因时，报告写 `escalate_to_full: true`；下一轮基于 preflight base→当前 head 的完整 diff 生成新 profile 后才升 full，不在 targeted 轮偷偷扩成全量审查。同一 evidence 未变化时不得换措辞重复 finding；三轮代码复审仍阻断才上报用户。
 
-每轮开始/结束时间由编排器立即记入 report，`elapsed_minutes` 向上取整；禁止事后凭感觉估时。最终把 implementation/review/spec 聚合分钟、report 目录与 `review_profile_version: develop-review-profile/v1` 写入 `status.yml code_reviews[]`，并在提交前运行 `node scripts/check-sprint.js --review {task-id}`；未通过不得提交终态。
+每轮开始/结束时间由编排器立即记入 report；逐轮、implementation 与 review 墙钟按需由事件时间戳计算，不重复持久化派生分钟。最终只把跨多段累计的 `spec_minutes`、report 目录与 `review_profile_version: develop-review-profile/v1` 写入 `status.yml code_reviews[]`，并在提交前运行 `node scripts/check-sprint.js --review {task-id}`；未通过不得提交终态。

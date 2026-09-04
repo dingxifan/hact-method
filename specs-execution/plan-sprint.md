@@ -175,7 +175,7 @@
 
 ### Step 4.7：签 G3 前 · 完成判据自检（提前跑，门卫兜底）
 
-签 G3 前主动在项目仓根跑 `node scripts/check-sprint.js vN`，把 G3 全部【linter】判据机械核到绿：必填字段 / reference 稳定锚 / AC 回链与 intent-oracle 格式 / 逐条反向覆盖 / depends_on / 三方一致。敏感启发词仍列 `🧑`。红则逐条修并重跑；pre-commit 门卫在签字 commit 再兜一次。
+签 G3 前主动在项目仓根跑 `node ../hact-method-lab/templates/scripts/check-sprint.js vN .`，直接使用已同步的方法论当前版，把 G3 全部【linter】判据机械核到绿：必填字段 / reference 稳定锚 / AC 回链与 intent-oracle 格式 / 逐条反向覆盖 / depends_on / 三方一致。敏感启发词仍列 `🧑`。红则逐条修并重跑；项目本地 pre-commit 门卫在签字 commit 再兜一次。
 
 脚本 `🧑` 段语义残量由签字人确认：疑点已逐条确认、TRD 每模块都有任务包、Step 3.5 独审无遗留阻断、任务包 AC 逐条**忠实**于回链的 PRD AC（内容真覆盖，非仅 id 在场）。
 

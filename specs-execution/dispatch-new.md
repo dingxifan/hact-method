@@ -142,14 +142,14 @@ golden: false
 | `contract-impact` | 固定为 `none`。无法诚实填写即返回 Step 1 硬升，不得以 `governed` 把共享契约改动塞进 B 类 |
 | `urgency` | Step 3 判断结果 |
 | `risk` | 默认 `standard`；若触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用，则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29——B 类无 G3 检查器，误标由 develop 有效 risk 判定 + 末端 diff 独立预检兜底） |
-| `acceptance-criteria` | 按 `intent-oracle-v1` 写 Step 3.5 确认的 intent/oracle；example 可选，未经独立复算保持 `golden: false`。纯加法 schema 变更另加技术 AC 指向已更新 TRD 章节 |
+| `acceptance-criteria` | 按 `intent-oracle-v1` 写 Step 3.5 确认的 intent/oracle；example 可选，未经独立复算保持 `golden: false`。任何 schema/API/type/enum/event/state 变更（含纯加法）均已在 Step 1 退出 B 类，不能在此写技术 AC 绕回 |
 | `do-not` | 直接使用 Step 3.5 确认的禁动边界列表 |
 | `files` | Step 3.5 初步估填的预计改动文件 / 组件清单 |
 | `asset-writes` | Step 3.5 确认的共享写集稳定键；无则 `[]`。命中同一资产的并发任务必须在 develop 前协调串行 |
-| `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；**含纯加法 schema 变更时**必须写明：最坏情况 / 如何发现 / 如何回滚 |
+| `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序 |
 | `api-contract`（条件） | 仅 `layers=[backend]` 且新增接口被前端消费时填，否则整段删除（与 develop §字段规范一致） |
 
-**全部字段无空值方可写入 queue**。写完运行 `node scripts/check-b-task.js b-queue/{task-id}.md`；非 0 即停止派发并回 Step 1。公共 schema/API/type/enum/event/state 的变更不再允许用 B 类字段组合绕过升级。
+**全部字段无空值方可写入 queue**。写完运行 `node ../hact-method-lab/templates/scripts/check-b-task.js b-queue/{task-id}.md --root .`；非 0 即停止派发并回 Step 1。公共 schema/API/type/enum/event/state 的变更不再允许用 B 类字段组合绕过升级。
 
 **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 

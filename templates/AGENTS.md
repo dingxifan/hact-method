@@ -8,9 +8,9 @@
 
 本会话运行于 **Codex**。开始任何项目工作前，按顺序完整读取并执行：
 
-1. `../hact-method-lab/templates/runtime/preflight.md`
-2. `../hact-method-lab/templates/boot-protocol.md`
-3. `../hact-method-lab/templates/runtime/codex.md`
+1. `../hact-method-lab/templates/runtime/codex.md`：加载能力实现映射。
+2. `../hact-method-lab/templates/boot-protocol.md`：同步并推断 `task.type`、加载单份任务规范。
+3. `../hact-method-lab/templates/runtime/preflight.md`：只协商该任务实际需要的能力，通过后才执行任务。
 
 执行规范中的中立能力词汇按 `runtime/codex.md` 落地。不得把运行时、模型或工具细节写进任务包、`status.yml` 或 Gate。
 

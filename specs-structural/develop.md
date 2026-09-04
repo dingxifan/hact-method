@@ -90,7 +90,7 @@ api-contract:
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] 若当前集合使本期 sprint 任务全部完成，global seam review 已运行；scope gap 已新开 owner，不打回无关单包
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
-- [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾降档审查的先重派默认模型独审）
+- [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 档审查的先重派高能力审查档）
 - [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录 `code_rounds/spec_rounds`、implementation/review/spec 墙钟、report 目录、review profile version 与 finding 路由）
 
 ---

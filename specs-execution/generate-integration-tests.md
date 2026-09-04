@@ -82,12 +82,13 @@
 
 ### Step 3：跑后端测试
 
-读 `integration-tests/scripts-v{N}.md`，提取穿透流列表，按运行时映射启动纯执行单元：
+读 `integration-tests/scripts-v{N}.md`，为每条穿透流分配稳定场景 id（如 `BE-01`），按运行时映射启动纯执行单元：
 - 每条流一个执行单元，执行该流的脚本序列，**在推不动处（某步转换失败 / 边不存在 / 队列不消费）即停并报断点**——穿透的价值正在这里
-- 返回：每步结果（✅/❌）+ HTTP 状态码 + 关键字段摘要 + 断在哪一步及现象
+- 每步请求/响应状态码、去敏后的关键 headers/body 摘要和最终状态查询结果写入 `integration-tests/evidence/vN/{场景-id}/transcript.txt`；不得把 Authorization、cookie、PII 或真凭据落盘
+- 返回：每步结果（✅/❌）+ HTTP 状态码 + 关键字段摘要 + transcript 项目相对路径 + 断在哪一步及现象
 - **流间状态互扰**：只有各流使用独立实体 / 数据前缀且不写共享产物时才可并行；隔离不了则串行跑（穿透流本就少）。运行时不支持隔离执行时，由主线串行执行并如实记录。
 
-全部返回后，汇总写入 `integration-tests/result-{日期}.md`，**同步写 `status.yml` 的 `integration_tests[]`**（每条场景一项）：
+全部返回后，汇总写入 `integration-tests/result-{日期}.md`，每条已执行后端流在「证据」列引用其 transcript；**同步写 `status.yml` 的 `integration_tests[]`**（每条场景一项）：
 ```yaml
 - { iteration: vN, index: {序号}, description: {场景描述}, status: {通过/失败}, failure_reason: {失败现象 或 null} }
 ```
@@ -118,9 +119,9 @@
 ```
 🚫 等用户点头 + 提供样本。
 
-**执行（点头后）**：用**用户临时提供的小真样本**（**不入库**——含 PII）对每条边界打**一次真调**，断言**接线成立**：鉴权方式对不对、真响应形状解析对不对、真行为（204 / 超时 / token 格式）与假设符不符——**不测业务正确性**。结果写 `result-{日期}.md` + `status.yml`（标"边界冒烟"）。
+**执行（点头后）**：用**用户临时提供的小真样本**（**不入库**——含 PII）对每条边界打**一次真调**，断言**接线成立**：鉴权方式对不对、真响应形状解析对不对、真行为（204 / 超时 / token 格式）与假设符不符——**不测业务正确性**。为每条边界分配 `BD-xx` 场景 id，把去敏后的请求目标、状态码、响应形状和断言结果写 `integration-tests/evidence/vN/{场景-id}/transcript.txt`；结果写 `result-{日期}.md` + `status.yml`（标"边界冒烟"并引用证据路径）。
 
-**降级（非静默）**：无凭据 / 无环境 / 用户跳过 → 标"边界冒烟未跑、边界 {X} 真调未验"，移交 manual-test / deploy-smoke，**不假装绿**。
+**降级（非静默）**：无凭据 / 无环境 / 用户跳过 → 结果行写 `未运行`，在「未运行原因」标"边界 {X} 真调未验"及移交 manual-test / deploy-smoke，**不假装绿**。
 
 **失败**：真调失败 = 接线错 → 升级 `source=integration` develop 带真证据修，不自动 patch。**边界闸在自动绿之外**——其失败产 finding、不卡后端穿透套件的绿。
 
@@ -145,10 +146,10 @@
 **完整档步骤**（必跑迭代或用户选「是」）：
 
 1. 确认前端页面可打开
-2. 由主线或只读调查单元读取 ux-flows.md + prototype.html（若存在），生成运行时中立的前端场景定义 `integration-tests/frontend/v{N}-scenarios.md`（上限 15 条，优先主流程 + 跨模块集成点）。每条至少包含前置条件、用户操作、可观察预期与证据要求；具体执行脚本由当前运行时映射生成。prototype.html 存在时软核对场景覆盖是否齐全（不设硬闸口，超 15 条按上限降级 backlog）
+2. 由主线或只读调查单元读取 ux-flows.md + prototype.html（若存在），生成运行时中立的前端场景定义 `integration-tests/frontend/v{N}-scenarios.md`（上限 15 条，优先主流程 + 跨模块集成点）。每条分配稳定场景 id，并至少包含前置条件、用户操作、可观察预期与证据类型；共同证据目录固定为 `integration-tests/evidence/vN/{场景-id}/`，具体执行脚本由当前运行时映射生成。prototype.html 存在时软核对场景覆盖是否齐全（不设硬闸口，超 15 条按上限降级 backlog）
    - **禁恒真式断言**：不得用**元素计数**判 UI 元素消失/弹窗关闭——组件库普遍在关闭后保留 DOM 节点（计数恒 ≥1），该断言在构造上无法侦测关闭，**永远绿**。判"消失/关闭"一律按**可见性**（`offsetParent === null` / 实测尺寸为 0）。每条断言写完自问一遍：**被测行为反过来时，这条会不会红？**不会红即无效断言，重写。
 3. 按运行时映射把场景定义编译为可执行脚本，更新脚本索引并追加前端部分；commit + push
-4. 按模块启动纯执行单元运行浏览器场景，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`。仅在模块数据、环境和写入产物均隔离时并行，否则串行；运行时不支持隔离执行时由主线串行执行
+4. 按模块启动纯执行单元运行浏览器场景，证据落 `integration-tests/evidence/vN/{场景-id}/`，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`。仅在模块数据、环境和写入产物均隔离时并行，否则串行；运行时不支持隔离执行时由主线串行执行。完成前运行 `node ../hact-method-lab/templates/scripts/check-integration-evidence.js integration-tests/result-{日期}.md .`；已执行无证据、未运行无原因均阻断
 5. **视觉冒烟断言**（涉视觉基线迭代必做，≤3 条固定、不计入 15 条上限）：在关键页面加载后通过浏览器场景能力执行 JS，实测以下确定值，取数源 = `design.md`「〇、视觉冒烟锚点」段，不符即 `[阻断]`：
    - **主色覆盖**：`getComputedStyle(document.documentElement).getPropertyValue('--el-color-primary').trim()`（按本项目 UI 库主色变量名调整）== design.md 主色 token —— 抓「token 定义了没覆盖库主题」
    - **视口无外溢**：目标视口宽下 `document.documentElement.scrollWidth - window.innerWidth <= 0` —— 抓「视口外溢」
@@ -168,6 +169,14 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的�
 ---
 
 ### Step 6：三条件确认
+
+先对本轮共同结果执行：
+
+```bash
+node ../hact-method-lab/templates/scripts/check-integration-evidence.js integration-tests/result-{日期}.md .
+```
+
+非 0 先补后端 transcript、浏览器证据或未运行原因；不能靠文字声明放行。
 
 - [ ] 所有穿透流均有明确结论（无"未测"条目）
 - [ ] 主流程无 `[阻断]` 失败（已经 develop(source=integration) 修复 / revise-doc 对齐 并复测通过）

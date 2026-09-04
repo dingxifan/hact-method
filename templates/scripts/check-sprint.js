@@ -14,6 +14,8 @@
  *   node scripts/check-sprint.js vN          # 项目根 = cwd
  *   node scripts/check-sprint.js vN <项目根>
  *   node scripts/check-sprint.js --review <task-id> [项目根]  # A/B 通用 review 审计
+ *   node scripts/check-sprint.js --ready <task-id,...> [项目根] # develop 认领前依赖就绪检查
+ *   node scripts/check-sprint.js --worktree-from-reports <report,...|none> [项目根]
  *
  * 退出码：有任一 FAIL → 1；全 pass → 0；用法错误 / 自身出错 → 2。
  *
@@ -24,6 +26,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const childProcess = require('child_process');
 
 const PLACEHOLDER = '<待填>';
 const findings = []; // {level:'fail'|'pass'|'human', rule, loc, msg}
@@ -35,10 +39,11 @@ function readLines(p) { return fs.readFileSync(p, 'utf8').split(/\r?\n/); }
 function exists(p) { try { return fs.statSync(p).isFile(); } catch { return false; } }
 function stripComment(s) { return s.replace(/\s+#.*$/, '').trim(); } // 去行尾 ` # 注释`
 
-// 任务包机械必含的 17 字段（specs-structural/develop.md §字段规范的可校验子集）。
-// status 不在内（与 status.yml 重复，由后者权威）；risk 缺省按 standard，不机械校验；api-contract 条件必填，单独判。
-const REQUIRED = ['task-id', 'sprint_id', 'layers', 'source', 'task_type', 'urgency',
-  'title', 'description', 'depends_on', 'files', 'acceptance-criteria',
+// 任务包机械必含字段（specs-structural/develop.md §字段规范的可校验子集）。
+// status 不在内（与 status.yml 重复，由后者权威）；api-contract 条件必填，单独判。
+const REQUIRED = ['task-id', 'sprint_id', 'layers', 'source', 'task_type', 'contract-impact',
+  'urgency', 'risk', 'title', 'description', 'depends_on', 'files', 'asset-writes', 'supersedes',
+  'ac-format', 'acceptance-criteria',
   'relevant-standards', 'reference', 'context', 'known-risks', 'do-not', 'escalate-if'];
 
 /* ---------- frontmatter 容错解析 ----------
@@ -156,6 +161,32 @@ function sharedAssetConflicts(packages) {
     }
   }
   return conflicts;
+}
+
+function dependencyReadinessErrors(packages, selectedIds, statusTasks) {
+  const errors = [];
+  const order = new Map(selectedIds.map((id, index) => [id, index]));
+  const byPackage = new Map(packages.map(pkg => [pkg.id, pkg]));
+  const byStatus = new Map((statusTasks || []).map(task => [task.id, task]));
+  if (new Set(selectedIds).size !== selectedIds.length) errors.push('任务集含重复 task-id');
+  for (const id of selectedIds) {
+    const pkg = byPackage.get(id);
+    const status = byStatus.get(id);
+    if (!pkg) { errors.push(`${id} 找不到唯一任务包`); continue; }
+    if (!status) errors.push(`${id} 在 status.yml tasks[] 中不存在`);
+    else if (status.status !== '可取') errors.push(`${id} 当前 status=${status.status || '<缺失>'}，初次认领只允许 可取`);
+    for (const dep of pkg.deps) {
+      if (order.has(dep)) {
+        if (order.get(dep) >= order.get(id)) errors.push(`${id} 的同批依赖 ${dep} 未排在它之前`);
+        continue;
+      }
+      const depStatus = byStatus.get(dep);
+      if (!depStatus) errors.push(`${id} 的外部依赖 ${dep} 在 status.yml 不存在`);
+      else if (depStatus.status !== 'merged')
+        errors.push(`${id} 的外部依赖 ${dep} 尚未 merged（当前 ${depStatus.status || '<缺失>'}）`);
+    }
+  }
+  return errors;
 }
 
 const reLineNum = /L\s*\d+|\d+\s*[-–~]\s*\d+|行\s*\d+/;   // 行号 / 行号区间
@@ -365,7 +396,7 @@ const REVIEW_AUDIT_FIELDS = [
   'review_profile_version',
   'implementation_started_at', 'implementation_completed_at',
   'review_started_at', 'review_completed_at',
-  'implementation_minutes', 'review_minutes', 'spec_minutes',
+  'spec_minutes',
 ];
 const isUInt = v => /^\d+$/.test(v || '');
 const isSha40 = v => /^[0-9a-f]{40}$/i.test(v || '');
@@ -376,6 +407,51 @@ const parseIso = v => {
 };
 const ceilMinutes = (start, end) => Math.ceil((end - start) / 60000);
 const FOUNDATION_PROFILE_VERSION = 'foundation-review/v1';
+
+function gitOutput(root, args, encoding = 'utf8') {
+  return childProcess.execFileSync('git', args, {
+    cwd: root,
+    encoding,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+function gitObjectType(root, object) {
+  try { return String(gitOutput(root, ['cat-file', '-t', object])).trim(); }
+  catch { return null; }
+}
+
+function fixedDiffEvidence(root, base, head) {
+  try {
+    gitOutput(root, ['cat-file', '-e', `${base}^{tree}`]);
+    gitOutput(root, ['cat-file', '-e', `${head}^{tree}`]);
+    const bytes = gitOutput(root, ['diff', '--binary', base, head], null);
+    const names = gitOutput(root, ['diff', '--name-only', '-z', base, head], null)
+      .toString('utf8').split('\0').filter(Boolean).map(name => name.replace(/\\/g, '/')).sort();
+    return { hash: crypto.createHash('sha256').update(bytes).digest('hex'), names };
+  } catch (error) {
+    return { error: String(error.stderr || error.message).trim() };
+  }
+}
+
+function parseReportFindings(reportPath) {
+  const lines = readLines(reportPath);
+  const start = lines.findIndex(line => /^## Findings\s*$/.test(line));
+  if (start < 0) return [];
+  const out = [];
+  let current = null;
+  const flush = () => { if (current) out.push(current); current = null; };
+  for (const line of lines.slice(start + 1)) {
+    if (/^##\s/.test(line)) break;
+    if (/^\s*#/.test(line)) continue;
+    const item = line.match(/^\s*-\s+id:\s*['"]?([^'"\s]+)['"]?\s*$/);
+    if (item) { flush(); current = { id: item[1] }; continue; }
+    const field = line.match(/^\s+(severity|status):\s*['"]?([^'"\s]+)['"]?\s*$/);
+    if (field && current) current[field[1]] = field[2];
+  }
+  flush();
+  return out;
+}
 
 function resolveProjectFile(root, rel) {
   const absRoot = path.resolve(root);
@@ -461,16 +537,8 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     if (implStart > implEnd) errors.push('implementation_started_at 晚于 completed_at');
     if (implEnd !== reviewStart) errors.push('implementation_completed_at 必须等于 review_started_at，避免墙钟留白或重叠');
     if (reviewStart > reviewEnd) errors.push('review_started_at 晚于 completed_at');
-    if (isUInt(cr.implementation_minutes)
-        && Number(cr.implementation_minutes) !== ceilMinutes(implStart, implEnd))
-      errors.push('implementation_minutes 与时间戳向上取整结果不符');
-    if (isUInt(cr.review_minutes)
-        && Number(cr.review_minutes) !== ceilMinutes(reviewStart, reviewEnd))
-      errors.push('review_minutes 与时间戳向上取整结果不符');
   }
-  for (const k of ['implementation_minutes', 'review_minutes', 'spec_minutes']) {
-    if (!isUInt(cr[k])) errors.push(`${k} 须为 int>=0`);
-  }
+  if (!isUInt(cr.spec_minutes)) errors.push('spec_minutes 须为 int>=0');
 
   const relDir = cr.review_report_dir || '';
   const absRoot = path.resolve(root);
@@ -498,11 +566,14 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     if (!['before-code', 'retroactive'].includes(p('timing'))) errors.push('preflight timing 非法');
     if (!['pass', 'revised'].includes(p('result'))) errors.push('preflight result 未闭合');
     if (!isSha40(p('base_ref')) || !isSha40(p('base_tree'))) errors.push('preflight base_ref/base_tree 非固定 40 位 SHA');
+    else {
+      if (gitObjectType(root, p('base_ref')) !== 'commit') errors.push('preflight base_ref 不是当前仓可解析的 commit');
+      if (gitObjectType(root, p('base_tree')) !== 'tree') errors.push('preflight base_tree 不是当前仓可解析的 tree');
+    }
     if (![pfStart, pfEnd].every(Number.isFinite) || pfStart > pfEnd) errors.push('preflight 时间非法');
-    if (!isUInt(p('spec_minutes')) || (Number.isFinite(pfStart) && Number.isFinite(pfEnd)
-        && Number(p('spec_minutes')) !== ceilMinutes(pfStart, pfEnd))) errors.push('preflight spec_minutes 非法');
-    if (isUInt(cr.spec_minutes) && isUInt(p('spec_minutes'))
-        && Number(cr.spec_minutes) < Number(p('spec_minutes'))) errors.push('status spec_minutes 小于 preflight 记录');
+    if (Number.isFinite(pfStart) && Number.isFinite(pfEnd) && isUInt(cr.spec_minutes)
+        && Number(cr.spec_minutes) < ceilMinutes(pfStart, pfEnd))
+      errors.push('status spec_minutes 小于 preflight 时间戳可计算的最低墙钟');
   }
 
   const reports = fs.readdirSync(absDir).filter(f => /^round-\d{2}\.md$/.test(f)).sort();
@@ -510,14 +581,20 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     errors.push(`round report 数 ${reports.length} != code_rounds ${cr.code_rounds}`);
   let previousEscalated = false, previousReviewedHead = '', lastConclusion = '';
   let activeProfile = '';
+  const openBlocking = new Set();
   const fullProfiles = new Set();
   let taskPackagePath = '';
+  let declaredTaskFiles = [];
   if (!foundationProfile && !legacyProfile) {
     const taskPackages = findTaskPackages(root, id);
     if (taskPackages.length !== 1) errors.push(taskPackages.length
       ? `找到 ${taskPackages.length} 个同 id 任务包，review profile 输入必须唯一`
       : '找不到 A/B 权威任务包，无法重算 review profile');
-    else taskPackagePath = taskPackages[0];
+    else {
+      taskPackagePath = taskPackages[0];
+      const packageFm = parseFrontmatter(taskPackagePath);
+      declaredTaskFiles = listItems(packageFm && packageFm.files).map(normalizeFileAsset).sort();
+    }
   }
   let firstReportStarted = NaN, lastReportCompleted = NaN;
   const findingId = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-F\\d{3}$`);
@@ -542,7 +619,21 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     else if (mode === 'targeted' && previousReviewedHead && r('reviewed_base') !== previousReviewedHead)
       errors.push(`${file}: targeted reviewed_base 必须等于上一轮 reviewed_head`);
     if (!isSha256(r('diff_sha256'))) errors.push(`${file}: diff_sha256 非 64 位小写 hex`);
-    if (!listItems(rp && rp.changed_files).length) errors.push(`${file}: changed_files 为空`);
+    const reportedChangedFiles = listItems(rp && rp.changed_files).map(name => name.replace(/\\/g, '/')).sort();
+    if (!reportedChangedFiles.length) errors.push(`${file}: changed_files 为空`);
+    if (isSha40(r('reviewed_base')) && isSha40(r('reviewed_head'))) {
+      const fixed = fixedDiffEvidence(root, r('reviewed_base'), r('reviewed_head'));
+      if (fixed.error) errors.push(`${file}: 固定 diff 不可复现：${fixed.error}`);
+      else {
+        if (r('diff_sha256') !== fixed.hash) errors.push(`${file}: diff_sha256 与 git diff --binary 实际字节不一致`);
+        if (JSON.stringify(reportedChangedFiles) !== JSON.stringify(fixed.names))
+          errors.push(`${file}: changed_files 与固定 diff 实际文件集不一致`);
+        if (declaredTaskFiles.length) {
+          const undeclared = fixed.names.filter(name => !declaredTaskFiles.includes(name.toLowerCase()));
+          if (undeclared.length) errors.push(`${file}: 固定 diff 超出任务包 files：${undeclared.join(', ')}`);
+        }
+      }
+    }
     if (legacyProfile) {
       // P0 存量报告没有 review_profile；保留原固定 diff/墙钟链审计，不虚构历史 profile。
     } else if (foundationProfile) {
@@ -554,7 +645,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       if (fullProfiles.has(profileKey)) errors.push(`${file}: 每次 full 必须生成新的 review_profile`);
       fullProfiles.add(profileKey);
       if (taskPackagePath && ['standard', 'sensitive'].includes(risk))
-        errors.push(...fullProfileErrors(root, id, profileRel, taskPackagePath, listItems(rp && rp.changed_files), risk)
+        errors.push(...fullProfileErrors(root, id, profileRel, taskPackagePath, reportedChangedFiles, risk)
           .map(message => `${file}: ${message}`));
       activeProfile = profileKey;
     } else {
@@ -564,8 +655,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
         errors.push(`${file}: targeted 必须继承最近一次 full 的 review_profile`);
     }
     if (![started, completed].every(Number.isFinite) || started > completed) errors.push(`${file}: 时间非法`);
-    if (!isUInt(r('elapsed_minutes')) || (Number.isFinite(started) && Number.isFinite(completed)
-        && Number(r('elapsed_minutes')) !== ceilMinutes(started, completed))) errors.push(`${file}: elapsed_minutes 非法`);
     if (!['pass', 'revise', 'evidence-needed'].includes(r('conclusion'))) errors.push(`${file}: conclusion 非法`);
     if (!['true', 'false'].includes(r('escalate_to_full'))) errors.push(`${file}: escalate_to_full 非布尔`);
     if (mode === 'targeted') {
@@ -577,7 +666,22 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       const ids = listItems(rp && rp.target_finding_ids);
       if (!ids.length) errors.push(`${file}: targeted 缺 target_finding_ids`);
       else if (ids.some(x => !findingId.test(x))) errors.push(`${file}: target_finding_ids 不符合 ${id}-FNNN`);
+      if ([...openBlocking].some(openId => !ids.includes(openId)))
+        errors.push(`${file}: targeted 未覆盖此前全部 open blocking findings`);
+      const reportFindingIds = new Set(parseReportFindings(path.join(absDir, file)).map(finding => finding.id));
+      if (ids.some(target => !reportFindingIds.has(target)))
+        errors.push(`${file}: targeted 报告未逐条回写 target_finding_ids`);
     }
+    const reportFindings = parseReportFindings(path.join(absDir, file));
+    for (const finding of reportFindings) {
+      if (!findingId.test(finding.id || '')) errors.push(`${file}: finding id 不符合 ${id}-FNNN`);
+      if (!['blocking', 'advisory'].includes(finding.severity || '')) errors.push(`${file}: ${finding.id} severity 非法或缺失`);
+      if (!['open', 'verified-closed', 'advisory'].includes(finding.status || '')) errors.push(`${file}: ${finding.id} status 非法或缺失`);
+      if (finding.severity === 'blocking' && finding.status === 'open') openBlocking.add(finding.id);
+      if (finding.status === 'verified-closed' || finding.status === 'advisory') openBlocking.delete(finding.id);
+    }
+    if (r('conclusion') === 'pass' && openBlocking.size)
+      errors.push(`${file}: conclusion=pass 但仍有 open blocking finding：${[...openBlocking].join(', ')}`);
     if (index === 0) firstReportStarted = started;
     lastReportCompleted = completed;
     previousReviewedHead = r('reviewed_head');
@@ -590,6 +694,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     errors.push('review_completed_at 与末轮 report.completed_at 不一致');
   if (reports.length && lastConclusion !== 'pass') errors.push('末轮 report.conclusion 必须为 pass');
   if (reports.length && previousEscalated) errors.push('末轮仍要求 escalate_to_full，审查尚未闭合');
+  if (openBlocking.size) errors.push(`审查链仍有 open blocking findings：${[...openBlocking].join(', ')}`);
   return errors;
 }
 
@@ -625,7 +730,110 @@ function checkReviewAudit(taskId, root) {
   if (missing.length) errors.push(`缺墙钟/report 字段：${missing.join('/')}`);
   else errors.push(...reviewAuditErrors(root, taskId, cr));
   if (errors.length) fail('review 审计', statusPath, `${taskId}: ${errors.join('；')}`);
-  else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、review profile、逐轮报告与三段墙钟均合法`);
+  else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、review profile、逐轮报告与墙钟证据均合法`);
+}
+
+function checkReady(subject, root) {
+  const selectedIds = String(subject || '').split(',').map(value => value.trim()).filter(Boolean);
+  if (!selectedIds.length || selectedIds.some(id => !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id))) {
+    fail('认领就绪', 'task-id-list', '任务列表只允许逗号分隔的字母、数字和连字符');
+    return;
+  }
+  const packages = [];
+  for (const id of selectedIds) {
+    const matches = findTaskPackages(root, id);
+    if (matches.length !== 1) {
+      fail('认领就绪', id, matches.length ? `找到 ${matches.length} 个同 id 任务包` : '找不到任务包');
+      continue;
+    }
+    const fm = parseFrontmatter(matches[0]);
+    packages.push({ id, deps: listItems(fm && fm.depends_on), fm, file: matches[0] });
+  }
+  const statusTasks = parseStatusTasks(path.join(root, 'status.yml'));
+  if (statusTasks === null) {
+    fail('认领就绪', 'status.yml', '缺 status.yml，无法证明依赖已 merged');
+    return;
+  }
+  const errors = dependencyReadinessErrors(packages, selectedIds, statusTasks);
+  errors.forEach(message => fail('认领就绪', 'status.yml', message));
+  if (!errors.length && packages.length === selectedIds.length)
+    pass('认领就绪', `${selectedIds.join(' → ')} 依赖闭合，外部依赖均已 merged`);
+}
+
+function checkWorktreeFromReports(subject, root) {
+  const reportPaths = subject === 'none' ? [] : String(subject || '').split(',').map(value => value.trim()).filter(Boolean);
+  const allowedFiles = new Set();
+  const allowedDirs = [];
+  const acceptedBlobs = new Map();
+  for (const relative of reportPaths) {
+    const report = resolveProjectFile(root, relative);
+    if (!report || !exists(report)) {
+      fail('工作树白名单', relative || '<空>', 'prior final report 不存在或越界');
+      continue;
+    }
+    const fm = parseFrontmatter(report);
+    const value = key => scalarText(fm && fm[key]);
+    const reportDir = path.dirname(report);
+    const roundFiles = fs.readdirSync(reportDir).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
+    if (path.basename(report) !== roundFiles.at(-1)) {
+      fail('工作树白名单', relative, '传入报告不是该任务最后一轮');
+      continue;
+    }
+    if (value('conclusion') !== 'pass' || value('escalate_to_full') !== 'false') {
+      fail('工作树白名单', relative, 'prior final report 未 pass 或仍要求 full escalation');
+      continue;
+    }
+    const reportFindings = parseReportFindings(report);
+    if (reportFindings.some(finding => finding.severity === 'blocking' && finding.status === 'open')) {
+      fail('工作树白名单', relative, 'prior final report 仍有 open blocking finding');
+      continue;
+    }
+    const changedFiles = listItems(fm && fm.changed_files).map(file => file.replace(/\\/g, '/')).sort();
+    const fixed = fixedDiffEvidence(root, value('reviewed_base'), value('reviewed_head'));
+    if (fixed.error || fixed.hash !== value('diff_sha256')
+        || JSON.stringify(fixed.names) !== JSON.stringify(changedFiles)) {
+      fail('工作树白名单', relative, `prior final report 固定 diff 不可复现或证据不一致${fixed.error ? `：${fixed.error}` : ''}`);
+      continue;
+    }
+    for (const file of changedFiles) {
+      allowedFiles.add(file);
+      let reviewedBlob = null;
+      try { reviewedBlob = String(gitOutput(root, ['rev-parse', `${value('reviewed_head')}:${file}`])).trim(); }
+      catch { reviewedBlob = null; }
+      acceptedBlobs.set(file, reviewedBlob);
+    }
+    allowedDirs.push(path.relative(root, reportDir).replace(/\\/g, '/') + '/');
+  }
+  let dirty = [];
+  try {
+    const commands = [
+      ['diff', '--name-only', '-z'],
+      ['diff', '--cached', '--name-only', '-z'],
+      ['ls-files', '--others', '--exclude-standard', '-z'],
+    ];
+    dirty = [...new Set(commands.flatMap(args => gitOutput(root, args, null).toString('utf8')
+      .split('\0').filter(Boolean).map(file => file.replace(/\\/g, '/'))))];
+    const stash = String(gitOutput(root, ['stash', 'list'])).trim();
+    if (stash) fail('工作树白名单', 'git stash list', '存在 stash；先确认归属和是否会 pop，再进入下一任务');
+  } catch (error) {
+    fail('工作树白名单', root, `无法读取 Git 工作树：${String(error.stderr || error.message).trim()}`);
+    return;
+  }
+  const unexpected = dirty.filter(file => !allowedFiles.has(file) && !allowedDirs.some(dir => file.startsWith(dir)));
+  if (unexpected.length) fail('工作树白名单', root, `存在非前序 accepted 实现/审计产物的改动：${unexpected.join(', ')}`);
+  for (const [file, reviewedBlob] of acceptedBlobs) {
+    let indexBlob = null, worktreeBlob = null;
+    try { indexBlob = String(gitOutput(root, ['rev-parse', `:${file}`])).trim(); } catch { indexBlob = null; }
+    const absolute = path.join(root, file);
+    if (exists(absolute)) {
+      try { worktreeBlob = String(gitOutput(root, ['hash-object', '--', file])).trim(); } catch { worktreeBlob = null; }
+    }
+    if (indexBlob !== reviewedBlob || worktreeBlob !== reviewedBlob)
+      fail('工作树白名单', file, '当前 index/worktree blob 已偏离 prior report reviewed_head，存在同路径二次未审修改');
+  }
+  if (!findings.some(item => item.level === 'fail')) pass('工作树白名单', reportPaths.length
+    ? `仅存在 ${reportPaths.length} 个 final/pass 任务的原样 accepted 实现与审计产物`
+    : '首任务工作树与 index 干净');
 }
 
 /* ====================== 主校验 ====================== */
@@ -915,15 +1123,22 @@ function checkSprint(iteration, root) {
 function main() {
   const args = process.argv.slice(2);
   const reviewMode = args[0] === '--review';
-  const subject = reviewMode ? args[1] : args[0];
-  const root = (reviewMode ? args[2] : args[1]) || process.cwd();
-  if (!subject || (!reviewMode && !/^v\d+(\.\d+)*$/.test(subject))) {
+  const readyMode = args[0] === '--ready';
+  const worktreeMode = args[0] === '--worktree-from-reports';
+  const specialMode = reviewMode || readyMode || worktreeMode;
+  const subject = specialMode ? args[1] : args[0];
+  const root = (specialMode ? args[2] : args[1]) || process.cwd();
+  if (!subject || (!specialMode && !/^v\d+(\.\d+)*$/.test(subject))) {
     console.error('用法: node check-sprint.js <vN|vN.M> [项目根]\n'
-      + '   或: node check-sprint.js --review <task-id> [项目根]');
+      + '   或: node check-sprint.js --review <task-id> [项目根]\n'
+      + '   或: node check-sprint.js --ready <task-id,...> [项目根]\n'
+      + '   或: node check-sprint.js --worktree-from-reports <report,...|none> [项目根]');
     process.exit(2);
   }
   try {
     if (reviewMode) checkReviewAudit(subject, root);
+    else if (readyMode) checkReady(subject, root);
+    else if (worktreeMode) checkWorktreeFromReports(subject, root);
     else checkSprint(subject, root);
   }
   catch (e) { console.error('check-sprint 自身出错（非产物问题）:', e.message); process.exit(2); }
@@ -931,7 +1146,9 @@ function main() {
   const fails = findings.filter(f => f.level === 'fail');
   const passes = findings.filter(f => f.level === 'pass');
   const humans = findings.filter(f => f.level === 'human');
-  console.log(`\n=== check-sprint (${reviewMode ? `review:${subject}` : subject}) 报告 ===`);
+  const label = reviewMode ? `review:${subject}` : readyMode ? `ready:${subject}`
+    : worktreeMode ? `worktree:${subject}` : subject;
+  console.log(`\n=== check-sprint (${label}) 报告 ===`);
   console.log(`通过 ${passes.length} 项 / 失败 ${fails.length} 项\n`);
   if (fails.length) {
     console.log('❌ FAIL:');
@@ -948,4 +1165,5 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { sharedAssetConflicts };
+module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED, REVIEW_AUDIT_FIELDS,
+  sharedAssetConflicts, dependencyReadinessErrors };

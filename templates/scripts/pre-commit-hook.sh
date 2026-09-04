@@ -12,6 +12,7 @@
 #   iterations/vN/sprint.md|queue/*.md → check-sprint.js vN（只认 .md——.gitkeep 不触发，init 提交 queue 必然为空）
 #   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
 #   b-queue/*.md                  → check-b-task.js（B 类不得夹带共享契约修订）
+#   integration-tests/result-*.md → check-integration-evidence.js（已执行有证据、未运行有原因）
 #   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
 #   connections.yml                 → check-conn.js（零机密 + 凭据引用完备 + 凭据落位安全）
 #   任何 staged 文件                → check-secrets.js（反查 ~/.hact/secrets.env 的真值）
@@ -108,6 +109,12 @@ done
 b_tasks=$(echo "$staged" | grep -E '^b-queue/.*\.md$' || true)
 for task in $b_tasks; do
   run scripts/check-b-task.js "$task"
+done
+
+# --- 联调证据共同落盘契约 ---
+integration_results=$(echo "$staged" | grep -E '^integration-tests/result-.*\.md$' || true)
+for result in $integration_results; do
+  run scripts/check-integration-evidence.js "$result"
 done
 
 # --- reusables.md 登记表（check-reusables.js）---

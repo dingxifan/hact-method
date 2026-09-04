@@ -15,19 +15,37 @@ fs.writeFileSync(path.join(root, 'iterations', 'v1', 'as-built-ledger.md'), `# A
 ## 证据源
 - \`reusables.md#标杆切片\`
 ## 对账项
-| 对象 | 设计声明 | as-built 证据 | 实际观察 | 关系 | 动作 |
-|---|---|---|---|---|---|
-| OrderStatus | foundation 声明状态机 | \`src/order.ts#OrderStatus\` | 已有 pending/done | 一致 | 沿用 |
+| 对象 | 设计声明 | as-built 证据 | 实际观察 | 关系 | 闭合状态 | 动作 | 闭合证据 |
+|---|---|---|---|---|---|---|---|
+| OrderStatus | foundation 声明状态机 | \`src/order.ts#OrderStatus\` | 已有 pending/done | 一致 | closed | 沿用 | 本行 as-built 证据 |
 `);
 assert.deepStrictEqual(validate('v1', root), [], '有证据锚的对账账本应通过');
 
 fs.writeFileSync(path.join(root, 'iterations', 'v1', 'as-built-ledger.md'), `## 证据源
 - reusables
 ## 对账项
-| 对象 | 设计声明 | as-built 证据 | 实际观察 | 关系 | 动作 |
-|---|---|---|---|---|---|
-| OrderStatus | 声明 | src/order.ts | 不确定 | 未知 | 无 |
+| 对象 | 设计声明 | as-built 证据 | 实际观察 | 关系 | 闭合状态 | 动作 | 闭合证据 |
+|---|---|---|---|---|---|---|---|
+| OrderStatus | 声明 | src/order.ts | 不确定 | 未知 | open | 需补证据 | — |
 `);
-assert.ok(validate('v1', root).length >= 2, '无证据锚且未知无动作必须失败');
+assert.ok(validate('v1', root).length >= 3, '无证据锚且未知未闭合必须失败');
+
+fs.writeFileSync(path.join(root, 'iterations', 'v1', 'as-built-ledger.md'), `## 证据源
+- \`reusables.md#标杆切片\`
+## 对账项
+| 对象 | 设计声明 | as-built 证据 | 实际观察 | 关系 | 闭合状态 | 动作 | 闭合证据 |
+|---|---|---|---|---|---|---|---|
+| OrderStatus | 声明 | \`src/order.ts#OrderStatus\` | 实现与旧声明不同，已修订 | 漂移 | closed | 修订声明 | \`decisions.md#D-12\` |
+`);
+assert.deepStrictEqual(validate('v1', root), [], '漂移项有真实修订锚后可通过');
+
+fs.writeFileSync(path.join(root, 'iterations', 'v1', 'as-built-ledger.md'), `## 证据源
+- \`reusables.md#标杆切片\`
+## 对账项
+| 对象 | 设计声明 | as-built 证据 | 实际观察 | 关系 | 闭合状态 | 动作 | 闭合证据 |
+|---|---|---|---|---|---|---|---|
+| OrderStatus | 声明 | \`src/order.ts#OrderStatus\` | 仍不确定 | 未知 | closed | 补证据 | \`decisions.md#D-12\` |
+`);
+assert.ok(validate('v1', root).some(error => /未知 \+ closed/.test(error)), '未知不得标 closed');
 fs.rmSync(root, { recursive: true, force: true });
 console.log('✅ check-as-built-ledger 正反夹具通过');
