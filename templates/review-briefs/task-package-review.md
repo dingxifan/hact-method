@@ -1,23 +1,28 @@
 <!--
   任务包独立证据审查 brief · plan-sprint Step 3.5 消费 · live 引用（不入项目仓）
   命名规范：templates/review-briefs/{被审产物}-review.md（本文审 queue/*.md 任务包）。
-  派发：plan-sprint 主线派隔离审查单元，令其读本文件按指令执行，只告知本期迭代版本 vN。
+  派发：plan-sprint 主线派隔离审查单元，令其读本文件按指令执行，告知本期迭代版本 vN + review-scope。
        审查单元据本 brief 自读输入文件，看不到也不需要写包过程叙事 / 拆分理由。
   改动审查维度去改本文件（单一来源），不在 spec 正文重述。
 -->
-你是一名独立审查员，从未参与这批任务包的拆分与写作。本期迭代版本由派发者告知（下文路径中的 `vN` 替换为本期实际版本号）。
+你是一名独立审查员，从未参与这批任务包的拆分与写作。本期迭代版本与 `review-scope: full | module:{任务包列表} | global-summary` 由派发者告知（下文路径中的 `vN` 替换为实际版本号）。缺 scope 按 `full`。
 
 【自读输入】（你自己读下列文件，不依赖任何转述）
 - PRD（用户 G1 签字认可的需求事实，含各功能 Acceptance Criteria）：`iterations/vN/prd.md` 全文
 - TRD（本期技术契约）：`iterations/vN/trd.md`
 - Standards（长期默认）：先扫项目根三份 Standards 的规则 id + `applies-if`，再只打开任务包已列规则和疑似漏选候选；不默认全文加载
 - 视觉规格（仅当有 frontend 任务时）：项目根 `design.md`（核地基包是否覆盖其 token）
-- 任务包（待审产物）：`iterations/vN/queue/*.md` 全部 `[可取]` 任务包（派发者按包分批时只审被指定的那批）
+- 任务包（待审产物）：默认读取 `iterations/vN/queue/*.md` 全部 `[可取]` 任务包；只有派发者明确说明已超过无 compact 预算并给出业务模块边界时才读指定模块，分批后另有全局总核兜 AC/共享资产/依赖
 
 【审查立场】
 主动寻找任务包与权威事实的差异，但不以 finding 数量为目标。每条阻断须指出冲突原文、影响和正确动作；尚不能判定时输出 `evidence-gap`，不把猜测升级成实现要求。
 
-【逐类检查】（每类必须有明确结论，不允许跳过）
+【review-scope】
+- `full`：执行下方全部维度，审全部任务包。
+- `module`：只审指定任务包的包内忠实性/契约/风险，但仍读取全局 AC id 与共享资产索引，发现跨模块疑点交 `global-summary`，不自行扩包。
+- `global-summary`：只读 PRD AC 清单、TRD 模块清单、全部任务包 frontmatter 与各 module findings；只核 AC 是否跨批遗漏、共享资产 source-of-truth 和依赖断边，不重审 oracle、example、api 字段或视觉地基。
+
+【逐类检查】（`full/module` 每个适用维度须有明确结论；`global-summary` 只执行第 2 类的全局覆盖部分和第 8 类，不输出其余维度 N/A）
 
 1. AC 忠实性：逐条核 `intent` 是否忠实覆盖回链 PRD，`oracle` 是否由 PRD/TRD 判据支持；不得把普通 example 的偶然数字反写成 intent。
 2. AC 完备性：PRD 每条 AC 是否都被至少一个任务包覆盖？逐条核对，找出整条遗漏的 PRD AC。

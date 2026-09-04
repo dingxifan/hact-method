@@ -7,7 +7,7 @@
 
 ---
 
-> **步骤协议**：每步完成输出 `✅ [步骤] 完成：[2–3 句结论] → 下一步：[步骤] — [一句说明]` 后**直接继续**（非 🚫 步骤不问"继续？"、不等回应）；🚫 处必须停下等用户明确回应；⚖️ 处按既定规则默认判定，输出结论 + 理由后直接继续，用户可随时推翻（推翻则修正后再继续）。
+> **步骤协议**：机械读取、写文件和检查正常时静默执行，不逐步播报完成总结。只在 🚫 人类确认、会改变范围/取舍的 ⚖️ 默认判定、异常/`blocked` 和最终移交时输出；🚫 必须停下等明确回应，⚖️ 用一行结论 + 理由后继续，用户可随时推翻。
 
 ---
 
@@ -124,16 +124,13 @@
 
 > 写包自检（提前跑、门卫兜底）：模板字段无空（`api-contract` 仅 backend 且有前端消费时填；`risk` 缺省按 `standard` 处理，不接 linter）+ AC 双向对账（纵向每条回链某 PRD AC / 横向 PRD 每条 AC 被某包覆盖）由 `check-sprint` 逐条机械核（Step 4.7）——此处早发现失配即补、不静默放过；逐条**忠实性**（内容真覆盖、非仅 id 在场）留 Step 3.5 + 签字人。
 
-```
-✅ 任务包写完：共 [N] 个，全部入 queue。
-→ 下一步：任务包独立证据审查
-```
-
 ---
 
 ### Step 3.5：任务包独立证据审查
 
-**派发**：派普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN。审查员自读 PRD/TRD/queue；Standards 先扫 id + applies-if，再打开命中/疑似漏选条目，不默认全读。任务包 >4 个按包分批派；具体模型见运行时映射。
+**派发**：默认只派一个普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，告知本期迭代版本 vN + `review-scope: full`。审查员一次自读 PRD、TRD、全部任务包 normative core，以及 Standards 的 id + applies-if/命中规则，统一核 AC→task 覆盖、依赖和共享资产全局关系。任务包数量本身不触发分批；具体模型见运行时映射。
+
+只有“PRD + TRD + 全部 normative core + 命中 Standards”预计会超过当前模型的**无 compact 审查预算**时，才按业务模块切分，而不是按任意 2–3 包切：每批必须依赖闭合，派发时给 `review-scope: module:{任务包列表}`。模块审查结束后再派一个 `review-scope: global-summary` 轻量全局总核，只读 PRD AC 清单、TRD 模块清单、全部任务包 frontmatter 和各批 findings，专核跨批 AC 遗漏、共享资产 source-of-truth 与依赖断边；不重审包内 oracle/字段。
 > brief 查 AC 忠实/完备、oracle/example 可复算、api-contract、Standards 匹配、视觉地基与 risk。审查维度原文固化在 brief 文件，此处不重述。
 
 **【loop 逻辑】**（主线拿到隔离审查 findings 后的处置）
@@ -145,11 +142,6 @@
 | `example-error` | 修 example 或取消错误的 `golden`；只复核该 AC，不进入 develop 代码整改 |
 | 有其它 `[阻断]` | 按 finding action 修任务包或发 `revise-doc`；只重审变化面 |
 | 同一 `[阻断]` 修 3 次仍出现 | 停止 loop，上报用户；判断根因——若在 TRD（漂移点①：TRD 丢了 AC）则创建 `revise-doc(target=trd)`，不在本会话硬改 |
-
-```
-✅ 任务包独立审查完成：[findings: [] / 修复 {N} 条阻断后通过]，AC 忠于 PRD、无遗漏。
-→ 下一步：生成 sprint.md 汇总视图
-```
 
 ---
 
@@ -210,7 +202,7 @@
 |--------|-------------|------------|---------|
 | 会话启动 | 只读调查单元并行读 6 份输入文件（纯读取+带路径摘要） | — | 读取失败则主线单独读 |
 | Step 3（任务 >4 个） | 隔离执行单元各起草 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整字段 YAML | 失败则主线接管该包 |
-| Step 3.5 独立审查 | 隔离审查单元审任务包保真，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 令审查单元读该 brief 自执行（自读 prd/trd/standards/queue），只告知 vN；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
+| Step 3.5 独立审查 | 默认一个隔离审查单元联合审全部任务包，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 只告知 vN；超过无 compact 预算才按业务模块切，随后加一次 frontmatter/AC/共享资产全局总核 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
 **重要**：隔离执行单元只返回任务包内容，**由主线写入文件**，不让它直接操作文件系统。
 

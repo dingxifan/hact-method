@@ -1,13 +1,13 @@
 # exec: draft-tech-design
 
-> 运行时加载本文时，当前任务是读 PRD 输出 TRD + 三份 standards，签 G2。
+> 运行时加载本文时，当前任务是读 PRD 输出 TRD，按候选增量维护三份 Standards（可 0 变更），签 G2。
 > 三层顺序：**骨架**（架构轮廓）→ **结构层**（完整契约）→ **执行层**（standards）
 
 **上下文密度**：中高。需读多份输入文件，输出 4 份文档。疑点清单阻断前不开始写 TRD。
 
 ---
 
-> **步骤协议**：每步完成输出 `✅ [步骤] 完成：[2–3 句结论] → 下一步：[步骤] — [一句说明]` 后**直接继续**（非 🚫 步骤不问"继续？"、不等回应）；🚫 处必须停下等用户明确回应；⚖️ 处按既定规则默认判定，输出结论 + 理由后直接继续，用户可随时推翻（推翻则修正后再继续）。
+> **步骤协议**：机械读取、写文件和检查正常时静默执行，不逐步播报完成总结。只在 🚫 人类确认、会改变范围/取舍的 ⚖️ 默认判定、异常/`blocked` 和最终移交时输出；🚫 必须停下等明确回应，⚖️ 用一行结论 + 理由后继续，用户可随时推翻。
 
 ---
 
@@ -32,9 +32,8 @@
 - 项目根 `project.md`（技术层已有决策）
 - 项目根 `decisions.md`
 - 项目根 `reusables.md`
-- `../hact-method-lab/templates/standards/backend.md`
-- `../hact-method-lab/templates/standards/frontend.md`
-- `../hact-method-lab/templates/standards/schema.md`（项目 Standards 的职责、准入与条目格式）
+- 项目根三份 Standards 仅扫规则 id + `applies-if`（如已存在；用于发现与本期 TRD delta 的候选或冲突，不读规则全文）
+- 执行人 notes 仅检索 `[规范]` 标签行（不读全文）；公共/栈 Standards 模板与规则正文留 Step 7 候选命中后按 layer 加载
 
 **技术偏好确认**：
 - 从 项目根 `project.md` 技术层读取已有选型，不重新询问——**新项目的栈由 V0 `draft-foundation` 先于本任务确立**。
@@ -46,7 +45,7 @@
 {项目名} · G1 已签，PRD 已确认
 
 可做的任务：
-[1] draft-tech-design — 技术设计（TRD + 三份 standards）← 主线
+[1] draft-tech-design — 技术设计（TRD + Standards 候选维护）← 主线
 [2] revise-doc(target=prd) — 若发现 PRD 有歧义或遗漏，先修再做技术设计
 
 其他可做（输入「展开」/ 自由描述）：
@@ -61,7 +60,7 @@
 用户选 [1] → 进入 Step 1 疑点清单（技术偏好已在上方会话启动确认，不重复问）
 用户选 [2] → 加载 revise-doc exec spec，按 revise-doc 流程执行
 
-开场说：「我将分三层完成技术设计：先确认架构骨架方向，再写完整 TRD 契约，最后生成三份 standards。首先输出疑点清单等你确认，确认后才开始写。」
+开场说：「我将分三层完成技术设计：先确认架构骨架方向，再写完整 TRD 契约，最后只处理本期命中的 Standards 候选（可能为 0）。首先输出疑点清单等你确认，确认后才开始写。」
 
 ---
 
@@ -215,17 +214,25 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 > **存量守卫（未走 V0、无 foundation.md 的项目）**：本步整体跳过；只有通过 Standards 准入的稳定默认才更新下方当前规则表，不为此顺手新建 foundation.md。
 
-三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，只承接 PRD/TRD/design/Foundation/check/test 之后剩下的、暂不能由更强权威对象承接的默认规则。新项目已由 V0 首播时，本任务只原地更新当前真值；存量空桩才首播。禁止按 vN 追加历史段。TRD 确认后，写集不重叠时启动 2 个隔离执行单元处理 frontend / backend；主线同时处理 shared。
+三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，只承接 PRD/TRD/design/Foundation/check/test 之后剩下的、暂不能由更强权威对象承接的默认规则。新项目已由 V0 首播；存量空桩需要首播时视为三个 layer 都有候选。禁止按 vN 追加历史段。
+
+**先做候选扫描，不先加载模板**。主线从本期已写 TRD、Foundation/design 变化、项目 feedback 的 `[规范]`/Standards 相关行、notes 的 `[规范]` 标签行和现有规则 id + `applies-if` 生成 `0..N` 条 `standards-candidate`，每条只含：目标 layer、触发事实、为什么是跨任务长期默认、可能新增/替换/删除的 rule id。以下任一也触发候选：测试机制或视觉地基 enforcement 发生变化；项目 Standards 为空；用户明确要求做 Standards cleanup。
+
+- **0 条**：三份 Standards 原样不动；不读公共/栈模板与规则全文，不派 frontend/backend 生成单元，直接进入 Step 8。
+- **有候选**：只读目标 layer 的现有命中规则、公共候选、项目栈子模板相关段和 notes 命中条目；仅为存在候选的 frontend/backend layer 各派一个隔离执行单元，shared 候选由主线处理。无候选 layer 不读、不派、不改。
+- **仅 cleanup**：读项目现有三份规则和近两期引用/`standards_checked`，不加载公共/栈候选模板；无新增内容生成时由主线完成删除/迁移，不派生成单元。
+
+进入“有候选/cleanup”分支后才读取 `../hact-method-lab/templates/standards/schema.md`；0 candidate 分支不为重复确认既有职责而加载 schema。
 
 **Standards 来源规则**（三源：通用候选 + 栈候选 + 执行人个人 notes）：
 - 所有候选先按 `templates/standards/schema.md` 分类与准入；只有跨任务、长期稳定的默认约束进入 Standards，并改写成完整规则条目。
 - 首期播种只选择本项目适用项，不整节复制。项目栈无对应子模板时，仅从通用候选与已确认的长期栈约束生成。
 - 迭代维护只更新、替换或新增当前规则；不新增 vN 标题。版本契约回 TRD，Foundation 不变式回 Foundation，机制位置回 check/test/config，历史回 decisions，临时缺口回 waiver/backlog。
-- **先做收缩审计，再补规则**：按 `schema.md` 扫最近两个已完成迭代的 `queue/*.md` 的 `relevant-standards` 与各 `code-reviews/*/round-*.md` 的 `standards_checked`。连续两期均未被引用、且没有仍实际运行的 enforcement 的条目默认删或迁往其正确权威对象；有 enforcement 的条目只留 id、默认约束和 enforcement 指针。此次新增/保留的每条必须能说明它仍属于 Standards，而不是把“以前写过”当理由。
+- **候选命中或 cleanup 时才做收缩**：按 `schema.md` 扫最近两个已完成迭代的 `queue/*.md` 的 `relevant-standards` 与各 `code-reviews/*/round-*.md` 的 `standards_checked`。连续两期均未被引用、且没有仍实际运行的 enforcement 的条目默认删或迁往其正确权威对象；有 enforcement 的条目只留 id、默认约束和 enforcement 指针。此次新增/保留的每条必须能说明它仍属于 Standards，而不是把“以前写过”当理由。
 - notes 候选同样先过准入并去重；与现有规则冲突时保留当前规则，把候选送 `feedback.md`；与公共候选冲突但项目有明确决定时，以项目决定为准并记 `decisions.md`。
 
-**隔离执行单元输入要点**（frontend / backend 各一份）：
-- 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md`（+ 项目栈对应的 `{layer}-{栈}.md` 栈子模板，如有）+ 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
+**隔离执行单元输入要点**（仅有候选的 frontend / backend layer）：
+- 传入：对应 standards-candidate + TRD 命中章节（不默认全文）+ `../hact-method-lab/templates/standards/{layer}.md` 命中候选段（+ 项目栈对应子模板命中段，如有）+ 项目根现有目标规则 + notes 中命中 `[规范]` 条目
 - 输出：本期适用的当前规则条目；每条含稳定 id、`applies-if / rule / grade / enforcement / override / superseded-when`。不得输出 AC、版本史、任务号、事故叙事、当前代码行号或临时补偿纪律
 - 主线负责写项目根 `standards-{layer}.md`（首播或当前态更新），不让隔离执行单元直接写文件
 
@@ -233,13 +240,13 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 主线处理项目根 `standards-shared.md`。错误码表、接口字段与接口权限属于本期契约时留在 TRD；只有跨任务稳定默认按同一 schema 进入 shared Standards。
 
-**测试基建约定（不可视区测试的地基，不可省）**：项目根 `standards-backend.md` 必含测试机制规则（框架 + 命令 + 测试位置 + enforcement id）。这是 develop 把不可视区 intent/oracle 落成 runnable test 的前提。
+**测试基建约定（不可视区测试的地基，不可省）**：项目根 `standards-backend.md` 必含测试机制规则（框架 + 命令 + 测试位置 + enforcement id）。这是 develop 把不可视区 intent/oracle 落成 runnable test 的前提；现有规则与机制均未变化时不构成 candidate。
 - 新项目：测试框架已由 V0 确立 → 本期沿用；机制变化时更新同一规则，不另加版本段。
 - 存量项目（未走 V0）：在此确立框架，写入 standards-backend 与 项目根 `project.md` 技术层；若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop.md` 阶段 A 测试基建缺失处理）。
 
-**视觉地基约定（可视区地基，含前端时不可省）**：新项目由 V0 首播，本期沿用或更新同一规则；存量项目在此首播。项目 Standards 以规则 id 引用视觉地基的 enforcement，Foundation 承接全局入口/主题强制档，design.md 承接具体 token 真值，不在 Standards 重复三份全文。
+**视觉地基约定（可视区地基，含前端时不可省）**：新项目由 V0 首播，本期沿用；只有 enforcement 或默认约束变化才形成 candidate。存量项目在此首播。项目 Standards 以规则 id 引用视觉地基的 enforcement，Foundation 承接全局入口/主题强制档，design.md 承接具体 token 真值，不在 Standards 重复三份全文。
 
-三份汇总后检查：字段完整、无重复/矛盾、无版本追加史；TRD 关键契约留在 TRD，不以“覆盖所有 TRD 细节”为目标。输出一行收缩结果：`Standards：保留 {N} / 新增 {N} / 删除或迁移 {N}（原因与去处）`；没有历史迭代或无变动时如实写零，不凑审计项。
+有候选/cleanup 时汇总检查：字段完整、无重复/矛盾、无版本追加史；TRD 关键契约留在 TRD，不以“覆盖所有 TRD 细节”为目标。最终 G2 确认时附一行：`Standards：跳过（0 candidate）` 或 `保留 {N} / 新增 {N} / 删除或迁移 {N}`；机械过程中不另播报。
 
 **隔离执行单元失败判定**：以下任一情况视为失败，主线接管该份 standards：
 - 返回内容为空或格式完全不符合模板结构
@@ -267,7 +274,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 > **签字前置**：Step 5 内容审查问题已处理 + Step 6 用户已确认 TRD + 语义判据已确认（载体真承接 AC、接口字段真满足画面）。（结构 linter 由下方签字 commit 的 pre-commit 门卫强制兜底，无需在此重述"退出码 0 才签"。）
 
 ```
-✅ TRD + standards 完成：TRD [N] 段，standards 三份（shared / frontend / backend），decisions.md 已更新。
+✅ TRD 完成：[N] 段；Standards：{跳过（0 candidate）/ 更新 [layer...]，新增 N、替换 N、删除或迁移 N}；decisions.md 已更新。
 要签 G2 吗？
 ```
 
@@ -305,7 +312,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 |--------|-------------|---------|
 | 会话启动 | 只读调查单元并行读 6 份输入文件（纯读取+带路径摘要） | 读取失败则主线单独读，不阻断 |
 | Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 重派一次仍失败则 `blocked`，不得主线自审替代 |
-| Step 7 standards 维护 | 2 个隔离执行单元各处理一份不重叠文件（frontend / backend 首播或当前态更新） | 失败则主线接管该份，记录原因 |
+| Step 7 Standards 维护 | 0 candidate 时不派；有候选时仅为命中的 frontend/backend layer 各派一个隔离执行单元；仅 cleanup 由主线处理 | 失败则主线接管该份，记录原因 |
 
 > **Step 5 与 Step 4 分工**：Step 4 linter 机械核结构 / 覆盖类【linter】判据；Step 5 验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），两者不重叠。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。
 

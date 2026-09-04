@@ -37,7 +37,7 @@
 |------|------|------|
 | 场景列表 + 流程图 | `iterations/vN/ux-flows.md` | Markdown，**仅含两段**：场景列表 + mermaid 流程图 |
 | HTML 原型 | `iterations/vN/prototype.html` | 自包含单文件，可在浏览器直接打开 |
-| 设计简报 | `iterations/vN/design-brief.md` | 外部设计会话路径专用；含业务背景/视觉规范/场景/流程/AC 说明，供独立设计会话生成原型 |
+| 设计简报 | `iterations/vN/design-brief.md` | 仅用户明确选择外部设计会话时，按 `../hact-method-lab/specs-execution/draft-ux-external.md` 生成；默认本地路径不创建 |
 | AC 覆盖映射 | `iterations/vN/prototype-map.md` | 两条路径均必有；一张表（AC / 场景 / HTML 锚点），Step 5 对抗审查的核查基线 |
 | 视觉规范（如首次） | `design.md` | 项目级跨迭代文件；首期生成「全局视觉基线 + 页面规格」结构，后续页面特有规格按稳定标题增补 |
 
