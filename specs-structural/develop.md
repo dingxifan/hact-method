@@ -26,7 +26,9 @@
 
 | 字段 | 类型 | 必填 | 取值 / 说明 |
 |------|------|:----:|------------|
+| `package-schema` | int | 新任务 ✅ | 固定 `2`；存量缺失按 legacy 兼容，不批量回填。schema 2 启用 module/design-reference 等新机械契约 |
 | `task-id` | string | ✅ | 唯一标识，对应 sprint.md 行或 B 类总账行 |
+| `module` | string | schema 2 ✅ | TRD「模块拆分」中的稳定模块名；用于 G3 超预算时按业务模块切与生成最小全局索引，不得从 `context`/文件名猜测 |
 | `sprint_id` | string | ✅ | 所属 Sprint 标识，如 `v4`；由 plan-sprint 填写 |
 | `layers` | string[] | ✅ | `[frontend]` / `[backend]` / `[shared]` |
 | `source` | enum | ✅ | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` |
@@ -42,7 +44,8 @@
 | `ac-format` | enum | ✅ | 新任务固定 `intent-oracle-v1`；存量缺省按旧格式兼容，不要求批量回填 |
 | `acceptance-criteria` | string[] | ✅ | 3–5 条，每条是一个 block scalar，含回链 tag + `intent` + `oracle`；`example` 可选，默认是派生说明，不高于 oracle。仅输入封闭、可按 oracle 复算且经写包独审确认的例子标 `golden: true`，develop 才承担字面物化义务；其余测试物化 intent/oracle |
 | `relevant-standards` | string[] | ✅ | 只列 `applies-if` 命中的稳定规则 id，并附 `standards-{layer}.md` / `standards-shared.md` 条目标题。无命中填 `[]`；frontend 另由 `reference` 指向 design.md 的全局基线和相关页面规格，存量无稳定锚时才全文读取 |
-| `reference` | string[] | ✅ | 只列做实现决策必需的权威锚：文件路径 + 稳定符号/章节锚（优先）或行号 + 说明；不接受“全文”。无必需锚可填 `[]` |
+| `design-reference-format` | enum | frontend 条件必填 | `sliced-v1`：design 已有全局基线 + 页面规格结构；`legacy-full`：存量 design 尚无稳定页面标题。backend/shared 不写 |
+| `reference` | string[] | ✅ | 只列做实现决策必需的权威锚。普通情况不接受全文；仅 `design-reference-format=legacy-full` 允许 `design.md 全文（存量）`。frontend `sliced-v1` 须含全局视觉基线和相关页面标题；无其他必需锚可填 `[]` |
 | `context` | string | ✅ | 关键实现切入点（如：`GoalList.vue L142 handleDelete()`…） |
 | `known-risks` | string[] | ✅ | 只列本任务新打开或显著放大的实际风险；无则 `[]` |
 | `do-not` | string[] | ✅ | 只列本任务真实 scope 边；通用编码/凭据红线由 Standards 与 develop 全局纪律承接；无则 `[]` |
@@ -91,7 +94,7 @@ api-contract:
 - [ ] 若当前集合使本期 sprint 任务全部完成，global seam review 已运行；scope gap 已新开 owner，不打回无关单包
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
 - [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 档审查的先重派高能力审查档）
-- [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录 `code_rounds/spec_rounds`、implementation/review/spec 墙钟、report 目录、review profile version 与 finding 路由）
+- [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录 `code_rounds/spec_rounds`、implementation/review/spec 墙钟、report 目录、review profile/evidence version 与 finding 路由）
 
 ---
 

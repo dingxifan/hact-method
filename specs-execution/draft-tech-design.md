@@ -122,7 +122,7 @@
 
 ### Step 3：写完整 TRD
 
-骨架确认后，逐段写完整 TRD，**每段写完后报告进度**。最终 `iterations/vN/trd.md` 套用结构化模板 `../hact-method-lab/templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位），**不得偏离 header/槽位写法**——Step 4 linter 按此解析；模板的 `<待填>` 占位与注释须全部替换/删除。
+骨架确认后静默逐段写完整 TRD；仅出现疑点、异常或 `blocked` 时中断报告。最终 `iterations/vN/trd.md` 套用结构化模板 `../hact-method-lab/templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位），**不得偏离 header/槽位写法**——Step 4 linter 按此解析；模板的 `<待填>` 占位与注释须全部替换/删除。
 
 **§ 技术选型变更**：仅写本期新增；格式：依赖 / 版本 / 用途 / 选型理由。迭代项目不重复已有。
 
@@ -228,7 +228,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 - 所有候选先按 `templates/standards/schema.md` 分类与准入；只有跨任务、长期稳定的默认约束进入 Standards，并改写成完整规则条目。
 - 首期播种只选择本项目适用项，不整节复制。项目栈无对应子模板时，仅从通用候选与已确认的长期栈约束生成。
 - 迭代维护只更新、替换或新增当前规则；不新增 vN 标题。版本契约回 TRD，Foundation 不变式回 Foundation，机制位置回 check/test/config，历史回 decisions，临时缺口回 waiver/backlog。
-- **候选命中或 cleanup 时才做收缩**：按 `schema.md` 扫最近两个已完成迭代的 `queue/*.md` 的 `relevant-standards` 与各 `code-reviews/*/round-*.md` 的 `standards_checked`。连续两期均未被引用、且没有仍实际运行的 enforcement 的条目默认删或迁往其正确权威对象；有 enforcement 的条目只留 id、默认约束和 enforcement 指针。此次新增/保留的每条必须能说明它仍属于 Standards，而不是把“以前写过”当理由。
+- **候选命中或 cleanup 时才做收缩**：按 `schema.md` 扫最近两个已完成迭代的 `queue/*.md` 的 `relevant-standards` 与各 `code-reviews/*/round-*.md` 的 `standards_checked`；旧报告缺字段记 `unknown`。连续两期零引用只进入复核，不能删除。拟删除时在 `_meta/sessions/standards-retention-vN.json` 写 rule id、`zero_use/safety_or_data/superseded_when_met`（严格 boolean）、`applies_if_possible`（boolean/null）、迁移目标/可解析更强锚与 `requested`，然后运行 `node ../hact-method-lab/templates/scripts/standards-retention-policy.js {该文件}`；类型错误、占位/坏锚或非 0 一律禁止删除。安全/数据规则无更强承接锚则保留；有 enforcement 的条目只留 id、默认约束和指针。
 - notes 候选同样先过准入并去重；与现有规则冲突时保留当前规则，把候选送 `feedback.md`；与公共候选冲突但项目有明确决定时，以项目决定为准并记 `decisions.md`。
 
 **隔离执行单元输入要点**（仅有候选的 frontend / backend layer）：

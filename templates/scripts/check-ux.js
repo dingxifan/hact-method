@@ -4,6 +4,7 @@
 //   ux-flows.md  —— 含「场景列表」（S-id 条目）+ 「流程图」（mermaid 块）
 //   prototype-map.md —— 含「前端 AC 覆盖」表
 //   prototype.html   —— 文件存在
+//   design.md        —— 本期 draft-ux:需要 的功能在「八、页面规格」有稳定标题
 //
 // 用法：node scripts/check-ux.js v1 [项目根目录]
 // 退出码：0 = 通过  1 = 结构不合格  2 = 参数错误
@@ -25,6 +26,33 @@ function pass(label, msg)      { findings.push({ level: 'pass', label, msg }); }
 function fail(label, loc, msg) { findings.push({ level: 'fail', label, loc, msg }); hasFail = true; }
 
 const iterDir = path.join(root, 'iterations', ver);
+
+/* ---- design.md 页面规格覆盖 ---- */
+const prdPath = path.join(iterDir, 'prd.md');
+const designPath = path.join(root, 'design.md');
+if (fs.existsSync(prdPath) && fs.existsSync(designPath)) {
+  const prd = fs.readFileSync(prdPath, 'utf8');
+  const requiredPages = [];
+  const featureHeadings = [...prd.matchAll(/^###\s+功能：([^\r\n`]+)(?:[^\r\n]*)$/gm)];
+  for (let index = 0; index < featureHeadings.length; index += 1) {
+    const match = featureHeadings[index];
+    const start = match.index + match[0].length;
+    const nextFeature = featureHeadings[index + 1] && featureHeadings[index + 1].index;
+    const nextSectionOffset = prd.slice(start).search(/^##\s+/m);
+    const nextSection = nextSectionOffset >= 0 ? start + nextSectionOffset : prd.length;
+    const end = nextFeature === undefined ? nextSection : Math.min(nextFeature, nextSection);
+    if (/^\*\*draft-ux\*\*：\s*需要\s*$/m.test(prd.slice(start, end))) requiredPages.push(match[1].trim());
+  }
+  const design = fs.readFileSync(designPath, 'utf8');
+  const pageSection = (design.match(/^##\s+八、页面规格\s*$([\s\S]*)/m) || [])[1] || '';
+  const pageTitles = [...pageSection.matchAll(/^###\s+(.+)$/gm)].map(match => match[1].trim());
+  const normalizePage = value => String(value || '').trim().replace(/(?:页面|页)$/u, '').replace(/\s+/g, '');
+  const missing = requiredPages.filter(name => !pageTitles.some(title => normalizePage(title) === normalizePage(name)));
+  if (missing.length) fail('design 页面规格', designPath, `本期 draft-ux 功能缺稳定页面标题：${missing.join('、')}`);
+  else if (requiredPages.length) pass('design 页面规格', `${requiredPages.length} 个 draft-ux 功能均有页面规格标题`);
+} else if (fs.existsSync(prdPath)) {
+  fail('design.md 存在', designPath, '本期有 PRD 但项目根缺 design.md');
+}
 
 /* ---- ux-flows.md ---- */
 const uxPath = path.join(iterDir, 'ux-flows.md');
@@ -54,7 +82,7 @@ if (!fs.existsSync(uxPath)) {
 const mapPath = path.join(iterDir, 'prototype-map.md');
 if (!fs.existsSync(mapPath)) {
   fail('prototype-map.md 存在', mapPath,
-    '未找到 prototype-map.md（由 Claude Design 与 prototype.html 同步产出）');
+    '未找到 prototype-map.md（由 draft-ux 与 prototype.html 同步产出）');
 } else {
   const text = fs.readFileSync(mapPath, 'utf8');
   if (!/^##\s+前端\s*AC\s*覆盖/m.test(text)) {

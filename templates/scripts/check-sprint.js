@@ -14,7 +14,10 @@
  *   node scripts/check-sprint.js vN          # 项目根 = cwd
  *   node scripts/check-sprint.js vN <项目根>
  *   node scripts/check-sprint.js --review <task-id> [项目根]  # A/B 通用 review 审计
+ *   node scripts/check-sprint.js --review-chain <task-id> [项目根] # 合并前仅核固定审查链，不依赖终态 status 条目
  *   node scripts/check-sprint.js --ready <task-id,...> [项目根] # develop 认领前依赖就绪检查
+ *   node scripts/check-sprint.js --wave-ready <task-id,...> [项目根] # 单人 wave 的机械准入
+ *   node scripts/check-sprint.js --wave-state <progress.json> [项目根] # wave 断点恢复可执行性
  *   node scripts/check-sprint.js --worktree-from-reports <report,...|none> [项目根]
  *
  * 退出码：有任一 FAIL → 1；全 pass → 0；用法错误 / 自身出错 → 2。
@@ -515,6 +518,9 @@ function fullProfileErrors(root, id, profileRel, taskPackagePath, changedFiles, 
 function reviewAuditErrors(root, id, cr, options = {}) {
   const errors = [];
   const profileVersion = cr.review_profile_version || '';
+  const evidenceVersion = cr.review_evidence_version || '';
+  if (evidenceVersion && evidenceVersion !== 'develop-review-round/v2')
+    errors.push(`未知 review_evidence_version=${evidenceVersion}`);
   const legacyProfile = options.allowLegacyProfile === true && !profileVersion;
   const foundationProfile = profileVersion === FOUNDATION_PROFILE_VERSION;
   if (foundationProfile && id !== 'foundation')
@@ -531,14 +537,16 @@ function reviewAuditErrors(root, id, cr, options = {}) {
   const implEnd = parseIso(cr.implementation_completed_at);
   const reviewStart = parseIso(cr.review_started_at);
   const reviewEnd = parseIso(cr.review_completed_at);
-  if (![implStart, implEnd, reviewStart, reviewEnd].every(Number.isFinite)) {
-    errors.push('四个 started/completed 字段须为带时区 ISO-8601');
-  } else {
-    if (implStart > implEnd) errors.push('implementation_started_at 晚于 completed_at');
-    if (implEnd !== reviewStart) errors.push('implementation_completed_at 必须等于 review_started_at，避免墙钟留白或重叠');
-    if (reviewStart > reviewEnd) errors.push('review_started_at 晚于 completed_at');
+  if (!options.preMerge) {
+    if (![implStart, implEnd, reviewStart, reviewEnd].every(Number.isFinite)) {
+      errors.push('四个 started/completed 字段须为带时区 ISO-8601');
+    } else {
+      if (implStart > implEnd) errors.push('implementation_started_at 晚于 completed_at');
+      if (implEnd !== reviewStart) errors.push('implementation_completed_at 必须等于 review_started_at，避免墙钟留白或重叠');
+      if (reviewStart > reviewEnd) errors.push('review_started_at 晚于 completed_at');
+    }
+    if (!isUInt(cr.spec_minutes)) errors.push('spec_minutes 须为 int>=0');
   }
-  if (!isUInt(cr.spec_minutes)) errors.push('spec_minutes 须为 int>=0');
 
   const relDir = cr.review_report_dir || '';
   const absRoot = path.resolve(root);
@@ -585,6 +593,8 @@ function reviewAuditErrors(root, id, cr, options = {}) {
   const fullProfiles = new Set();
   let taskPackagePath = '';
   let declaredTaskFiles = [];
+  let relevantStandardIds = [];
+  let taskPackageSchema = '';
   if (!foundationProfile && !legacyProfile) {
     const taskPackages = findTaskPackages(root, id);
     if (taskPackages.length !== 1) errors.push(taskPackages.length
@@ -593,22 +603,43 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     else {
       taskPackagePath = taskPackages[0];
       const packageFm = parseFrontmatter(taskPackagePath);
+      taskPackageSchema = scalarText(packageFm && packageFm['package-schema']);
       declaredTaskFiles = listItems(packageFm && packageFm.files).map(normalizeFileAsset).sort();
+      relevantStandardIds = [...new Set(listItems(packageFm && packageFm['relevant-standards'])
+        .map(item => (item.match(/^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+/) || [])[0])
+        .filter(Boolean).map(item => item.toUpperCase()))].sort();
     }
   }
   let firstReportStarted = NaN, lastReportCompleted = NaN;
+  if (taskPackageSchema === '2' && evidenceVersion !== 'develop-review-round/v2')
+    errors.push('package-schema=2 必须写 review_evidence_version=develop-review-round/v2');
   const findingId = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-F\\d{3}$`);
   reports.forEach((file, index) => {
     const rp = parseFrontmatter(path.join(absDir, file));
     const r = k => scalarText(rp && rp[k]);
     const mode = r('mode');
     const risk = r('risk');
+    const reportSchema = r('schema');
     const profileRel = r('review_profile');
     const started = parseIso(r('started_at')), completed = parseIso(r('completed_at'));
     if (!rp || r('task_id') !== id) errors.push(`${file}: task_id 不匹配`);
     if (Number(r('round')) !== index + 1) errors.push(`${file}: round 与文件序号不符`);
     if (!['full', 'targeted'].includes(mode)) errors.push(`${file}: mode 非法`);
     if (!['standard', 'sensitive'].includes(risk)) errors.push(`${file}: risk 非法`);
+    if (reportSchema && reportSchema !== 'develop-review-round/v2')
+      errors.push(`${file}: 未知 round schema=${reportSchema}`);
+    if (evidenceVersion === 'develop-review-round/v2' && reportSchema !== 'develop-review-round/v2')
+      errors.push(`${file}: review_evidence_version=v2 时 round schema 必须为 develop-review-round/v2`);
+    if (reportSchema === 'develop-review-round/v2') {
+      if (!rp.standards_checked) errors.push(`${file}: v2 standards_checked 缺失`);
+      else if (!foundationProfile) {
+        const checked = [...new Set(listItems(rp.standards_checked).map(item => item.toUpperCase()))].sort();
+        const extras = checked.filter(item => !relevantStandardIds.includes(item));
+        if (extras.length) errors.push(`${file}: standards_checked 含任务包外 id：${extras.join(', ')}`);
+        if (mode === 'full' && JSON.stringify(checked) !== JSON.stringify(relevantStandardIds))
+          errors.push(`${file}: full standards_checked 必须与 relevant-standards 完整对账`);
+      }
+    }
     if (index === 0 && mode !== 'full') errors.push(`${file}: 首轮必须 full`);
     if (previousEscalated && mode !== 'full') errors.push(`${file}: 上轮要求 escalate_to_full，本轮却非 full`);
     if (!isSha40(r('base_ref'))) errors.push(`${file}: base_ref 非固定 40 位 SHA`);
@@ -733,6 +764,38 @@ function checkReviewAudit(taskId, root) {
   else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、review profile、逐轮报告与墙钟证据均合法`);
 }
 
+function checkReviewChain(taskId, root) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
+    fail('review chain', 'task-id', 'task-id 只允许字母、数字和连字符');
+    return;
+  }
+  const candidates = [];
+  const bDir = path.join(root, 'b-reviews', taskId);
+  if (fs.existsSync(bDir) && fs.statSync(bDir).isDirectory()) candidates.push(bDir);
+  const iterations = path.join(root, 'iterations');
+  if (fs.existsSync(iterations) && fs.statSync(iterations).isDirectory()) for (const version of fs.readdirSync(iterations)) {
+    const dir = path.join(iterations, version, 'code-reviews', taskId);
+    if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) candidates.push(dir);
+  }
+  if (candidates.length !== 1) {
+    fail('review chain', taskId, `须唯一定位 review 目录，当前 ${candidates.length} 个`);
+    return;
+  }
+  const reports = fs.readdirSync(candidates[0]).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
+  const taskPackages = findTaskPackages(root, taskId);
+  const packageFm = taskPackages.length === 1 ? parseFrontmatter(taskPackages[0]) : null;
+  const cr = {
+    freshness: 'pass',
+    review_report_dir: path.relative(root, candidates[0]).replace(/\\/g, '/'),
+    review_profile_version: taskId === 'foundation' ? FOUNDATION_PROFILE_VERSION : 'develop-review-profile/v1',
+    review_evidence_version: scalarText(packageFm && packageFm['package-schema']) === '2' ? 'develop-review-round/v2' : '',
+    code_rounds: reports.length,
+  };
+  const errors = reviewAuditErrors(root, taskId, cr, { preMerge: true });
+  errors.forEach(message => fail('review chain', cr.review_report_dir, `${taskId}: ${message}`));
+  if (!errors.length) pass('review chain', `${taskId} 的 preflight/profile/fixed diff/round/finding 链可在合并前复现`);
+}
+
 function checkReady(subject, root) {
   const selectedIds = String(subject || '').split(',').map(value => value.trim()).filter(Boolean);
   if (!selectedIds.length || selectedIds.some(id => !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id))) {
@@ -758,6 +821,124 @@ function checkReady(subject, root) {
   errors.forEach(message => fail('认领就绪', 'status.yml', message));
   if (!errors.length && packages.length === selectedIds.length)
     pass('认领就绪', `${selectedIds.join(' → ')} 依赖闭合，外部依赖均已 merged`);
+}
+
+function checkWaveReady(subject, root) {
+  const selectedIds = String(subject || '').split(',').map(value => value.trim()).filter(Boolean);
+  if (selectedIds.length < 2 || selectedIds.some(id => !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id))) {
+    fail('wave 准入', 'task-id-list', 'wave 至少 2 个任务，且只允许逗号分隔的字母、数字和连字符');
+    return;
+  }
+  const packages = [];
+  for (const id of selectedIds) {
+    const matches = findTaskPackages(root, id);
+    if (matches.length !== 1) {
+      fail('wave 准入', id, matches.length ? `找到 ${matches.length} 个同 id 任务包` : '找不到任务包');
+      continue;
+    }
+    const fm = parseFrontmatter(matches[0]);
+    const layers = listItems(fm && fm.layers).map(value => value.toLowerCase());
+    packages.push({
+      id,
+      deps: listItems(fm && fm.depends_on),
+      source: scalarText(fm && fm.source).toLowerCase(),
+      risk: (scalarText(fm && fm.risk) || 'standard').toLowerCase(),
+      layer: layers.join(','),
+      fm,
+      file: matches[0],
+    });
+  }
+  const statusTasks = parseStatusTasks(path.join(root, 'status.yml'));
+  if (statusTasks === null) {
+    fail('wave 准入', 'status.yml', '缺 status.yml，无法证明依赖与 active consumer');
+    return;
+  }
+  const errors = dependencyReadinessErrors(packages, selectedIds, statusTasks);
+  const layers = new Set(packages.map(pkg => pkg.layer));
+  if (packages.some(pkg => pkg.source !== 'sprint')) errors.push('wave 只允许 source=sprint');
+  if (packages.some(pkg => pkg.risk !== 'standard')) errors.push('wave 只允许已声明 risk=standard；语义有效 risk 仍由主线前置复核');
+  if (layers.size !== 1 || layers.has('')) errors.push('wave 任务必须属于同一明确 layer');
+  const selected = new Set(selectedIds);
+  const activeConsumers = statusTasks.filter(task => {
+    if (selected.has(task.id) || !['taken-by', 'done'].includes(task.status)) return false;
+    const deps = String(task.depends_on || '').split(',').map(value => value.trim()).filter(Boolean);
+    return deps.some(dep => selected.has(dep));
+  });
+  if (activeConsumers.length) errors.push(`存在集合外 active consumer：${activeConsumers.map(task => task.id).join(', ')}`);
+  const selectedNotAvailable = statusTasks.filter(task => selected.has(task.id) && task.status !== '可取');
+  if (selectedNotAvailable.length) errors.push(`候选任务并非全部 [可取]：${selectedNotAvailable.map(task => `${task.id}=${task.status}`).join(', ')}`);
+  errors.forEach(message => fail('wave 准入', 'status.yml', message));
+  if (!errors.length && packages.length === selectedIds.length)
+    pass('wave 准入', `${selectedIds.join(' → ')} 为同 layer/standard/sprint，依赖闭合且无已登记 active consumer`);
+}
+
+function checkWaveState(progressRel, root) {
+  const progressPath = resolveProjectFile(root, progressRel);
+  if (!progressPath || !exists(progressPath)) {
+    fail('wave 恢复', progressRel || '<空>', 'progress.json 不存在或越界');
+    return;
+  }
+  let progress;
+  try { progress = JSON.parse(fs.readFileSync(progressPath, 'utf8')); }
+  catch (error) { fail('wave 恢复', progressRel, `progress.json 无法解析：${error.message}`); return; }
+  if (progress.schema !== 'wave-progress/v1' || !progress.branch || !Array.isArray(progress.tasks) || progress.tasks.length < 2) {
+    fail('wave 恢复', progressRel, '须为 wave-progress/v1，含 branch 与至少 2 个 tasks');
+    return;
+  }
+  const branch = progress.branch;
+  try { gitOutput(root, ['rev-parse', '--verify', `refs/heads/${branch}`]); }
+  catch { fail('wave 恢复', branch, '本地 wave branch 不可解析'); }
+  const statusTasks = parseStatusTasks(path.join(root, 'status.yml'));
+  if (statusTasks === null) {
+    fail('wave 恢复', 'status.yml', '缺 status.yml');
+    return;
+  }
+  const progressIds = progress.tasks.map(task => task.id);
+  const group = statusTasks.filter(task => task.branch === branch);
+  const branchIds = group.map(task => task.id).sort();
+  const expectedIds = [...progressIds].sort();
+  if (JSON.stringify(branchIds) !== JSON.stringify(expectedIds))
+    fail('wave 恢复', 'status.yml', `progress tasks 与该 branch 全部任务不一致：progress=${expectedIds.join(',')} status=${branchIds.join(',')}`);
+  const wrongBranch = group.filter(task => task.branch !== branch);
+  if (wrongBranch.length) fail('wave 恢复', 'status.yml', `任务未绑定 progress branch：${wrongBranch.map(task => task.id).join(', ')}`);
+  const escaped = group.filter(task => !['taken-by', 'done'].includes(task.status));
+  if (escaped.length) fail('wave 恢复', 'status.yml', `同 wave 不得部分退回可取/merged：${escaped.map(task => `${task.id}=${task.status}`).join(', ')}`);
+  const assignees = new Set(group.map(task => task.assigned_to).filter(Boolean));
+  if (assignees.size > 1) fail('wave 恢复', 'status.yml', '同 wave 出现多个 assigned_to');
+  for (const task of progress.tasks) {
+    if (!['accepted', 'current', 'pending'].includes(task.state)) {
+      fail('wave 恢复', progressRel, `${task.id}: state 非 accepted/current/pending`);
+      continue;
+    }
+    if (task.state === 'accepted') {
+      if (!isSha40(task.commit) || gitObjectType(root, task.commit) !== 'commit') {
+        fail('wave 恢复', progressRel, `${task.id}: accepted commit 不可解析`);
+        continue;
+      }
+      try { gitOutput(root, ['merge-base', '--is-ancestor', task.commit, `refs/heads/${branch}`]); }
+      catch { fail('wave 恢复', progressRel, `${task.id}: accepted commit 不是 wave branch 祖先`); }
+      const evidence = [task.preflight, task.profile, task.final_report];
+      if (evidence.some(value => !value || typeof value !== 'string')) {
+        fail('wave 恢复', progressRel, `${task.id}: accepted 必须记录 preflight/profile/final_report`);
+        continue;
+      }
+      const treeFiles = String(gitOutput(root, ['ls-tree', '-r', '--name-only', task.commit])).split(/\r?\n/);
+      const missingEvidence = evidence.filter(relative => !treeFiles.includes(relative.replace(/\\/g, '/')));
+      if (missingEvidence.length) {
+        fail('wave 恢复', progressRel, `${task.id}: accepted commit 缺审计物 ${missingEvidence.join(', ')}`);
+        continue;
+      }
+      const reportRel = task.final_report.replace(/\\/g, '/');
+      const committedReport = String(gitOutput(root, ['show', `${task.commit}:${reportRel}`]));
+      const field = key => ((committedReport.match(new RegExp(`^${key}:\\s*(.+)$`, 'm')) || [])[1] || '').trim();
+      if (field('task_id') !== task.id || field('schema') !== 'develop-review-round/v2' || field('conclusion') !== 'pass')
+        fail('wave 恢复', progressRel, `${task.id}: commit 内 final report 的 task/schema/conclusion 非法`);
+      if (!isSha40(field('reviewed_head')) || gitObjectType(root, field('reviewed_head')) !== 'tree')
+        fail('wave 恢复', progressRel, `${task.id}: commit 内 final report reviewed_head 不可解析`);
+    }
+  }
+  if (!findings.some(item => item.level === 'fail'))
+    pass('wave 恢复', `${group.length} 个任务的 branch/status/progress/accepted commit+report 可共同恢复`);
 }
 
 function checkWorktreeFromReports(subject, root) {
@@ -876,6 +1057,9 @@ function checkSprint(iteration, root) {
 
   for (const p of packages) {
     const where = p.file;
+    const packageSchema = scalarText(p.fm['package-schema']);
+    if (packageSchema && packageSchema !== '2') fail('任务包 schema', where, `${p.id}：未知 package-schema=${packageSchema}`);
+    if (packageSchema === '2' && valEmpty('module', p.fm.module)) fail('任务包 module', where, `${p.id}：schema 2 必填 TRD 稳定 module`);
     // 1. 字段完备
     for (const key of REQUIRED) {
       if (valEmpty(key, p.fm[key])) fail('字段完备', where, `${p.id}：字段「${key}」缺失/为空/占位`);
@@ -899,8 +1083,43 @@ function checkSprint(iteration, root) {
     }
     // 2. reference 稳定锚 + ux-flows/trd 链
     const refs = listItems(p.fm['reference']);
+    const designRefFormat = scalarText(p.fm['design-reference-format']).toLowerCase();
+    const enforceDesignRef = packageSchema === '2' || Boolean(designRefFormat);
+    if (/frontend/.test(p.layersStr) && enforceDesignRef) {
+      const designPath = path.join(root, 'design.md');
+      if (!['sliced-v1', 'legacy-full'].includes(designRefFormat)) {
+        fail('reference design', where, `${p.id}：frontend 须填 design-reference-format=sliced-v1|legacy-full`);
+      } else if (!exists(designPath)) {
+        fail('reference design', where, `${p.id}：项目根缺 design.md`);
+      } else {
+        const designText = fs.readFileSync(designPath, 'utf8');
+        const designRefs = refs.filter(ref => /design\.md/i.test(ref));
+        const globalRef = designRefs.some(ref => /全局视觉基线|第?[〇一二三四五六七0-7]节/i.test(ref));
+        const pageHeader = designText.match(/^##\s+八、页面规格\s*$/m);
+        const hasPageSection = Boolean(pageHeader);
+        const pageStart = pageHeader ? pageHeader.index + pageHeader[0].length : designText.length;
+        const nextTopOffset = designText.slice(pageStart).search(/^##\s+/m);
+        const pageBody = designText.slice(pageStart, nextTopOffset >= 0 ? pageStart + nextTopOffset : designText.length);
+        const pageTitles = [...pageBody.matchAll(/^###\s+(.+)$/gm)]
+          .map(match => match[1].trim()).filter(title => !/[<{].*[>}]|页面\/功能名/.test(title));
+        if (designRefFormat === 'legacy-full') {
+          if (!designRefs.some(ref => /全文（存量）|全文\(存量\)/i.test(ref)))
+            fail('reference design', where, `${p.id}：legacy-full 必须显式写 design.md 全文（存量）`);
+          if (hasPageSection && pageTitles.length)
+            fail('reference design', where, `${p.id}：design 已有页面规格标题，不得继续用 legacy-full`);
+        } else {
+          if (!globalRef) fail('reference design', where, `${p.id}：sliced-v1 缺 design.md 全局视觉基线锚`);
+          const baseline = scalarText(p.fm['baseline']).toLowerCase() === 'visual';
+          if (!baseline && !pageTitles.some(title => designRefs.some(ref => ref.includes(title))))
+            fail('reference design', where, `${p.id}：sliced-v1 非视觉地基包须引用 design.md 中真实页面规格标题`);
+        }
+      }
+    } else if (!/frontend/.test(p.layersStr) && p.fm['design-reference-format']) {
+      fail('reference design', where, `${p.id}：非 frontend 不得填写 design-reference-format`);
+    }
     if (refs.length) {
-      const noAnchor = refs.filter(r => !hasStableAnchor(r));
+      const noAnchor = refs.filter(r => !hasStableAnchor(r)
+        && !(designRefFormat === 'legacy-full' && /design\.md.*全文[（(]存量[）)]/i.test(r)));
       if (noAnchor.length) fail('reference 稳定锚', where, `${p.id}：${noAnchor.length} 条 reference 无符号/章节/行号锚（首条：${noAnchor[0].slice(0, 40)}…）`);
       // draft-ux 是**可选**环节（PRD 标 `draft-ux: 需要` 才触发）——ux-flows.md 不存在时，
       // 前端 AC 的形态权威落在 TRD「交互技术方案」段，此处不得强求引用一份不存在的文件。
@@ -1123,21 +1342,30 @@ function checkSprint(iteration, root) {
 function main() {
   const args = process.argv.slice(2);
   const reviewMode = args[0] === '--review';
+  const reviewChainMode = args[0] === '--review-chain';
   const readyMode = args[0] === '--ready';
+  const waveReadyMode = args[0] === '--wave-ready';
+  const waveStateMode = args[0] === '--wave-state';
   const worktreeMode = args[0] === '--worktree-from-reports';
-  const specialMode = reviewMode || readyMode || worktreeMode;
+  const specialMode = reviewMode || reviewChainMode || readyMode || waveReadyMode || waveStateMode || worktreeMode;
   const subject = specialMode ? args[1] : args[0];
   const root = (specialMode ? args[2] : args[1]) || process.cwd();
   if (!subject || (!specialMode && !/^v\d+(\.\d+)*$/.test(subject))) {
     console.error('用法: node check-sprint.js <vN|vN.M> [项目根]\n'
       + '   或: node check-sprint.js --review <task-id> [项目根]\n'
+      + '   或: node check-sprint.js --review-chain <task-id> [项目根]\n'
       + '   或: node check-sprint.js --ready <task-id,...> [项目根]\n'
+      + '   或: node check-sprint.js --wave-ready <task-id,...> [项目根]\n'
+      + '   或: node check-sprint.js --wave-state <progress.json> [项目根]\n'
       + '   或: node check-sprint.js --worktree-from-reports <report,...|none> [项目根]');
     process.exit(2);
   }
   try {
     if (reviewMode) checkReviewAudit(subject, root);
+    else if (reviewChainMode) checkReviewChain(subject, root);
     else if (readyMode) checkReady(subject, root);
+    else if (waveReadyMode) checkWaveReady(subject, root);
+    else if (waveStateMode) checkWaveState(subject, root);
     else if (worktreeMode) checkWorktreeFromReports(subject, root);
     else checkSprint(subject, root);
   }
@@ -1146,7 +1374,7 @@ function main() {
   const fails = findings.filter(f => f.level === 'fail');
   const passes = findings.filter(f => f.level === 'pass');
   const humans = findings.filter(f => f.level === 'human');
-  const label = reviewMode ? `review:${subject}` : readyMode ? `ready:${subject}`
+  const label = reviewMode ? `review:${subject}` : reviewChainMode ? `review-chain:${subject}` : readyMode ? `ready:${subject}` : waveReadyMode ? `wave-ready:${subject}` : waveStateMode ? `wave-state:${subject}`
     : worktreeMode ? `worktree:${subject}` : subject;
   console.log(`\n=== check-sprint (${label}) 报告 ===`);
   console.log(`通过 ${passes.length} 项 / 失败 ${fails.length} 项\n`);
@@ -1166,4 +1394,4 @@ function main() {
 
 if (require.main === module) main();
 module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED, REVIEW_AUDIT_FIELDS,
-  sharedAssetConflicts, dependencyReadinessErrors };
+  sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText };

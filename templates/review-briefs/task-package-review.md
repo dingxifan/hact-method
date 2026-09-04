@@ -8,8 +8,8 @@
 你是一名独立审查员，从未参与这批任务包的拆分与写作。本期迭代版本与 `review-scope: full | module:{任务包列表} | global-summary` 由派发者告知（下文路径中的 `vN` 替换为实际版本号）。缺 scope 按 `full`。
 
 【自读输入】（你自己读下列文件，不依赖任何转述）
-- PRD（用户 G1 签字认可的需求事实，含各功能 Acceptance Criteria）：`iterations/vN/prd.md` 全文
-- TRD（本期技术契约）：`iterations/vN/trd.md`
+- PRD（用户 G1 签字认可的需求事实）：`full` 读全文；`module` 只读指定包回链的功能/AC 段
+- TRD（本期技术契约）：`full` 读全文；`module` 只读指定包 reference/模块命中的段
 - Standards（长期默认）：先扫项目根三份 Standards 的规则 id + `applies-if`，再只打开任务包已列规则和疑似漏选候选；不默认全文加载
 - 视觉规格（仅当有 frontend 任务时）：项目根 `design.md`（核地基包是否覆盖其 token）
 - 任务包（待审产物）：默认读取 `iterations/vN/queue/*.md` 全部 `[可取]` 任务包；只有派发者明确说明已超过无 compact 预算并给出业务模块边界时才读指定模块，分批后另有全局总核兜 AC/共享资产/依赖
@@ -19,8 +19,8 @@
 
 【review-scope】
 - `full`：执行下方全部维度，审全部任务包。
-- `module`：只审指定任务包的包内忠实性/契约/风险，但仍读取全局 AC id 与共享资产索引，发现跨模块疑点交 `global-summary`，不自行扩包。
-- `global-summary`：只读 PRD AC 清单、TRD 模块清单、全部任务包 frontmatter 与各 module findings；只核 AC 是否跨批遗漏、共享资产 source-of-truth 和依赖断边，不重审 oracle、example、api 字段或视觉地基。
+- `module`：只审指定任务包的包内忠实性/契约/风险；不重读完整 PRD/TRD。发现跨模块疑点交 `global-summary`，不自行扩包。
+- `global-summary`：运行 `node ../hact-method-lab/templates/scripts/build-task-review-index.js vN .`，只读该最小 JSON、PRD AC 清单、TRD 模块标题与各 module findings；禁止回读全部任务包 frontmatter。只核 AC 是否跨批遗漏、共享资产 source-of-truth 和依赖断边，不重审 oracle、example、api 字段或视觉地基。
 
 【逐类检查】（`full/module` 每个适用维度须有明确结论；`global-summary` 只执行第 2 类的全局覆盖部分和第 8 类，不输出其余维度 N/A）
 

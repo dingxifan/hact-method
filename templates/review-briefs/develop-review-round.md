@@ -1,5 +1,6 @@
 <!-- develop 独立证据审查逐轮报告模板；首次 full，整改后默认 targeted。 -->
 ---
+schema: develop-review-round/v2
 task_id: <待填>
 round: 1
 mode: full | targeted
@@ -12,7 +13,7 @@ reviewed_base: <commit/tree SHA>
 reviewed_head: <commit/tree SHA>
 diff_sha256: <`git diff --binary reviewed_base reviewed_head` 原始字节的 SHA-256，64 位小写 hex>
 changed_files: []
-standards_checked: [] # 本轮实际核过的 relevant-standards rule ids；targeted 仅列重核项
+standards_checked: [] # v2 必填；full 与任务包 relevant-standards ids 一致，targeted 仅列重核子集；旧报告缺字段视 unknown
 started_at: <ISO-8601>
 completed_at: <ISO-8601>
 escalate_to_full: false

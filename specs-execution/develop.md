@@ -76,7 +76,7 @@ node ../hact-method-lab/templates/scripts/check-sprint.js --ready {task-id-1},{t
 
 非 0 表示存在未合并外部依赖、集合未依赖闭合或顺序错误；重新选集，不得先认领再等依赖。
 
-**单人 wave 判定（只改变本轮执行形态）**：候选集中有至少 2 个 `交付=串行` 任务时，主线在认领前检查：① 全部是 `source=sprint`、同一 layer 且 `risk=standard`；② `--ready` 已通过，依赖都在本集合拓扑内或已 merged；③ 没有集合外的 `[taken-by]` / `[done]` 任务依赖其中任一任务；④ 估量线允许整组在一次会话完成；⑤ 用户确认本轮没有其他人或会话等待这些中间任务进入 master。全部满足时，向用户给出一次选择：
+**单人 wave 判定（只改变本轮执行形态）**：候选集中有至少 2 个 `交付=串行` 任务时，先按下文“有效 risk”同一语义扫逐包计算并回写漏标，再运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --wave-ready {task-id-list} .`。只有以下条件全满足才给 wave 选项：① 全部是 `source=sprint`、同一 layer、有效 risk=standard；② 依赖都在本集合拓扑内或已 merged；③ 无集合外 active consumer；④ 估量线允许整组在一次会话完成；⑤ 用户确认没有其他人/会话等待中间任务进入 master。
 
 ```
 本轮可选单人 wave：{task-id 按拓扑序}。
@@ -84,7 +84,7 @@ node ../hact-method-lab/templates/scripts/check-sprint.js --ready {task-id-1},{t
 当前无已登记的外部消费者；请确认「无其他会话等待中间合并」，并选择 [wave / 独立 PR]。
 ```
 
-用户选 `wave` → `execution_mode=single-operator-wave`；未满足任一条件、用户选独立 PR、或用户未确认外部消费者为空 → `execution_mode=individual`。这不是把 `交付=串行` 改成可并行：一旦出现真实并发消费者，必须保持 `individual`。`source=foundation`、B 类和任一 sensitive 任务不适用 wave。
+用户选 `wave` → `execution_mode=single-operator-wave`；其余情况 → `individual`。这不是把 `交付=串行` 改成可并行。`source=foundation`、B 类和任一 sensitive 任务不适用 wave；每个任务写第一行代码前及固定 diff 形成后都重算有效 risk，防漏标晚发现。
 
 估量完成后直接通知用户并进入认领（无需等确认）：
 ```
@@ -97,7 +97,7 @@ node ../hact-method-lab/templates/scripts/check-sprint.js --ready {task-id-1},{t
 
 - **可并行任务集或 `single-operator-wave`**（认领时立即建一条分支）：`{layer}-{batch|wave}-v{N}-{id1}/{id2}/...`（依赖序，末元素后无尾斜杠）
   ```bash
-  git checkout -b {layer}-batch-v{N}-{id1}/{id2}/...   # 从 master 切
+  git checkout -b {上方实际分支名}   # batch 用 batch，wave 用 wave；从 master 切
   ```
 - **串行任务**（每个任务开始时建各自分支，不提前建全部）：`{task-id}`
   ```bash
@@ -151,6 +151,10 @@ preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失�
 ## 主循环：逐任务「执行 → 独立审查」（per task，依赖序串行）
 
 > **可并行任务集或 `single-operator-wave`**：对每个任务按依赖拓扑序串行走「工作树白名单核对 → 该任务 freshness preflight → 隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突）。当前任务通过后保留其 accepted implementation tree；其审计目录保持未暂存，下一任务由白名单检查识别，不把报告混入 `base_tree`。下一任务再取新的 preflight `base_tree`，不得复用批次起点。全部通过后进末端（一次）。**individual 串行任务多个**：每个任务各自串行完成「preflight + 主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
+
+> **wave 的任务级 commit**：每个任务独审通过、按其 fixed diff 再算有效 risk 仍为 standard 后，提交该任务 accepted implementation + preflight/profile/final round 报告，形成稳定的 `{task-id} → commit/report` 边界；一个 PR 可含多个任务 commit。审计物进 commit 后，下一任务 fixed diff 仍从新 base tree 起，不会混入本任务实现 diff。该边界用于断点恢复和必要时拆 prefix，不取消 per-task review。
+
+**wave 中途升档/拆分 transaction**：某任务 fixed diff 令有效 risk 升 sensitive 时立即停止，不把它并入 wave PR，并按 sensitive 重派高能力独审。此前通过任务的 implementation + 审计物均已在 per-task commits：① 以最后通过 commit 建 prefix 分支，在独立 worktree 对每个 prefix task 运行 `--review-chain`（合并前审查链，不依赖终态 `code_reviews[]`）与末端全量；② 在原 dirty 工作树执行 `git switch -c {当前 task-id}`（保留在制品、建立真实 individual branch），并验证当前 branch 正是该 task-id；③ 在 prefix worktree 与原工作树写同一 split 状态：prefix `[done]`，当前 `[taken-by]` + branch={task-id}，未开始任务全部 `[可取]` 且清空 assigned_to/branch；④ prefix PR 合并后把 prefix 任务落 `[merged]` 并写终态 `code_reviews[]`。无 prefix 时跳过①④，仍执行②③。不得 stash、还原或删除在制品；任一步失败则整组保持原 wave 状态，不做半套状态写入。
 
 ### 阶段 A · 隔离执行单元（读懂 → 计划 → 写 → 自绿）
 
@@ -241,7 +245,7 @@ node scripts/review-profile.js {task-package-path} \
 
 ## 末端（主线，集合全部任务通过审查后跑一次）
 
-> **individual 串行任务多个时**：每个任务分别完整跑一遍本「末端」流程（全量检测 → commit → PR → 合并 → 状态更新），完成后 `git checkout master && git pull`，再启下一个主循环。**可并行任务与 `single-operator-wave`**：全部主循环完成后统一跑一次末端。wave 内任一任务 blocked 或审查未通过时，不创建 PR、不合并；已通过的前序任务保留其固定快照，待该任务恢复或用户改回 individual 后续做。
+> **individual 串行任务多个时**：每个任务分别完整跑一遍本「末端」流程（全量检测 → commit → PR → 合并 → 状态更新），完成后 `git checkout master && git pull`，再启下一个主循环。**可并行任务与 `single-operator-wave`**：全部主循环完成后统一跑一次末端；wave 的代码已有 per-task commits，末端不制造重复整合 commit。wave 内任一任务 blocked 或审查未通过时，不创建整组 PR、不合并，按下方原子恢复协议保留整组。
 
 ### 全量检测
 
@@ -274,7 +278,8 @@ npm run build && npm run type-check && npm run lint && npm run test
 
 **commit message 格式**：
 - 串行任务（每个单独提交） → `{type}({task-id}): {改动描述}`
-- 批量多任务 → `feat({分支名}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]`
+- 可并行 batch → `feat({分支名}): {layer}层批量实现 [{task-id-1}, {task-id-2}, ...]`
+- single-operator-wave → 主循环已按 `{type}({task-id}): {改动描述}` 逐任务提交；此处只确认工作树实现文件无未提交变化，不再生成重复整合 commit
 
 ```bash
 git add {改动的文件列表}
@@ -328,7 +333,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
 - 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
 - **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加一条。保留兼容字段 `rounds`，填写 `code_rounds/spec_rounds/freshness`；另写 `review_report_dir`、`review_profile_version`（普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`）、`implementation_started_at/completed_at`、`review_started_at/completed_at` 与累计 `spec_minutes`。implementation/review 墙钟由时间戳按需计算，不持久化派生分钟；`spec_minutes` 因可能累计多段 preflight/revise-doc 继续保留。时间由编排器在事件发生时写，禁止事后估算；issues 保留稳定 finding id、dimension 与 type/reachability/impact/action。两类轮次与三类墙钟不得互相冒充。
+- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加一条。保留兼容字段 `rounds`，填写 `code_rounds/spec_rounds/freshness`；另写 `review_report_dir`、`review_profile_version`（普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`）、`review_evidence_version: develop-review-round/v2`、`implementation_started_at/completed_at`、`review_started_at/completed_at` 与累计 `spec_minutes`。implementation/review 墙钟由时间戳按需计算，不持久化派生分钟；`spec_minutes` 因可能累计多段 preflight/revise-doc 继续保留。时间由编排器在事件发生时写，禁止事后估算；issues 保留稳定 finding id、dimension 与 type/reachability/impact/action。两类轮次与三类墙钟不得互相冒充。
   在提交终态前，对集合内每个任务运行方法论当前版 `node ../hact-method-lab/templates/scripts/check-sprint.js --review {task-id} .`；缺 preflight/report、首轮非 full、targeted 无 finding id/固定 diff、时间账不闭合均先修正，不得靠人工说明放行。该入口不依赖 iteration，B 类同样执行。
   ```bash
   git checkout master && git pull
@@ -407,8 +412,8 @@ context-state:
   blocked-at: "{卡在哪里}"
   key-decisions: [...]
 ```
-2. 将该任务包回 `[可取]`，写阻塞原因（其余已通过审查的任务保留进度）
-3. 告知用户：「{task-id} 遇到阻塞，已回到 [可取]，建议后续开新会话重新拾取」
+2. **individual**：将该任务包回 `[可取]`，写阻塞原因；告知用户后续开新会话重拾。
+3. **single-operator-wave**：不得只退当前任务。默认把同 branch 的整组任务保持 `[taken-by]`，写 `_meta/sessions/develop-wave-{id1}--{idN}.json`，schema=`wave-progress/v1`，列 branch 与每个 task 的 `state=accepted|current|pending`；accepted 另列 commit、preflight、profile、final_report。新会话先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --wave-state {progress.json} .`，机械确认该 branch 完整任务集、整组 status、真实 branch、commit 祖先关系及 commit 内审计物后恢复。若用户明确拆组，执行上方 split transaction。任何路径都不得形成“A taken-by 未 merged、B 单独可取”的状态。
 
 ---
 

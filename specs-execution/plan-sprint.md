@@ -109,12 +109,13 @@
 
 | 字段 | 怎么填（判断 / 来源，模板之外） | 验证归属 |
 |------|------|------|
+| `package-schema` / `module` | 新包固定 schema 2；module 取 TRD「模块拆分」稳定名称，同模块包必须同值 | check-sprint·schema/module 非空；Step 3.5 对 TRD 归属 |
 | `depends_on` | Step 2 已确认依赖（与 sprint.md 依赖列、status.yml 三处一致）；共享资产消费（共用表/枚举/类型）消费方→source-of-truth 任务（反查得出，不另存消费方列表） | check-sprint·在册 ¹ |
 | `asset-writes` | 从本包 delta 提取跨文件共享写集，稳定键格式见任务包模板；无则 `[]`。不得把“都改同一资产”伪装成逻辑相关后继续并行 | check-sprint·与各包 files/asset-writes 两两交叉 ¹ |
 | `contract-impact` | 实现已签 PRD/TRD/Foundation/Standards 的任务填 `governed`；完全不触及共享契约填 `none`。本字段不授权改契约，发现权威文档需变更先停下走 revise-doc | check-sprint·枚举；Step 3.5 核契约是否已先修订 |
 | `risk` | 默认 `standard`；若任务触及 develop 合并前安全敏感预检四类之一（权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29）。缺省即 standard，存量任务包不回填 | Step 3.5 独审第⑥类 + check-sprint 启发 🧑；develop 侧按有效 risk 兜底 |
 | `acceptance-criteria` | 不发明无来源 AC。每条拆 `intent`（PRD 行为）+ `oracle`（PRD/TRD 判据）；`example` 可省且默认非权威。仅封闭输入、可独立复算并在 Step 3.5 通过的例子标 `golden: true` | check-sprint·回链/格式；Step 3.5 独立复算与忠实性 |
-| `reference` | 只链实现决策必需锚；优先章节/符号，行号仅在无稳定锚时使用。前端链 ux-flows 对应场景（若存在），后端链 TRD 错误/服务流程对应章节 | check-sprint·稳定锚 ² |
+| `design-reference-format` / `reference` | frontend：design 有页面规格结构填 `sliced-v1`，reference 链全局视觉基线 + 本任务页面标题；视觉地基包只需全局基线。存量 design 无页面结构填 `legacy-full` + `design.md 全文（存量）`。另链 ux-flows 对应场景（若存在）；backend 链 TRD 错误/服务流程 | check-sprint·design/稳定锚 ² |
 | `relevant-standards` | 从条目 `applies-if` 匹配当前 delta，只列规则 id + 条目标题；不重述规则、机制和事故历史。前端包另在 `reference` 指向 `design.md` 的相关页面规格标题；只有全局基线或存量 design 无稳定页面锚时才标明需读全文 | Step 3.5 第④类 |
 | `supersedes` | 来源 = TRD 里「本期废除 / 改判 / 替换既有实现」的表述 + `decisions.md` 被本期取代的条目。判据是**取代关系**而非改动关系：改一个函数不算，让某实现从此无调用方才算。无则 `[]`——宁可空着，不为凑数写。 | 交付时逐条结账（develop §退役账）；G5 核对 |
 | `api-contract`（`layers=[backend]` 且被前端依赖） | 来源 = TRD 数据模型 + `standards-frontend` 字段需求 + 已写前端任务包草稿（表格列/表单字段）；request 取 TRD query/body，response 取前端实际消费字段（平铺规则在模板）；**全部后端包写完统一向用户确认字段结构** | Step 3.5·推导正确性；用户确认 |
@@ -130,7 +131,7 @@
 
 **派发**：默认只派一个普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，告知本期迭代版本 vN + `review-scope: full`。审查员一次自读 PRD、TRD、全部任务包 normative core，以及 Standards 的 id + applies-if/命中规则，统一核 AC→task 覆盖、依赖和共享资产全局关系。任务包数量本身不触发分批；具体模型见运行时映射。
 
-只有“PRD + TRD + 全部 normative core + 命中 Standards”预计会超过当前模型的**无 compact 审查预算**时，才按业务模块切分，而不是按任意 2–3 包切：每批必须依赖闭合，派发时给 `review-scope: module:{任务包列表}`。模块审查结束后再派一个 `review-scope: global-summary` 轻量全局总核，只读 PRD AC 清单、TRD 模块清单、全部任务包 frontmatter 和各批 findings，专核跨批 AC 遗漏、共享资产 source-of-truth 与依赖断边；不重审包内 oracle/字段。
+只有“PRD + TRD + 全部 normative core + 命中 Standards”预计会超过当前模型的**无 compact 审查预算**时，才按业务模块切分，而不是按任意 2–3 包切：每批依赖闭合，派发 `review-scope: module:{任务包列表}`，只读这些包回链的 PRD 功能段/TRD 模块段。模块审查结束后派 `review-scope: global-summary`；该审查员自行运行 `node ../hact-method-lab/templates/scripts/build-task-review-index.js vN .`，只读其最小索引 + PRD AC 清单 + TRD 模块标题 + 各批 findings，不再读全部 frontmatter，专核跨批 AC 遗漏、共享资产 source-of-truth 与依赖断边。
 > brief 查 AC 忠实/完备、oracle/example 可复算、api-contract、Standards 匹配、视觉地基与 risk。审查维度原文固化在 brief 文件，此处不重述。
 
 **【loop 逻辑】**（主线拿到隔离审查 findings 后的处置）

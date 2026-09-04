@@ -43,10 +43,11 @@ function runAudit(taskId = TASK_ID) {
 }
 
 function reportText({ taskId, round, mode, profile, prior, targets, baseRef, base, head,
-  changedFiles, started, completed, conclusion, body = 'findings: []' }) {
+  changedFiles, started, completed, conclusion, standardsChecked, body = 'findings: []' }) {
   const evidence = diffEvidence(base, head);
   assert.deepStrictEqual(evidence.names, [...changedFiles].sort(), 'fixture changed files must be real');
   return `---
+schema: develop-review-round/v2
 task_id: ${taskId}
 round: ${round}
 mode: ${mode}
@@ -60,6 +61,7 @@ reviewed_head: ${head}
 diff_sha256: ${evidence.hash}
 changed_files:
 ${changedFiles.map(file => `  - ${file}`).join('\n')}
+standards_checked: [${(standardsChecked || (taskId === TASK_ID ? ['BE-TEST-01'] : [])).join(', ')}]
 started_at: ${started}
 completed_at: ${completed}
 escalate_to_full: false
@@ -80,13 +82,15 @@ try {
   git(['config', 'user.name', 'Test']);
 
   const task = `---
+package-schema: 2
 task-id: ${TASK_ID}
+module: enforcement
 task_type: dev-backend
 layers: [backend]
 source: bug
 risk: standard
 status: taken-by:cc
-relevant-standards: []
+relevant-standards: [BE-TEST-01 · standards-backend.md § 测试机制]
 files:
   - scripts/check-guard.js
   - tests/enforcement/guard.spec.ts
@@ -144,6 +148,7 @@ result: pass
     freshness: pass
     review_report_dir: b-reviews/${TASK_ID}
     review_profile_version: develop-review-profile/v1
+    review_evidence_version: develop-review-round/v2
     implementation_started_at: 2026-08-09T00:01:00Z
     implementation_completed_at: 2026-08-09T00:02:00Z
     review_started_at: 2026-08-09T00:02:00Z
@@ -172,6 +177,15 @@ result: pass
     severity: blocking
     status: open`), 'utf8');
   assert.match(runAudit().stdout, /conclusion=pass 但仍有 open blocking/, 'open blocker must fail pass');
+  fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(/^standards_checked:.*\n/m, ''), 'utf8');
+  assert.match(runAudit().stdout, /standards_checked 缺失/, 'v2 full missing standards_checked must fail');
+  fs.writeFileSync(roundOnePath, canonicalRoundOne
+    .replace('schema: develop-review-round/v2', 'schema: develop-review-round/v2x')
+    .replace(/^standards_checked:.*\n/m, ''), 'utf8');
+  assert.match(runAudit().stdout, /未知 round schema|round schema 必须/, 'unknown schema must not fall open to legacy');
+  fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(
+    'standards_checked: [BE-TEST-01]', 'standards_checked: [BE-TEST-01, FE-EXTRA-01]'), 'utf8');
+  assert.match(runAudit().stdout, /任务包外 id/, 'full extra standards id must fail');
   fs.writeFileSync(roundOnePath, canonicalRoundOne, 'utf8');
 
   write('src/unrelated.ts', 'export const unrelated = true;\n');
@@ -220,6 +234,7 @@ result: pass
     freshness: pass
     review_report_dir: b-reviews/${TASK_ID}
     review_profile_version: develop-review-profile/v1
+    review_evidence_version: develop-review-round/v2
     implementation_started_at: 2026-08-09T00:01:00Z
     implementation_completed_at: 2026-08-09T00:02:00Z
     review_started_at: 2026-08-09T00:02:00Z
@@ -236,6 +251,11 @@ result: pass
   assert.match(runAudit().stdout, /targeted 必须继承/);
   fs.writeFileSync(roundTwoPath,
     fs.readFileSync(roundTwoPath, 'utf8').replace(`review_profile: ${wrongProfile}`, `review_profile: ${profileRel}`), 'utf8');
+  const canonicalRoundTwo = fs.readFileSync(roundTwoPath, 'utf8');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace(
+    'standards_checked: [BE-TEST-01]', 'standards_checked: [FE-EXTRA-01]'), 'utf8');
+  assert.match(runAudit().stdout, /任务包外 id/, 'targeted standards_checked must be subset of task standards');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
 
   git(['read-tree', baseTree]);
   write('src/main.ts', 'export const main = true;\n');

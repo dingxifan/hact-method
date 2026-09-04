@@ -82,11 +82,11 @@ Read: design.md 的「全局视觉基线」+ 与本期功能同名的页面规�
 - 改 → 按修改继续聊，刷新总结再审
 - 主动加方面 → 加上继续
 
-### Step 1.3：design.md 视觉对接
+### Step 1.3：design.md 全局基线 + 页面覆盖检查
 
-**若 项目根 `design.md` 已存在且填充充分**（v2/v3 迭代时通常如此）→ 跳过本子步，直接转 Step 2。
+分别检查：① 全局视觉基线是否完整；② 本期 `draft-ux: 需要` 的功能/页面在 `## 八、页面规格` 下是否已有稳定标题。全局完整但本期有新页面时，不重问全局基调，记录缺失页面标题，继续设计；这些页面在用户走查通过后由 Step 7 按已接受原型补入。
 
-**否则**（首次做 UX，design.md 是空模板或缺失）：
+**全局基线为空或缺失时**：
 
 AI 问 3–5 个视觉基调问题：
 
@@ -260,6 +260,8 @@ AI 问 3–5 个视觉基调问题：
 
 ## Step 7：收尾移交
 
+先依据用户已确认的 prototype，为 Step 1.3 记录的缺失页面在 `design.md ## 八、页面规格` 补稳定 `### {页面/功能名}`：只写该页布局、区块、控件组合、空态/错误态视觉与响应式例外，不复制全局 token。已有页面若本期经用户确认发生变化则原地更新。用户刚完成原型走查即构成页面规格确认，不再新增一轮重复问答。
+
 写 `ux-flows.md`（从内部消化提炼），仅两段：
 
 ````markdown
@@ -293,7 +295,7 @@ flowchart TD
 
 ```bash
 git add iterations/vN/ux-flows.md iterations/vN/prototype.html iterations/vN/prototype-map.md
-# design.md 若 Step 1.3 已 commit 且本步无改动，则不再 add
+# design.md 若本期新增/更新页面规格则一并 add；无变化不重复提交
 git commit -m "feat(ux): v{N} 交互流程图 + 原型 [{项目名}]"
 ```
 

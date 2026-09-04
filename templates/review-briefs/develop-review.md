@@ -64,7 +64,7 @@
 - 任务拆分粒度 / 依赖方向 / 交付方式（串行 / 可并行）——plan-sprint 已定，不否决。
 
 【输出格式】
-每轮另写 `standards_checked: [规则 id...]`：full 精确列本轮实际核过的 `relevant-standards`；targeted 仅列为目标 finding 重核的 id；无命中为 `[]`。这是 Standards 消耗审计，不把“未发现”伪称规则已被 enforcement 拦截。
+每轮按 `develop-review-round/v2` 写 `standards_checked: [规则 id...]`：full 必须与任务包 `relevant-standards` id 完整对账；targeted 仅列本轮重核的子集；无命中为 `[]`。这是 Standards 消耗审计，不把“未发现”伪称规则已被 enforcement 拦截；旧报告缺字段记 unknown，不当零使用。
 
 每条 finding：
 - id：{task-id}-F{NNN}（同根跨轮保持不变；变体不另起 id）

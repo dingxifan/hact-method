@@ -109,6 +109,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
     freshness: revised           # enum，pass / revised
     review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
     review_profile_version: develop-review-profile/v1  # Foundation 为 foundation-review/v1
+    review_evidence_version: develop-review-round/v2   # 新任务 round 报告 schema；存量缺失按 legacy/unknown
     implementation_started_at: 2026-08-09T01:00:00Z  # ISO-8601，preflight 通过后当场记录
     implementation_completed_at: 2026-08-09T01:42:00Z # 首轮独审 dispatch 前当场记录
     review_started_at: 2026-08-09T01:42:00Z          # 首轮 full dispatch
@@ -144,6 +145,7 @@ code_reviews:                    # CR 结论 + 评语 + 逐条 issue，全内联
 | `code_reviews[].freshness` | pass / revised |
 | `code_reviews[].review_report_dir` | 项目根相对路径；A 类 `iterations/vN/code-reviews/{task-id}`，B 类 `b-reviews/{task-id}` |
 | `code_reviews[].review_profile_version` | 普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`。存量缺失兼容提示，新任务终态审计必填 |
+| `code_reviews[].review_evidence_version` | 新任务 `develop-review-round/v2`；要求每轮 schema 精确匹配并核 `standards_checked`。存量缺失记 legacy/unknown，不把缺字段当零使用 |
 | `code_reviews[].implementation_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
 | `code_reviews[].review_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
 | `code_reviews[].spec_minutes` | int ≥0（非枚举）；多段规格澄清累计值 |

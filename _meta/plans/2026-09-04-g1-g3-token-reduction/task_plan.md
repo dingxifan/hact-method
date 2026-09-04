@@ -1,7 +1,7 @@
 # G1–G3 低风险上下文减法
 
 > 日期：2026-09-04
-> 范围：减少非决策叙述、重复访谈、无候选 Standards 维护和按固定包数重复审查；不改 Gate、独立审查职责或现有产物 schema。
+> 范围：减少非决策叙述、重复访谈、无候选 Standards 维护和按固定包数重复审查；不改 Gate 或独立审查职责。首轮复审后以 `package-schema: 2` / `develop-review-round/v2` 显式版本化新增机械契约，存量缺字段继续兼容。
 
 ## 交付项
 
@@ -12,10 +12,11 @@
 | draft-ux 缺口问答 | ✅ | PRD 完整时不重复访谈/总结；本地原型默认，外部路径按需加载 companion |
 | Standards 候选触发 | ✅ | 0 candidate 时不读模板、不派生成单元、不改三份文件；cleanup 由用户显式触发 |
 | G3 预算式联合审查 | ✅ | 默认一次审全局；只有超过无 compact 预算才按业务模块切，并保留跨批次总核 |
+| 独立复审修复 | ✅ | 四轮同口径复审：block(4×S1+4×S2) → block(3×S1+6×S2) → block(2×S1+1×S2) → pass(0/0/0) |
 
 ## 不变量
 
 1. G1/G2/G3 的人类签字点和独立内容审查保留。
-2. task package、PRD、TRD、UX 产物 schema 本轮不改。
+2. PRD/TRD/UX 主产物 schema 不改；task package/review round 的新增字段必须显式版本化，旧包/旧报告缺版本按 legacy/unknown 兼容。
 3. Standards 三源原则保留；候选扫描只决定是否展开全文和派生成单元。
 4. G3 分批时不得丢失 AC 全覆盖、共享资产和跨包依赖的全局判断。
