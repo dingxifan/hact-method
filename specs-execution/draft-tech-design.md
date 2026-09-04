@@ -215,12 +215,13 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 > **存量守卫（未走 V0、无 foundation.md 的项目）**：本步整体跳过；只有通过 Standards 准入的稳定默认才更新下方当前规则表，不为此顺手新建 foundation.md。
 
-三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**。新项目已由 V0 首播时，本任务只原地更新当前真值；存量空桩才首播。禁止按 vN 追加历史段。TRD 确认后，写集不重叠时启动 2 个隔离执行单元处理 frontend / backend；主线同时处理 shared。
+三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，只承接 PRD/TRD/design/Foundation/check/test 之后剩下的、暂不能由更强权威对象承接的默认规则。新项目已由 V0 首播时，本任务只原地更新当前真值；存量空桩才首播。禁止按 vN 追加历史段。TRD 确认后，写集不重叠时启动 2 个隔离执行单元处理 frontend / backend；主线同时处理 shared。
 
 **Standards 来源规则**（三源：通用候选 + 栈候选 + 执行人个人 notes）：
 - 所有候选先按 `templates/standards/schema.md` 分类与准入；只有跨任务、长期稳定的默认约束进入 Standards，并改写成完整规则条目。
 - 首期播种只选择本项目适用项，不整节复制。项目栈无对应子模板时，仅从通用候选与已确认的长期栈约束生成。
 - 迭代维护只更新、替换或新增当前规则；不新增 vN 标题。版本契约回 TRD，Foundation 不变式回 Foundation，机制位置回 check/test/config，历史回 decisions，临时缺口回 waiver/backlog。
+- **先做收缩审计，再补规则**：按 `schema.md` 扫最近两个已完成迭代的 `queue/*.md` 的 `relevant-standards` 与各 `code-reviews/*/round-*.md` 的 `standards_checked`。连续两期均未被引用、且没有仍实际运行的 enforcement 的条目默认删或迁往其正确权威对象；有 enforcement 的条目只留 id、默认约束和 enforcement 指针。此次新增/保留的每条必须能说明它仍属于 Standards，而不是把“以前写过”当理由。
 - notes 候选同样先过准入并去重；与现有规则冲突时保留当前规则，把候选送 `feedback.md`；与公共候选冲突但项目有明确决定时，以项目决定为准并记 `decisions.md`。
 
 **隔离执行单元输入要点**（frontend / backend 各一份）：
@@ -238,7 +239,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 **视觉地基约定（可视区地基，含前端时不可省）**：新项目由 V0 首播，本期沿用或更新同一规则；存量项目在此首播。项目 Standards 以规则 id 引用视觉地基的 enforcement，Foundation 承接全局入口/主题强制档，design.md 承接具体 token 真值，不在 Standards 重复三份全文。
 
-三份汇总后检查：字段完整、无重复/矛盾、无版本追加史；TRD 关键契约留在 TRD，不以“覆盖所有 TRD 细节”为目标。
+三份汇总后检查：字段完整、无重复/矛盾、无版本追加史；TRD 关键契约留在 TRD，不以“覆盖所有 TRD 细节”为目标。输出一行收缩结果：`Standards：保留 {N} / 新增 {N} / 删除或迁移 {N}（原因与去处）`；没有历史迭代或无变动时如实写零，不凑审计项。
 
 **隔离执行单元失败判定**：以下任一情况视为失败，主线接管该份 standards：
 - 返回内容为空或格式完全不符合模板结构

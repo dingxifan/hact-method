@@ -15,7 +15,7 @@
 - 编码约定：`relevant-standards` 命中的规则 id（只读对应条目）
 - 测试（正确性证据）：本任务新增 / 改动的测试代码 + 测试运行结果
 - 审查适用面：`review_profile` JSON。它由 `scripts/review-profile.js` 根据任务包元数据、有效 risk 和固定 diff 的 changed files 生成；只消费 `selected_dimensions`，`omitted_dimensions` 及理由用于审计，不输出 N/A 占位
-- **frontend 额外**：项目根 `design.md`（视觉规格基准）；`iterations/vN/prototype.html` 对应交互路径（若存在，交互基准）
+- **frontend 额外**：`design.md` 的全局视觉基线 + 任务包 `reference` 点名页面规格（存量无稳定锚时全文，视觉规格基准）；`iterations/vN/prototype.html` 对应交互路径（若存在，交互基准）
 
 【review mode】
 
@@ -64,6 +64,8 @@
 - 任务拆分粒度 / 依赖方向 / 交付方式（串行 / 可并行）——plan-sprint 已定，不否决。
 
 【输出格式】
+每轮另写 `standards_checked: [规则 id...]`：full 精确列本轮实际核过的 `relevant-standards`；targeted 仅列为目标 finding 重核的 id；无命中为 `[]`。这是 Standards 消耗审计，不把“未发现”伪称规则已被 enforcement 拦截。
+
 每条 finding：
 - id：{task-id}-F{NNN}（同根跨轮保持不变；变体不另起 id）
 - dimension：{profile selected_dimensions 中的稳定 id}

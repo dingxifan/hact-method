@@ -39,7 +39,7 @@
 | HTML 原型 | `iterations/vN/prototype.html` | 自包含单文件，可在浏览器直接打开 |
 | 设计简报 | `iterations/vN/design-brief.md` | 外部设计会话路径专用；含业务背景/视觉规范/场景/流程/AC 说明，供独立设计会话生成原型 |
 | AC 覆盖映射 | `iterations/vN/prototype-map.md` | 两条路径均必有；一张表（AC / 场景 / HTML 锚点），Step 5 对抗审查的核查基线 |
-| 视觉规范（如首次） | `design.md` | 项目级跨迭代文件；首次 draft-ux 时由本 task 生成初稿 |
+| 视觉规范（如首次） | `design.md` | 项目级跨迭代文件；首期生成「全局视觉基线 + 页面规格」结构，后续页面特有规格按稳定标题增补 |
 
 **ux-flows.md 必含内容（仅两段）**：
 
@@ -85,7 +85,7 @@
 | 上游 | 交接内容 | 格式 |
 |------|---------|------|
 | `draft-prd-vN` | 定稿 PRD，含功能清单和 acceptance criteria | `iterations/vN/prd.md` |
-| `design.md` | 视觉规范（首次时由本 task 生成；非首次时必读） | `design.md` |
+| `design.md` | 视觉规范（全局基线必读；页面规格按本期功能标题精读，存量无锚时全文） | `design.md` |
 
 **输出给**
 

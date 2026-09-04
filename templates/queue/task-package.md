@@ -48,9 +48,9 @@ acceptance-criteria:
     example: <可选；封闭输入与派生结果>
     golden: false
 relevant-standards:
-  - <待填>                # 只列 applies-if 命中的规则：`RULE-ID · standards-{layer}.md § 条目标题`；design.md 为 frontend 无条件必读，不重复列
+  - <待填>                # 只列 applies-if 命中的规则：`RULE-ID · standards-{layer}.md § 条目标题`；frontend 的 design.md 规格锚写入下方 reference，不重复列
 reference:
-  - <待填>                # 仅列实现决策必需锚点：文件路径 + 稳定符号/章节锚（优先）或行号 + 说明；拒"全文"
+  - <待填>                # 仅列实现决策必需锚点：文件路径 + 稳定符号/章节锚（优先）或行号 + 说明；frontend 须含 `design.md § 全局视觉基线` + 相关页面规格标题；存量无稳定锚才写“全文（存量）”
   # 前端任务：reference 须含 ux-flows.md 对应功能段锚（若文件存在）
   # 后端任务：reference 须含 trd.md 错误码/服务流程对应章节锚
 context: <待填>           # 关键实现切入点，如 GoalList.vue L142 handleDelete()

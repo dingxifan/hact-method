@@ -60,7 +60,7 @@
 - 主循环、freshness preflight、独立审查、末端全量和状态更新照常；所有文中的 vN 参数对 B 类替换为“无 iteration”。
 - `adversarial-review` 只保留为用户明确要求接管已有手动 diff 的兼容入口，不是新 B 包默认执行路径。
 
-**拾取任务（source=sprint）：形成任务集**
+**拾取任务（source=sprint）：形成任务集与当轮执行形态**
 
 读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按 `交付` 字段分两路。候选任务只有在以下条件满足时才算可拾取：其 `depends_on` 要么已 `[merged]`，要么同时进入本轮任务集且排在它之前；跨 layer 或未纳入本轮的依赖必须先合并。**两路共用估量标准**：以「主线编排 + 末端全量检测不触发 compact」为截止线，按各任务 `files` 估改动面取前缀子集；超出估量线的任务留 `[可取]` 下轮拾取。
 
@@ -76,16 +76,26 @@ node ../hact-method-lab/templates/scripts/check-sprint.js --ready {task-id-1},{t
 
 非 0 表示存在未合并外部依赖、集合未依赖闭合或顺序错误；重新选集，不得先认领再等依赖。
 
+**单人 wave 判定（只改变本轮执行形态）**：候选集中有至少 2 个 `交付=串行` 任务时，主线在认领前检查：① 全部是 `source=sprint`、同一 layer 且 `risk=standard`；② `--ready` 已通过，依赖都在本集合拓扑内或已 merged；③ 没有集合外的 `[taken-by]` / `[done]` 任务依赖其中任一任务；④ 估量线允许整组在一次会话完成；⑤ 用户确认本轮没有其他人或会话等待这些中间任务进入 master。全部满足时，向用户给出一次选择：
+
+```
+本轮可选单人 wave：{task-id 按拓扑序}。
+逐包实现、freshness、固定 diff 和独审不变；只把末端全量检测、PR、合并和状态提交合为一次。
+当前无已登记的外部消费者；请确认「无其他会话等待中间合并」，并选择 [wave / 独立 PR]。
+```
+
+用户选 `wave` → `execution_mode=single-operator-wave`；未满足任一条件、用户选独立 PR、或用户未确认外部消费者为空 → `execution_mode=individual`。这不是把 `交付=串行` 改成可并行：一旦出现真实并发消费者，必须保持 `individual`。`source=foundation`、B 类和任一 sensitive 任务不适用 wave。
+
 估量完成后直接通知用户并进入认领（无需等确认）：
 ```
-本轮任务集：[task-id...]（{串行：各自 PR / 可并行：共一 PR}，估约 {N} 处改动）{若截断：，剩余 [id...] 留下轮}
+本轮任务集：[task-id...]（{individual：串行任务各自 PR / 可并行共一 PR；single-operator-wave：一条分支、一个 PR}，估约 {N} 处改动）{若截断：，剩余 [id...] 留下轮}
 ```
 
 **认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）。
 
 **分支锁定**：
 
-- **可并行任务集**（认领时立即建一条分支）：`{layer}-batch-v{N}-{id1}/{id2}/...`（依赖序，末元素后无尾斜杠）
+- **可并行任务集或 `single-operator-wave`**（认领时立即建一条分支）：`{layer}-{batch|wave}-v{N}-{id1}/{id2}/...`（依赖序，末元素后无尾斜杠）
   ```bash
   git checkout -b {layer}-batch-v{N}-{id1}/{id2}/...   # 从 master 切
   ```
@@ -100,7 +110,7 @@ node ../hact-method-lab/templates/scripts/check-sprint.js --ready {task-id-1},{t
 > 禁止从其他任务分支切（禁止 stacked PR）。前置任务未合并且不在同一批次时，本任务不可拾取；不得从前置任务分支绕过就绪检查。
 > 多会话并行时同名分支已存在 → git 立即报错：停止，告知用户另一会话已认领同批任务，澄清后再继续。
 
-`branch` 字段写入 status.yml：可并行任务认领时统一写入；串行任务随各自分支建立时逐步写入。认领 commit：
+`branch` 字段写入 status.yml：可并行任务或 wave 认领时统一写入；individual 串行任务随各自分支建立时逐步写入。wave 的每个任务保留原 `delivery=串行`，仅共同指向本轮分支。认领 commit：
 
 ```bash
 git add iterations/vN/sprint.md status.yml
@@ -140,7 +150,7 @@ preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失�
 
 ## 主循环：逐任务「执行 → 独立审查」（per task，依赖序串行）
 
-> **可并行任务集**：对每个任务按依赖拓扑序串行走「工作树白名单核对 → 该任务 freshness preflight → 隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突）。当前任务通过后保留其 accepted implementation tree；其审计目录保持未暂存，下一任务由白名单检查识别，不把报告混入 `base_tree`。下一任务再取新的 preflight `base_tree`，不得复用批次起点。全部通过后进末端（一次）。**串行任务多个**：每个任务各自串行完成「preflight + 主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
+> **可并行任务集或 `single-operator-wave`**：对每个任务按依赖拓扑序串行走「工作树白名单核对 → 该任务 freshness preflight → 隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突）。当前任务通过后保留其 accepted implementation tree；其审计目录保持未暂存，下一任务由白名单检查识别，不把报告混入 `base_tree`。下一任务再取新的 preflight `base_tree`，不得复用批次起点。全部通过后进末端（一次）。**individual 串行任务多个**：每个任务各自串行完成「preflight + 主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
 
 ### 阶段 A · 隔离执行单元（读懂 → 计划 → 写 → 自绿）
 
@@ -150,9 +160,9 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
    - 任务包 normative core（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）；non-normative appendix 仅在疑点需要历史解释时查
    - 只读 `relevant-standards` 命中的规则 id；不加载同文件其它条目
    - 只读 `reference` 列出的符号/章节/行号锚，不读全文
-   - **frontend 额外**：必读项目根 `design.md` 全文（视觉规格唯一参照）；`ux-flows.md` 对应功能段（若存在，按 title 匹配）；`prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
+   - **frontend 额外**：读 `design.md`「全局视觉基线」+ 任务包 `reference` 点名的页面规格；存量 design 或任务包未给稳定页面锚时才全文读取（视觉规格唯一参照）。再读 `ux-flows.md` 对应功能段（若存在，按 title 匹配）与 `prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
 2. **读懂**：以每条 AC 的 `intent` 为目标、`oracle` 为判据；普通 example 仅帮助理解，冲突时返回 `example-error`，不得用代码迁就。只有 `golden: true` 的 example 是字面契约。
-3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块；用只读调查单元读项目根 `reusables.md`，已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
+3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块。若任务包已点名资产或 `reusables.md` 是小而直接可定位的登记表，隔离执行单元自行精读相关段；只有需跨目录搜索、核对登记真实性或存在多个候选时才派只读调查单元。已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
 4. **写**：逐模块实现并**落盘**。>5 文件 / 跨模块可在写集不重叠时再派隔离执行单元分模块（frontend 按组件、backend 按 controller/service 拆；属执行单元内部事务，主线不介入）。
 5. **自绿（首次实现，共享工作树）**：跑本任务目标测试与必要的 `build` / `type-check` / `lint`；不可视区 AC 的 intent/oracle 落成有辨别力的 runnable test，`golden: true` 的 example 再字面 1:1 物化。普通 example 不制造额外字面测试义务。完整仓 `build/type/lint/test` 只在末端跑一次；整改轮默认只跑 finding 反例与受影响回归，不在每轮重复整链。无对应命令则跳过。同一测试修 3 次仍红时返回 blocked，先查 oracle/contract，不硬磨代码。
 6. **返回结构**给主线：
@@ -231,7 +241,7 @@ node scripts/review-profile.js {task-package-path} \
 
 ## 末端（主线，集合全部任务通过审查后跑一次）
 
-> **串行任务多个时**：每个串行任务分别完整跑一遍本「末端」流程（全量检测 → commit → PR → 合并 → 状态更新），完成后 `git checkout master && git pull`，再启下一个串行任务的主循环。**可并行任务**：全部主循环完成后统一跑一次末端。
+> **individual 串行任务多个时**：每个任务分别完整跑一遍本「末端」流程（全量检测 → commit → PR → 合并 → 状态更新），完成后 `git checkout master && git pull`，再启下一个主循环。**可并行任务与 `single-operator-wave`**：全部主循环完成后统一跑一次末端。wave 内任一任务 blocked 或审查未通过时，不创建 PR、不合并；已通过的前序任务保留其固定快照，待该任务恢复或用户改回 individual 后续做。
 
 ### 全量检测
 
@@ -375,7 +385,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | **隔离审查单元** | 主循环每任务阶段 B | 读对应 brief、自读权威原文、按证据分类 finding | 失败则主线重派；连续失败按审查 loop 超界处置 |
 | **全局接缝审查单元** | 本期最后一个 sprint 集合全量绿后 | 只审包间归属、调用方可达、退役、共享定义与组合终态 | scope gap 新开任务，不回灌无关 per-task 重审 |
 | 子模块隔离执行单元 | 阶段 A 内（>5 文件 / 跨模块） | 实现单个不重叠模块，返回代码 | 由上层执行单元处理 |
-| 只读调查单元 | 阶段 A 复用检查 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 失败则隔离执行单元直接读 |
+| 只读调查单元 | 阶段 A 的跨目录复用盘点 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 小而明确的登记表由隔离执行单元直读；调查失败也由其直接读 |
 
 **隔离执行单元失败协议**：
 1. 同一问题三次失败 → 隔离执行单元返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策）
@@ -407,7 +417,7 @@ context-state:
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 开跑前人工门 | **前端设计到位确认**（design.md / prototype 覆盖本批次画面） | 无（backend-only 跳过） |
-| 隔离执行单元额外加载 | 项目根 `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
+| 隔离执行单元额外加载 | `design.md` 全局视觉基线 + 任务包点名页面规格（存量无稳定锚才全文）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
 | 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint / type-check / style lint（命令按项目栈）｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
 | 子模块隔离执行单元拆分粒度 | 按组件拆 | 按模块拆（controller / service 分开）|
 | 独立审查侧重 | AC 忠实 + 机械保真（变量非硬编码）；视觉到位归人工门 | AC 忠实 + 测试品类齐全 + 标准合规 |

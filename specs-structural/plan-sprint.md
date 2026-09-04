@@ -49,7 +49,7 @@
 - [ ] **【linter】** 视觉地基包（本期含 frontend 任务时）：v1 必有标 `baseline: visual` 的视觉地基包（`check-sprint.js` 硬核 FAIL）；vN+1 的 design.md 变更触发地基跟进包由 Step 3.5 独审 + 签字人确认（机器退人工）
 - [ ] **【linter】** 归属真空：任务包 `do-not`/`context` 声明"这件事不在本包"时确有另一个包认领（`check-sprint.js` 核；点名不存在的包 / 两包互推 = FAIL，未点名承接方 = `🧑` 逐条指认）
 - [ ] **【linter】** 依赖关系与共享写集已标注（任务包 `depends_on`、`asset-writes` 在册，无则填 `[]`）；两个包同写一个 `files` 路径或共享资产键时，已有任一方向的依赖路径并标串行
-- [ ] 每个任务的 `交付` 列已填（`串行` 或 `可并行`），判断理由已向用户说明并确认
+- [ ] 每个任务的 `交付` 列已填（`串行` 或 `可并行`），判断理由已向用户说明并确认；该列仍是团队共享写集/依赖边界，G4 的单人 wave 只改变当轮执行形态，不回写本列
 - [ ] **【linter】** sprint.md 已写，queue↔sprint.md↔status.yml 三方一致（`check-sprint.js` 三方一致）
 - [ ] 完成判据已核对（`check-sprint.js` 退出码 0 + `🧑` 段语义残量人签；存量项目无脚本则退回 `skeleton/06-gates.md` §7 G3 段人工逐条核对）
 - [ ] G3 已签（`gates.md` 已记录 + commit）

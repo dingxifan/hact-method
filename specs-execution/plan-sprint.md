@@ -82,7 +82,7 @@
 | 两任务写同一文件，或同一共享表/枚举/类型/API/事件/配置项 | 选定 source-of-truth 包，其余包依赖它；全部 `串行` |
 | 两任务逻辑相关但无代码级调用，或同属一 layer 可在同分支内按序实现 | 上游 → `可并行` |
 
-**含义**：`串行` = 单独建分支/PR、**合并 master 后**依赖它的任务才能开 develop 会话；`可并行` = 与同 layer 其余可并行任务合一个分支/PR 统一交付。
+**含义**：`串行` = 默认独立分支/PR、其下游在另一会话需要从 master 取用时必须等它合并；`可并行` = 与同 layer 其余可并行任务合一个分支/PR 统一交付。`串行` 记录共享写集和团队协作边界，不是单人本轮必然拆 PR 的永久属性：G4 拾取时若所有单人 wave 条件都满足，可选择派生执行形态 `single-operator-wave`；不改本列、不改依赖方向。
 
 **视觉地基包规则**（本迭代含 frontend 任务时）：UI 库主题覆盖 / 全局 reset / body margin / token 全局接线这类**跨切面公共件不属于任何业务页**，按页/组件切包会天然漏掉——必须显式拆一个「视觉地基包」兜底：
 - **v1（硬性必有，含前端时）**：地基包为前端**首包**（建议 001），其余 frontend 任务 `depends_on` 它（要用其 token），加 `baseline: visual` 标记（check-sprint 据此核 v1 必有）。内容按是否走过 V0 走骨架分（**框架/值二分**）：
@@ -115,7 +115,7 @@
 | `risk` | 默认 `standard`；若任务触及 develop 合并前安全敏感预检四类之一（权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29）。缺省即 standard，存量任务包不回填 | Step 3.5 独审第⑥类 + check-sprint 启发 🧑；develop 侧按有效 risk 兜底 |
 | `acceptance-criteria` | 不发明无来源 AC。每条拆 `intent`（PRD 行为）+ `oracle`（PRD/TRD 判据）；`example` 可省且默认非权威。仅封闭输入、可独立复算并在 Step 3.5 通过的例子标 `golden: true` | check-sprint·回链/格式；Step 3.5 独立复算与忠实性 |
 | `reference` | 只链实现决策必需锚；优先章节/符号，行号仅在无稳定锚时使用。前端链 ux-flows 对应场景（若存在），后端链 TRD 错误/服务流程对应章节 | check-sprint·稳定锚 ² |
-| `relevant-standards` | 从条目 `applies-if` 匹配当前 delta，只列规则 id + 条目标题；不重述规则、机制和事故历史 | Step 3.5 第④类 |
+| `relevant-standards` | 从条目 `applies-if` 匹配当前 delta，只列规则 id + 条目标题；不重述规则、机制和事故历史。前端包另在 `reference` 指向 `design.md` 的相关页面规格标题；只有全局基线或存量 design 无稳定页面锚时才标明需读全文 | Step 3.5 第④类 |
 | `supersedes` | 来源 = TRD 里「本期废除 / 改判 / 替换既有实现」的表述 + `decisions.md` 被本期取代的条目。判据是**取代关系**而非改动关系：改一个函数不算，让某实现从此无调用方才算。无则 `[]`——宁可空着，不为凑数写。 | 交付时逐条结账（develop §退役账）；G5 核对 |
 | `api-contract`（`layers=[backend]` 且被前端依赖） | 来源 = TRD 数据模型 + `standards-frontend` 字段需求 + 已写前端任务包草稿（表格列/表单字段）；request 取 TRD query/body，response 取前端实际消费字段（平铺规则在模板）；**全部后端包写完统一向用户确认字段结构** | Step 3.5·推导正确性；用户确认 |
 

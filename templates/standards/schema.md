@@ -60,3 +60,4 @@ TRD 可用明确的等价方案覆盖 Standards 默认值；不得静默破坏 F
 - plan-sprint 先读条目 id + `applies-if`，只把命中的 id 写入 `relevant-standards`。
 - develop 与 per-task review 只加载 `relevant-standards` 命中的条目；不得默认重读整份 Standards。
 - 已被类型、lint 或测试完整承接的散文只留规则索引与 enforcement id，删除重复人工教程。
+- **消耗审计与收缩**：每次 full review 在 round report 写实际核过的 `standards_checked` id。维护 Standards 时，先扫最近两个已完成迭代的任务包 `relevant-standards` 与 review reports：连续两期零引用、又没有仍在执行的 enforcement 的条目，默认删除或迁往 TRD / design / Foundation / decisions；有 enforcement 的条目保留为该机制的简短索引，不把机制说明抄回散文。零 finding 不能单独证明规则无价值，真实引用与 enforcement 才是审计依据。

@@ -41,7 +41,7 @@
 | `supersedes` | string[] | ✅ | 本包取代的既有实体，无则 `[]`。一行一条并写清是什么：代码路径（旧实现 / 旧分支 / 将无调用方的模块）、lint 规则 id、spec 文件、`decisions #N`。非空即欠一笔**退役账**：develop 在 PR description 逐条给「已下线 / 保留 + 解除条件」，`wrap-up-iteration` 于签 G5 前核对。**不进 `check-sprint.js` 必填校验**（存量项目任务包无此字段，机械必填会全线红） |
 | `ac-format` | enum | ✅ | 新任务固定 `intent-oracle-v1`；存量缺省按旧格式兼容，不要求批量回填 |
 | `acceptance-criteria` | string[] | ✅ | 3–5 条，每条是一个 block scalar，含回链 tag + `intent` + `oracle`；`example` 可选，默认是派生说明，不高于 oracle。仅输入封闭、可按 oracle 复算且经写包独审确认的例子标 `golden: true`，develop 才承担字面物化义务；其余测试物化 intent/oracle |
-| `relevant-standards` | string[] | ✅ | 只列 `applies-if` 命中的稳定规则 id，并附 `standards-{layer}.md` / `standards-shared.md` 条目标题。无命中填 `[]`；`design.md` 为 frontend 无条件必读，不重复列出 |
+| `relevant-standards` | string[] | ✅ | 只列 `applies-if` 命中的稳定规则 id，并附 `standards-{layer}.md` / `standards-shared.md` 条目标题。无命中填 `[]`；frontend 另由 `reference` 指向 design.md 的全局基线和相关页面规格，存量无稳定锚时才全文读取 |
 | `reference` | string[] | ✅ | 只列做实现决策必需的权威锚：文件路径 + 稳定符号/章节锚（优先）或行号 + 说明；不接受“全文”。无必需锚可填 `[]` |
 | `context` | string | ✅ | 关键实现切入点（如：`GoalList.vue L142 handleDelete()`…） |
 | `known-risks` | string[] | ✅ | 只列本任务新打开或显著放大的实际风险；无则 `[]` |
