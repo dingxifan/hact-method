@@ -37,7 +37,7 @@
 **source=foundation 进料（V0 走骨架特例）**
 
 `source=foundation` 时会话启动改走本块——**不走** sprint 拾取/认领/批次分支/前端设计门；**主循环 + 末端照常**，仅三处替换：
-- **判定 foundation 模式**（无任务包、无 source 字段可读）：由项目状态判——`iterations/v0/gates.md` G2 已签 **且** `status.yml` 无 `[merged]` 的 `foundation` task（即项目仓 `CLAUDE.md` Step 1「先判 V0」推断出的本模式），或用户明示走骨架。
+- **判定 foundation 模式**（无任务包、无 source 字段可读）：由项目状态判——`iterations/v0/gates.md` G2 已签 **且** `status.yml` 无 `[merged]` 的 `foundation` task（即项目仓共同启动协议 Step 1「先判 V0」推断出的本模式），或用户明示走骨架。
 - **全栈、不问执行层**：走骨架横跨前后端，跳过「第零步」。
 - **建造单元 = `iterations/v0/foundation-design.md`**：对象 = 其「地基件清单」逐件 + 「标杆穿透切片」。地基件互锁（管道/作用域 repo/外壳/主题/信封彼此依赖）→ **串行建在单条 `foundation-v0` 分支、共一个 PR**：
   ```bash

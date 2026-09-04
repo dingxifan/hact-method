@@ -74,7 +74,7 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - 项目根三份 Standards：建空桩；V0 `draft-foundation` 按 `templates/standards/schema.md` 首播当前稳定默认规则（存量由 draft-tech-design 兜底），后续只更新当前真值
 
 同时写入以下文件：
-- `CLAUDE.md`：内容复制自 `templates\CLAUDE.md`，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充
+- `CLAUDE.md` 与 `AGENTS.md`：分别复制自同名 templates，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充。两者都是薄入口，共同启动正文在 `templates\boot-protocol.md`；不得各自复制启动协议
 - `.claude/commands/gitee-ops.md`：内容复制自 `templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
 - `scripts/check-docs.js`：内容复制自 `templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
 - `scripts/check-gate.js`：内容复制自 `templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
@@ -238,7 +238,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 - **走 V0**（默认）→ `draft-foundation` 建 `iterations/v0/`，走 V0 流程。
 - **跳过 V0** → **不建 `iterations/v0/`**，直接进 V1；地基代码在 V1 内随功能组织、standards 等首期簇由 `draft-tech-design` 兜底（**等同存量路径**）。**代价**：放弃 V0「强制边在 build 前焊死」的保证，靠 plan-sprint 视觉地基包 + develop 兜——仅微型 / 低风险项目适用。
 
-> `iterations/v0/` 是否存在 = V0 路径的机器信号（跨会话推断据此判，见项目仓 `CLAUDE.md` Step 1）；跳过则该目录不存在、推断自然落到 V1。
+> `iterations/v0/` 是否存在 = V0 路径的机器信号（跨会话推断据此判，见项目仓共同启动协议 Step 1）；跳过则该目录不存在、推断自然落到 V1。
 
 🚫 等用户拍板走 / 跳
 
