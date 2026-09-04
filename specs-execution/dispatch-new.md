@@ -3,7 +3,7 @@
 > 运行时加载本文时，当前任务是处理一条 B 类入口：收到 bug 报告或优化需求，判断是否属于 B 类，写任务包入 queue，记入 b-tasks.md。
 > 本 task 是轻量派发任务，通常 10 分钟内完成。
 
-**上下文密度**：低。不加载代码，按需读 trd.md（判断是否涉及接口 schema 变更）。
+**上下文密度**：低。不加载实现代码；读取当前已签 PRD/TRD、Foundation 与命中的 Standards，判断是否触及共享契约。
 
 ---
 
@@ -34,8 +34,10 @@
 | 影响两个及以上模块的核心逻辑 | 跨模块重构 |
 | 需要产品决策（新用户场景 / 新功能边界） | 超出已有 PRD 范围 |
 | 修改或删除已有接口路径 / 参数 / 字段 | breaking change，可能影响已有客户端或数据 |
+| 需要修改已签 PRD/TRD、Foundation、Standards、design.md 或 gates.md | 共享契约不能在 B 类实现包中顺手改 |
+| 新增或改变共享 API/事件、公共类型/枚举、数据库表/列/约束/迁移、状态词汇/转换边 | **纯加法也属于契约变更**；先修订权威文档并重新规划 |
 
-**涉及接口或数据结构纯加法时，逐条判定**（新增可选字段 / 参数，不修改 / 删除已有项）：
+**未改共享契约、仅在既有扩展点内做实现纯加法时，逐条判定**：
 
 | 判定项 | 升 A 类条件 | 可走 B 类条件 |
 |--------|------------|--------------|
@@ -46,8 +48,8 @@
 
 **升级 A 类时输出**：
 ```
-此需求涉及 {跨模块核心逻辑 / 产品决策 / breaking change / 业务逻辑复杂 / 风险不可控}，需走 A 类流程。
-本 dispatch-new task 终止，请在项目仓开 draft-prd-vN 会话。
+此需求涉及 {跨模块核心逻辑 / 产品决策 / breaking change / 共享契约修订 / 业务逻辑复杂 / 风险不可控}，不能作为 B 类实现包派发。
+本 dispatch-new task 终止：产品意图变化走 draft-prd-vN；既有意图下的契约修订走 revise-doc(target={prd|trd|foundation|standards|design})，修订完成后重新 plan-sprint。
 ```
 
 **全部不满足升 A 条件** → 继续 Step 2。
@@ -111,6 +113,11 @@ golden: false
 【files 初步估填】
 - {预计改动的文件 / 组件}
 
+【共享契约影响】
+- contract-impact: none
+- asset-writes: [{本任务写入的共享资产稳定键；无则 []}]
+- 依据：{为什么不需要修改已签 PRD/TRD/Foundation/Standards/design 或公共 schema/API/type/enum/event/state}
+
 [layer=frontend 时额外输出]
 【视觉参照】design.md §{节} / prototype.html {路径}
 无对应规格时：明确写「无对应设计规格，以 do-not 边界为准」
@@ -132,15 +139,17 @@ golden: false
 |------|------|
 | `task-id` | `{项目缩写}-b-{三位序号}`，如 `hact-b-001` |
 | `source` | 与 `target-source` 一致（`bug` 或 `optimization`） |
+| `contract-impact` | 固定为 `none`。无法诚实填写即返回 Step 1 硬升，不得以 `governed` 把共享契约改动塞进 B 类 |
 | `urgency` | Step 3 判断结果 |
 | `risk` | 默认 `standard`；若触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用，则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29——B 类无 G3 检查器，误标由 develop 有效 risk 判定 + 末端 diff 独立预检兜底） |
 | `acceptance-criteria` | 按 `intent-oracle-v1` 写 Step 3.5 确认的 intent/oracle；example 可选，未经独立复算保持 `golden: false`。纯加法 schema 变更另加技术 AC 指向已更新 TRD 章节 |
 | `do-not` | 直接使用 Step 3.5 确认的禁动边界列表 |
 | `files` | Step 3.5 初步估填的预计改动文件 / 组件清单 |
+| `asset-writes` | Step 3.5 确认的共享写集稳定键；无则 `[]`。命中同一资产的并发任务必须在 develop 前协调串行 |
 | `known-risks` | bug 复现步骤不明确时在此标注；`urgency=hotfix` 且与当前 sprint 任务可能改动重叠文件时，标注冲突文件，由 develop 执行人协调合并顺序；**含纯加法 schema 变更时**必须写明：最坏情况 / 如何发现 / 如何回滚 |
 | `api-contract`（条件） | 仅 `layers=[backend]` 且新增接口被前端消费时填，否则整段删除（与 develop §字段规范一致） |
 
-**全部字段无空值方可写入 queue**（schema 变更**不另立字段**——落在上述 `acceptance-criteria` / `known-risks` / `api-contract`，与 develop §字段规范单一真相对齐）。
+**全部字段无空值方可写入 queue**。写完运行 `node scripts/check-b-task.js b-queue/{task-id}.md`；非 0 即停止派发并回 Step 1。公共 schema/API/type/enum/event/state 的变更不再允许用 B 类字段组合绕过升级。
 
 **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（机器侧状态契约，B 类为项目级、跨迭代——`source: {bug/optimization}`、`type: develop`、`iteration: null`、`sprint: null`、`delivery: null`、`status: 可取`，`urgency` 取 Step 3 结果；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 

@@ -63,6 +63,20 @@ sync_repo "../hact-notes-{username}" - \
 
 项目仓或 hact-method 同步失败（冲突、分叉、凭据失败或方法论仓不在 `master`）时停止；个人 notes 仓失败只提示，不阻断。
 
+### Step 0.5：门卫可见性
+
+同步完成后，若项目存在 `scripts/check-hook-state.js`，运行：
+
+```bash
+node scripts/check-hook-state.js --method-root ../hact-method-lab
+```
+
+- 退出码 0：tracked 门卫已由实际生效 hook 逐字节安装或明确委托，且方法论模板无漂移；把「检查器与门卫」标为 `available`。
+- 退出码 1：按 `signals` 报告未安装、active↔tracked 漂移或 template↔project 漂移；标为 `degraded`，继续时必须手动运行本任务相关检查器。**只报告，不自动复制/覆盖**，由人决定安装、重装或合并项目自定义 hook。
+- 脚本不存在（存量仓）：标为 `degraded` 并提示补铺；不虚报门卫已生效。
+
+本检查只让本地状态可见，不把 pre-commit 冒充安全边界；`--no-verify` 仍可绕过并须自行留痕。
+
 ## Step 1：状态推断与规范加载
 
 1. 读取 `project.md`。

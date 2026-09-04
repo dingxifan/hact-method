@@ -3,7 +3,7 @@
  * check-sprint.js · hact-method G3（plan-sprint 产物）完成判据 linter（子计划 3c）
  *
  * 用途：机械核对 G3 完成判据里**确定性可查**的部分——任务包字段完备 / reference 稳定锚 /
- *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / sprint↔queue↔status 三方一致 /
+ *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / 共享写集冲突 / sprint↔queue↔status 三方一致 /
  *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）/
  *      归属真空（任务包声明"这件事不在本包"时，须确有另一个包认领）/
  *      审计留痕完备性（已 [merged] 的任务须有 code_reviews[]；新条目区分 code/spec rounds、墙钟、review profile 并落逐轮 report）。
@@ -107,13 +107,56 @@ function parseFrontmatter(p) {
 
 function valEmpty(key, v) {
   if (!v) return true;                                  // 字段缺失
-  if (v.type === 'inline-empty-list') return !['depends_on', 'relevant-standards', 'reference', 'known-risks', 'do-not', 'escalate-if'].includes(key);
+  if (v.type === 'inline-empty-list') return !['depends_on', 'asset-writes', 'relevant-standards', 'reference', 'known-risks', 'do-not', 'escalate-if'].includes(key);
   if (v.type === 'list') return v.items.filter(x => x && !x.includes(PLACEHOLDER)).length === 0;
   const t = (v.text || '').trim();
   return t === '' || t.includes(PLACEHOLDER);
 }
 function listItems(v) { return v && v.items ? v.items.filter(x => x && !x.includes(PLACEHOLDER)) : []; }
 function scalarText(v) { return v ? (v.text || '') : ''; }
+
+function normalizeFileAsset(ref) {
+  const text = String(ref || '').trim().replace(/\\/g, '/');
+  const match = text.match(/^(.+?\.[A-Za-z0-9_-]+)(?:\s|$)/);
+  return (match ? match[1] : text).toLowerCase();
+}
+
+function taskWriteAssets(pkg) {
+  const fileKeys = listItems(pkg.fm.files).map(x => `file:${normalizeFileAsset(x)}`);
+  const declared = listItems(pkg.fm['asset-writes']).map(x => `asset:${x.trim().toLowerCase()}`);
+  return new Set([...fileKeys, ...declared]);
+}
+
+function dependencyPath(packages, fromId, toId) {
+  const byId = new Map(packages.map(p => [p.id, p]));
+  const seen = new Set();
+  const stack = [fromId];
+  while (stack.length) {
+    const current = stack.pop();
+    if (current === toId) return true;
+    if (seen.has(current)) continue;
+    seen.add(current);
+    const pkg = byId.get(current);
+    if (pkg) stack.push(...pkg.deps);
+  }
+  return false;
+}
+
+function sharedAssetConflicts(packages) {
+  const conflicts = [];
+  for (let i = 0; i < packages.length; i += 1) {
+    const leftAssets = taskWriteAssets(packages[i]);
+    for (let j = i + 1; j < packages.length; j += 1) {
+      const rightAssets = taskWriteAssets(packages[j]);
+      const overlap = [...leftAssets].filter(x => rightAssets.has(x));
+      if (!overlap.length) continue;
+      const ordered = dependencyPath(packages, packages[i].id, packages[j].id)
+        || dependencyPath(packages, packages[j].id, packages[i].id);
+      if (!ordered) conflicts.push({ left: packages[i].id, right: packages[j].id, overlap });
+    }
+  }
+  return conflicts;
+}
 
 const reLineNum = /L\s*\d+|\d+\s*[-–~]\s*\d+|行\s*\d+/;   // 行号 / 行号区间
 const reSectionAnchor = /(?:§|#)\s*[^\s#]|(?:章节|小节)\s*[:：]/;
@@ -629,6 +672,18 @@ function checkSprint(iteration, root) {
     for (const key of REQUIRED) {
       if (valEmpty(key, p.fm[key])) fail('字段完备', where, `${p.id}：字段「${key}」缺失/为空/占位`);
     }
+    // 新格式任务包必须显式声明共享写集；存量旧格式缺字段继续兼容，但不得靠省略字段获得并行资格。
+    if (scalarText(p.fm['ac-format']) === 'intent-oracle-v1' && !p.fm['asset-writes'])
+      fail('共享写集字段', where, `${p.id}：新任务包缺 asset-writes；无共享资产也必须填 []`);
+    if (scalarText(p.fm['ac-format']) === 'intent-oracle-v1' && !p.fm['contract-impact'])
+      fail('契约影响字段', where, `${p.id}：新任务包缺 contract-impact；实现已签契约填 governed，不触及填 none`);
+    const contractImpact = scalarText(p.fm['contract-impact']).toLowerCase();
+    if (p.fm['contract-impact'] && !['governed', 'none'].includes(contractImpact))
+      fail('契约影响字段', where, `${p.id}：contract-impact=${contractImpact} 非法，须为 governed 或 none`);
+    for (const asset of listItems(p.fm['asset-writes'])) {
+      if (!/^[a-z][a-z0-9_-]*:\S/i.test(asset))
+        fail('共享写集格式', where, `${p.id}：asset-writes「${asset}」须使用 kind:value 稳定键`);
+    }
     // 1b. api-contract 条件必填
     if (/backend/.test(p.layersStr) && consumedByFE.has(p.id)) {
       if (valEmpty('api-contract', p.fm['api-contract']))
@@ -672,6 +727,13 @@ function checkSprint(iteration, root) {
     }
   }
   if (findings.filter(f => f.level === 'fail').length === 0) pass('任务包字段/AC/reference', `${packages.length} 个任务包字段完备、reference 含稳定锚、AC 回链与新格式合法`);
+
+  // 3b. 共享写集：同文件或同资产的两个任务必须存在任一方向的依赖路径，默认串行。
+  const assetConflicts = sharedAssetConflicts(packages);
+  for (const conflict of assetConflicts) {
+    fail('共享写集冲突', queueDir, `${conflict.left} 与 ${conflict.right} 同写 ${conflict.overlap.join('、')}，但 depends_on 无任一方向的依赖路径；补依赖并标串行，或证明并拆成不重叠资产键`);
+  }
+  if (!assetConflicts.length) pass('共享写集冲突', '同文件/同共享资产写入均已由依赖路径串行化');
 
   // 4. AC 逐条反向覆盖：PRD 每个 AC-nn 被 ≥1 任务包 tag 引用（替代旧功能级——逐条严格强于功能级）
   if (prdIds === null) {
@@ -885,4 +947,5 @@ function main() {
   process.exit(fails.length ? 1 : 0);
 }
 
-main();
+if (require.main === module) main();
+module.exports = { sharedAssetConflicts };

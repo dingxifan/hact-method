@@ -54,6 +54,7 @@
 **source=bug/optimization 进料（B 类）**
 
 - B 类由 `dispatch-new` 写入 `b-queue/` 后，统一从本 `develop` 入口拾取；一次只取用户点名的一个 task-id，不与 sprint 批次混跑。
+- 认领前运行 `node scripts/check-b-task.js b-queue/{task-id}.md`。缺脚本的存量仓人工核 `contract-impact=none`，且 `files` 不含已签 PRD/TRD/Foundation/Standards/design、迁移/schema/公共契约路径；命中即阻断并转 `revise-doc` 或新 A 类迭代，不得边写代码边改契约。
 - 无 Gate、无 sprint.md、无 iteration；任务包路径为 `b-queue/{task-id}.md`，审查/预检记录目录为 `b-reviews/{task-id}/`，分支名与 PR 粒度均为 `{task-id}`。
 - 状态 `[可取]` 时认领并同步 `status.yml`；`[taken-by]` 时按断点续做对账。状态已 `[done]/[merged]` 则先说明现状，不重复实现。
 - 主循环、freshness preflight、独立审查、末端全量和状态更新照常；所有文中的 vN 参数对 B 类替换为“无 iteration”。

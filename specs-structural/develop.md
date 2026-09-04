@@ -31,11 +31,13 @@
 | `layers` | string[] | ✅ | `[frontend]` / `[backend]` / `[shared]` |
 | `source` | enum | ✅ | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` |
 | `task_type` | enum | ✅ | `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）/ layers=[shared] 时由分配者在任务包中指定 |
+| `contract-impact` | enum | ✅（新包） | `governed` = 只实现已经签署/修订完成的 PRD、TRD、Foundation、Standards，不在 develop 中改契约；`none` = 不触及共享契约。`source=bug/optimization` 只能为 `none`；若需求本身要修订契约，必须先退出 B 类走 `revise-doc` 或新 A 类迭代，再重新规划 |
 | `urgency` | enum | ✅ | `normal`（默认）/ `hotfix` |
 | `risk` | enum | ✅ | `standard`（默认）/ `sensitive`。触及 develop 合并前安全敏感预检四类之一时填 `sensitive`：权限 / 认证 / 数据隔离、不可逆数据操作、金额 / 计费计算、对外不可撤销副作用；否则填 `standard`，**存疑即 `sensitive`**。缺省按 `standard` 处理。develop 侧按**有效 risk** 消费（自报 `sensitive` 或主线四类语义扫命中即升档并回改本字段），末端安全敏感预检基于 diff 独立判定、不唯此字段（决策#29，见 `specs-execution/develop.md`） |
 | `title` | string | ✅ | 简短描述，15字以内 |
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
 | `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |
+| `asset-writes` | string[] | ✅（新包） | 本任务会写的跨文件共享资产；无则 `[]`。使用稳定键，如 `db:users`、`enum:OrderStatus`、`type:UserDTO`、`api:GET /users`、`event:order.created`、`config:auth-policy`。`files` 相同或资产键相同的任务必须以 `depends_on` 排出先后；旧包缺字段时兼容，但不能据此获得并行资格 |
 | `supersedes` | string[] | ✅ | 本包取代的既有实体，无则 `[]`。一行一条并写清是什么：代码路径（旧实现 / 旧分支 / 将无调用方的模块）、lint 规则 id、spec 文件、`decisions #N`。非空即欠一笔**退役账**：develop 在 PR description 逐条给「已下线 / 保留 + 解除条件」，`wrap-up-iteration` 于签 G5 前核对。**不进 `check-sprint.js` 必填校验**（存量项目任务包无此字段，机械必填会全线红） |
 | `ac-format` | enum | ✅ | 新任务固定 `intent-oracle-v1`；存量缺省按旧格式兼容，不要求批量回填 |
 | `acceptance-criteria` | string[] | ✅ | 3–5 条，每条是一个 block scalar，含回链 tag + `intent` + `oracle`；`example` 可选，默认是派生说明，不高于 oracle。仅输入封闭、可按 oracle 复算且经写包独审确认的例子标 `golden: true`，develop 才承担字面物化义务；其余测试物化 intent/oracle |
@@ -45,7 +47,7 @@
 | `known-risks` | string[] | ✅ | 只列本任务新打开或显著放大的实际风险；无则 `[]` |
 | `do-not` | string[] | ✅ | 只列本任务真实 scope 边；通用编码/凭据红线由 Standards 与 develop 全局纪律承接；无则 `[]` |
 | `escalate-if` | string[] | ✅ | 只列无法从权威原文自行裁决的分支；无则 `[]` |
-| `depends_on` | string[] | ✅ | 本任务依赖的前置 task-id 列表，无依赖填 `[]`。两类来源：① 编译/接口依赖（下游引用上游新增的共享类型/接口，须等上游合并）② 共享资产消费（多任务共享同一表/枚举/共享类型时，指向 source-of-truth 任务）。**消费方无需另存**——由其他任务的 `depends_on` 反查得出（谁的 `depends_on` 含本 task-id，谁即消费方）。与 sprint.md「依赖」列、status.yml `depends_on` 三处一致 |
+| `depends_on` | string[] | ✅ | 本任务依赖的前置 task-id 列表，无依赖填 `[]`。两类来源：① 编译/接口依赖（下游引用上游新增的共享类型/接口，须等上游合并）② 共享资产消费（多任务写同一表/枚举/共享类型时，指向 source-of-truth 任务）。`check-sprint.js` 对 `files` 与 `asset-writes` 做两两交叉核验；共享写集没有任一方向的依赖路径即 FAIL。与 sprint.md「依赖」列、status.yml `depends_on` 三处一致 |
 | `api-contract` | object | 条件 | 仅 `layers=[backend]` 且该接口被前端消费时必填；由 plan-sprint 推导写入，develop 只读；见下方格式说明 |
 | `baseline` | enum | 条件 | 仅「视觉地基包」填 `visual`（普通包不写此行）；标记本包是全局 reset + UI 库主题覆盖 + token 全局接线的跨切面地基。由 plan-sprint 在 v1（或 design.md 变更迭代）拆出、`check-sprint.js` 据此核 v1 必有；其余 frontend 任务 `depends_on` 它。见 `specs-execution/plan-sprint.md` Step 2 |
 

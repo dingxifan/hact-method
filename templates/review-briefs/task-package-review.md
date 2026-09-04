@@ -26,14 +26,15 @@
 5. relevant-standards 匹配：按任务 delta 与规则 `applies-if` 核已列 id；只报明确命中的漏项。规则本身实为本期契约/历史/机制位置时，输出 `contract-drift → revise-doc`，不要求任务包复制。
 6. 视觉地基完备性（仅含 frontend 时）：按 `design.md/foundation.md` 变更面核是否需要地基包；已建成且无相关变更则无发现，不重复展开历史建设说明。
 7. risk 标注核对：触及安全敏感四类而标 standard = 阻断并 `fix-package`；拿不准是否触及时输出 `evidence-gap` 并请求具体证据，允许任务包从严保留 sensitive，不因“看不出风险”要求降档。
+8. 共享资产归属：机械检查已负责发现同文件/同资产键无依赖；你只核 `asset-writes` 是否漏掉 TRD 中明确共享的表、枚举、类型、API、事件或配置，以及 source-of-truth 包方向是否合理。明确漏项输出 `scope-gap → fix-package`。
 
 【边界 — 不审以下，这些归用户确认 / 留下游】
-- 任务拆分粒度、依赖方向、交付方式（串行/可并行）——这是用户在 Step2/2.5 的决策权，你不得否决。
+- 任务拆分粒度与不涉及共享写集的交付偏好——这是用户在 Step2/2.5 的决策权。共享写集必须串行属于硬边界，不可由偏好豁免。
 - `files` 字段行号是否精确——目标文件此刻尚未写出，无法核对，留 develop 阶段。
 
 【输出格式】
 每条 finding：
-- 类别：{AC忠实性 / AC完备性 / oracle-example / api-contract / relevant-standards匹配 / 视觉地基完备性 / risk标注核对}
+- 类别：{AC忠实性 / AC完备性 / oracle-example / api-contract / relevant-standards匹配 / 视觉地基完备性 / risk标注核对 / 共享资产归属}
 - 位置：{任务包 task-id / PRD 功能名}
 - 问题：{具体描述，一句话}
 - 严重程度：{阻断 / 建议}

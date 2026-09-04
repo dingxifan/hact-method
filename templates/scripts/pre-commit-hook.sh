@@ -7,9 +7,11 @@
 # 安装：init-project 把本文件复制为 项目仓 `.git/hooks/pre-commit` 并 chmod +x。
 # 触发：commit 时按 staged 文件路由到对应检查器——
 #   iterations/vN/prd.md            → check-docs.js（同迭代有 trd.md 则带上做交叉对账）
+#   iterations/vN/prd.md|as-built-ledger.md → check-as-built-ledger.js（走过 V0 时）
 #   iterations/vN/trd.md            → check-docs.js（PRD+TRD 交叉）
 #   iterations/vN/sprint.md|queue/*.md → check-sprint.js vN（只认 .md——.gitkeep 不触发，init 提交 queue 必然为空）
 #   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
+#   b-queue/*.md                  → check-b-task.js（B 类不得夹带共享契约修订）
 #   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
 #   connections.yml                 → check-conn.js（零机密 + 凭据引用完备 + 凭据落位安全）
 #   任何 staged 文件                → check-secrets.js（反查 ~/.hact/secrets.env 的真值）
@@ -76,6 +78,9 @@ for dir in $iter_dirs; do
       run scripts/check-docs.js --trd "${dir}trd.md"
     fi
   fi
+  if echo "$staged" | grep -qE "^${dir}(prd|as-built-ledger)\.md$"; then
+    run scripts/check-as-built-ledger.js "$ver"
+  fi
 
   # --- sprint / 任务包（check-sprint.js）---
   # 只认 .md：init 提交只 stage queue/**/.gitkeep（立项时 queue 必然为空），不触发本检查
@@ -97,6 +102,12 @@ for dir in $iter_dirs; do
   if echo "$staged" | grep -qE "^${dir}(ux-flows\.md|prototype\.html|prototype-map\.md)$"; then
     run scripts/check-ux.js "$ver"
   fi
+done
+
+# --- B 类任务包契约边界（check-b-task.js）---
+b_tasks=$(echo "$staged" | grep -E '^b-queue/.*\.md$' || true)
+for task in $b_tasks; do
+  run scripts/check-b-task.js "$task"
 done
 
 # --- reusables.md 登记表（check-reusables.js）---

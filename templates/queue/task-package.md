@@ -18,6 +18,7 @@ sprint_id: <待填>          # 所属 Sprint 标识，如 v4-s1；由 plan-sprin
 layers: <待填>             # [frontend] / [backend] / [shared]（数组写法）
 source: <待填>             # sprint / integration / manual-test / bug / optimization
 task_type: <待填>          # dev-frontend（layers=[frontend]）/ dev-backend（layers=[backend]）/ shared 时显式指定
+contract-impact: <待填>    # governed（只实现已签 PRD/TRD/Foundation/Standards）/ none（不触及共享契约）；B 类只能 none
 # baseline: visual        # 仅「视觉地基包」加此行；普通任务包不写。见顶部说明 + plan-sprint Step 2
 urgency: normal           # normal（默认）/ hotfix
 risk: standard            # standard（默认，审查 subagent 可用轻量模型）/ sensitive（触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）；存疑即 sensitive（只升不降，develop 侧另按有效 risk + diff 独立预检兜底）
@@ -28,6 +29,8 @@ description: <待填>        # 格式「当前状态 → 期望状态」，不�
 depends_on: []            # 前置 task-id 列表，无依赖填 []；与 sprint.md 依赖列、status.yml depends_on 三处一致
 files:
   - <待填>                # 必改文件路径，精确到已知行号范围；不预防性列"可能"文件
+asset-writes: []          # 共享写集，无则 []。命名 `db:users` / `enum:OrderStatus` / `type:UserDTO` / `api:GET /users` / `config:auth-policy`
+                          # 两包命中同一 asset 或同一 files 路径时必须用 depends_on 排出先后；不得标可并行
 supersedes: []            # 本包取代的既有实体，无则 []（不是 <待填>）。一行一条，写清是什么：
                           # 代码路径（旧实现 / 旧分支 / 已无调用方的模块）、lint 规则 id、spec 文件、decisions #N。
                           # 填了即欠一笔退役账——develop 交付时逐条给「已下线 / 保留 + 理由」，见 develop §退役账

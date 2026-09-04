@@ -38,7 +38,7 @@
 
 **加载上下文**：首期读 `_meta/input/background.md`（如有）+ 项目根 `foundation.md`（**地基蓝图·领域地图**——核心实体 / 主数据 / 贯穿全局作用域；本期功能挂其核心实体、不另起领域，与 V0 已立的地基一致；**不存在则跳过**——仅存量项目无此文件；新项目无论走/跳 V0，foundation.md 均已由 init 播种）；迭代读 项目根 `project.md`（已有现状 + 已排除功能）。
 
-**[走过 V0 时] 核 as-built**：上述必读件全是**设计侧**文档，而 V0 走骨架的产出是**代码与迁移**——只读设计侧，PRD 可以给一个 V0 已经安顿好的实体另指一个家，且一路过 linter 与独审（两者都只看 PRD 自身自洽）。故 `iterations/v0/` 存在时，落笔前先扫两处实况：① 项目根 `reusables.md` 的**标杆切片登记**（V0 那根穿透切片真建了哪条业务线）；② 迁移/实体定义（V0 实际建了哪些表与列）。**本期功能若触及其中任一实体，方案须与已落地的承载方式一致**；判定必须改，走 `revise-doc` 显式改而不是在 PRD 里另起一套——同一实体两个家，`foundation.md` 上那条标着"不可议价"的构造级边会守着一间空房子。
+**[走过 V0 时] 核 as-built 并落证据账本**：上述必读件全是**设计侧**文档，而 V0 走骨架的产出是**代码与迁移**。`iterations/v0/` 存在时，按 `templates/as-built-ledger.md` 生成 `iterations/vN/as-built-ledger.md`，只记录本期触及的实体、状态枚举、队列、转换边与地基关注点：① 设计声明；② `reusables.md` 标杆切片登记；③ 迁移/实体/状态机/队列定义的路径或符号锚；④ 实际观察；⑤ 一致/漂移/未知；⑥ 动作。**本期功能若触及其中任一事实，方案须与已落地承载一致**；漂移或未知在落笔前走 `revise-doc`/补证据关闭，不得在 PRD 里另起一套。账本是证据索引，不复制原文或整仓摘要。
 
 开场：「本次完成 v{N} PRD，分三层：对齐方向骨架 → 逐功能写契约 → 清零开放问题签 G1。」确认版本号后开始。
 
@@ -113,6 +113,8 @@
 
 套模板整合写入 `iterations/vN/prd.md`，替换所有 `<待填>`，保留 `<!-- ac-format: intent-oracle-v1 -->`，删除其它提示/示例注释块。
 
+走过 V0 时同时确认 `iterations/vN/as-built-ledger.md` 已写完且无 `漂移/未知` 的未处置行。
+
 **迭代 PRD（v2+）**：文件开头加「## vN 变更摘要」（格式见模板注释），每功能标题带变更类型后缀（`### 功能：名 \`继承\``），与摘要表一致。变更类型：**继承**（完全一致）/**继承·微调**（局部调整）/**重构**（逻辑重写、目标同）/**简化**（范围收窄）/**新增**（首次引入）。
 
 更新 项目根 `project.md` 产品层（目标 / 用户 / 功能边界）。
@@ -124,6 +126,7 @@
 
 ```bash
 node scripts/check-docs.js --prd iterations/vN/prd.md
+node scripts/check-as-built-ledger.js vN
 ```
 
 红 → 按报告逐条修 `prd.md` 重跑到绿。这步是**提前自查**；Step 8 签字 commit 时 pre-commit 门卫会再跑一遍、红则拦 commit——"跳过 linter 偷偷签字"机制上做不到，故不再写强制散文。
@@ -157,7 +160,7 @@ AI 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用
 
 **更新项目根 `status.yml`**（机器侧状态契约；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；不存在先从 `../hact-method-lab/templates/status.yml` 补建）：确保 `iterations.vN.gates` 块存在（v1 已由 init-project 建，v2+ 在此新增该期块、G1–G5 未签）→ 将 `iterations.vN.gates.G1` 改为 `{ signed: true, date: {YYYY-MM-DD} }`。
 
-`git add iterations/vN/prd.md iterations/vN/gates.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`
+`git add iterations/vN/prd.md iterations/vN/as-built-ledger.md iterations/vN/gates.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`（未走 V0 时不 add 不存在的账本）
 
 > PRD 定稿后发现遗漏关键功能 → 建 `revise-doc(target=prd)`，不直接改已签 PRD。
 
