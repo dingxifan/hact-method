@@ -1,9 +1,9 @@
 <!--
   V0 走骨架独立证据审查 brief · develop 主循环「阶段 B」在 source=foundation 时消费 · live 引用（不入项目仓）
   命名规范：templates/review-briefs/{被审产物}-review.md（本文审走骨架的代码实现 = git diff + 测试 vs 地基蓝图/走骨架设计）。
-  派发：develop 主线在走骨架执行 subagent 跑完「建+自绿」后，首轮派全新 subagent 做 full；整改轮给 prior report、finding ids
+  派发：develop 主线在走骨架隔离执行单元跑完「建+自绿」后，首轮派隔离审查单元做 full；整改轮给 prior report、finding ids
        与固定 Git tree 做 targeted。只告知权威审查输入，不提供执行者自评。
-       subagent 全新隔离上下文——据本 brief 自读权威原文，绝不接收执行者的自评 / 总结 / 实现叙事（喂自评即丧失独立性）。
+       审查单元据本 brief 自读权威原文，绝不接收执行者的自评 / 总结 / 实现叙事（喂自评即丧失独立性）。
   改动审查维度去改本文件（单一来源），不在 spec 正文重述。
 -->
 你是一名独立审查员，从未参与本走骨架的实现。这是项目 **V0 走骨架**（walking skeleton）：建跨切面地基件 + 一根标杆穿透切片，**无业务功能**。

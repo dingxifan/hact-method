@@ -55,7 +55,7 @@
 
 ## 完成判据
 
-> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 4 跑，含 PRD↔TRD 两条交叉对账）——机械判据的最终判定。未标的是**语义判据**（载体真承接 AC、精化例子忠实 PRD 行为例子），由 Step 5 末端内容审查（陌生视角 subagent）+ 签字人复核 + develop 内置独立审查的技术保真把关。
+> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-tech-design Step 4 跑，含 PRD↔TRD 两条交叉对账）——机械判据的最终判定。未标的是**语义判据**（载体真承接 AC、精化例子忠实 PRD 行为例子），由 Step 5 末端隔离内容审查 + 签字人复核 + develop 内置独立审查的技术保真把关。
 
 - [ ] 疑点清单已输出，用户逐条确认，无未解决疑点
 - [ ] **【linter】** TRD 7 个段落全部存在，无空段
@@ -63,11 +63,11 @@
 - [ ] **【linter】** PRD 每条 `AC-nn` 都被 TRD 某载体 `# 满足 AC` 回链承接，且无悬空回链（逐条正向+反向，交叉对账；存量旧格式退人工兜底）
 - [ ] **【linter·存在】** 测试环境约定段落存在且非空（"完整"由人核）
 - [ ] 不可视区 AC 的 oracle 已精化到状态码/错误码/断言；普通 example 与 oracle 一致但不升格为字面契约，回链载体真承接对应 AC
-- [ ] Step 5 独立内容审查已跑、问题清单已与用户处理（陌生视角验内部一致性 / AC 真承接 / 字段满足画面 / 覆盖，linter 兜不住的内容残量；subagent 失败则主线自审降级）
+- [ ] Step 5 独立内容审查已跑、问题清单已与用户处理（陌生视角验内部一致性 / AC 真承接 / 字段满足画面 / 覆盖，linter 兜不住的内容残量；隔离审查不可用则阻断，不以主线自审替代）
 - [ ] 三份 standards 已输出（shared / frontend / backend）
 - [ ] decisions.md 已追加本期架构决策
 - [ ] project.md 技术层已更新
-- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 实体↔表 + AC↔回链两条交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）
+- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 实体↔表 + AC↔回链两条交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，不额外派隔离单元）
 - [ ] G2 已签（`gates.md` 已记录 + commit）
 
 ---

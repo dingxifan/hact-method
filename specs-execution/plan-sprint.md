@@ -15,7 +15,7 @@
 
 **前置：G2 是否已签** — 读 `iterations/vN/gates.md`：未签 → 阻断「⚠️ G2 未通过，TRD 未确认，先完成 draft-tech-design 再规划 Sprint」；已签 → 继续。
 
-**必读文件**（Explore subagent 并行读，默认指定 `model: "haiku"`）：
+**必读文件**（可用只读调查单元并行读并返回带路径摘要；不可用则主线顺序读）：
 - `iterations/vN/prd.md`（AC 来源——任务包 AC 须回链至此，G2 后开发链中段唯一回看 PRD 的窗口）
 - `iterations/vN/trd.md`
 - 项目根三份 Standards：先只读条目 id + `applies-if`，再打开与本期任务候选匹配的条目；不把整份正文灌入每个写包上下文
@@ -102,7 +102,7 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；字段格式、AC 权威层级与 reference 锚规则由模板承接。每包只写相对 as-built 的 delta，normative core 超过 8–12KB 时拆包或迁 non-normative appendix。**数量**：≤4 主线逐个写、>4 启并行 subagent（各 2–3 包，见 Subagent 使用）；每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
+骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；字段格式、AC 权威层级与 reference 锚规则由模板承接。每包只写相对 as-built 的 delta，normative core 超过 8–12KB 时拆包或迁 non-normative appendix。**数量**：≤4 主线逐个写、>4 可启并行隔离执行单元（各 2–3 包，见「隔离单元使用」）；隔离单元只返回内容，由主线写文件。每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
 
 下表只列**模板讲不了的判断 / 跨文件来源**（中）+ **该字段验证归属**（右，显式标谁机械、谁留人）：
 
@@ -130,12 +130,12 @@
 
 ### Step 3.5：任务包独立证据审查
 
-**派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "sonnet"`），令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN。审查员自读 PRD/TRD/queue；Standards 先扫 id + applies-if，再打开命中/疑似漏选条目，不默认全读。任务包 >4 个按包分批派。
+**派发**：派普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，只告知本期迭代版本 vN。审查员自读 PRD/TRD/queue；Standards 先扫 id + applies-if，再打开命中/疑似漏选条目，不默认全读。任务包 >4 个按包分批派；具体模型见运行时映射。
 > brief 查 AC 忠实/完备、oracle/example 可复算、api-contract、Standards 匹配、视觉地基与 risk。审查维度原文固化在 brief 文件，此处不重述。
 
-**【loop 逻辑】**（主线拿到 subagent findings 后的处置）
+**【loop 逻辑】**（主线拿到隔离审查 findings 后的处置）
 
-| sub-agent 输出 | 动作 |
+| 隔离审查输出 | 动作 |
 |---|---|
 | `findings: []` | 退出，进入 Step 4 |
 | 只有 `[建议]` | 记入 项目根 `feedback.md`（供 wrap-up 分流）；退出，进入 Step 4 |
@@ -201,15 +201,15 @@
 
 ---
 
-## Subagent 使用
+## 隔离单元使用
 
-| 触发点 | Subagent 任务 | Prompt 要点 | 失败处理 |
+| 触发点 | 隔离单元任务 | 输入要点 | 失败处理 |
 |--------|-------------|------------|---------|
-| 会话启动 | Explore 并行读 6 份输入文件（纯读取+摘要，指定 `model: "haiku"`） | — | 读取失败则主线单独读 |
-| Step 3（任务 >4 个） | 并行 subagent 各写 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整字段 YAML | 失败则主线接管该包 |
-| Step 3.5 独立审查 | 独立 sub-agent 审任务包保真，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 令 subagent 读该 brief 自执行（自读 prd/trd/standards/queue），只告知 vN；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
+| 会话启动 | 只读调查单元并行读 6 份输入文件（纯读取+带路径摘要） | — | 读取失败则主线单独读 |
+| Step 3（任务 >4 个） | 隔离执行单元各起草 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / standards 相关章节 / reusables 相关条目；输出完整字段 YAML | 失败则主线接管该包 |
+| Step 3.5 独立审查 | 隔离审查单元审任务包保真，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 令审查单元读该 brief 自执行（自读 prd/trd/standards/queue），只告知 vN；任务多则按包分批 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
-**重要**：subagent 只返回任务包内容，**由主线写入文件**，不让 subagent 直接操作文件系统。
+**重要**：隔离执行单元只返回任务包内容，**由主线写入文件**，不让它直接操作文件系统。
 
 ---
 

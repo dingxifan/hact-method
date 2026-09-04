@@ -8,7 +8,7 @@
 
 ## 一、为什么有这份契约
 
-机器侧取数如果靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.md` 复选框，就是在读「为人写的叙述性 markdown」——CC 每次生成时排版会漂移，取数持续出错。
+机器侧取数如果靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.md` 复选框，就是在读「为人写的叙述性 markdown」——运行时每次生成时排版会漂移，取数持续出错。
 
 **解法**：把「机器要的结构化状态」从「人看的叙述文档」里彻底分离，单独落到一份 schema 锁死的 `status.yml`。
 
@@ -45,7 +45,7 @@
 ```yaml
 project: {项目名}                # string，项目名
 schema: 1                        # int，本契约 schema 版本号；字段演进靠它兼容
-generated_by: cc                 # string，固定 cc
+generated_by: hact-method        # string，固定 hact-method（运行时中立）
 
 iterations:                      # 按版本分块；每期一个 key
   v1:

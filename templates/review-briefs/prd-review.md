@@ -1,8 +1,8 @@
 <!--
   PRD 独立内容审查 brief · draft-prd-vN Step 7.5 消费 · live 引用（不入项目仓）
   命名规范：templates/review-briefs/{被审产物}-review.md（本文审 iterations/vN/prd.md）。
-  派发：draft-prd-vN 主线派一个全新 subagent，令其读本文件按指令执行，只告知本期迭代版本 vN。
-       subagent 是全新隔离上下文——据本 brief 自读定稿 prd.md，看不到也不需要生成对话 / 讨论过程。
+  派发：draft-prd-vN 主线派隔离审查单元，令其读本文件按指令执行，只告知本期迭代版本 vN。
+       审查单元据本 brief 自读定稿 prd.md，看不到也不需要生成对话 / 讨论过程。
   分工：linter（check-docs）+ 门卫守格式；本文只查 linter 兜不住的内容有效性。
   改动审查维度去改本文件（单一来源），不在 spec 正文重述。
 -->

@@ -5,7 +5,7 @@
 
 project: {项目名}
 schema: 1
-generated_by: cc
+generated_by: hact-method
 
 iterations:
   v1:

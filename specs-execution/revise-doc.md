@@ -1,6 +1,6 @@
 # exec: revise-doc
 
-> CC 加载本文时，当前任务是对一份已签 Gate 的文档（PRD / TRD / Foundation / Standards）做最小化修订，记录原因，判断下游影响。
+> 运行时加载本文时，当前任务是对一份已签 Gate 的文档（PRD / TRD / Foundation / Standards）做最小化修订，记录原因，判断下游影响。
 > 已签 Gate 不撤销，只记录变更；修订范围严格最小化，不借机重写或扩展。
 
 **上下文密度**：低–中。只读目标文档 + backlog，不加载代码。

@@ -1,6 +1,6 @@
 # exec: wrap-up-iteration
 
-> CC 加载本文时，当前任务是执行迭代收尾三步：偏离对账 / feedback 审阅分流 / project.md 合并，完成后签 G5。
+> 运行时加载本文时，当前任务是执行迭代收尾三步：偏离对账 / feedback 审阅分流 / project.md 合并，完成后签 G5。
 > 可与 deploy 并行执行，无强依赖。deploy 失败不阻断收尾，但 project.md 的"已上线"标注取决于部署结果。
 
 **上下文密度**：中。读 backlog + feedback + project.md + 本期 PRD/TRD，不加载代码。

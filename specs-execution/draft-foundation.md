@@ -1,6 +1,6 @@
 # exec: draft-foundation
 
-> CC 加载本文时，当前任务是为新项目做 **V0 地基设计**：定栈、把 `foundation.md` 每块关注点选定具体形式并验"实际档 ≥ 应有档"、首期播种 standards、定走骨架范围与标杆切片，签 G2(v0)。
+> 运行时加载本文时，当前任务是为新项目做 **V0 地基设计**：定栈、把 `foundation.md` 每块关注点选定具体形式并验"实际档 ≥ 应有档"、首期播种 standards、定走骨架范围与标杆切片，签 G2(v0)。
 > **只产文档（设计），不产代码。** 公共形式的代码（瓶颈管道 / 作用域 repo / 外壳 / 主题框架 / 错误信封）由下游 `develop(source=foundation)` 物化——设计预写代码 = 空中建筑（铁律）。
 
 **上下文密度**：中。读 `foundation.md` + 背景 + project.md；输出更新 foundation.md + 三份 standards + `iterations/v0/foundation-design.md`。
@@ -27,7 +27,7 @@ mkdir -p "iterations/v0"
 [ -f iterations/v0/gates.md ] || printf '# Gates · v0（走骨架）\n\n- [ ] G2：地基设计已确认 —\n' > iterations/v0/gates.md
 ```
 
-**必读文件**（用 Explore subagent 并行读，默认指定 `model: "haiku"`，不占主线）：
+**必读文件**（可用只读调查单元并行读并返回带路径摘要；不可用则主线顺序读）：
 - 项目根 `foundation.md`（核心输入：领域地图 + 关注点登记 + 应有档）
 - `_meta/input/` 背景材料
 - 项目根 `project.md` / `decisions.md` / `reusables.md`
@@ -116,7 +116,7 @@ mkdir -p "iterations/v0"
 
 ### Step 4：维护项目 Standards（首期播种）
 
-三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，V0 首期播种，此后原地更新当前真值，不追加版本史。启动 2 个并行 subagent 处理 frontend / backend，主线处理 shared。
+三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，V0 首期播种，此后原地更新当前真值，不追加版本史。写集不重叠时可启动 2 个隔离执行单元处理 frontend / backend，主线处理 shared。
 
 **来源规则（三源）**：公共 layer 候选 + 当前栈候选 + 执行人个人 notes `[规范]`。所有候选先过 `templates/standards/schema.md` 准入门槛，再改写成带稳定 id、`applies-if / rule / grade / enforcement / override / superseded-when` 的项目条目；不全量复制。未通过的业务契约、Foundation 不变式、机制登记、历史或临时缺口分别迁往其权威对象。notes 不存在或无合格候选则跳过；与项目现有决定冲突时以项目决定为准并记 `decisions.md`。
 
@@ -126,7 +126,7 @@ mkdir -p "iterations/v0"
 
 > **强制档诚实化**：`grade` 高于人审级时必须给真实 enforcement id；给不出机制时降为人审级或迁入 waiver/backlog，不得把期望档写成已实现事实。Foundation 已登记的不变式与探针不在 Standards 重复展开。
 
-三份汇总后检查：每条字段完整、无重复/矛盾、正文无版本史/任务号/事故叙事；架构轮廓中的不变式由 Foundation 覆盖，不要求复制进 Standards。Subagent 返回空 / 跑偏 / 超时 → 主线接管该份，记原因。
+三份汇总后检查：每条字段完整、无重复/矛盾、正文无版本史/任务号/事故叙事；架构轮廓中的不变式由 Foundation 覆盖，不要求复制进 Standards。隔离执行单元返回空 / 跑偏 / 超时 → 主线接管该份，记原因。
 
 ---
 
@@ -169,12 +169,12 @@ mkdir -p "iterations/v0"
 
 ---
 
-## Subagent 使用
+## 隔离单元使用
 
-| 触发点 | Subagent 任务 | 失败处理 |
+| 触发点 | 隔离单元任务 | 失败处理 |
 |--------|-------------|---------|
-| 会话启动 | Explore 并行读输入文件（foundation.md / background / project.md / 模板 standards；纯读取+摘要，指定 `model: "haiku"`） | 读取失败则主线单独读，不阻断 |
-| Step 4 standards 播种 | 2 个并行 subagent 各处理一份（frontend / backend 首期播种） | 失败则主线接管该份，记原因 |
+| 会话启动 | 只读调查单元并行读输入文件（foundation.md / background / project.md / 模板 standards；纯读取+带路径摘要） | 读取失败则主线单独读，不阻断 |
+| Step 4 standards 播种 | 2 个隔离执行单元各处理一份不重叠文件（frontend / backend 首期播种） | 失败则主线接管该份，记原因 |
 
 ---
 

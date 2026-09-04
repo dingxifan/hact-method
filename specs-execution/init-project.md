@@ -1,6 +1,6 @@
 # exec: init-project
 
-> CC 加载本文时，当前任务是为新项目创建独立仓库（代码 + 协调文件合并）。
+> 运行时加载本文时，当前任务是为新项目创建独立仓库（代码 + 协调文件合并）。
 
 **上下文密度**：低。机械化操作为主（Step 1–4、6），单次会话可完整完成；唯 Step 5「项目共识讨论」是发散环节（读背景、摸全貌、填地基蓝图），骑在本 task 内、不另起 task（决策#20）。
 **执行位置**：hact-method 工作区；创建目标在 `../{name}/`。
@@ -74,8 +74,7 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - 项目根三份 Standards：建空桩；V0 `draft-foundation` 按 `templates/standards/schema.md` 首播当前稳定默认规则（存量由 draft-tech-design 兜底），后续只更新当前真值
 
 同时写入以下文件：
-- `CLAUDE.md` 与 `AGENTS.md`：分别复制自同名 templates，将 `{项目名}` 替换为实际项目名，`{一句话描述}` 留空待用户补充。两者都是薄入口，共同启动正文在 `templates\boot-protocol.md`；不得各自复制启动协议
-- `.claude/commands/gitee-ops.md`：内容复制自 `templates\.claude\commands\gitee-ops.md`（slash command，输入 `/gitee-ops` 执行 Gitee 仓库操作）
+- **运行时入口与项目配置**：按 `templates/runtime/{runtime}.md` 的「项目初始化映射」铺设。团队双运行时项目同时铺设两套；入口只引用共同启动正文，不复制协议；若目标路径已有文件，先报告差异，禁止覆盖存量配置
 - `scripts/check-docs.js`：内容复制自 `templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
 - `scripts/check-gate.js`：内容复制自 `templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
 - `scripts/check-sprint.js`：内容复制自 `templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
@@ -285,9 +284,9 @@ git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git pus
 
 ---
 
-## Subagent 使用
+## 隔离单元使用
 
-无。全程使用 Write / Bash 工具直接执行。
+无。全程由主线使用当前运行时的文件与命令能力直接执行。
 
 ---
 

@@ -51,7 +51,7 @@
 
 ## 完成判据
 
-> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-prd-vN Step 7.4 跑）——这就是该判据的最终判定，PRD 不再派 subagent 冷核。**【linter·非空】/【linter·枚举】** 是受限标签：linter 只核机械部分（槽位非空 / 取值合法），括注里的语义部分仍由签字人核。未带 linter 标的是纯**语义判据**，由签字人（产品）确认。
+> 标 **【linter】** 的判据由 `scripts/check-docs.js` 确定性机械核（draft-prd-vN Step 7.4 跑）——这就是该判据的最终判定，PRD 不再额外派隔离单元冷核。**【linter·非空】/【linter·枚举】** 是受限标签：linter 只核机械部分（槽位非空 / 取值合法），括注里的语义部分仍由签字人核。未带 linter 标的是纯**语义判据**，由签字人（产品）确认。
 
 - [ ] 场景还原完整（5 要素齐全）
 - [ ] 三角评估已逐功能完成
@@ -64,8 +64,8 @@
 - [ ] 每条有行为的 AC 已拆 `intent + oracle`；example 可选且与 oracle 一致，不把例子当高于判据的真值
 - [ ] 有新页面 / 新交互 / ≥3 个状态：已在 acceptance criteria 中覆盖交互规格
 - [ ] project.md 产品层已更新
-- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，无 subagent）
-- [ ] 末端独立内容审查已过（draft-prd-vN Step 7.5 派陌生视角 subagent 审内容有效性：一致性 / AC 可验性 / 覆盖完整；输出问题清单已处理）——语义判据，签字人确认；"是否用户真要的"归用户（design §10），subagent 不判
+- [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，不额外派隔离单元）
+- [ ] 末端独立内容审查已过（draft-prd-vN Step 7.5 派隔离审查单元审内容有效性：一致性 / AC 可验性 / 覆盖完整；输出问题清单已处理）——语义判据，签字人确认；"是否用户真要的"归用户（design §10），审查单元不判
 - [ ] G1 已签（`gates.md` 已记录 + commit）
 
 ---

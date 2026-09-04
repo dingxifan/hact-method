@@ -44,7 +44,7 @@
 - [ ] 验收报告 AC 验证表的「验证来源」如实标注：不可视区 AC 取自脊柱+联调测试结果（不重复人工核对正确性）、可视区/业务 AC 经人工验收；全表仍列全 PRD 每条 AC 做完备性对账
 - [ ] 【linter】所有 develop(source=manual-test) 任务已 [merged]（`check-gate.js G4` 核 status.yml）
 - [ ] 【linter】验收报告已写，结论为"通过"（`check-gate.js G4` 核）
-- [ ] 完成判据已核对（`check-gate.js G4` 退出码 0 + 语义残量人签；存量无脚本退回 `skeleton/06-gates.md` §7 G4/G5 段人工逐条核对兜底，无 subagent）
+- [ ] 完成判据已核对（`check-gate.js G4` 退出码 0 + 语义残量人签；存量无脚本退回 `skeleton/06-gates.md` §7 G4/G5 段人工逐条核对兜底，不额外派隔离单元）
 - [ ] G4 已签（`gates.md` 已记录 + commit）
 
 ---

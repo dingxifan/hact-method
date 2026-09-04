@@ -1,6 +1,6 @@
 # exec: draft-tech-design
 
-> CC 加载本文时，当前任务是读 PRD 输出 TRD + 三份 standards，签 G2。
+> 运行时加载本文时，当前任务是读 PRD 输出 TRD + 三份 standards，签 G2。
 > 三层顺序：**骨架**（架构轮廓）→ **结构层**（完整契约）→ **执行层**（standards）
 
 **上下文密度**：中高。需读多份输入文件，输出 4 份文档。疑点清单阻断前不开始写 TRD。
@@ -25,7 +25,7 @@
 - 有任何功能标记 `draft-ux: 需要`，且 `iterations/vN/prototype.html` 不存在 → 阻断：「⚠️ PRD 中有功能需要交互原型，请先完成 draft-ux 再启动技术设计。」
 - 全部标记 `draft-ux: 不需要`，或 `prototype.html` 已存在 → 继续
 
-**必读文件**（用 Explore subagent 并行读取，默认指定 `model: "haiku"`，不占主线上下文）：
+**必读文件**（可用只读调查单元并行读取并返回带路径摘要；不可用则主线顺序读）：
 - `iterations/vN/prd.md`
 - `iterations/vN/ux-flows.md`（如存在；作为接口设计的业务流参照）
 - `iterations/vN/prototype.html`（如存在；作为接口设计时确认各画面数据需求的参照）
@@ -155,7 +155,7 @@
 
 ### Step 4：结构 linter 自检（【linter】判据的最终判定，含交叉对账）
 
-TRD 落盘后**立即**跑确定性检查（不等到签字）。此刻 PRD 与 TRD 都在，**两条交叉对账在此兑现**：① PRD `涉及实体` ↔ TRD `### 表`；② PRD `AC-nn` ↔ TRD `# 满足 AC` 回链（逐条正向挡悬空 + 逐条反向验覆盖，机械化 AC 覆盖映射自检）。这些是【linter】判据，机械核定，**不派判据冷核 subagent**：
+TRD 落盘后**立即**跑确定性检查（不等到签字）。此刻 PRD 与 TRD 都在，**两条交叉对账在此兑现**：① PRD `涉及实体` ↔ TRD `### 表`；② PRD `AC-nn` ↔ TRD `# 满足 AC` 回链（逐条正向挡悬空 + 逐条反向验覆盖，机械化 AC 覆盖映射自检）。这些是【linter】判据，机械核定，**不额外派隔离单元冷核**：
 
 ```bash
 node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
@@ -169,19 +169,19 @@ node scripts/check-docs.js iterations/vN/prd.md iterations/vN/trd.md
   - 重跑到绿（签字 commit 的 pre-commit 门卫会再跑、红则拦 commit）。
 
 > linter 覆盖结构/一致性判据（含 AC 覆盖映射的**齐全性**机械核）；**语义判据**（接口字段是否真满足画面、载体是否**真承接**所回链的 AC 而非仅 id 在场）落 linter 🧑 段，由 Step 5 末端审查 + 签字时复核 + 后续 `develop` 内置独立审查的技术保真把关。
-> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（无 subagent），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
+> 项目仓无 `scripts/check-docs.js`（存量项目未铺）→ 退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段的人工逐条核对兜底（不额外派隔离单元），并提示"建议补铺 linter（见 init-project Step 3）"，不阻断。
 
 ---
 
 ### Step 5：独立内容审查（格式之外的内容有效性）
 
-check-docs（+ 门卫）守**结构与覆盖齐全性**；**内容有效性派全新 subagent 陌生视角复核**（防同上下文自评盖章）——TRD 的语义残量比 PRD 更厚（接口契约对不对、精化缩没缩水、字段满不满足画面）。
+check-docs（+ 门卫）守**结构与覆盖齐全性**；**内容有效性派隔离审查单元做陌生视角复核**（防同上下文自评盖章）——TRD 的语义残量比 PRD 更厚（接口契约对不对、精化缩没缩水、字段满不满足画面）。
 
-**派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "sonnet"`），令其读 `../hact-method-lab/templates/review-briefs/trd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 trd.md + prd.md（+ ux-flows / prototype 如有），陌生视角逐查四维度（内部一致性 / AC 真承接 / 字段满足画面 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
+**派发**：派普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/trd-review.md` 按 brief 执行，只告知本期迭代版本 vN——审查单元据 brief **自读**定稿 trd.md + prd.md（+ ux-flows / prototype 如有），陌生视角逐查四维度（内部一致性 / AC 真承接 / 字段满足画面 / 覆盖完整），输出问题清单（禁 pass 盖章）。具体模型见运行时映射；审查维度改动去改该 brief（单一来源），不在此重述。
 
-CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用户拍板。
+AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用户拍板。
 
-> subagent 失败 / 超时 → 主线自审兜底（陌生视角降级），不阻断。
+> 隔离审查失败 / 超时 → 重派一次；仍失败则标记 `blocked` 并等待恢复，不得用主线自审冒充独立审查。
 
 ---
 
@@ -215,7 +215,7 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 > **存量守卫（未走 V0、无 foundation.md 的项目）**：本步整体跳过；只有通过 Standards 准入的稳定默认才更新下方当前规则表，不为此顺手新建 foundation.md。
 
-三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**。新项目已由 V0 首播时，本任务只原地更新当前真值；存量空桩才首播。禁止按 vN 追加历史段。TRD 确认后，启动 2 个并行 subagent 处理 frontend / backend；主线同时处理 shared。
+三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**。新项目已由 V0 首播时，本任务只原地更新当前真值；存量空桩才首播。禁止按 vN 追加历史段。TRD 确认后，写集不重叠时启动 2 个隔离执行单元处理 frontend / backend；主线同时处理 shared。
 
 **Standards 来源规则**（三源：通用候选 + 栈候选 + 执行人个人 notes）：
 - 所有候选先按 `templates/standards/schema.md` 分类与准入；只有跨任务、长期稳定的默认约束进入 Standards，并改写成完整规则条目。
@@ -223,12 +223,12 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 - 迭代维护只更新、替换或新增当前规则；不新增 vN 标题。版本契约回 TRD，Foundation 不变式回 Foundation，机制位置回 check/test/config，历史回 decisions，临时缺口回 waiver/backlog。
 - notes 候选同样先过准入并去重；与现有规则冲突时保留当前规则，把候选送 `feedback.md`；与公共候选冲突但项目有明确决定时，以项目决定为准并记 `decisions.md`。
 
-**Subagent prompt 要点**（frontend / backend 各一份）：
+**隔离执行单元输入要点**（frontend / backend 各一份）：
 - 传入：TRD 完整内容 + 对应 `../hact-method-lab/templates/standards/{layer}.md`（+ 项目栈对应的 `{layer}-{栈}.md` 栈子模板，如有）+ 项目根现有 standards（如有）+ 执行人个人 notes 中本 layer 相关的 `[规范]` 条目
 - 输出：本期适用的当前规则条目；每条含稳定 id、`applies-if / rule / grade / enforcement / override / superseded-when`。不得输出 AC、版本史、任务号、事故叙事、当前代码行号或临时补偿纪律
-- 主线负责写项目根 `standards-{layer}.md`（首播或当前态更新），不让 subagent 直接写文件
+- 主线负责写项目根 `standards-{layer}.md`（首播或当前态更新），不让隔离执行单元直接写文件
 
-> 本步 frontend / backend subagent 属 standards 内容生成任务，保持默认模型，不套 Step 5 审查类轻量模型规则。
+> 本步 frontend / backend 隔离执行单元属 standards 内容生成任务，使用当前运行时的执行档，不套 Step 5 审查档规则。
 
 主线处理项目根 `standards-shared.md`。错误码表、接口字段与接口权限属于本期契约时留在 TRD；只有跨任务稳定默认按同一 schema 进入 shared Standards。
 
@@ -240,10 +240,10 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 三份汇总后检查：字段完整、无重复/矛盾、无版本追加史；TRD 关键契约留在 TRD，不以“覆盖所有 TRD 细节”为目标。
 
-**Subagent 失败判定**：以下任一情况视为失败，主线接管该份 standards：
-- subagent 返回内容为空或格式完全不符合模板结构
-- subagent 返回内容包含大量与 TRD 无关的通用规则（未基于 TRD 提炼）
-- subagent 运行超时或报错
+**隔离执行单元失败判定**：以下任一情况视为失败，主线接管该份 standards：
+- 返回内容为空或格式完全不符合模板结构
+- 返回内容包含大量与 TRD 无关的通用规则（未基于 TRD 提炼）
+- 运行超时或报错
 
 主线接管时：直接基于 TRD 对应层（frontend/backend）的相关章节手动生成该份 standards，记录原因。
 
@@ -298,13 +298,13 @@ CC 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 ---
 
-## Subagent 使用
+## 隔离单元使用
 
-| 触发点 | Subagent 任务 | 失败处理 |
+| 触发点 | 隔离单元任务 | 失败处理 |
 |--------|-------------|---------|
-| 会话启动 | Explore 并行读 6 份输入文件（纯读取+摘要，指定 `model: "haiku"`） | 读取失败则主线单独读，不阻断 |
+| 会话启动 | 只读调查单元并行读 6 份输入文件（纯读取+带路径摘要） | 读取失败则主线单独读，不阻断 |
 | Step 5 内容审查 | 全新陌生视角审 TRD 内容有效性（一致性 / AC 真承接 / 字段满足画面 / 覆盖），输出问题清单 | 失败则主线自审降级，不阻断 |
-| Step 7 standards 维护 | 2 个并行 subagent 各处理一份（frontend / backend 首播或当前态更新） | 失败则主线接管该份，记录原因 |
+| Step 7 standards 维护 | 2 个隔离执行单元各处理一份不重叠文件（frontend / backend 首播或当前态更新） | 失败则主线接管该份，记录原因 |
 
 > **Step 5 与 Step 4 分工**：Step 4 linter 机械核结构 / 覆盖类【linter】判据；Step 5 验 linter 兜不住的**内容有效性**（载体真承接 / 精化忠实 / 字段满足画面），两者不重叠。存量项目未铺 `check-docs.js` 时格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工兜底（Step 5 内容审查照常派）。
 

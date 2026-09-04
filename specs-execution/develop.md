@@ -1,10 +1,10 @@
 # exec: develop
 
-> CC 加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
-> **执行模型**：主线只编排（定标 / 新鲜度核对 / 设计门 / finding 路由 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由执行 subagent 跑。独立审查 subagent 自读权威原文、按证据分类 finding；只有当前可达的行为/机制缺陷进入代码回炉。人工只守一个门：**前端设计是否到位**。
+> 运行时加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
+> **执行模型**：主线只编排（定标 / 新鲜度核对 / 设计门 / finding 路由 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由隔离执行单元跑。隔离审查单元自读权威原文、按证据分类 finding；只有当前可达的行为/机制缺陷进入代码回炉。人工只守一个门：**前端设计是否到位**。
 > **无独立 pr-review 环节**（决策#24）：代码质量由 per-task 独立证据审查 + 全量绿把关，develop 自审自合并。仅安全敏感改动保留一道人工裁决。
 
-**上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到执行 subagent，故**批次可放大**。本 spec 处理**一次会话**，任务集 size ≥ 1：`交付=可并行` 任务共一个 PR；`交付=串行` 任务各自一个 PR，会话内可串行多个（每任务完整跑「主循环+末端」后切回 master，再启下一个）。
+**上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到隔离执行单元，故**批次可放大**。本 spec 处理**一次会话**，任务集 size ≥ 1：`交付=可并行` 任务共一个 PR；`交付=串行` 任务各自一个 PR，会话内可串行多个（每任务完整跑「主循环+末端」后切回 master，再启下一个）。
 
 ---
 
@@ -12,7 +12,7 @@
 
 > **🚫 人工门（全自动模型下只剩两处，其余全自动 loop、不逐步等人）**：
 > ① **前端设计到位**——frontend 批次开跑前一次性确认（backend-only 跳过）。
-> ② **escape-hatch**——执行 subagent 撞 do-not 拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红时返回 blocked，主线浮给用户。
+> ② **escape-hatch**——隔离执行单元撞 do-not 拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红时返回 blocked，主线浮给用户。
 
 ---
 
@@ -46,7 +46,7 @@
   status.yml：`iterations.v0` 块已由 draft-foundation 建（仅 G2）；此处只往 `tasks` **追加** `{ id: foundation, source: foundation, status: taken-by, branch: foundation-v0 }`（不重建 v0 块）。
 - **跳过前端设计门**：走骨架建主题**框架**用占位 token（design.md 真值由 V1 `draft-ux` 填），不实现具体画面 → 无 design.md 覆盖可对、无前端设计人工门。
 - **三处替换**（其余主循环 / 末端不变）：
-  ① 阶段 A 执行 subagent **自读 `foundation-design.md` 对应件 + `foundation.md` 该关注点行 + relevant standards**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
+  ① 阶段 A 隔离执行单元 **自读 `foundation-design.md` 对应件 + `foundation.md` 该关注点行 + relevant standards**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
   ② 阶段 B 独审读 **`../hact-method-lab/templates/review-briefs/foundation-review.md`**（替代 develop-review：验强制边实际档≥应有档 + 命门 + 标杆质量）。
   ③ 末端状态更新走下方「`source=foundation`」分支（无 sprint.md；登记标杆切片）。
 > 安全敏感预检（末端·合并前）：走骨架本就含数据隔离/鉴权的构造级落地 → **必然触发** architecture 裁决门，按既有规则等 architecture discipline 签后合并。
@@ -128,11 +128,11 @@ preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失�
 
 ## 主循环：逐任务「执行 → 独立审查」（per task，依赖序串行）
 
-> **可并行任务集**：对每个任务按依赖序串行走「执行 subagent → 独立审查 subagent」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突），全部通过后进末端（一次）。**串行任务多个**：每个任务各自串行完成「主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
+> **可并行任务集**：对每个任务按依赖序串行走「隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突），全部通过后进末端（一次）。**串行任务多个**：每个任务各自串行完成「主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
 
-### 阶段 A · 执行 subagent（读懂 → 计划 → 写 → 自绿）
+### 阶段 A · 隔离执行单元（读懂 → 计划 → 写 → 自绿）
 
-preflight 通过后，编排器立即记录 `implementation_started_at`。主线派一个 general-purpose subagent，告知 `{task-id}` + layer + `{迭代 vN | B 类无 iteration}`，令其自治完成（隔离上下文）：
+preflight 通过后，编排器立即记录 `implementation_started_at`。主线派隔离执行单元，告知 `{task-id}` + layer + `{迭代 vN | B 类无 iteration}`，令其自治完成：
 
 1. **自读上下文**（精确加载，不全量）：
    - 任务包 normative core（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）；non-normative appendix 仅在疑点需要历史解释时查
@@ -140,8 +140,8 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
    - 只读 `reference` 列出的符号/章节/行号锚，不读全文
    - **frontend 额外**：必读项目根 `design.md` 全文（视觉规格唯一参照）；`ux-flows.md` 对应功能段（若存在，按 title 匹配）；`prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
 2. **读懂**：以每条 AC 的 `intent` 为目标、`oracle` 为判据；普通 example 仅帮助理解，冲突时返回 `example-error`，不得用代码迁就。只有 `golden: true` 的 example 是字面契约。
-3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块；用 Explore 读 项目根 `reusables.md`，已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
-4. **写**：逐模块实现并**落盘**。>5 文件 / 跨模块可再派子 subagent 分模块（frontend 按组件、backend 按 controller/service 拆；属 subagent 内部的事，主线不介入）。
+3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块；用只读调查单元读项目根 `reusables.md`，已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
+4. **写**：逐模块实现并**落盘**。>5 文件 / 跨模块可在写集不重叠时再派隔离执行单元分模块（frontend 按组件、backend 按 controller/service 拆；属执行单元内部事务，主线不介入）。
 5. **自绿（首次实现，共享工作树）**：跑本任务目标测试与必要的 `build` / `type-check` / `lint`；不可视区 AC 的 intent/oracle 落成有辨别力的 runnable test，`golden: true` 的 example 再字面 1:1 物化。普通 example 不制造额外字面测试义务。完整仓 `build/type/lint/test` 只在末端跑一次；整改轮默认只跑 finding 反例与受影响回归，不在每轮重复整链。无对应命令则跳过。同一测试修 3 次仍红时返回 blocked，先查 oracle/contract，不硬磨代码。
 6. **返回结构**给主线：
    ```yaml
@@ -154,13 +154,13 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
    blocked: { reason: "do-not 边界拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红 / 测试基建缺失", detail: "..." }  # status=blocked 时填
    ```
 
-执行 subagent 返回 `done` 时，编排器立即记录 `implementation_completed_at`，并以两时间戳向上取整得到 `implementation_minutes`。这段只计算首次实现；从第一轮独审开始到最终通过的整改与等待统一计入 review wall-clock，避免重叠。
+隔离执行单元返回 `done` 时，编排器立即记录 `implementation_completed_at`，并以两时间戳向上取整得到 `implementation_minutes`。这段只计算首次实现；从第一轮独审开始到最终通过的整改与等待统一计入 review wall-clock，避免重叠。
 
-> **测试基建缺失**（项目无测试运行器）：执行 subagent 返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 项目根 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 独立审查 subagent 按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
+> **测试基建缺失**（项目无测试运行器）：隔离执行单元返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 项目根 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 隔离审查单元按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
 
-### 阶段 B · 独立证据审查 subagent（自读权威原文）
+### 阶段 B · 隔离证据审查单元（自读权威原文）
 
-执行 subagent 返回 `done` 后，编排器立即记录 `review_started_at`。A 类 round report 写 `iterations/vN/code-reviews/{task-id}/round-{NN}.md`，B 类写 `b-reviews/{task-id}/round-{NN}.md`，格式用 `templates/review-briefs/develop-review-round.md`。
+隔离执行单元返回 `done` 后，编排器立即记录 `review_started_at`。A 类 round report 写 `iterations/vN/code-reviews/{task-id}/round-{NN}.md`，B 类写 `b-reviews/{task-id}/round-{NN}.md`，格式用 `templates/review-briefs/develop-review-round.md`。
 
 > **撞到本任务外的改动时怎么办**（实测 2026-08-30，三个仓同时中招）：另一个会话在同一工作树里提交了与本任务无关的改动，diff 因此不干净。两条合法出路——
 > - **让它成为合法基线**：若那条误落 commit 恰好以本任务的认领 commit 为父，直接把 `master` 快进到它并推送，本任务分支据此重锚基线，被审 diff 就只剩本任务文件。**无历史改写、无重复 commit、原 SHA 与作者信息保留**，是最省事的一种。
@@ -170,20 +170,20 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 >
 > **判据：保留，不得删除或还原。** 本规范说的「分离工作树」意思是**别把别人的改动混进你的 diff**，不是「清掉它」。改动若尚未 commit（躺在工作树里、无 commit 可归因），**原样留在原地不提交**即可满足这个目的——`git add -- {本任务 changed-files}` 本就只暂存本任务文件，别人的改动自然不会进你的 diff。
 > 不得用 `git checkout --` / 删文件 / `git stash` 处置它：**留着不提交是可逆的，还原和删除是不可逆的**，两者代价差一个量级，而对「不混进 diff」这个目标的贡献完全相同。实测 2026-08-30：一个会话据本条字面依据把来源不明的 `scripts/pre-commit-hook.sh` 改动 `git checkout --` 还原、并删掉了新脚本（虽留了底到 scratchpad），另一个会话遇到同样情况选择「既不提交也不回退、原样留着并上报」——后者是本条要求的处置。
-> 另：**文件 mtime 不是归因证据**。它只能证明「那时被写过」，证明不了「谁写的」；据 mtime 落在自己 subagent 运行窗口内就断定是自己人所为，实测已致误判。归因不明时按上一段留着并上报，不猜。
+> 另：**文件 mtime 不是归因证据**。它只能证明「那时被写过」，证明不了「谁写的」；据 mtime 落在自己执行单元运行窗口内就断定是自己人所为，实测已致误判。归因不明时按上一段留着并上报，不猜。
 
-> **「工作树干净」必须连 `git stash list` 一起看。** 凡以「工作树不含本任务外改动」为前提的判据（本节固定 `base_tree`、preflight 的工作树核对等），只查 `git status` 会读出**假干净**：改动被 stash 后 `git status` 就是干净的，而那些改动随时可能 pop 回来、落进你随后固定的 tree 里。实测 2026-08-30：某会话的执行 subagent 对自己在制品做了一次 stash-pop，工作树有二十余分钟处在「看起来干净、实则 3175 行悬在 stash 里」的状态；期间若有另一个会话据 `git status` 判定"干净"并据此固定审查对象，得到的是一个假前提。
+> **「工作树干净」必须连 `git stash list` 一起看。** 凡以「工作树不含本任务外改动」为前提的判据（本节固定 `base_tree`、preflight 的工作树核对等），只查 `git status` 会读出**假干净**：改动被 stash 后 `git status` 就是干净的，而那些改动随时可能 pop 回来、落进你随后固定的 tree 里。实测 2026-08-30：某会话的隔离执行单元对自己在制品做了一次 stash-pop，工作树有二十余分钟处在「看起来干净、实则 3175 行悬在 stash 里」的状态；期间若有另一个会话据 `git status` 判定"干净"并据此固定审查对象，得到的是一个假前提。
 > 加固很便宜：`git status --porcelain` 与 `git stash list` **同时为空**才算干净；非空时先弄清那些 stash 属于谁、会不会 pop 回来，再决定是否继续。
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并计算固定 diff 的 SHA-256。首次 `reviewed_base` 取 preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。
 
-**首次 full review**：主线派全新隔离 subagent 读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree + 下方生成的 project-relative `review_profile`。审查员自读任务包、命中 Standards、固定 diff 与测试，只执行 profile selected dimensions，不接收执行者自评；每条 finding 必须给稳定 id、dimension、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。Foundation 的 profile 固定为 `foundation-review/v1` 并按专用 brief 全审。
+**首次 full review**：主线派隔离审查单元读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree + 下方生成的 project-relative `review_profile`。审查员自读任务包、命中 Standards、固定 diff 与测试，只执行 profile selected dimensions，不接收执行者自评；每条 finding 必须给稳定 id、dimension、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。Foundation 的 profile 固定为 `foundation-review/v1` 并按专用 brief 全审。
 
 **整改 targeted review**：传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；全新审查员可读前次**独立报告**，但仍不得接收开发者自评。只核这些 finding、反例、受影响回归与两棵 tree 之间的增量 diff，不重做无关逐类审查。若 changed surface 超出允许范围、引入新机制/模块/依赖或发现新根因，本轮报告置 `escalate_to_full: true`，紧接下一轮才升 full。
 
 每轮 dispatch/completion 当场写 `started_at/completed_at/elapsed_minutes`；不得事后估算。round report 本身不计入被审实现 tree，最终随状态提交。
 
-**模型分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 执行 subagent 是写代码/生成任务，保持默认模型；本阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 派发审查 subagent 时指定 `model: "sonnet"`；sensitive 或 `source=foundation` → 不指定 model，继承当前会话默认模型。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
+**能力分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 是写代码/生成任务，使用当前运行时映射的执行档；阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 普通审查档；sensitive 或 `source=foundation` → 高能力审查档。具体模型只在运行时映射表定义。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
 
 **review profile（非 Foundation 的每次 full 必做）**：有效 risk 与 fixed changed-files 确定后、派审查员前，用项目 `scripts/review-profile.js` 从权威任务包生成不可覆盖的 JSON；A 类写 `iterations/vN/code-reviews/{task-id}/profile-round-{NN}.json`，B 类写 `b-reviews/{task-id}/profile-round-{NN}.json`。命令只传任务包路径、有效 risk 与 `git diff --name-only {preflight base_tree} {reviewed_head}` 的完整文件集合：
 
@@ -200,7 +200,7 @@ node scripts/review-profile.js {task-package-path} \
 
 | action | 动作 | 复审范围 |
 |---|---|---|
-| `fix-code` / `fix-mechanism` | 重派执行 subagent 修对应稳定 finding ids | 下一轮 `targeted` 只复审该行为、反例、受影响回归与增量 diff；报告触发 `escalate_to_full` 才追加 full |
+| `fix-code` / `fix-mechanism` | 重派隔离执行单元修对应稳定 finding ids | 下一轮 `targeted` 只复审该行为、反例、受影响回归与增量 diff；报告触发 `escalate_to_full` 才追加 full |
 | `revise-doc` / `downgrade-claim` | 修任务包或发 `revise-doc`；代码文件数必须为 0 | 只复核 contract/claim 一致性，不重跑完整代码审查；计 `spec_rounds` |
 | `global-gap-review` | 交 global seam review 或创建补缝任务 | 原包可独立合规时不打回、不重审 |
 | `backlog` | 记入遗留/waiver | 不重审 |
@@ -212,7 +212,7 @@ node scripts/review-profile.js {task-package-path} \
 
 ### escape-hatch（执行 / 审查返回 blocked 时）
 
-执行 subagent 返回 `status: blocked`，或审查 loop 超界 → 主线**浮给用户**该 blocked 结构，等用户指示后带答案**重派**该任务；用户判定无解 → 走「上下文重置协议」（任务回 `[可取]`）。视觉缺口理论上已被前端设计门预堵，仍冒出则说明 design.md 有漏 → 回补 design / `revise-doc`。
+隔离执行单元返回 `status: blocked`，或审查 loop 超界 → 主线**浮给用户**该 blocked 结构，等用户指示后带答案**重派**该任务；用户判定无解 → 走「上下文重置协议」（任务回 `[可取]`）。视觉缺口理论上已被前端设计门预堵，仍冒出则说明 design.md 有漏 → 回补 design / `revise-doc`。
 
 > 每任务通过审查后主线报一行：`✅ {task-id} 完成（{changed-files 数} 文件，{tests} 测试，审查通过）`。集合全部通过后进末端。
 
@@ -235,7 +235,7 @@ npm run build && npm run type-check && npm run lint && npm run test
 
 ### global seam review（本期最后一个 sprint 集合）
 
-当当前集合通过后将使本期全部 `source=sprint` 任务完成时，派独立 subagent 读 `../hact-method-lab/templates/review-briefs/global-seam-review.md`，审合并候选树的包间接缝；输出写入 `iterations/vN/global-seam-review.md`。只查互推/无人认领入口、调用方不可达、旧实现未退役、共享定义分叉与组合终态不可达，不重审单包 AC/代码风格。
+当当前集合通过后将使本期全部 `source=sprint` 任务完成时，派隔离审查单元读 `../hact-method-lab/templates/review-briefs/global-seam-review.md`，审合并候选树的包间接缝；输出写入 `iterations/vN/global-seam-review.md`。只查互推/无人认领入口、调用方不可达、旧实现未退役、共享定义分叉与组合终态不可达，不重审单包 AC/代码风格。
 
 - `scope-gap`：创建独立补缝任务并同步 queue/sprint/status；当前已合规包不打回、不完整重审。
 - 能明确归属当前 diff 的 `behavior-bug`：按 `fix-code` 修对应行为并做增量复审。
@@ -331,7 +331,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 本会话到此结束。后续动作（联调 / 复测 / 验收）由对应上游会话触发，不在此处继续。
 ```
 
-🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续 pinchtab / 复测 / 联调"等后续动作——develop 只负责到代码合并到 master；测试 / 联调 / 验收是独立 task，由对应会话触发，不由 develop 会话延续。
+🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续浏览器场景 / 复测 / 联调"等后续动作——develop 只负责到代码合并到 master；测试 / 联调 / 验收是独立 task，由对应会话触发，不由 develop 会话延续。
 
 ### feedback 检查 / 就地分流
 
@@ -356,23 +356,23 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 ---
 
-## Subagent 使用
+## 隔离单元使用
 
 | 角色 | 触发 | 任务 | 失败处理 |
 |------|------|------|---------|
-| **执行 subagent** | 主循环每任务阶段 A | 自读上下文 → 读懂 → 计划+复用 → 写+自绿，返回结构化结果 | 见下方失败协议 |
-| **独立审查 subagent** | 主循环每任务阶段 B | 读对应 brief、自读权威原文、按证据分类 finding | 失败则主线重派；连续失败按审查 loop 超界处置 |
-| **global seam review subagent** | 本期最后一个 sprint 集合全量绿后 | 只审包间归属、调用方可达、退役、共享定义与组合终态 | scope gap 新开任务，不回灌无关 per-task 重审 |
-| 子模块 subagent | 阶段 A 内（>5 文件 / 跨模块） | 实现单个模块，返回代码 | 由执行 subagent 内部处理 |
-| Explore | 阶段 A 复用检查 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要；纯读取+摘要，指定 `model: "haiku"`） | 失败则执行 subagent 直接读 |
+| **隔离执行单元** | 主循环每任务阶段 A | 自读上下文 → 读懂 → 计划+复用 → 写+自绿，返回结构化结果 | 见下方失败协议 |
+| **隔离审查单元** | 主循环每任务阶段 B | 读对应 brief、自读权威原文、按证据分类 finding | 失败则主线重派；连续失败按审查 loop 超界处置 |
+| **全局接缝审查单元** | 本期最后一个 sprint 集合全量绿后 | 只审包间归属、调用方可达、退役、共享定义与组合终态 | scope gap 新开任务，不回灌无关 per-task 重审 |
+| 子模块隔离执行单元 | 阶段 A 内（>5 文件 / 跨模块） | 实现单个不重叠模块，返回代码 | 由上层执行单元处理 |
+| 只读调查单元 | 阶段 A 复用检查 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 失败则隔离执行单元直接读 |
 
-**执行 subagent 失败协议**：
-1. 同一问题三次失败 → 执行 subagent 返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策）
+**隔离执行单元失败协议**：
+1. 同一问题三次失败 → 隔离执行单元返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策）
 2. 主线带上更多上下文重派一次
 3. 再次失败 → 触发**上下文重置协议**
 
 **上下文重置协议**（出现以下任一情况触发）：
-- 执行 subagent 二次重派后仍失败 / 审查 loop 超界且 escape-hatch 无解
+- 隔离执行单元二次重派后仍失败 / 审查 loop 超界且 escape-hatch 无解
 - 实际改动文件超出 `files` 清单 3 个以上
 - 调试轮次 > 20 轮
 - 用户临时追加新需求
@@ -396,9 +396,9 @@ context-state:
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 开跑前人工门 | **前端设计到位确认**（design.md / prototype 覆盖本批次画面） | 无（backend-only 跳过） |
-| 执行 subagent 额外加载 | 项目根 `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
+| 隔离执行单元额外加载 | 项目根 `design.md`（**必读全文**）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
 | 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint / type-check / style lint（命令按项目栈）｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
-| 子模块 subagent 拆分粒度 | 按组件拆 | 按模块拆（controller / service 分开）|
+| 子模块隔离执行单元拆分粒度 | 按组件拆 | 按模块拆（controller / service 分开）|
 | 独立审查侧重 | AC 忠实 + 机械保真（变量非硬编码）；视觉到位归人工门 | AC 忠实 + 测试品类齐全 + 标准合规 |
 
 ---

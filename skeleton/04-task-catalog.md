@@ -175,11 +175,11 @@
 
 ### 8. `generate-integration-tests`
 
-> 设计联调测试场景 + 写脚本（pinchtab + curl）+ 跑测试 + 把失败转 develop(source=integration)。
+> 设计联调测试场景 + 写浏览器/HTTP 脚本 + 跑测试 + 把失败转 develop(source=integration)。
 
 - **discipline**: `integration-testing`
 - **完成判据**: 测试脚本就位 + 跑过一轮 + 失败任务全部派出 develop(source=integration)
-- **主要产物**: `integration-tests/` 目录（pinchtab + curl 脚本）+ 一轮跑结果 + 派生的修复任务包
+- **主要产物**: `integration-tests/` 目录（浏览器场景 + HTTP 脚本）+ 一轮跑结果 + 派生的修复任务包
 - **关联 Gate**: —
 - **前置条件**: sprint 完成（所有 source=sprint 的 develop 任务 `[merged]`）——任务入口检查
 - **属性**: 无
@@ -247,7 +247,7 @@
 - **关联 Gate**: —
 - **属性**: `target-source`（bug / optimization）
 
-> dispatch-new 只派包，不实现。新 B 包必须交给 `develop(source=bug/optimization)`；`adversarial-review` 仅兼容用户明确要求接管的已有手动 diff，且仍须有 preflight 记录。
+> dispatch-new 只派包，不实现。新 B 包必须交给 `develop(source=bug/optimization)`；既有手动 diff 仅在用户明确要求时走当前运行时的兼容审查入口，且仍须有 preflight 记录。
 
 详见 `specs-structural/dispatch-new.md`。
 

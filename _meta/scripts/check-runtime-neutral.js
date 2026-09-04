@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 检查运行时中立文本是否泄漏具体实现机制。
-// 默认只扫描已完成中立化的 runtime 核心；执行规范完成清洗后再扩展范围。
+// 默认扫描全部运行时中立正文；实现细节只允许出现在 templates/runtime/{cc,codex}.md。
 const fs = require('fs');
 const path = require('path');
 
@@ -8,6 +8,11 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 const defaults = [
   'templates/runtime/interfaces.md',
   'templates/runtime/preflight.md',
+  'templates/boot-protocol.md',
+  'specs-execution',
+  'specs-structural',
+  'skeleton',
+  'templates/review-briefs',
 ];
 const targets = process.argv.slice(2).length > 0 ? process.argv.slice(2) : defaults;
 
@@ -15,16 +20,33 @@ const targets = process.argv.slice(2).length > 0 ? process.argv.slice(2) : defau
 const hardPattern = /sub-?agent|general-purpose|codex exec|--profile|Skill\(|pinchtab|\bExplore\b|\bhaiku\b|model_reasoning_effort|\.codex\/agents/iu;
 const findings = [];
 
+function collectFiles(absolute) {
+  const stat = fs.statSync(absolute);
+  if (stat.isFile()) return [absolute];
+  if (!stat.isDirectory()) return [];
+
+  return fs.readdirSync(absolute, { withFileTypes: true })
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .flatMap((entry) => {
+      const child = path.join(absolute, entry.name);
+      if (entry.isDirectory()) return collectFiles(child);
+      return entry.isFile() && entry.name.endsWith('.md') ? [child] : [];
+    });
+}
+
 for (const target of targets) {
   const absolute = path.resolve(repoRoot, target);
   if (!fs.existsSync(absolute)) {
     findings.push(`${target}:0: 文件不存在`);
     continue;
   }
-  const lines = fs.readFileSync(absolute, 'utf8').split(/\r?\n/);
-  lines.forEach((line, index) => {
-    if (hardPattern.test(line)) findings.push(`${target}:${index + 1}: ${line}`);
-  });
+  for (const file of collectFiles(absolute)) {
+    const relative = path.relative(repoRoot, file).replaceAll('\\', '/');
+    const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+    lines.forEach((line, index) => {
+      if (hardPattern.test(line)) findings.push(`${relative}:${index + 1}: ${line}`);
+    });
+  }
 }
 
 if (findings.length > 0) {

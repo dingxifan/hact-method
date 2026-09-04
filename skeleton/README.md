@@ -8,7 +8,7 @@
 
 1. **[`01-identity.md`](01-identity.md)** — 身份模型：谁是谁？git author + web 登录映射同一 user；权限通过 user-discipline 关联表达
 2. **[`02-workspaces.md`](02-workspaces.md)** — 三个工作区按"心态"切割：hact-method（方法论）/ 项目根（项目）/ hact-notes（个人积累）
-3. **[`03-disciplines.md`](03-disciplines.md)** — 8 个 discipline = 任务知识的聚类（含 CC 上下文管理 heat map）
+3. **[`03-disciplines.md`](03-disciplines.md)** — 8 个 discipline = 任务知识的聚类（含运行时上下文管理 heat map）
 4. **[`04-task-catalog.md`](04-task-catalog.md)** — 14 个 task type 完整字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）
 5. **[`05-state-machine.md`](05-state-machine.md)** — 4 个状态（可取 / taken-by / done / merged）+ 流转 + 软锁 + 异常转移
 6. **[`06-gates.md`](06-gates.md)** — 5 个 Gate + 子状态聚合 + A 类 vs B 类 + 多迭代展示
@@ -35,7 +35,7 @@ hact-method/
 ├── STATUS.md             当前状态
 ├── skeleton/             ← 本目录（骨架，第一阶段产物）
 ├── specs-structural/     第二阶段：每个 task 的完整结构契约（继承 04）
-├── specs-execution/      第四阶段：每个 task 的执行规范 + subagent 协议（继承 03 密度声明）
+├── specs-execution/      第四阶段：每个 task 的执行规范 + 隔离单元协议（继承 03 密度声明）
 ├── projects/             具体项目的编排目录（含 iterations/）
 ├── templates/            模板（项目模板、standards 模板等）
 └── _meta/                研发过程产物（plans / input）
@@ -51,4 +51,4 @@ hact-method/
 
 ## 下游文档预期
 
-第二阶段将基于本骨架展开 `specs-structural/`：每个 task 一份独立 spec 文档，覆盖完整契约（含边界场景、错误处理、字段细节）。第三阶段由真实项目边用边补 `specs-execution/`：每个 task 的执行细则 + 高密度 discipline 的 subagent 协议。
+第二阶段将基于本骨架展开 `specs-structural/`：每个 task 一份独立 spec 文档，覆盖完整契约（含边界场景、错误处理、字段细节）。第三阶段由真实项目边用边补 `specs-execution/`：每个 task 的执行细则 + 高密度 discipline 的隔离单元协议。

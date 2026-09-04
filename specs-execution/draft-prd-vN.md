@@ -78,7 +78,7 @@
 
 **vN+1 分级确认（⚖️）**：迭代 PRD 中变更类型为**继承 / 继承·微调**的功能，成组批量一次确认（组内逐功能列一句变更点摘要，微调处高亮）；**新增 / 重构 / 简化**保持逐个确认。v1 全部功能逐个（皆为新增）。用户对批量组内任一功能有异议 → 该功能拆出转逐个确认。
 
-- **AC 三层**：`intent` 写用户可观察结果；`oracle` 写如何判断满足；`example` 可选，只帮助理解。产品确认 intent，CC 与产品共同确认 oracle 可判；技术精度（状态码/错误码）留 TRD。写不出 oracle 就当场澄清。example 与 oracle 冲突时改 example；本阶段不把普通例子宣告为 golden。
+- **AC 三层**：`intent` 写用户可观察结果；`oracle` 写如何判断满足；`example` 可选，只帮助理解。产品确认 intent，AI 与产品共同确认 oracle 可判；技术精度（状态码/错误码）留 TRD。写不出 oracle 就当场澄清。example 与 oracle 冲突时改 example；本阶段不把普通例子宣告为 golden。
 - **用户故事**汇总到顶层「## 用户故事」段（3–5 个覆盖核心场景），不逐功能写。
 - **开放问题**逐功能记工作笔记，Step 6 清零后落顶层「## 开放问题」段（定稿须空），不进功能块。
 
@@ -133,14 +133,14 @@ node scripts/check-docs.js --prd iterations/vN/prd.md
 
 ### Step 7.5：独立内容审查（格式之外的内容有效性）
 
-linter（+ 门卫）守**格式**；**内容有效性派全新 subagent 陌生视角复核**（防同上下文自评盖章）。
+linter（+ 门卫）守**格式**；**内容有效性派隔离审查单元做陌生视角复核**（防同上下文自评盖章）。
 
-**派发**：派一个全新 subagent（纯审查/一致性核对，默认指定 `model: "sonnet"`），令其读 `../hact-method-lab/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——subagent 据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。审查维度改动去改该 brief（单一来源），不在此重述。
+**派发**：派普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——审查单元据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。具体模型见运行时映射；审查维度改动去改该 brief（单一来源），不在此重述。
 
-CC 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用户拍板。
+AI 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用户拍板。
 
 > **与逐功能确认（Step 4）互补**：Step 4 是增量、锚定；本步是整份、陌生视角。
-> subagent 失败 / 超时 → 主线自审兜底（陌生视角降级），不阻断。
+> 隔离审查失败 / 超时 → 重派一次；仍失败则标记 `blocked` 并等待恢复，不得用主线自审冒充独立审查。
 
 ### Step 8：G1
 
@@ -167,9 +167,9 @@ CC 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用
 
 ---
 
-## Subagent 使用
+## 隔离单元使用
 
-PRD 生成全程纯对话；**唯一 subagent 在 Step 7.5**——定稿后派全新陌生视角审内容有效性（格式归 linter，内容归独立审查，默认指定 `model: "sonnet"`）。失败则主线自审降级兜底。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
+PRD 生成全程纯对话；**唯一隔离审查在 Step 7.5**——定稿后派普通档隔离审查单元审内容有效性（格式归 linter，内容归独立审查，具体模型见运行时映射）。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
 
 ---
 

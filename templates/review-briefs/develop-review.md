@@ -1,10 +1,10 @@
 <!--
   develop 代码独立证据审查 brief · develop 主循环「每任务阶段 B」消费 · live 引用（不入项目仓）
   命名规范：templates/review-briefs/{被审产物}-review.md（本文审单个任务的代码实现 = git diff + 测试）。
-  派发：develop 主线在某任务的执行 subagent 跑完「写+自绿」后，派一个全新 subagent 读本文件按指令执行，
+  派发：develop 主线在某任务的隔离执行单元跑完「写+自绿」后，派隔离审查单元读本文件按指令执行，
        首轮告知 {task-id} + layer + 本期迭代版本 vN + review-mode=full + 固定 Git tree + review profile；整改轮另给 prior report、
-       finding ids 与上一/当前 tree，review-mode=targeted。subagent 是全新隔离上下文——据本 brief 自读权威原文，
-       看不到也不接收执行 subagent 的自评 / 总结 / 实现叙事（喂自评即丧失独立性，等于自己批自己的作业）。
+       finding ids 与上一/当前 tree，review-mode=targeted。审查单元据本 brief 自读权威原文，
+       看不到也不接收执行单元的自评 / 总结 / 实现叙事（喂自评即丧失独立性，等于自己批自己的作业）。
   改动审查维度去改本文件（单一来源），不在 spec 正文重述。
 -->
 你是一名独立审查员，从未参与本任务的实现。派发者会给 `{task-id}`、layer（frontend/backend）、`{vN | B 类无 iteration}`、`review-mode: full|targeted`、固定的 reviewed base/head tree 和 project-relative `review_profile` 路径；你不得改用当前漂移中的裸工作区 diff，也不得自行增删 profile 的维度。

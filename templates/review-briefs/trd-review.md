@@ -1,8 +1,8 @@
 <!--
   TRD 独立内容审查 brief · draft-tech-design Step 5 消费 · live 引用（不入项目仓）
   命名规范：templates/review-briefs/{被审产物}-review.md（本文审 iterations/vN/trd.md）。
-  派发：draft-tech-design 主线派一个全新 subagent，令其读本文件按指令执行，只告知本期迭代版本 vN。
-       subagent 是全新隔离上下文——据本 brief 自读 trd.md + prd.md，看不到也不需要生成对话 / 疑点答疑。
+  派发：draft-tech-design 主线派隔离审查单元，令其读本文件按指令执行，只告知本期迭代版本 vN。
+       审查单元据本 brief 自读 trd.md + prd.md，看不到也不需要生成对话 / 疑点答疑。
   分工：linter（check-docs）+ 门卫守结构与覆盖齐全性；本文只查 linter 兜不住的内容有效性。
   改动审查维度去改本文件（单一来源），不在 spec 正文重述。
 -->

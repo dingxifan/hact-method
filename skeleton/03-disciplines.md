@@ -26,7 +26,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ## 8 个 discipline
 
-> 注：原 `review`（代码审查）discipline 于 2026-06-20 随 `pr-review` task 砍除——代码审查不再是独立任务/学科，而是 `develop` 内置的**独立对抗审查 subagent**（per-task、自读权威原文）；审查知识落 `templates/review-briefs/develop-review.md`，归 `dev-frontend`/`dev-backend` 的执行流。
+> 注：原 `review`（代码审查）discipline 于 2026-06-20 随 `pr-review` task 砍除——代码审查不再是独立任务/学科，而是 `develop` 内置的**隔离对抗审查单元**（per-task、自读权威原文）；审查知识落 `templates/review-briefs/develop-review.md`，归 `dev-frontend`/`dev-backend` 的执行流。
 
 ### `management`
 
@@ -78,7 +78,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 **边界**：
 
-- 不包含代码审查（→ develop 内置独立审查 subagent）
+- 不包含代码审查（→ develop 内置隔离审查单元）
 - 不包含测试设计（→ `integration-testing`）
 - 不包含技术设计（→ `architecture`）
 - 只覆盖"任务如何被组织、被分发"层面的事
@@ -89,7 +89,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ### `integration-testing`
 
-**范围**：联调测试设计与脚本编写——识别测试场景、写联调脚本（浏览器自动化 + HTTP，如 pinchtab / curl）、跑测试、把发现的问题转修复任务。
+**范围**：联调测试设计与脚本编写——识别测试场景、写联调脚本（浏览器场景 + HTTP）、跑测试、把发现的问题转修复任务。
 
 **边界**：
 
@@ -103,13 +103,13 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ### `dev-frontend`
 
-**范围**：前端开发——前端组件实现、视觉规格落地、前端单元测试、浏览器自动化侧（如 pinchtab）。具体框架/UI 库属项目技术栈层（`project.md` 技术层 + standards 栈子模板），不在本骨架预设。
+**范围**：前端开发——前端组件实现、视觉规格落地、前端单元测试、浏览器场景执行。具体框架/UI 库属项目技术栈层（`project.md` 技术层 + standards 栈子模板），不在本骨架预设。
 
 **边界**：
 
 - 不包含后端 API 设计（→ `architecture`）
 - 不包含联调测试设计（→ `integration-testing`）
-- 代码审查由 `develop` 内置独立审查 subagent 承担（非独立 discipline）
+- 代码审查由 `develop` 内置隔离审查单元承担（非独立 discipline）
 
 **典型工作**：拉 `develop(layer=frontend)` 任务，按 `standards-frontend.md` 写前端代码（框架按项目栈），per-task 独立审查通过后推 PR 并合并。
 
@@ -123,7 +123,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 - 不包含前端 UI（→ `dev-frontend`）
 - 不包含 API 设计（→ `architecture`）
-- 代码审查由 `develop` 内置独立审查 subagent 承担（非独立 discipline）
+- 代码审查由 `develop` 内置隔离审查单元承担（非独立 discipline）
 
 **典型工作**：拉 `develop(layer=backend)` 任务，按 `standards-backend.md` 写代码，per-task 独立审查通过后推 PR 并合并。
 
@@ -158,23 +158,23 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ---
 
-## 关于 CC 上下文管理
+## 关于运行时上下文管理
 
-某些 discipline 的工作模式天然吃主会话上下文——特别是涉及"读多个文件 + 写代码 + 调试"的循环任务。这些 discipline 的执行规范（specs-execution）会显式规定 subagent 使用策略，以保住主会话的认知带宽。
+某些 discipline 的工作模式天然吃主会话上下文——特别是涉及"读多个文件 + 写代码 + 调试"的循环任务。这些 discipline 的执行规范会显式规定隔离单元与只读调查单元的使用策略，以保住主会话的认知带宽。
 
 按经验粗分三档：
 
 
 | discipline                           | 上下文密度 | 主要消耗源                             |
 | ------------------------------------ | ----- | --------------------------------- |
-| `dev-frontend` / `dev-backend`       | 高     | 主线编排 + 末端全量（per-task 实现/审查下沉 subagent，含内置独立审查） |
+| `dev-frontend` / `dev-backend`       | 高     | 主线编排 + 末端全量（per-task 实现/审查下沉隔离单元，含内置独立审查） |
 | `integration-testing`                | 高     | 写脚本时探索系统行为                        |
 | `architecture`                       | 中     | 设计 TRD 时探索现有代码                    |
 | `product`                            | 中     | PRD 写作的资料整理                       |
 | `management` / `dispatch` / `deploy` | 低     | 主要是对话 / 简单操作                      |
 
 
-具体的 subagent 使用策略（何时 spawn Explore、何时 spawn general-purpose、failure handling 等）属于执行层规范，在 `specs-execution/` 第四阶段编写时落地。**本骨架仅做密度声明**——让规范作者知道哪些 discipline 该重点设计 subagent 协议。
+具体的隔离单元使用策略与失败处理属于执行层规范，在 `specs-execution/` 落地；运行时如何实现只写对应映射表。**本骨架仅做密度声明**——让规范作者知道哪些 discipline 该重点设计隔离协议。
 
 ---
 

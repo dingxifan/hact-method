@@ -12,7 +12,7 @@
 
 | 通道 | 身份字段 |
 |---|---|
-| CC 端会话 | `git config user.name` + `user.email` |
+| AI 运行时会话 | `git config user.name` + `user.email` |
 | Web 端（若未来有配套应用） | 登录账号 |
 
 两个通道映射到同一个 user 实体——通过 user 表的同一行关联。具体认证机制属配套应用的实施细节，本文只规定原则：**必须打通**。
@@ -28,14 +28,14 @@
 
 ## 2. 任务是路由键
 
-用户登录后**没有角色身份**。CC 加载工作规范靠的是当前 task 的 type，不是 user 的属性。
+用户登录后**没有角色身份**。运行时加载工作规范靠的是当前 task 的 type，不是 user 的属性。
 
 同一用户的不同会话：
 
 ```
-上午：拉 draft-prd-vN 任务  → CC 加载 PRD 起草规范
-下午：拉 develop 任务        → CC 加载 dev-{layer} 开发规范
-晚上：拉 plan-sprint 任务  → CC 加载 sprint 规划规范
+上午：拉 draft-prd-vN 任务  → 运行时加载 PRD 起草规范
+下午：拉 develop 任务        → 运行时加载 dev-{layer} 开发规范
+晚上：拉 plan-sprint 任务  → 运行时加载 sprint 规划规范
 ```
 
 三次会话都是同一个 user，加载的规范完全不同——驱动它的是"手上是哪类任务"，不是"扮演什么角色"。
