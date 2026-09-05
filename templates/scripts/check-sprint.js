@@ -1041,7 +1041,14 @@ function checkSprint(iteration, root) {
     const layers = layersV ? (layersV.items.length ? layersV.items : [scalarText(layersV)])
                               .join(',').replace(/[\[\]]/g, '') : '';
     const deps = listItems(fm['depends_on']);
-    packages.push({ id, fm, file: fp, layersStr: layers, deps });
+    packages.push({
+      id,
+      fm,
+      file: fp,
+      layersStr: layers,
+      deps,
+      strictSchema: scalarText(fm['package-schema']) === '2',
+    });
   }
 
   // 哪些 backend 任务被前端 depends_on 消费（→ api-contract 必填）
@@ -1058,16 +1065,21 @@ function checkSprint(iteration, root) {
   for (const p of packages) {
     const where = p.file;
     const packageSchema = scalarText(p.fm['package-schema']);
+    // package-schema 由新版任务包显式声明。历史 V6 包没有该字段，不能因为后来新增
+    // contract-impact / asset-writes / supersedes 等字段而被追溯判红；它们仍经过下方
+    // 既有的依赖、引用和 AC 校验，但不获得新版并行资产声明的资格。
+    const strictPackageSchema = packageSchema === '2';
     if (packageSchema && packageSchema !== '2') fail('任务包 schema', where, `${p.id}：未知 package-schema=${packageSchema}`);
-    if (packageSchema === '2' && valEmpty('module', p.fm.module)) fail('任务包 module', where, `${p.id}：schema 2 必填 TRD 稳定 module`);
+    if (strictPackageSchema && valEmpty('module', p.fm.module)) fail('任务包 module', where, `${p.id}：schema 2 必填 TRD 稳定 module`);
     // 1. 字段完备
-    for (const key of REQUIRED) {
+    const requiredFields = strictPackageSchema ? REQUIRED : REQUIRED.filter(key => !['contract-impact', 'asset-writes', 'supersedes'].includes(key));
+    for (const key of requiredFields) {
       if (valEmpty(key, p.fm[key])) fail('字段完备', where, `${p.id}：字段「${key}」缺失/为空/占位`);
     }
     // 新格式任务包必须显式声明共享写集；存量旧格式缺字段继续兼容，但不得靠省略字段获得并行资格。
-    if (scalarText(p.fm['ac-format']) === 'intent-oracle-v1' && !p.fm['asset-writes'])
+    if (strictPackageSchema && !p.fm['asset-writes'])
       fail('共享写集字段', where, `${p.id}：新任务包缺 asset-writes；无共享资产也必须填 []`);
-    if (scalarText(p.fm['ac-format']) === 'intent-oracle-v1' && !p.fm['contract-impact'])
+    if (strictPackageSchema && !p.fm['contract-impact'])
       fail('契约影响字段', where, `${p.id}：新任务包缺 contract-impact；实现已签契约填 governed，不触及填 none`);
     const contractImpact = scalarText(p.fm['contract-impact']).toLowerCase();
     if (p.fm['contract-impact'] && !['governed', 'none'].includes(contractImpact))
@@ -1156,11 +1168,13 @@ function checkSprint(iteration, root) {
   if (findings.filter(f => f.level === 'fail').length === 0) pass('任务包字段/AC/reference', `${packages.length} 个任务包字段完备、reference 含稳定锚、AC 回链与新格式合法`);
 
   // 3b. 共享写集：同文件或同资产的两个任务必须存在任一方向的依赖路径，默认串行。
-  const assetConflicts = sharedAssetConflicts(packages);
+  const assetConflicts = sharedAssetConflicts(packages.filter(p => p.strictSchema));
   for (const conflict of assetConflicts) {
     fail('共享写集冲突', queueDir, `${conflict.left} 与 ${conflict.right} 同写 ${conflict.overlap.join('、')}，但 depends_on 无任一方向的依赖路径；补依赖并标串行，或证明并拆成不重叠资产键`);
   }
-  if (!assetConflicts.length) pass('共享写集冲突', '同文件/同共享资产写入均已由依赖路径串行化');
+  if (packages.some(p => !p.strictSchema))
+    human('共享写集冲突', '含存量任务包，涉及旧包的共享写入需人工核对；未获得新版并行资产声明资格');
+  else if (!assetConflicts.length) pass('共享写集冲突', '同文件/同共享资产写入均已由依赖路径串行化');
 
   // 4. AC 逐条反向覆盖：PRD 每个 AC-nn 被 ≥1 任务包 tag 引用（替代旧功能级——逐条严格强于功能级）
   if (prdIds === null) {
@@ -1281,11 +1295,19 @@ function checkSprint(iteration, root) {
       .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
       .map(t => t.id);
     const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
-    const noAudit = [], partialAudit = [], legacyProfile = [], badAudit = [];
+    const noAudit = [], partialAudit = [], legacyProfile = [], badAudit = [], legacyPackages = [];
     const legacyAuditFields = REVIEW_AUDIT_FIELDS.filter(k => k !== 'review_profile_version');
     for (const id of mergedIds) {
       const cr = crByTask.get(id);
       if (!cr) { noEntry.push(id); continue; }
+      const taskPackage = packages.find(p => p.id === id);
+      if (!taskPackage || !taskPackage.strictSchema) {
+        // 已合并的旧包只做“是否有历史审查条目”的可追溯性检查；不要把新 schema 的
+        // profile、固定 diff 和墙钟约束反向施加到它的原始审计物上。
+        if (!('rounds' in cr)) noRounds.push(id);
+        legacyPackages.push(id);
+        continue;
+      }
       if (!('rounds' in cr)) { noRounds.push(id); continue; }
       if (!/^\d+$/.test(cr.rounds) || Number(cr.rounds) < 1) badRounds.push(`${id}(rounds=${cr.rounds})`);
       if (!('code_rounds' in cr) || !('spec_rounds' in cr)) {
@@ -1327,10 +1349,12 @@ function checkSprint(iteration, root) {
       human('审计留痕', `有 code_reviews 条目但缺墙钟/report 字段：${noAudit.join(', ')} —— 存量可保留；新合并任务须自动记录 implementation/review/spec 分钟与逐轮报告`);
     if (legacyProfile.length)
       human('审计留痕', `P0 报告链合法但缺 review profile：${legacyProfile.join(', ')} —— 存量可保留；新 full review 必须自动生成 profile`);
+    if (legacyPackages.length)
+      human('审计留痕', `存量任务包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 未验证新版 profile、固定 diff 与墙钟契约`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
     else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
-             && !partialAudit.length && !legacyProfile.length && !badAudit.length && !noAudit.length)
+             && !partialAudit.length && !legacyProfile.length && !badAudit.length && !noAudit.length && !legacyPackages.length)
       pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds、墙钟、review profiles 与逐轮 reports`);
   }
 

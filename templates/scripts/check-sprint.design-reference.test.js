@@ -54,7 +54,7 @@ function run() {
   return childProcess.spawnSync(process.execPath, [script, 'v2', root], { cwd: root, encoding: 'utf8' });
 }
 
-write('iterations/v2/prd.md', '## 核心功能\n### 功能：退款审批\n- AC-01 intent: 可审批退款\n');
+write('iterations/v2/prd.md', '## 核心功能\n### 功能：退款审批\n- AC-01: intent: 可审批退款\n');
 write('iterations/v2/sprint.md', '| task-id | title | layers | 依赖 | 状态 | PR | 交付 |\n| demo-v2-001 | 退款审批页 | frontend | — | [可取] | — | 可并行 |\n');
 write('status.yml', 'tasks:\n  - id: demo-v2-001\n    source: sprint\n    iteration: v2\n    layer: frontend\n    status: 可取\n    depends_on: []\n    delivery: 可并行\n');
 write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款审批页\n');
@@ -75,5 +75,37 @@ write('iterations/v2/queue/demo-v2-001.md', task('legacy-full', ['design.md 全�
 assert.doesNotMatch(run().stdout, /reference design|reference 稳定锚/, '真实旧 design + legacy-full 应兼容通过');
 write('iterations/v2/queue/demo-v2-001.md', task('', ['design.md § 色彩系统'], false));
 assert.doesNotMatch(run().stdout, /reference design/, '缺新 schema 字段的旧包不得被新 design 契约阻断');
+const legacyTask = task('', ['design.md § 色彩系统'], false)
+  .replace(/^contract-impact:.*\n/m, '')
+  .replace(/^asset-writes:.*\n/m, '')
+  .replace(/^supersedes:.*\n/m, '');
+write('iterations/v2/queue/demo-v2-001.md', legacyTask);
+assert.strictEqual(run().status, 0, '旧包缺新增字段应兼容通过');
+const modernTask = legacyTask.replace('---\n', '---\npackage-schema: 2\nmodule: refund\n');
+write('iterations/v2/queue/demo-v2-001.md', modernTask);
+assert.match(run().stdout, /字段「contract-impact」|字段「asset-writes」|字段「supersedes」/, 'schema 2 仍强制新增字段');
+write('iterations/v2/queue/demo-v2-001.md', modernTask.replace('package-schema: 2', 'package-schema: 3'));
+assert.match(run().stdout, /未知 package-schema=3/, '未知版本不得当存量放行');
+
+const mergedStatus = 'tasks:\n  - id: demo-v2-001\n    source: sprint\n    iteration: v2\n    layer: frontend\n    status: merged\n    depends_on: []\n    delivery: 可并行\n';
+write('iterations/v2/sprint.md', '| task-id | title | layers | 依赖 | 状态 | PR | 交付 |\n| demo-v2-001 | 退款审批页 | frontend | — | [merged] | — | 可并行 |\n');
+write('iterations/v2/queue/demo-v2-001.md', legacyTask);
+write('status.yml', mergedStatus + 'code_reviews:\n  - task_id: demo-v2-001\n    rounds: 1\n    implementation_started_at: 2026-08-01T00:00:00Z\n');
+assert.strictEqual(run().status, 0, '历史包不因部分新审计字段倒填不全而失败');
+assert.match(run().stdout, /存量任务包仅核历史审查条目存在/, '兼容放行须明确审计边界');
+assert.doesNotMatch(run().stdout, /均有合法 rounds、墙钟/, '旧包不得被宣称已通过新版完整审计');
+write('iterations/v2/queue/demo-v2-001.md', task('legacy-full', ['design.md 全文（存量）']));
+assert.match(run().stdout, /墙钟\/report\/profile 字段只写了一部分/, 'schema 2 仍校验审计完整性');
+write('iterations/v2/queue/demo-v2-001.md', legacyTask);
+write('status.yml', mergedStatus);
+assert.match(run().stdout, /code_reviews\[\] 无条目/, '旧包仍须保留历史审查条目');
+
+write('iterations/v2/queue/demo-v2-002.md', legacyTask.replaceAll('demo-v2-001', 'demo-v2-002'));
+assert.doesNotMatch(run().stdout, /同写 .*但 depends_on/, '旧包重叠文件不受新共享写集契约追溯阻断');
+assert.match(run().stdout, /涉及旧包的共享写入需人工核对/, '旧包共享写入须留人工确认');
+write('iterations/v2/queue/demo-v2-001.md', task('legacy-full', ['design.md 全文（存量）']));
+assert.doesNotMatch(run().stdout, /同写 .*但 depends_on/, '新旧混合包不按新契约追溯阻断');
+write('iterations/v2/queue/demo-v2-002.md', task('legacy-full', ['design.md 全文（存量）']).replaceAll('demo-v2-001', 'demo-v2-002'));
+assert.match(run().stdout, /同写 .*但 depends_on/, '两个 schema 2 包同文件无依赖仍应阻断');
 fs.rmSync(root, { recursive: true, force: true });
 console.log('✅ check-sprint design-reference 正反夹具通过');
