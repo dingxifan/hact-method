@@ -16,3 +16,4 @@
 - 第三轮独立复审仍 block（2×S1、1×S2）：prefix verifier/真实 individual branch、wave-state commit 内证据与完整任务集、retention 伪布尔仍有缺口。
 - 已补 `--review-chain`、真实 prefix 审计与 B branch 事务、commit blob 证据核验/漏任务负例、严格布尔 schema；等待第四轮同口径复审。
 - 第四轮独立复审 `pass`（0×S0、0×S1、0×S2）；15/15 模板测试、runtime-neutral、paths 与 diff check 全绿。
+- 2026-09-05 awuchi v1.2 首次真实 plan-sprint 回归发现两处 schema 2 假红：模板规定无取代关系写 supersedes: []，检查器却把空数组判缺字段；页面规格解析又把示例编号「八」误固化为结构。已把 supersedes 加入合法空数组字段、页面标题改按二级标题含「页面规格」识别并止于下一二级标题，补非八章节与空 supersedes 负向夹具。

@@ -115,7 +115,7 @@ function parseFrontmatter(p) {
 
 function valEmpty(key, v) {
   if (!v) return true;                                  // 字段缺失
-  if (v.type === 'inline-empty-list') return !['depends_on', 'asset-writes', 'relevant-standards', 'reference', 'known-risks', 'do-not', 'escalate-if'].includes(key);
+  if (v.type === 'inline-empty-list') return !['depends_on', 'asset-writes', 'supersedes', 'relevant-standards', 'reference', 'known-risks', 'do-not', 'escalate-if'].includes(key);
   if (v.type === 'list') return v.items.filter(x => x && !x.includes(PLACEHOLDER)).length === 0;
   const t = (v.text || '').trim();
   return t === '' || t.includes(PLACEHOLDER);
@@ -1107,7 +1107,7 @@ function checkSprint(iteration, root) {
         const designText = fs.readFileSync(designPath, 'utf8');
         const designRefs = refs.filter(ref => /design\.md/i.test(ref));
         const globalRef = designRefs.some(ref => /全局视觉基线|第?[〇一二三四五六七0-7]节/i.test(ref));
-        const pageHeader = designText.match(/^##\s+八、页面规格\s*$/m);
+        const pageHeader = designText.match(/^##\s+[^\r\n]*页面规格[^\r\n]*$/m);
         const hasPageSection = Boolean(pageHeader);
         const pageStart = pageHeader ? pageHeader.index + pageHeader[0].length : designText.length;
         const nextTopOffset = designText.slice(pageStart).search(/^##\s+/m);

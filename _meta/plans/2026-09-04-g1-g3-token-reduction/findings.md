@@ -45,3 +45,8 @@
 - wave-state 双向核 branch 全任务集，并从 accepted commit blob 核 preflight/profile/report、task/schema/pass/reviewed tree；漏任务、工作树篡改和缺证据负例均翻红。
 - retention 严格 boolean/null，字符串 `"false"` 与数字伪证据令 CLI 非零。
 - 15/15 模板脚本测试、runtime-neutral、paths 与 diff check 通过。
+
++## 真实项目回归 · 2026-09-05
+
+- awuchi v1.2 的新任务包按模板填写 supersedes: []，check-sprint 却报字段为空。根因是 valEmpty 的合法空数组白名单漏了 supersedes，与结构规范「无则 []」正面冲突。
+- awuchi 的页面规格随迭代演进位于「十一、页面规格（v1.2）」，check-sprint / check-ux 只认逐字「八、页面规格」。章节编号是示例布局、不是 schema；解析已收窄为二级标题含「页面规格」并止于下一二级标题，保留同名前缀和全局区冒充负例。

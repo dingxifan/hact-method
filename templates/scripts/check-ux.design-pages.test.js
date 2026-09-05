@@ -21,5 +21,7 @@ write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退�
 assert.match(run().stderr, /退款审批/, '旧页面前缀不得冒充新功能页面');
 write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款审批页\n');
 assert.strictEqual(run().status, 0, '补入本期页面规格后应通过');
+write('design.md', '## 〇、视觉冒烟锚点\n## 十一、页面规格（v1.2）\n### 退款审批页\n## 十二、其它\n### 干扰项\n');
+assert.strictEqual(run().status, 0, '页面规格不得绑定固定章节编号，且解析须止于下一个二级章节');
 fs.rmSync(root, { recursive: true, force: true });
 console.log('✅ check-ux design 页面覆盖夹具通过');

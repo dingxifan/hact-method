@@ -4,7 +4,7 @@
 //   ux-flows.md  —— 含「场景列表」（S-id 条目）+ 「流程图」（mermaid 块）
 //   prototype-map.md —— 含「前端 AC 覆盖」表
 //   prototype.html   —— 文件存在
-//   design.md        —— 本期 draft-ux:需要 的功能在「八、页面规格」有稳定标题
+//   design.md        —— 本期 draft-ux:需要 的功能在「页面规格」章节有稳定标题，章节编号可随项目演进
 //
 // 用法：node scripts/check-ux.js v1 [项目根目录]
 // 退出码：0 = 通过  1 = 结构不合格  2 = 参数错误
@@ -44,7 +44,12 @@ if (fs.existsSync(prdPath) && fs.existsSync(designPath)) {
     if (/^\*\*draft-ux\*\*：\s*需要\s*$/m.test(prd.slice(start, end))) requiredPages.push(match[1].trim());
   }
   const design = fs.readFileSync(designPath, 'utf8');
-  const pageSection = (design.match(/^##\s+八、页面规格\s*$([\s\S]*)/m) || [])[1] || '';
+  const pageHeader = design.match(/^##\s+[^\r\n]*页面规格[^\r\n]*$/m);
+  const pageStart = pageHeader ? pageHeader.index + pageHeader[0].length : design.length;
+  const nextTopOffset = design.slice(pageStart).search(/^##\s+/m);
+  const pageSection = pageHeader
+    ? design.slice(pageStart, nextTopOffset >= 0 ? pageStart + nextTopOffset : design.length)
+    : '';
   const pageTitles = [...pageSection.matchAll(/^###\s+(.+)$/gm)].map(match => match[1].trim());
   const normalizePage = value => String(value || '').trim().replace(/(?:页面|页)$/u, '').replace(/\s+/g, '');
   const missing = requiredPages.filter(name => !pageTitles.some(title => normalizePage(title) === normalizePage(name)));

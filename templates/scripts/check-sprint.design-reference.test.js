@@ -60,6 +60,9 @@ write('status.yml', 'tasks:\n  - id: demo-v2-001\n    source: sprint\n    iterat
 write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款审批页\n');
 write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页']));
 assert.doesNotMatch(run().stdout, /\[reference design\]/, '有效全局+页面 design 锚不应报 design finding');
+assert.doesNotMatch(run().stdout, /字段「supersedes」/, 'schema 2 的 supersedes: [] 是明确无取代关系，不得误报为空字段');
+write('design.md', '## 〇、视觉冒烟锚点\n## 十一、页面规格（v1.2）\n### 退款审批页\n');
+assert.doesNotMatch(run().stdout, /\[reference design\]/, '页面规格结构不得绑定固定章节编号或禁止标题后缀');
 write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['ux-flows.md § 退款审批']));
 assert.match(run().stdout, /reference design/, 'frontend 缺 design 锚必须失败');
 write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 不存在页']));
