@@ -25,7 +25,7 @@
 
 读任务包，确认 `target`（目标环境，如 `prod` / `staging`）。触发前置（A 类 G4 已签 / B 类积累批量 / hotfix 须 `dispatch` 授权）见 structural `前置条件` + 红线。
 
-**先确认连接可用**：跑 `node scripts/check-conn.js check --live`。红则先修连接再谈部署——连不上服务器时后面每一步都会以更难读的形态失败。服务器坐标从 `connections.yml` 取：`ssh.{target}.mcp-alias` / `ssh.{target}.host` / `ssh.{target}.app-dir`（服务器上的仓库目录）；实际使用哪种远端命令通道由当前运行时映射决定。连接与凭据的分层约定见 hact-conn skill。
+**先确认连接可用**：跑 `node scripts/check-conn.js check --live`。红则先修连接再谈部署——连不上服务器时后面每一步都会以更难读的形态失败。服务器坐标从 `connections.yml` 取：`ssh.{target}.mcp-alias` / `ssh.{target}.host` / `ssh.{target}.app-dir`（服务器上的仓库目录）；实际使用哪种远端命令通道由当前运行时映射决定。连接与凭据遵循项目内 `connections.yml` 与 `~/.hact/secrets.env` 的分层约定。
 
 **首次部署（`deployment.config` 不存在）**：先建 `deployment.config`，只填**命令侧**字段，commit 后继续：
 ```

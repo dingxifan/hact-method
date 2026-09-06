@@ -58,7 +58,6 @@
 - 无 Gate、无 sprint.md、无 iteration；任务包路径为 `b-queue/{task-id}.md`，审查/预检记录目录为 `b-reviews/{task-id}/`，分支名与 PR 粒度均为 `{task-id}`。
 - 状态 `[可取]` 时认领并同步 `status.yml`；`[taken-by]` 时按断点续做对账。状态已 `[done]/[merged]` 则先说明现状，不重复实现。
 - 主循环、freshness preflight、独立审查、末端全量和状态更新照常；所有文中的 vN 参数对 B 类替换为“无 iteration”。
-- `adversarial-review` 只保留为用户明确要求接管已有手动 diff 的兼容入口，不是新 B 包默认执行路径。
 
 **拾取任务（source=sprint）：形成任务集与当轮执行形态**
 

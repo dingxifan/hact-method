@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 
 // 运行时文本所在处：这些是 CC 会逐字读取、或被复制进项目仓的内容
-const RUNTIME_DIRS = ['skeleton', 'specs-structural', 'specs-execution', 'guide', 'templates', 'skills'];
+const RUNTIME_DIRS = ['skeleton', 'specs-structural', 'specs-execution', 'guide', 'templates'];
 const RUNTIME_FILES = ['CLAUDE.md', 'BRIEF.md'];
 const EXT = /\.(md|js|sh|yml)$/;
 

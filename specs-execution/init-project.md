@@ -86,7 +86,7 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - `scripts/review-profile.js`：内容复制自 `templates\scripts\review-profile.js`（develop full review 的确定性维度选择器；`check-sprint.js --review` 同模块重算 selected/omitted，故必须与 check-sprint 一起铺设）
 - `scripts/check-ux.js`：内容复制自 `templates\scripts\check-ux.js`（draft-ux 产物结构 linter，纯 Node 无外部依赖；`draft-ux` Step 7 签字 commit 时门卫自动核 ux-flows.md 两段结构 + prototype-map.md AC 覆盖表 + prototype.html 存在）
 - `scripts/check-reusables.js`：内容复制自 `templates\scripts\check-reusables.js`（`reusables.md` 登记表 linter，纯 Node 无外部依赖；门卫在「改了 reusables.md」或「本次 commit 有文件删除/改名」时自动核登记路径是否还在——该表被 `draft-tech-design`/`plan-sprint`/`draft-prd-vN` 当权威源读，失真则那些检查静默放行）
-- `scripts/check-conn.js`：内容复制自 `templates\scripts\check-conn.js`（连接与凭据的统一寻址 + 体检，纯 Node 无外部依赖；`gitee-ops` 取 token / `deploy` 取服务器坐标 / 任何要连数据库或第三方 API 的任务都经它取值，门卫在「改了 connections.yml」时自动核零机密与引用完备）
+- `scripts/check-conn.js`：内容复制自 `templates\scripts\check-conn.js`（连接与凭据的统一寻址 + 体检，纯 Node 无外部依赖；代码托管操作取 token / `deploy` 取服务器坐标 / 任何要连数据库或第三方 API 的任务都经它取值，门卫在「改了 connections.yml」时自动核零机密与引用完备）
 - `connections.yml`：内容复制自 `templates\connections.yml`（**本项目外部连接登记**——入库、零机密，机密只写 `${secret:NAME}` 引用，真值在机器本地 `~/.hact/secrets.env`。用不到的段整段删掉）
 - `scripts/pre-commit-hook.sh`：内容复制自 `templates\scripts\pre-commit-hook.sh`（**门卫**——commit 时按 staged 文件路由跑对应 check-\*.js，红则拦 commit；脚本/node 缺失 no-op 放行。作为 tracked 文件入仓使其随 clone 存活；实际生效需装进 `.git/hooks/`，见 Step 4.1）
 - `iterations/.task-package-template.md`（可选参考）：任务包结构模板见 `templates\queue\task-package.md`，`plan-sprint` 写任务包时套用（YAML frontmatter 序列化）

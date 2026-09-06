@@ -214,7 +214,7 @@
 - **前置条件**: G4 已签（合并部署模式下也允许 hotfix 走快速通道，详见 `specs-structural/deploy.md`）
 - **属性**: `target`（环境标识，如 prod / staging）
 
-详见 `specs-structural/deploy.md`（含 `deploy-to-server` skill 的 hact-method 适配）。
+详见 `specs-structural/deploy.md`。
 
 ---
 

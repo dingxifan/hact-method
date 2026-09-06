@@ -11,7 +11,7 @@ git remote get-url origin
 # 示例输出：https://gitee.com/your-name/mail-ai.git
 # → owner = your-name，repo = mail-ai
 
-# token 统一寻址（见 hact-conn skill）：connections.yml → ~/.hact/secrets.env
+# token 统一寻址：connections.yml → ~/.hact/secrets.env
 $GITEE_TOKEN = node scripts/check-conn.js get gitee.token
 if (-not $GITEE_TOKEN) { throw "凭据未配置，按 check-conn 的提示补 ~/.hact/secrets.env" }
 ```
@@ -48,7 +48,7 @@ Invoke-RestMethod "https://gitee.com/api/v5/repos/{owner}/{repo}/pulls/{number}?
 ## 规则
 
 - owner/repo 从 `git remote get-url origin` 提取，不要硬编码
-- token 走 hact-conn 统一寻址（`node scripts/check-conn.js get gitee.token`），**不读 `backend/.env`**——那是应用运行时配置，不是个人凭据的存放处
+- token 走项目连接配置的统一寻址（`node scripts/check-conn.js get gitee.token`），**不读 `backend/.env`**——那是应用运行时配置，不是个人凭据的存放处
 - merge_method：`merge`（保留历史）/ `squash`（合并为单提交）/ `rebase`
 - 换 token 时只改机器本地 `~/.hact/secrets.env` 一处，本机所有项目同步生效
 
