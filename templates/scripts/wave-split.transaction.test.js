@@ -14,7 +14,6 @@ function write(cwd, rel, text) { const file = path.join(cwd, rel); fs.mkdirSync(
 const wave = 'backend-wave-v1-A/B/C';
 const individualB = 'B';
 const checkSprint = path.join(__dirname, 'check-sprint.js');
-const reviewProfile = path.join(__dirname, 'review-profile.js');
 const splitStatus = `tasks:
   - id: A
     status: done
@@ -61,8 +60,6 @@ result: pass
 ---
 `);
   git(['add', 'src/a.ts']);
-  childProcess.execFileSync(process.execPath, [reviewProfile, 'iterations/v1/queue/A.md', '--risk', 'standard',
-    '--output', 'iterations/v1/code-reviews/A/profile-round-01.json', '--changed-files', 'src/a.ts'], { cwd: root });
   const reviewedHead = git(['write-tree']);
   const diff = childProcess.execFileSync('git', ['diff', '--binary', baseTree, reviewedHead], { cwd: root });
   const diffHash = crypto.createHash('sha256').update(diff).digest('hex');
@@ -72,7 +69,6 @@ task_id: A
 round: 1
 mode: full
 risk: standard
-review_profile: iterations/v1/code-reviews/A/profile-round-01.json
 prior_report: null
 target_finding_ids: []
 base_ref: ${baseRef}

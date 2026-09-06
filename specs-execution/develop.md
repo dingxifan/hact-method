@@ -134,7 +134,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 任务进入主循环时逐个执行，不在批次开头一次性为全部任务预写。这样同分支批次中，前一任务已通过审查的 tree 会成为下一任务的 `base_tree`，两棵 tree 的 diff 只含当前任务。只查依赖合并后可能变化的面：
 
 - 本批首任务先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --worktree-from-reports none . --progress {本轮task-id-list}`；
-- 后续任务用此前每个已通过任务的最终 round report（逗号分隔）替换 `none`，保留 `--progress` 本轮任务集。检查器只允许这些报告声明的 accepted changed files、各自 review 目录中的 preflight/profile/round 产物，以及显式任务的未暂存 `_meta/sessions/develop-{task-id}-progress.md`；其他 dirty path 或任一 stash 均阻断。progress 不得暂存进实现 tree，最终作为收尾记录单独提交；已忽略的本地 progress 按项目现有策略保留，不强制入库。
+- 后续任务用此前每个已通过任务的最终 round report（逗号分隔）替换 `none`，保留 `--progress` 本轮任务集。检查器只允许这些报告声明的 accepted changed files、各自 review 目录中的审计产物，以及显式任务的未暂存 `_meta/sessions/develop-{task-id}-progress.md`；其他 dirty path 或任一 stash 均阻断。progress 不得暂存进实现 tree，最终作为收尾记录单独提交；已忽略的本地 progress 按项目现有策略保留，不强制入库。
 
 - `files` 是否仍是当前落点，`reference` 的符号/章节/行号锚是否仍存在；
 - 上游是否已完成本包原计划新建的机制，或改变了接口、状态、阈值；
@@ -163,7 +163,7 @@ preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失�
 
 > **可并行任务集或 `single-operator-wave`**：对每个任务按依赖拓扑序串行走「工作树白名单核对 → 该任务 freshness preflight → 隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突）。当前任务通过后保留其 accepted implementation tree；其审计目录保持未暂存，下一任务由白名单检查识别，不把报告混入 `base_tree`。下一任务再取新的 preflight `base_tree`，不得复用批次起点。全部通过后进末端（一次）。**individual 串行任务多个**：每个任务各自串行完成「preflight + 主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
 
-> **wave 的任务级 commit**：每个任务独审通过、按其 fixed diff 再算有效 risk 仍为 standard 后，提交该任务 accepted implementation + preflight/profile/final round 报告，形成稳定的 `{task-id} → commit/report` 边界；一个 PR 可含多个任务 commit。审计物进 commit 后，下一任务 fixed diff 仍从新 base tree 起，不会混入本任务实现 diff。该边界用于断点恢复和必要时拆 prefix，不取消 per-task review。
+> **wave 的任务级 commit**：每个任务独审通过、按其 fixed diff 再算有效 risk 仍为 standard 后，提交该任务 accepted implementation、preflight 与完整 round 报告链，形成稳定的 `{task-id} → commit/report` 边界；一个 PR 可含多个任务 commit。审计物进 commit 后，下一任务 fixed diff 仍从新 base tree 起，不会混入本任务实现 diff。该边界用于断点恢复和必要时拆 prefix，不取消 per-task review。
 
 **wave 中途升档/拆分 transaction**：某任务 fixed diff 令有效 risk 升 sensitive 时立即停止，不把它并入 wave PR，并按 sensitive 重派高能力独审。此前通过任务的 implementation + 审计物均已在 per-task commits：① 以最后通过 commit 建 prefix 分支，在独立 worktree 对每个 prefix task 运行 `--review-chain`（合并前审查链，不依赖终态 `code_reviews[]`）与末端全量；② 在原 dirty 工作树执行 `git switch -c {当前 task-id}`（保留在制品、建立真实 individual branch），并验证当前 branch 正是该 task-id；③ 在 prefix worktree 与原工作树写同一 split 状态：prefix `[done]`，当前 `[taken-by]` + branch={task-id}，未开始任务全部 `[可取]` 且清空 assigned_to/branch；④ prefix PR 合并后把 prefix 任务落 `[merged]` 并写终态 `code_reviews[]`。无 prefix 时跳过①④，仍执行②③。不得 stash、还原或删除在制品；任一步失败则整组保持原 wave 状态，不做半套状态写入。
 
@@ -213,36 +213,27 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并按 `git diff --binary {reviewed_base} {reviewed_head}` 的原始字节计算 SHA-256。首次 `reviewed_base` 取**当前任务** preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。B 类在派审前另运行 `node ../hact-method-lab/templates/scripts/check-b-task.js {task-package} --diff {reviewed_base} {reviewed_head} --root .`，用方法论当前版检查器对实际固定 diff 复核共享契约边界；非 0 退出 B 类并升级，不得继续独审。
 
-**首次 full review**：主线派隔离审查单元读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 `{task-id}` + layer + `{vN | B 类无 iteration}` + `review-mode: full` + base/head tree + 下方生成的 project-relative `review_profile`。审查员自读任务包、命中 Standards、固定 diff 与测试，只执行 profile selected dimensions，不接收执行者自评；每条 finding 必须给稳定 id、dimension、type/reachability/evidence/impact/action。同一根因的语法/输入变体合并进同一 id，不按变体数制造 blocker。Foundation 的 profile 固定为 `foundation-review/v1` 并按专用 brief 全审。
+**首次 full review**：主线派隔离审查单元读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 task-id、layer、迭代、有效 risk 和固定 base/head。审查员自读权威输入，按 brief 与实际改动确定检查范围；模式、报告和升级条件按轮次模板。
 
-**整改 targeted review**：传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；全新审查员可读前次**独立报告**，但仍不得接收开发者自评。只核这些 finding、反例、受影响回归与两棵 tree 之间的增量 diff，不重做无关逐类审查。若 changed surface 超出允许范围、引入新机制/模块/依赖或发现新根因，本轮报告置 `escalate_to_full: true`，紧接下一轮才升 full。
+**整改 targeted review**：传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；全新审查员可读前次**独立报告**，但仍不得接收开发者自评。核目标 finding、修复增量与受影响调用链；局部新发现可在 targeted 处理。升级全审条件与任务轮次上限统一按 `templates/review-briefs/develop-review-round.md`，新增文件/模块本身不触发 full。
 
 每轮 dispatch/completion 当场写 `started_at/completed_at`；逐轮耗时按需由时间戳计算，不重复持久化分钟字段。round report 本身不计入被审实现 tree，最终随状态提交。
 
 **能力分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 是写代码/生成任务，使用当前运行时映射的执行档；阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 普通审查档；sensitive 或 `source=foundation` → 高能力审查档。具体模型只在运行时映射表定义。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
 
-**review profile（非 Foundation 的每次 full 必做）**：有效 risk 与 fixed changed-files 确定后、派审查员前，用项目 `scripts/review-profile.js` 从权威任务包生成不可覆盖的 JSON；A 类写 `iterations/vN/code-reviews/{task-id}/profile-round-{NN}.json`，B 类写 `b-reviews/{task-id}/profile-round-{NN}.json`。命令只传任务包路径、有效 risk 与 `git diff --name-only {preflight base_tree} {reviewed_head}` 的完整文件集合：
-
-```bash
-node scripts/review-profile.js {task-package-path} \
-  --risk {standard|sensitive} \
-  --output {review-report-dir}/profile-round-{NN}.json \
-  --changed-files {fixed changed-files...}
-```
-
-生成失败、profile task-id 不匹配或 selected/omitted 不闭合 → 禁止派审。full round 的 `review_profile` 指向本轮新 profile；targeted 继承最近 full 的路径，不重新选择维度。targeted 扩大 changed surface 时先置 `escalate_to_full`，下一轮基于 preflight base→当前 head 的完整 diff 生成新 profile 再 full。`source=foundation` 继续用专用 `foundation-review.md` 逐关注点全审，不经过普通裁剪器。
-
 **finding 路由与有界复审**：
+
+先按 `templates/review-briefs/review-scope.md` 核 finding 是否属于规范、错误或外部风险。仅依赖开发人员恶意/有意绕过的 finding 交隔离审查单元纠正范围并留痕关闭，不进入代码整改或自动 backlog；已有范围内缺陷仍按下表处理。范围纠正不清零已用轮次。
 
 | action | 动作 | 复审范围 |
 |---|---|---|
 | `fix-code` / `fix-mechanism` | 重派隔离执行单元修对应稳定 finding ids | 下一轮 `targeted` 只复审该行为、反例、受影响回归与增量 diff；报告触发 `escalate_to_full` 才追加 full |
 | `revise-doc` / `downgrade-claim` | 修任务包或发 `revise-doc`；代码文件数必须为 0 | 只复核 contract/claim 一致性，不重跑完整代码审查；计 `spec_rounds` |
-| `global-gap-review` | 交 global seam review 或创建补缝任务 | 原包可独立合规时不打回、不重审 |
+| `global-gap-review` | 核承接方并创建补缝任务；A 类把组合证据移交联调，B 类/V0 按自身契约与授权边界处理 | 原包可独立合规时不打回；不可用待联调替代本包必要验证 |
 | `backlog` | 记入遗留/waiver | 不重审 |
 | `request-evidence` | 让审查员补反例或发规格澄清 | 证据面未变化前不改代码；补齐后重新分类 |
 
-`findings: []` 或仅 advisory 即通过。只有 action 为 `fix-code/fix-mechanism` 的 blocking finding 进入代码整改 loop。每实际运行一次 full/targeted 独审计一个 `code_round`；同一代码根因最多 3 个 code rounds，同一 finding 的 evidence 面未变化时禁止换措辞重复上报。超界后按根因发 revise-doc 或 escape-hatch。
+`findings: []` 或仅 advisory 即通过。只有 action 为 `fix-code/fix-mechanism` 的 blocking finding 进入代码整改 loop。每实际运行一次 full/targeted 独审计一个 `code_round`；按轮次模板的每任务累计上限收敛，同一证据未变化不重复上报。
 
 最终通过时编排器立即写 `review_completed_at`；review wall-clock 由 `review_started_at/completed_at` 按需计算，包含独审等待和审查期间整改，不重复持久化分钟字段。
 
@@ -252,7 +243,7 @@ node scripts/review-profile.js {task-package-path} \
 
 - **可恢复的执行问题**：仓内可查的信息未读、工具中断或执行单元上下文不足 → 主线补齐证据，按「隔离执行单元失败协议」恢复/重派，无需用户重复批准实现。单元仍活跃则接收其结果；确认已中断才对账并恢复同一单元工作，不盲目重做。测试静默或超时不算绿；重跑前核原进程状态，不并发启动重复写入或有副作用的测试。
 - **必须由人处理的边界**：补证后仍存在无法自行裁决的 `do-not/escalate-if`、未授权契约/设计变更、视觉缺口、必要权限/凭据或不可替代能力缺失 → 保留在制品，列明具体缺口、证据、命中的规范条款与需要的人类动作，暂停相关执行。前端设计、B 类契约升级与安全敏感合并裁决仍按各自规则处理，不用技术重试绕过。
-- **达到现有上限**：同一测试修 3 次仍红时先查 oracle/contract，再按下方失败协议允许的主线补证重派一次；仍失败走上下文重置。审查同一根因达到 3 个 code rounds 仍有阻断，按根因发 `revise-doc` 或请求用户裁决，不借执行失败协议增加代码审查轮次。
+- **达到现有上限**：同一测试修 3 次仍红时先查 oracle/contract，再按下方失败协议允许的主线补证重派一次；仍失败走上下文重置。审查按每任务累计 3 个 code rounds 判定；仍需复审或全审时按根因发 `revise-doc` 或请求用户裁决，不借新根因或执行失败协议续轮。
 
 只有未触及该边界、写集与依赖不冲突且当前执行形态允许的已授权工作可以继续；不得跳过 batch/wave 原子恢复规则或自行拆组。重派、更换单元和上下文恢复不清零测试修复次数、code rounds 或同一 finding 记录。用户给出裁决后核其覆盖范围，恢复记录中的下一动作；用户判定无解、失败协议耗尽或命中下方其他上下文重置条件时按该规则交接，不能仅因一次 `blocked` 就退回任务。
 
@@ -273,16 +264,7 @@ npm run build && npm run type-check && npm run lint && npm run test
 - 任一红 → 多为 **cross-task 集成问题**（单任务自测在阶段 A 已绿）；定位是哪个任务的改动引入，回该任务阶段 A 修。`build/type/lint` 无命令 → 跳过该条不阻断。`test` 无运行器 → 见阶段 A「测试基建缺失」处置。
 - **偏离核查**：`git diff --stat` 对比所有任务包 `files` 合集；汇总各任务返回的 `deviations` / `unmet-ac`，分别记入 PR description「偏离说明」/「遗留问题」。
 
-> 全量绿只证明可执行一致性；跨包归属与退役语义由下方 global seam review 负责，不回灌为逐包完整重审。
-
-### global seam review（本期最后一个 sprint 集合）
-
-当当前集合通过后将使本期全部 `source=sprint` 任务完成时，派隔离审查单元读 `../hact-method-lab/templates/review-briefs/global-seam-review.md`，审合并候选树的包间接缝；输出写入 `iterations/vN/global-seam-review.md`。只查互推/无人认领入口、调用方不可达、旧实现未退役、共享定义分叉与组合终态不可达，不重审单包 AC/代码风格。
-
-- `scope-gap`：创建独立补缝任务并同步 queue/sprint/status；当前已合规包不打回、不完整重审。
-- 能明确归属当前 diff 的 `behavior-bug`：按 `fix-code` 修对应行为并做增量复审。
-- `future-risk/evidence-gap`：按 backlog/request-evidence 路由，不为凑结论改代码。
-- 补缝任务完成后，作为新的最后集合再跑一次 seam review，直到报告 `findings: []` 或所有 gap 已有明确 owner。
+> 全量绿只证明可执行一致性。A 类跨包归属、共享定义、退役及组合终态由 `generate-integration-tests` 的准备核对与实际执行承接；已发现的组合缺口及证据留在 PR 遗留问题或补缝任务，供联调复用，不回灌为逐包完整重审。
 
 ```
 ✅ 全量检测完成：build/type/lint/test 全绿（[X] passed），[无偏离 / 偏离已记录]。集合 {task-id-list} 全部通过独立审查。
@@ -350,7 +332,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态一步落定为 `[merged]`（无独立 pr-review，develop 自审自合并即终态）：
 - 集合内**每个**任务包状态改为 `[merged]`（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）
 - **仅 source=sprint**：`iterations/vN/sprint.md` 集合内每任务行，状态列改 `[merged]`、**PR 列填同一个 `#N`**（N 为 PR 编号）；其余 source 任务不在 sprint.md，跳过
-- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加一条。保留兼容字段 `rounds`，填写 `code_rounds/spec_rounds/freshness`；另写 `review_report_dir`、`review_profile_version`（普通任务 `develop-review-profile/v1`；Foundation `foundation-review/v1`）、`review_evidence_version: develop-review-round/v2`、`implementation_started_at/completed_at`、`review_started_at/completed_at` 与累计 `spec_minutes`。implementation/review 墙钟由时间戳按需计算，不持久化派生分钟；`spec_minutes` 因可能累计多段 preflight/revise-doc 继续保留。时间由编排器在事件发生时写，禁止事后估算；issues 保留稳定 finding id、dimension 与 type/reachability/impact/action。两类轮次与三类墙钟不得互相冒充。
+- 项目根 `status.yml`：集合内每个 task 的 `status` 改 `merged`、`pr` 填 `{N}`；`code_reviews[]` 每任务追加结论与报告索引。填写 `rounds/code_rounds/spec_rounds/freshness`、`review_report_dir`、`review_evidence_version: develop-review-round/v2`、`implementation_started_at/completed_at`、`review_started_at/completed_at` 与累计 `spec_minutes`。implementation/review 墙钟由时间戳按需计算；`spec_minutes` 汇总可能分散的规格澄清时间。时间由编排器当场写入，不估算。问题及处置只在逐轮报告维护，不再复制 issues/comment；未处理建议与已接受风险在 PR 遗留问题中引用对应 finding。
   在提交终态前，对集合内每个任务运行方法论当前版 `node ../hact-method-lab/templates/scripts/check-sprint.js --review {task-id} .`；缺 preflight/report、首轮非 full、targeted 无 finding id/固定 diff、时间账不闭合均先修正，不得靠人工说明放行。该入口不依赖 iteration，B 类同样执行。
   ```bash
   git checkout master && git pull
@@ -411,7 +393,6 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 |------|------|------|---------|
 | **隔离执行单元** | 主循环每任务阶段 A | 自读上下文 → 读懂 → 计划+复用 → 写+自绿，返回结构化结果 | 见下方失败协议 |
 | **隔离审查单元** | 主循环每任务阶段 B | 读对应 brief、自读权威原文、按证据分类 finding | 失败则主线重派；连续失败按审查 loop 超界处置 |
-| **全局接缝审查单元** | 本期最后一个 sprint 集合全量绿后 | 只审包间归属、调用方可达、退役、共享定义与组合终态 | scope gap 新开任务，不回灌无关 per-task 重审 |
 | 子模块隔离执行单元 | 阶段 A 内（>5 文件 / 跨模块） | 实现单个不重叠模块，返回代码 | 由上层执行单元处理 |
 | 只读调查单元 | 阶段 A 的跨目录复用盘点 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 小而明确的登记表由隔离执行单元直读；调查失败也由其直接读 |
 
@@ -429,7 +410,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 重置流程：
 1. 按下方「上下文管理」更新 `_meta/sessions/develop-{task-id}-progress.md`，记录证据、已用重试额度和准确阻塞原因。
 2. **individual**：将该任务包回 `[可取]`，写阻塞原因；告知用户后续开新会话重拾。
-3. **single-operator-wave**：不得只退当前任务。默认把同 branch 的整组任务保持 `[taken-by]`，写 `_meta/sessions/develop-wave-{id1}--{idN}.json`，schema=`wave-progress/v1`，列 branch 与每个 task 的 `state=accepted|current|pending`；accepted 另列 commit、preflight、profile、final_report。新会话先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --wave-state {progress.json} .`，机械确认该 branch 完整任务集、整组 status、真实 branch、commit 祖先关系及 commit 内审计物后恢复。若用户明确拆组，执行上方 split transaction。任何路径都不得形成“A taken-by 未 merged、B 单独可取”的状态。
+3. **single-operator-wave**：不得只退当前任务。默认把同 branch 的整组任务保持 `[taken-by]`，写 `_meta/sessions/develop-wave-{id1}--{idN}.json`，schema=`wave-progress/v1`，列 branch 与每个 task 的 `state=accepted|current|pending`；accepted 另列 commit、preflight、final_report。新会话先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --wave-state {progress.json} .`，机械确认该 branch 完整任务集、整组 status、真实 branch、commit 祖先关系及 commit 内审计物后恢复。若用户明确拆组，执行上方 split transaction。任何路径都不得形成“A taken-by 未 merged、B 单独可取”的状态。
 
 ---
 
@@ -468,7 +449,7 @@ context-state:
 **断点续做**（含主循环、末端及合并后收尾）：
 1. 读本轮任务集、任务包与进度记录，核已授权范围、当前阶段及下一动作。旧记录缺新字段时从任务/审查/PR 证据重建，不要求重做实现或重新授权。
 2. 先核实际工作区、分支和本轮单元/进程状态；仍活跃则接收结果，不重派并发写入。核 `status.yml` 的 branch 与 Git/PR 实际进度；安全切换前保护在制品，不因进度文件写了分支名就盲目 checkout。wave 先走原整组恢复校验，不仅凭当前任务记录恢复。
-3. 用实际 diff、固定 tree、preflight、最终 round report 和测试证据核已完成阶段；仅 `git diff --stat`、状态文本或单元自报无法证明审查通过。实现或基线已变化时核影响并按原规则复验，不能沿用失效结论。重派/恢复前对账 attempts 与 rounds，不重置上限。
+3. 沿 progress 的旧分支/worktree 找到同 task-id 的完整审查链，原样携带 preflight、reports 和可解析的 Git 对象，接着下一个 round 编号；按全部实际代码轮次累计，不能换目录从 01 重开或重写起始时间。用固定 diff 与有效证据恢复阶段；基线变化只复验受影响部分。旧链缺失时记录已知轮次与证据缺口并找回，不当新任务重做；恢复、rebase、补前置依赖不重置 attempts/rounds。
 4. 从首个未完成阶段接续：代码已在 PR 合并但状态未落定 → 核远端合并结果后补状态/收尾，不重复实现或创建 PR；已证实通过且快照未变 → 继续下一动作，不重复独审。新发现真正边界按 escape-hatch 处理。
 
 **阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 progress.md 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。

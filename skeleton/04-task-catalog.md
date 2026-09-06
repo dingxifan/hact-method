@@ -153,7 +153,7 @@
   - `layers=[frontend]` → `dev-frontend`
   - `layers=[backend]` → `dev-backend`
   - `layers=[shared]` → 由分配者在任务包中指定 task_type
-- **完成判据**: 写代码前 preflight + 代码完成 + 普通任务自动 review profile 下首次 full/整改 targeted 独立证据审查通过（Foundation 专用全审）+ 末端全量绿 + PR `[merged]`（develop 自审自合并到 master，无独立 pr-review；安全敏感改动留 architecture 人工裁决）
+- **完成判据**: 写代码前 preflight + 代码完成 + 首次 full/整改 targeted 独立证据审查通过（Foundation 用专用 brief）+ 末端全量绿 + PR `[merged]`（develop 自审自合并到 master，无独立 pr-review；安全敏感改动留 architecture 人工裁决）
 - **主要产物**: PR（已合并）+ 代码改动 + 测试 + `code_reviews[]` 审计留痕
 - **关联 Gate**: —
 - **属性**:

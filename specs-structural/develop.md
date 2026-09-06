@@ -76,9 +76,8 @@ api-contract:
 |------|------|------|
 | PR | 代码仓库 | PR description 含 5 段：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 |
 | sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[merged]`，PR 列 → `#N` |
-| preflight / review rounds | A 类 `iterations/vN/code-reviews/{task-id}/`；B 类 `b-reviews/{task-id}/` | `preflight.md` + `profile-round-NN.json`（每次普通 full）+ `round-NN.md`；含固定 Git tree、自动维度集合、finding id、full/targeted scope 与逐轮墙钟 |
-| code_reviews[] 审计留痕 | 项目根 `status.yml` | 每 task 一条（conclusion + issues + 聚合轮次/墙钟 + report 目录 + review profile version），由 develop 末端写入 |
-| global seam review（触发时） | `iterations/vN/global-seam-review.md` | 本期最后一个 sprint 集合的包间接缝结论；gap 另开任务，不回灌单包 |
+| preflight / review rounds | A 类 `iterations/vN/code-reviews/{task-id}/`；B 类 `b-reviews/{task-id}/` | `preflight.md` + `round-NN.md`；含固定 Git tree、finding 及处置、full/targeted scope 与逐轮时间戳 |
+| code_reviews[] 审计索引 | 项目根 `status.yml` | 每 task 一条（结论、轮次/墙钟、report 目录与证据版本），由 develop 末端写入；不复制逐条问题 |
 | 执行进度 / 上下文重置记录 | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：任务集 / 当前阶段 / 下一动作 / 待接收单元 / 证据引用 / 已用尝试 / 已完成文件 / 阻塞点 / 关键决策；阶段切换或中断时更新，旧记录缺新增字段从权威证据重建；wave 整组恢复仍以既有 wave-progress/v1 为准 |
 
 ---
@@ -89,12 +88,12 @@ api-contract:
 - [ ] 不可视区 AC 的 `intent/oracle` 已落成测试且全绿；仅 `golden: true` 的 example 要求字面 1:1 物化
 - [ ] 写代码前 freshness preflight 已通过并落 `timing: before-code` 记录；命中的规格/示例漂移均在代码开发前按 action 关闭
 - [ ] layer 对应 checklist 自检通过（backend = `backend-checklist.md` 测试品类清单：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试，留人判项有结论；frontend = `frontend-checklist.md` 三段式：机械归 lint/vue-tsc/stylelint + 可测逻辑写测试 + 视觉/交互留人走查）
-- [ ] 集合内每个任务已通过独立证据审查；普通任务每次 full 的 review profile 已由 task type/layer/risk/fixed changed surface 自动生成，omitted 不输出 N/A；整改 targeted 继承最近 full；Foundation 使用专用全强度 profile sentinel
+- [ ] 集合内每个任务已通过独立证据审查；首次按 brief 核权威契约、实际改动与证据；整改 targeted 复用前次报告，Foundation 使用专用 brief
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
-- [ ] 若当前集合使本期 sprint 任务全部完成，global seam review 已运行；scope gap 已新开 owner，不打回无关单包
+- [ ] 已发现的组合缺口及证据已在 PR 遗留问题或补缝任务中移交；不打回独立合规的原包
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
 - [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 档审查的先重派高能力审查档）
-- [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录 `code_rounds/spec_rounds`、implementation/review/spec 墙钟、report 目录、review profile/evidence version 与 finding 路由）
+- [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录轮次、时间、report 目录与证据版本；finding 路由在报告中可追溯）
 - [ ] 本轮任务集全部收尾完成：状态与按 source 必需的追踪/反馈记录已提交，执行/审查/测试结果均已接收；不存在未完成的本轮必要动作。单元 `done` 或单个任务独审通过不等于 develop 完成
 
 ---

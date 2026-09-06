@@ -54,7 +54,6 @@ childProcess.execFileSync('git', ['checkout', '-b', waveBranch], { cwd: root, st
 const reviewedTree = childProcess.execFileSync('git', ['rev-parse', 'HEAD^{tree}'], { cwd: root, encoding: 'utf8' }).trim();
 write('src/a.ts', 'export const a = 1;\n');
 write('iterations/v1/code-reviews/demo-v1-001/preflight.md', '---\nresult: pass\n---\n');
-write('iterations/v1/code-reviews/demo-v1-001/profile-round-01.json', '{}\n');
 write('iterations/v1/code-reviews/demo-v1-001/round-01.md', `---\nschema: develop-review-round/v2\ntask_id: demo-v1-001\nreviewed_head: ${reviewedTree}\nconclusion: pass\n---\n`);
 childProcess.execFileSync('git', ['add', 'src/a.ts', 'iterations/v1/code-reviews/demo-v1-001'], { cwd: root });
 childProcess.execFileSync('git', ['commit', '-m', 'feat: A accepted'], { cwd: root, stdio: 'ignore' });
@@ -63,7 +62,6 @@ const progressRel = '_meta/sessions/develop-wave-demo-v1-001--demo-v1-002.json';
 write(progressRel, JSON.stringify({ schema: 'wave-progress/v1', branch: waveBranch, tasks: [
   { id: 'demo-v1-001', state: 'accepted', commit: acceptedCommit,
     preflight: 'iterations/v1/code-reviews/demo-v1-001/preflight.md',
-    profile: 'iterations/v1/code-reviews/demo-v1-001/profile-round-01.json',
     final_report: 'iterations/v1/code-reviews/demo-v1-001/round-01.md' },
   { id: 'demo-v1-002', state: 'current', commit: null, final_report: null },
 ] }, null, 2));
@@ -86,6 +84,6 @@ assert.strictEqual(waveState(progressRel).status, 1, 'commit 内 revise 不得�
 const missingEvidence = JSON.parse(fs.readFileSync(path.join(root, progressRel), 'utf8'));
 missingEvidence.tasks[0].preflight = 'iterations/v1/code-reviews/demo-v1-001/missing-preflight.md';
 write(progressRel, JSON.stringify(missingEvidence, null, 2));
-assert.strictEqual(waveState(progressRel).status, 1, 'accepted commit 缺 preflight/profile 必须失败');
+assert.strictEqual(waveState(progressRel).status, 1, 'accepted commit 缺 preflight 必须失败');
 fs.rmSync(root, { recursive: true, force: true });
 console.log('✅ check-sprint ready 正反夹具通过');

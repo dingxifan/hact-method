@@ -73,7 +73,6 @@
         "spec_rounds": 0,
         "freshness": "pass",
         "review_report_dir": "iterations/v1/code-reviews/demo-v1-001",
-        "review_profile_version": "develop-review-profile/v1",
         "implementation_started_at": "2026-09-04T01:00:00Z",
         "implementation_completed_at": "2026-09-04T01:10:00Z",
         "review_started_at": "2026-09-04T01:10:00Z",

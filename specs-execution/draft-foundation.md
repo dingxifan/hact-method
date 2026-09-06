@@ -76,6 +76,8 @@ mkdir -p "iterations/v0"
 
 ### Step 2：填 foundation.md「实际形式·档」+ 强制边诊断（核心）
 
+先读 `templates/review-briefs/review-scope.md`：强制边只承诺正常开发误用与实际外部边界的防护，不把防开发人员恶意/有意绕过写进设计要求。
+
 逐行回填 `foundation.md`「二」表的「实际形式·档」列：一列内同时写**具体形式 + 实际档**，格式 `{具体形式}（{档级}）`——如 `NestJS 全局 Guard + APP_GUARD 注册（构造级）`、`作用域 base repo 焊死 where（构造级）`、`stylelint 禁裸值规则（机械级）`。只写形式漏档级、或只写档级漏形式都不合格。逐行对照「应有档」：
 
 - 实际档 ≥ 应有档 → 通过。

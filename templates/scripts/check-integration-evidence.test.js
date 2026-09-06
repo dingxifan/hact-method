@@ -15,7 +15,9 @@ fs.mkdirSync(path.dirname(path.join(root, backendEvidence)), { recursive: true }
 fs.writeFileSync(path.join(root, backendEvidence), 'HTTP 200\nstate=done\n');
 const result = path.join(root, 'integration-tests', 'result-2026-09-04.md');
 fs.mkdirSync(path.dirname(result), { recursive: true });
-fs.writeFileSync(result, `| # | 模块 | 场景描述 | 结果 | 证据（项目相对路径） | 未运行原因 | 现象 | 级别 | 复测 |
+fs.writeFileSync(result, `组合核对：基线 abc123；注册/共享定义沿已有证据核实；导出调用方仍缺接线，补缝任务待合并。此为核对记录，非执行通过证明。
+
+| # | 模块 | 场景描述 | 结果 | 证据（项目相对路径） | 未运行原因 | 现象 | 级别 | 复测 |
 |---|---|---|---|---|---|---|---|---|
 | S-01 | web | 登录 | ✅ | \`${evidence}\` | — | — | — | — |
 | BE-01 | backend | 创建到终态 | ✅ | \`${backendEvidence}\` | — | — | — | — |

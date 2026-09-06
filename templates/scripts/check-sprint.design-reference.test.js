@@ -98,7 +98,7 @@ assert.strictEqual(run().status, 0, '历史包不因部分新审计字段倒填�
 assert.match(run().stdout, /存量任务包仅核历史审查条目存在/, '兼容放行须明确审计边界');
 assert.doesNotMatch(run().stdout, /均有合法 rounds、墙钟/, '旧包不得被宣称已通过新版完整审计');
 write('iterations/v2/queue/demo-v2-001.md', task('legacy-full', ['design.md 全文（存量）']));
-assert.match(run().stdout, /墙钟\/report\/profile 字段只写了一部分/, 'schema 2 仍校验审计完整性');
+assert.match(run().stdout, /墙钟\/report 字段只写了一部分/, 'schema 2 仍校验审计完整性');
 write('iterations/v2/queue/demo-v2-001.md', legacyTask);
 write('status.yml', mergedStatus);
 assert.match(run().stdout, /code_reviews\[\] 无条目/, '旧包仍须保留历史审查条目');

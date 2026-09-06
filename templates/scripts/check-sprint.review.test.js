@@ -7,12 +7,10 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { buildReviewProfileFromText } = require('./review-profile');
 
 const TASK_ID = 'demo-b-101';
-const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-review-profile-'));
+const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-review-audit-'));
 const checkSprint = path.join(__dirname, 'check-sprint.js');
-const reviewProfileScript = path.join(__dirname, 'review-profile.js');
 
 function write(rel, contents) {
   const target = path.join(tempRoot, rel);
@@ -42,7 +40,7 @@ function runAudit(taskId = TASK_ID) {
   });
 }
 
-function reportText({ taskId, round, mode, profile, prior, targets, baseRef, base, head,
+function reportText({ taskId, round, mode, prior, targets, baseRef, base, head,
   changedFiles, started, completed, conclusion, standardsChecked, body = 'findings: []' }) {
   const evidence = diffEvidence(base, head);
   assert.deepStrictEqual(evidence.names, [...changedFiles].sort(), 'fixture changed files must be real');
@@ -52,7 +50,6 @@ task_id: ${taskId}
 round: ${round}
 mode: ${mode}
 risk: ${taskId === 'foundation' ? 'sensitive' : 'standard'}
-review_profile: ${profile}
 prior_report: ${prior || 'null'}
 target_finding_ids: [${targets.join(', ')}]
 base_ref: ${baseRef}
@@ -101,7 +98,6 @@ acceptance-criteria:
 ---
 `;
   const changedFiles = ['scripts/check-guard.js', 'tests/enforcement/guard.spec.ts'];
-  const profileRel = `b-reviews/${TASK_ID}/profile-round-01.json`;
   write(`b-queue/${TASK_ID}.md`, task);
   write('scripts/check-guard.js', 'module.exports = () => true;\n');
   write('tests/enforcement/guard.spec.ts', 'const expected = true;\n');
@@ -115,13 +111,6 @@ acceptance-criteria:
   git(['add', ...changedFiles]);
   const reviewedHead1 = git(['write-tree']).trim();
 
-  const profileArgs = [reviewProfileScript, path.join(tempRoot, `b-queue/${TASK_ID}.md`),
-    '--risk', 'standard', '--output', path.join(tempRoot, profileRel), '--changed-files', ...changedFiles];
-  const generated = childProcess.spawnSync(process.execPath, profileArgs, { cwd: tempRoot, encoding: 'utf8' });
-  assert.strictEqual(generated.status, 0, `${generated.stdout}\n${generated.stderr}`);
-  const overwrite = childProcess.spawnSync(process.execPath, profileArgs, { cwd: tempRoot, encoding: 'utf8' });
-  assert.strictEqual(overwrite.status, 2, 'existing profile must be immutable');
-  const profile = JSON.parse(fs.readFileSync(path.join(tempRoot, profileRel), 'utf8'));
   write(`b-queue/${TASK_ID}.md`, task.replace('status: taken-by:cc', 'status: merged'));
   write(`b-reviews/${TASK_ID}/preflight.md`, `---
 task_id: ${TASK_ID}
@@ -134,7 +123,7 @@ result: pass
 ---
 `);
   write(`b-reviews/${TASK_ID}/round-01.md`, reportText({
-    taskId: TASK_ID, round: 1, mode: 'full', profile: profileRel, prior: null, targets: [],
+    taskId: TASK_ID, round: 1, mode: 'full', prior: null, targets: [],
     baseRef, base: baseTree, head: reviewedHead1, changedFiles,
     started: '2026-08-09T00:02:00Z', completed: '2026-08-09T00:03:00Z', conclusion: 'pass',
   }));
@@ -147,7 +136,6 @@ result: pass
     spec_rounds: 0
     freshness: pass
     review_report_dir: b-reviews/${TASK_ID}
-    review_profile_version: develop-review-profile/v1
     review_evidence_version: develop-review-round/v2
     implementation_started_at: 2026-08-09T00:01:00Z
     implementation_completed_at: 2026-08-09T00:02:00Z
@@ -168,6 +156,19 @@ result: pass
 
   const roundOnePath = path.join(tempRoot, `b-reviews/${TASK_ID}/round-01.md`);
   const canonicalRoundOne = fs.readFileSync(roundOnePath, 'utf8');
+  const historicalRound = canonicalRoundOne.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json');
+  const historicalStatus = canonicalStatus.replace('    spec_minutes: 1',
+    '    review_profile_version: develop-review-profile/v1\n    issues: []\n    spec_minutes: 1');
+  write(`b-reviews/${TASK_ID}/round-01.md`, historicalRound);
+  write('status.yml', historicalStatus);
+  write('archived-profile.json', '{"selector_revision":1,"historical":true}\n');
+  assert.strictEqual(runAudit().status, 0, 'old profile fields are inert; no selector is needed');
+  assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), historicalRound, 'audit must not rewrite historical reports');
+  assert.strictEqual(fs.readFileSync(path.join(tempRoot, 'status.yml'), 'utf8'), historicalStatus);
+  assert.strictEqual(fs.readFileSync(path.join(tempRoot, 'archived-profile.json'), 'utf8'), '{"selector_revision":1,"historical":true}\n');
+  write('status.yml', canonicalStatus);
+  fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(`task_id: ${TASK_ID}`, 'task_id: another-task'), 'utf8');
+  assert.match(runAudit().stdout, /task_id 不匹配/, 'report identity remains mandatory without profile');
   fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(reviewedHead1, 'c'.repeat(40)), 'utf8');
   assert.match(runAudit().stdout, /固定 diff 不可复现|当前仓可解析/, 'fake tree must fail');
   fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(/diff_sha256: [0-9a-f]{64}/, `diff_sha256: ${'d'.repeat(64)}`), 'utf8');
@@ -192,7 +193,7 @@ result: pass
   git(['add', 'src/unrelated.ts']);
   const cumulativeHead = git(['write-tree']).trim();
   write(`b-reviews/${TASK_ID}/round-01.md`, reportText({
-    taskId: TASK_ID, round: 1, mode: 'full', profile: profileRel, prior: null, targets: [],
+    taskId: TASK_ID, round: 1, mode: 'full', prior: null, targets: [],
     baseRef, base: baseTree, head: cumulativeHead, changedFiles: [...changedFiles, 'src/unrelated.ts'],
     started: '2026-08-09T00:02:00Z', completed: '2026-08-09T00:03:00Z', conclusion: 'pass',
   }));
@@ -200,25 +201,18 @@ result: pass
   git(['read-tree', reviewedHead1]);
   fs.writeFileSync(roundOnePath, canonicalRoundOne, 'utf8');
 
-  profile.selected_dimensions = profile.selected_dimensions.filter(item => item.id !== 'contract');
-  write(profileRel, `${JSON.stringify(profile, null, 2)}\n`);
-  const tampered = runAudit();
-  assert.strictEqual(tampered.status, 1, `${tampered.stdout}\n${tampered.stderr}`);
-  assert.match(tampered.stdout, /selected_dimensions|core 维度 contract/);
-  write(profileRel, `${JSON.stringify(buildReviewProfileFromText(task, changedFiles, 'standard'), null, 2)}\n`);
-
   write('tests/enforcement/guard.spec.ts', 'const expected = "safe"; const regression = true;\n');
   git(['add', 'tests/enforcement/guard.spec.ts']);
   const reviewedHead2 = git(['write-tree']).trim();
   write(`b-reviews/${TASK_ID}/round-01.md`, reportText({
-    taskId: TASK_ID, round: 1, mode: 'full', profile: profileRel, prior: null, targets: [],
+    taskId: TASK_ID, round: 1, mode: 'full', prior: null, targets: [],
     baseRef, base: baseTree, head: reviewedHead1, changedFiles,
     started: '2026-08-09T00:02:00Z', completed: '2026-08-09T00:03:00Z', conclusion: 'revise',
     body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: open`,
   }));
   const priorReport = `b-reviews/${TASK_ID}/round-01.md`;
   write(`b-reviews/${TASK_ID}/round-02.md`, reportText({
-    taskId: TASK_ID, round: 2, mode: 'targeted', profile: profileRel, prior: priorReport,
+    taskId: TASK_ID, round: 2, mode: 'targeted', prior: priorReport,
     targets: [`${TASK_ID}-F001`], baseRef, base: reviewedHead1, head: reviewedHead2,
     changedFiles: ['tests/enforcement/guard.spec.ts'],
     started: '2026-08-09T00:03:00Z', completed: '2026-08-09T00:04:00Z', conclusion: 'pass',
@@ -233,7 +227,6 @@ result: pass
     spec_rounds: 0
     freshness: pass
     review_report_dir: b-reviews/${TASK_ID}
-    review_profile_version: develop-review-profile/v1
     review_evidence_version: develop-review-round/v2
     implementation_started_at: 2026-08-09T00:01:00Z
     implementation_completed_at: 2026-08-09T00:02:00Z
@@ -245,13 +238,32 @@ result: pass
   assert.strictEqual(targeted.status, 0, `${targeted.stdout}\n${targeted.stderr}`);
 
   const roundTwoPath = path.join(tempRoot, `b-reviews/${TASK_ID}/round-02.md`);
-  const wrongProfile = `b-reviews/${TASK_ID}/profile-round-02.json`;
-  fs.writeFileSync(roundTwoPath,
-    fs.readFileSync(roundTwoPath, 'utf8').replace(`review_profile: ${profileRel}`, `review_profile: ${wrongProfile}`), 'utf8');
-  assert.match(runAudit().stdout, /targeted 必须继承/);
-  fs.writeFileSync(roundTwoPath,
-    fs.readFileSync(roundTwoPath, 'utf8').replace(`review_profile: ${wrongProfile}`, `review_profile: ${profileRel}`), 'utf8');
   const canonicalRoundTwo = fs.readFileSync(roundTwoPath, 'utf8');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace(priorReport, 'b-reviews/missing/round-01.md'), 'utf8');
+  assert.match(runAudit().stdout, /prior_report 必须指向/, 'recovery must retain the preceding independent report');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace('status: verified-closed', 'status: open'), 'utf8');
+  assert.match(runAudit().stdout, /open blocking/, 'restarting a process cannot silently drop a blocker');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
+  const priorRound = fs.readFileSync(roundOnePath, 'utf8');
+  const historicalPrior = priorRound.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json');
+  fs.writeFileSync(roundOnePath, historicalPrior, 'utf8');
+  assert.strictEqual(runAudit().status, 0, 'new targeted review can continue an old full report without profile');
+  assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), historicalPrior);
+  fs.writeFileSync(roundOnePath, priorRound, 'utf8');
+  const currentTaskPath = path.join(tempRoot, `b-queue/${TASK_ID}.md`);
+  const currentTask = fs.readFileSync(currentTaskPath, 'utf8');
+  fs.writeFileSync(currentTaskPath, currentTask
+    .replace('title: 收紧 enforcement', 'title: 明确此包边界')
+    .replace('BE-TEST-01 · standards-backend.md § 测试机制', 'BE-TEST-02 · standards-backend.md § 修订接线'), 'utf8');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace('standards_checked: [BE-TEST-01]', 'standards_checked: [BE-TEST-02]'), 'utf8');
+  assert.strictEqual(runAudit().status, 0, 'local contract revision uses targeted; historical reports remain unchanged');
+  fs.writeFileSync(currentTaskPath, currentTask, 'utf8');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
+  const localFinding = `\n  - id: ${TASK_ID}-F002\n    severity: blocking\n    status: verified-closed`;
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace('status: verified-closed', `status: verified-closed${localFinding}`), 'utf8');
+  assert.strictEqual(runAudit().status, 0, 'targeted may verify a local new finding without restarting full');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace('status: verified-closed', `status: verified-closed${localFinding.replace('verified-closed', 'open')}`), 'utf8');
+  assert.match(runAudit().stdout, /conclusion=pass 但仍有 open blocking/, 'local findings cannot be skipped to pass');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace(
     'standards_checked: [BE-TEST-01]', 'standards_checked: [FE-EXTRA-01]'), 'utf8');
   assert.match(runAudit().stdout, /任务包外 id/, 'targeted standards_checked must be subset of task standards');
@@ -274,7 +286,7 @@ result: pass
 ---
 `);
   write(`${foundationDir}/round-01.md`, reportText({
-    taskId: foundationId, round: 1, mode: 'full', profile: 'foundation-review/v1', prior: null,
+    taskId: foundationId, round: 1, mode: 'full', prior: null,
     targets: [], baseRef, base: baseTree, head: foundationHead, changedFiles: ['src/main.ts'],
     started: '2026-08-09T01:02:00Z', completed: '2026-08-09T01:03:00Z', conclusion: 'pass',
   }));
@@ -286,7 +298,6 @@ result: pass
     spec_rounds: 0
     freshness: pass
     review_report_dir: ${foundationDir}
-    review_profile_version: foundation-review/v1
     implementation_started_at: 2026-08-09T01:01:00Z
     implementation_completed_at: 2026-08-09T01:02:00Z
     review_started_at: 2026-08-09T01:02:00Z
@@ -296,18 +307,12 @@ result: pass
   const foundation = runAudit(foundationId);
   assert.strictEqual(foundation.status, 0, `${foundation.stdout}\n${foundation.stderr}`);
 
-  const statusPath = path.join(tempRoot, 'status.yml');
-  fs.writeFileSync(statusPath,
-    fs.readFileSync(statusPath, 'utf8').replace(
-      'review_profile_version: develop-review-profile/v1', 'review_profile_version: foundation-review/v1'), 'utf8');
-  assert.match(runAudit().stdout, /只允许 task_id=foundation/);
-
-  console.log('review-profile integration tests: 12/12 passed');
+  console.log('check-sprint review: fixed snapshots, findings, targeted recovery and foundation passed');
 } finally {
   const resolvedTemp = path.resolve(tempRoot);
   const resolvedOsTemp = path.resolve(os.tmpdir());
   if (!resolvedTemp.startsWith(resolvedOsTemp + path.sep)
-      || !path.basename(resolvedTemp).startsWith('hact-review-profile-')) {
+      || !path.basename(resolvedTemp).startsWith('hact-review-audit-')) {
     throw new Error(`拒绝清理非测试临时目录：${resolvedTemp}`);
   }
   fs.rmSync(resolvedTemp, { recursive: true, force: true });
