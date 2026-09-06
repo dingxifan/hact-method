@@ -18,7 +18,7 @@
  *   node scripts/check-sprint.js --ready <task-id,...> [项目根] # develop 认领前依赖就绪检查
  *   node scripts/check-sprint.js --wave-ready <task-id,...> [项目根] # 单人 wave 的机械准入
  *   node scripts/check-sprint.js --wave-state <progress.json> [项目根] # wave 断点恢复可执行性
- *   node scripts/check-sprint.js --worktree-from-reports <report,...|none> [项目根]
+ *   node scripts/check-sprint.js --worktree-from-reports <report,...|none> [项目根] [--progress <task-id,...>]
  *
  * 退出码：有任一 FAIL → 1；全 pass → 0；用法错误 / 自身出错 → 2。
  *
@@ -941,11 +941,45 @@ function checkWaveState(progressRel, root) {
     pass('wave 恢复', `${group.length} 个任务的 branch/status/progress/accepted commit+report 可共同恢复`);
 }
 
-function checkWorktreeFromReports(subject, root) {
+function checkWorktreeFromReports(subject, root, progressIds = '') {
   const reportPaths = subject === 'none' ? [] : String(subject || '').split(',').map(value => value.trim()).filter(Boolean);
   const allowedFiles = new Set();
   const allowedDirs = [];
   const acceptedBlobs = new Map();
+  // 只豁免显式本轮任务的本地进度；不进入 index 或被审实现 tree。
+  if (progressIds) {
+    const tasks = parseStatusTasks(path.join(root, 'status.yml'));
+    const staged = new Set(gitOutput(root, ['diff', '--cached', '--name-only', '-z'], null)
+      .toString('utf8').split('\0').filter(Boolean));
+    for (const id of progressIds.split(',')) {
+      if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(id) || !tasks.some(task => task.id === id)) {
+        fail('工作树白名单', id || '<空>', 'progress 必须指定 status.yml 中存在的本轮 task-id');
+        continue;
+      }
+      const relative = `_meta/sessions/develop-${id}-progress.md`;
+      const absolute = path.join(root, relative);
+      if (staged.has(relative)) {
+        fail('工作树白名单', relative, '进度文件不得暂存进实现 tree；保留工作区文件并分离暂存');
+        continue;
+      }
+      let progressStat;
+      try { progressStat = fs.lstatSync(absolute); }
+      catch (error) { if (error.code !== 'ENOENT') throw error; }
+      if (progressStat && !progressStat.isFile()) {
+        fail('工作树白名单', relative, '进度路径必须是普通文件，不接受符号链接或目录');
+        continue;
+      }
+      if (progressStat) {
+        const realRoot = fs.realpathSync(root);
+        const realRelative = path.relative(realRoot, fs.realpathSync(absolute));
+        if (realRelative.replace(/\\/g, '/') !== relative) {
+          fail('工作树白名单', relative, '进度路径必须是项目内原位普通文件，不接受符号链接或目录映射');
+          continue;
+        }
+      }
+      allowedFiles.add(relative);
+    }
+  }
   for (const relative of reportPaths) {
     const report = resolveProjectFile(root, relative);
     if (!report || !exists(report)) {
@@ -1374,6 +1408,11 @@ function main() {
   const specialMode = reviewMode || reviewChainMode || readyMode || waveReadyMode || waveStateMode || worktreeMode;
   const subject = specialMode ? args[1] : args[0];
   const root = (specialMode ? args[2] : args[1]) || process.cwd();
+  if (worktreeMode && args.length > 3
+      && (args.length !== 5 || args[3] !== '--progress' || !args[4])) {
+    console.error('用法: --worktree-from-reports <report,...|none> [项目根] [--progress <task-id,...>]');
+    process.exit(2);
+  }
   if (!subject || (!specialMode && !/^v\d+(\.\d+)*$/.test(subject))) {
     console.error('用法: node check-sprint.js <vN|vN.M> [项目根]\n'
       + '   或: node check-sprint.js --review <task-id> [项目根]\n'
@@ -1381,7 +1420,7 @@ function main() {
       + '   或: node check-sprint.js --ready <task-id,...> [项目根]\n'
       + '   或: node check-sprint.js --wave-ready <task-id,...> [项目根]\n'
       + '   或: node check-sprint.js --wave-state <progress.json> [项目根]\n'
-      + '   或: node check-sprint.js --worktree-from-reports <report,...|none> [项目根]');
+      + '   或: node check-sprint.js --worktree-from-reports <report,...|none> [项目根] [--progress <task-id,...>]');
     process.exit(2);
   }
   try {
@@ -1390,7 +1429,7 @@ function main() {
     else if (readyMode) checkReady(subject, root);
     else if (waveReadyMode) checkWaveReady(subject, root);
     else if (waveStateMode) checkWaveState(subject, root);
-    else if (worktreeMode) checkWorktreeFromReports(subject, root);
+    else if (worktreeMode) checkWorktreeFromReports(subject, root, args[4]);
     else checkSprint(subject, root);
   }
   catch (e) { console.error('check-sprint 自身出错（非产物问题）:', e.message); process.exit(2); }

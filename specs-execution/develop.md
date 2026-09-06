@@ -1,18 +1,30 @@
 # exec: develop
 
 > 运行时加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
-> **执行模型**：主线只编排（定标 / 新鲜度核对 / 设计门 / finding 路由 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由隔离执行单元跑。隔离审查单元自读权威原文、按证据分类 finding；只有当前可达的行为/机制缺陷进入代码回炉。人工只守一个门：**前端设计是否到位**。
+> **执行模型**：主线负责编排与接续（定标 / 新鲜度核对 / 设计门 / finding 路由 / 失败恢复 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由隔离执行单元跑。隔离审查单元自读权威原文、按证据分类 finding；只有当前可达的行为/机制缺陷进入代码回炉。
 > **无独立 pr-review 环节**（决策#24）：代码质量由 per-task 独立证据审查 + 全量绿把关，develop 自审自合并。仅安全敏感改动保留一道人工裁决。
 
 **上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到隔离执行单元，故**批次可放大**。本 spec 处理**一次会话**，任务集 size ≥ 1：`交付=可并行` 任务共一个 PR；`交付=串行` 任务各自一个 PR，会话内可串行多个（每任务完整跑「主循环+末端」后切回 master，再启下一个）。
 
 ---
 
-> **质量模型（三层防线）**：deterministic 绿先过 → 独立证据审查按当前风险面做语义 top-up → 人工只守前端设计到位。规格漂移、示例错误和 scope gap 走各自旁路，不伪装成代码缺陷。
+> **质量模型（三层防线）**：deterministic 绿先过 → 独立证据审查按当前风险面做语义 top-up → 前端设计与安全敏感合并按人工门裁决。规格漂移、示例错误和 scope gap 走各自旁路，不伪装成代码缺陷。
 
-> **🚫 人工门（全自动模型下只剩两处，其余全自动 loop、不逐步等人）**：
-> ① **前端设计到位**——frontend 批次开跑前一次性确认（backend-only 跳过）。
-> ② **escape-hatch**——隔离执行单元撞 do-not 拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红时返回 blocked，主线浮给用户。
+> **人工边界**：开跑前的范围/执行层选择、wave 选择与前端设计确认按下文处理；合并前保留安全敏感裁决。运行中的 `blocked` 先按 escape-hatch 分类，不能仅凭子单元状态直接要求用户接手。已确认范围内的正常实现、审查、整改和末端动作不逐步等人。
+
+## 主线接续协议
+
+本轮以已确定的任务集为执行范围；仅指定 layer 不等于授权清空该层队列。范围和必需确认已有明确结论且适用条件未变时沿用，不重复询问；范围、设计或风险变化时重新核对应边界。
+
+| 收到的结果 | 主线下一动作 |
+|---|---|
+| 实现单元返回 `done` | 核实际改动、测试结果与未满足 AC，按阶段 B 固定快照并立即派审；`done` 不是 develop 完成 |
+| 审查返回 finding | 按 finding action 分流；授权内代码整改立即重派，随后 targeted 复审；不能用进度汇报替代动作 |
+| 当前任务审查通过 | 记录证据，按 individual / batch / wave 既有顺序进入末端或下一任务 |
+| 测试或隔离单元仍在运行 | 接收结果前保持等待；可做不冲突的已授权编排工作，不重复派发同一写入单元 |
+| 工具中断或子单元 `blocked` | 核实际工作区、单元状态和证据，按 escape-hatch 恢复或升级 |
+
+中途收到「现在呢」「在复审吗」等进度询问时，简短回答实际阶段后继续原任务；只有用户明确要求暂停、取消或仅报告时才停止推进。阶段汇报使用「实现已返回 / 独审通过 / 正在验证」等局部结论，最终完成声明只在结束判据满足后输出。
 
 ---
 
@@ -121,8 +133,8 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 
 任务进入主循环时逐个执行，不在批次开头一次性为全部任务预写。这样同分支批次中，前一任务已通过审查的 tree 会成为下一任务的 `base_tree`，两棵 tree 的 diff 只含当前任务。只查依赖合并后可能变化的面：
 
-- 本批首任务先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --worktree-from-reports none .`；
-- 后续任务传入此前每个已通过任务的最终 round report（逗号分隔）。检查器只允许这些报告声明的 accepted changed files，以及各自 review 目录中的 preflight/profile/round 产物；其他 dirty path 或任一 stash 均阻断。
+- 本批首任务先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --worktree-from-reports none . --progress {本轮task-id-list}`；
+- 后续任务用此前每个已通过任务的最终 round report（逗号分隔）替换 `none`，保留 `--progress` 本轮任务集。检查器只允许这些报告声明的 accepted changed files、各自 review 目录中的 preflight/profile/round 产物，以及显式任务的未暂存 `_meta/sessions/develop-{task-id}-progress.md`；其他 dirty path 或任一 stash 均阻断。progress 不得暂存进实现 tree，最终作为收尾记录单独提交；已忽略的本地 progress 按项目现有策略保留，不强制入库。
 
 - `files` 是否仍是当前落点，`reference` 的符号/章节/行号锚是否仍存在；
 - 上游是否已完成本包原计划新建的机制，或改变了接口、状态、阈值；
@@ -197,7 +209,7 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 > 不得用 `git checkout --` / 删文件 / `git stash` 处置它：**留着不提交是可逆的，还原和删除是不可逆的**，两者代价差一个量级，而对「不混进 diff」这个目标的贡献完全相同。实测 2026-08-30：一个会话据本条字面依据把来源不明的 `scripts/pre-commit-hook.sh` 改动 `git checkout --` 还原、并删掉了新脚本（虽留了底到 scratchpad），另一个会话遇到同样情况选择「既不提交也不回退、原样留着并上报」——后者是本条要求的处置。
 > 另：**文件 mtime 不是归因证据**。它只能证明「那时被写过」，证明不了「谁写的」；据 mtime 落在自己执行单元运行窗口内就断定是自己人所为，实测已致误判。归因不明时按上一段留着并上报，不猜。
 
-> **「工作树无污染」必须连 `git stash list` 一起看。** 首任务要求 index/worktree/stash 全空；同分支后续任务允许两类已归因状态：① 前序已通过任务 final report 的 `changed_files`（accepted implementation，已暂存）② 这些任务各自 review 目录里的未暂存审计产物。除此之外任何 dirty path 都是污染；任一 stash 都阻断。不要凭肉眼读 `git status`，统一用上方 `--worktree-from-reports` 当前版检查器。
+> **「工作树无污染」必须连 `git stash list` 一起看。** 除上方 `--progress` 明确列出的未暂存进度文件，首任务要求 index/worktree/stash 全空；同分支后续任务再允许两类已归因状态：① 前序已通过任务 final report 的 `changed_files`（accepted implementation，已暂存）② 这些任务各自 review 目录里的未暂存审计产物。除此之外任何 dirty path 都是污染；任一 stash 都阻断。不要凭肉眼读 `git status`，统一用上方 `--worktree-from-reports` 当前版检查器。
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并按 `git diff --binary {reviewed_base} {reviewed_head}` 的原始字节计算 SHA-256。首次 `reviewed_base` 取**当前任务** preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。B 类在派审前另运行 `node ../hact-method-lab/templates/scripts/check-b-task.js {task-package} --diff {reviewed_base} {reviewed_head} --root .`，用方法论当前版检查器对实际固定 diff 复核共享契约边界；非 0 退出 B 类并升级，不得继续独审。
 
@@ -236,9 +248,15 @@ node scripts/review-profile.js {task-package-path} \
 
 ### escape-hatch（执行 / 审查返回 blocked 时）
 
-隔离执行单元返回 `status: blocked`，或审查 loop 超界 → 主线**浮给用户**该 blocked 结构，等用户指示后带答案**重派**该任务；用户判定无解 → 走「上下文重置协议」（任务回 `[可取]`）。视觉缺口理论上已被前端设计门预堵，仍冒出则说明 design.md 有漏 → 回补 design / `revise-doc`。
+主线先核 `blocked.detail`、实际工作区、单元运行状态、权威输入及已用轮次，再决定下一动作：
 
-> 每任务通过审查后主线报一行：`✅ {task-id} 完成（{changed-files 数} 文件，{tests} 测试，审查通过）`。集合全部通过后进末端。
+- **可恢复的执行问题**：仓内可查的信息未读、工具中断或执行单元上下文不足 → 主线补齐证据，按「隔离执行单元失败协议」恢复/重派，无需用户重复批准实现。单元仍活跃则接收其结果；确认已中断才对账并恢复同一单元工作，不盲目重做。测试静默或超时不算绿；重跑前核原进程状态，不并发启动重复写入或有副作用的测试。
+- **必须由人处理的边界**：补证后仍存在无法自行裁决的 `do-not/escalate-if`、未授权契约/设计变更、视觉缺口、必要权限/凭据或不可替代能力缺失 → 保留在制品，列明具体缺口、证据、命中的规范条款与需要的人类动作，暂停相关执行。前端设计、B 类契约升级与安全敏感合并裁决仍按各自规则处理，不用技术重试绕过。
+- **达到现有上限**：同一测试修 3 次仍红时先查 oracle/contract，再按下方失败协议允许的主线补证重派一次；仍失败走上下文重置。审查同一根因达到 3 个 code rounds 仍有阻断，按根因发 `revise-doc` 或请求用户裁决，不借执行失败协议增加代码审查轮次。
+
+只有未触及该边界、写集与依赖不冲突且当前执行形态允许的已授权工作可以继续；不得跳过 batch/wave 原子恢复规则或自行拆组。重派、更换单元和上下文恢复不清零测试修复次数、code rounds 或同一 finding 记录。用户给出裁决后核其覆盖范围，恢复记录中的下一动作；用户判定无解、失败协议耗尽或命中下方其他上下文重置条件时按该规则交接，不能仅因一次 `blocked` 就退回任务。
+
+> 每任务通过审查后主线报一行：`✅ {task-id} 独审通过（{changed-files 数} 文件，{tests} 测试）；接着执行 {下一阶段}`，并立即接续。集合全部通过后进末端，尚不能宣告 develop 完成。
 
 ---
 
@@ -351,22 +369,13 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 - `source=bug / optimization` → 在 项目根 `b-tasks.md` 对应行追加 `PR#{N} 已合并`
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"PR#{N} 已合并，可复测"
 
-```
-✅ develop 完成：{task-id-list}（{layer}）已实现、独立审查通过，PR {#N[, #N2, ...]} 已合并到 master。
-本会话到此结束。后续动作（联调 / 复测 / 验收）由对应上游会话触发，不在此处继续。
-```
-
-🚫 **会话硬边界**：输出上述声明后立即停止。禁止建议"现在可以继续浏览器场景 / 复测 / 联调"等后续动作——develop 只负责到代码合并到 master；测试 / 联调 / 验收是独立 task，由对应会话触发，不由 develop 会话延续。
-
 ### feedback 检查 / 就地分流
 
 回顾本次实现，识别值得沉淀的发现：
 - 遇到 standards 未覆盖的决策（视觉 / 接口边界等）且反复出现
 - 上下文重置协议被触发（记录触发原因，供后续调整任务拆分粒度 / context 估量策略参考——估量降低触发概率但不消除，单任务做爆仍走重置）
 - 独立审查反复揪出同类问题（可能 standards / checklist 有空缺）
-- 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）：
-  - ≤5 行且原因显而易见 → 直接修复（在 master 追加 commit），标记 `[x]`
-  - 较复杂 → 评估规模：≤3 文件且改动独立 → 建议走 B 类快速通道；否则入 项目根 `backlog.md`（格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径}`）
+- 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）：评估规模，≤3 文件且改动独立 → 建议走 B 类快速通道；否则入 项目根 `backlog.md`（格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径}`）。合并前决定纳入当前任务的修复仍须走整改、复审与末端验证；合并后只分流记录，不以行数少为由直接在 master 追加未审代码。
 - 无发现 → 跳过
 
 **反馈去向按 `source` 分**：
@@ -378,6 +387,21 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | `bug` / `optimization`（B 类） | **就地分流**：当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
 > 写入项目 `decisions.md` 前先看活跃条目是否已超过 30 条，或最早条目所属迭代是否已过去 5 期以上；若触发阈值，先按文件头约定把纯历史/已取代条目归档到 `decisions-history.md`，再追加本次决策。
+
+### 结束判据与最终移交
+
+准备结束回合前，主线核对实际证据，不以阶段汇报或单元 `done` 代替完成判据：
+
+1. 本轮任务集是否全部走完所需独审/整改、末端验证、PR 合并、状态提交及上述追踪/反馈分流？本轮产生的必要入库记录须提交到对应仓并核结果；项目已忽略的本地 progress 只需落盘。仅文件已写入不等于入库收尾完成。
+2. 是否还有本轮正在运行或结果未接收的执行/审查单元、测试？有则接收结果并推进；不可只报告「等待审查」后结束回合。
+3. 若仍未完成，是否存在已授权且可执行的下一动作？有则继续。仅在用户明确要求停止、真实人类边界、失败协议耗尽或运行环境无法继续时暂停，写明证据、剩余工作与恢复动作。暂停前核本轮活跃单元，能安全中断的先中断，不能中断的记录其状态与影响，避免隐含后台写入。
+
+```
+✅ develop 完成：{task-id-list}（{layer}）已实现、独立审查与末端验证通过，PR {#N[, #N2, ...]} 已合并到 master，状态与必要收尾记录已落定。
+本轮任务集完成。后续联调 / 复测 / 验收由对应上游会话触发。
+```
+
+**会话硬边界**：仅在本轮任务集满足上述结束判据后输出完成声明并停止；individual 中单个任务末端完成而本轮仍有任务时，回主循环继续。不自动拾取范围外任务或转入联调/验收；develop 内目标测试、回归和末端验证不属于禁止接续的下游任务。
 
 ---
 
@@ -392,25 +416,18 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | 只读调查单元 | 阶段 A 的跨目录复用盘点 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 小而明确的登记表由隔离执行单元直读；调查失败也由其直接读 |
 
 **隔离执行单元失败协议**：
-1. 同一问题三次失败 → 隔离执行单元返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策）
-2. 主线带上更多上下文重派一次
-3. 再次失败 → 触发**上下文重置协议**
+1. 同一问题三次失败 → 隔离执行单元返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策 / 已尝试动作与次数）；发现真实人类边界时立即返回，不为凑次数继续尝试。
+2. 主线按 escape-hatch 分类；可恢复时补充权威上下文重派一次。原有尝试记录随派发传入，不重新获得三次试错额度；这一次用于验证补证后的处置。没有新的证据或可行恢复动作时直接升级，不空转重派。
+3. 该次补证重派仍失败 → 触发**上下文重置协议**。中断恢复也保留已用额度；本协议不增加独立审查 code rounds 上限。
 
 **上下文重置协议**（出现以下任一情况触发）：
-- 隔离执行单元二次重派后仍失败 / 审查 loop 超界且 escape-hatch 无解
+- 隔离执行单元按失败协议补证重派一次后仍失败 / 审查 loop 超界且 escape-hatch 无解
 - 实际改动文件超出 `files` 清单 3 个以上
 - 调试轮次 > 20 轮
 - 用户临时追加新需求
 
 重置流程：
-1. 在 `_meta/sessions/develop-{task-id}-progress.md` 写 context-state：
-```yaml
-context-state:
-  task-id: {task-id}
-  completed-files: [...]
-  blocked-at: "{卡在哪里}"
-  key-decisions: [...]
-```
+1. 按下方「上下文管理」更新 `_meta/sessions/develop-{task-id}-progress.md`，记录证据、已用重试额度和准确阻塞原因。
 2. **individual**：将该任务包回 `[可取]`，写阻塞原因；告知用户后续开新会话重拾。
 3. **single-operator-wave**：不得只退当前任务。默认把同 branch 的整组任务保持 `[taken-by]`，写 `_meta/sessions/develop-wave-{id1}--{idN}.json`，schema=`wave-progress/v1`，列 branch 与每个 task 的 `state=accepted|current|pending`；accepted 另列 commit、preflight、profile、final_report。新会话先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --wave-state {progress.json} .`，机械确认该 branch 完整任务集、整组 status、真实 branch、commit 祖先关系及 commit 内审计物后恢复。若用户明确拆组，执行上方 split transaction。任何路径都不得形成“A taken-by 未 merged、B 单独可取”的状态。
 
@@ -430,11 +447,28 @@ context-state:
 
 ## 上下文管理
 
-**断点续做**（主循环中途恢复）：
-1. 读任务集各任务包，确认 AC
-1a. 读 `status.yml` 中本批任务的 `branch` 字段，执行 `git checkout {分支名}` 恢复到正确分支
-2. 读 `git diff --stat` + 各任务 `[done]/[taken-by]` 状态，确认哪些任务已通过审查、哪些未完成（以**工作区实际文件为准**）
-3. 读 `_meta/sessions/develop-{task-id}-progress.md` 的 context-state（如有）了解卡点
-4. 从未完成任务继续，不重做已通过审查的任务
+**进度记录**：复用 `_meta/sessions/develop-{task-id}-progress.md`。确定任务集后，在当前任务记录范围；派发/接收单元、阶段切换、暂停或恢复时更新，不逐工具调用记流水账。旧 context-state 字段保留，追加：
+
+```yaml
+context-state:
+  task-id: {task-id}
+  task-set: [...]             # 本轮已确定的任务集，按执行顺序
+  phase: review              # 当前实际阶段，如 implementation / review / validation / merge / closeout
+  next-action: "接收当前独审结果并按 finding action 分流"
+  units: []                  # 本轮待接收单元/进程的标识、职责、状态；无则 []
+  evidence: []               # preflight / 固定 tree / round report / 测试 / PR 的引用，不复制结论
+  attempts: []               # 同一问题/根因已尝试动作与次数；code rounds 以审查报告对账
+  completed-files: [...]
+  blocked-at: null           # 暂停时写具体原因、规范条款与所需人类动作
+  key-decisions: [...]       # 已授权范围与已确认门的出处、适用条件
+```
+
+此记录只描述执行意图与恢复线索，不替代任务包、`status.yml`、审查或测试证据。只保存无凭据的运行标识；运行时专属状态查询/等待方式按当前运行时实现，不写入任务或 Gate。wave 仍使用原 `wave-progress/v1` JSON 与校验器作为整组恢复依据，上述补充信息写当前任务 progress，不改变 wave JSON schema。
+
+**断点续做**（含主循环、末端及合并后收尾）：
+1. 读本轮任务集、任务包与进度记录，核已授权范围、当前阶段及下一动作。旧记录缺新字段时从任务/审查/PR 证据重建，不要求重做实现或重新授权。
+2. 先核实际工作区、分支和本轮单元/进程状态；仍活跃则接收结果，不重派并发写入。核 `status.yml` 的 branch 与 Git/PR 实际进度；安全切换前保护在制品，不因进度文件写了分支名就盲目 checkout。wave 先走原整组恢复校验，不仅凭当前任务记录恢复。
+3. 用实际 diff、固定 tree、preflight、最终 round report 和测试证据核已完成阶段；仅 `git diff --stat`、状态文本或单元自报无法证明审查通过。实现或基线已变化时核影响并按原规则复验，不能沿用失效结论。重派/恢复前对账 attempts 与 rounds，不重置上限。
+4. 从首个未完成阶段接续：代码已在 PR 合并但状态未落定 → 核远端合并结果后补状态/收尾，不重复实现或创建 PR；已证实通过且快照未变 → 继续下一动作，不重复独审。新发现真正边界按 escape-hatch 处理。
 
 **阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 progress.md 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。

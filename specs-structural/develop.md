@@ -79,7 +79,7 @@ api-contract:
 | preflight / review rounds | A 类 `iterations/vN/code-reviews/{task-id}/`；B 类 `b-reviews/{task-id}/` | `preflight.md` + `profile-round-NN.json`（每次普通 full）+ `round-NN.md`；含固定 Git tree、自动维度集合、finding id、full/targeted scope 与逐轮墙钟 |
 | code_reviews[] 审计留痕 | 项目根 `status.yml` | 每 task 一条（conclusion + issues + 聚合轮次/墙钟 + report 目录 + review profile version），由 develop 末端写入 |
 | global seam review（触发时） | `iterations/vN/global-seam-review.md` | 本期最后一个 sprint 集合的包间接缝结论；gap 另开任务，不回灌单包 |
-| 上下文重置记录（触发时写入） | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：已完成文件 / 阻塞点 / 关键决策 |
+| 执行进度 / 上下文重置记录 | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：任务集 / 当前阶段 / 下一动作 / 待接收单元 / 证据引用 / 已用尝试 / 已完成文件 / 阻塞点 / 关键决策；阶段切换或中断时更新，旧记录缺新增字段从权威证据重建；wave 整组恢复仍以既有 wave-progress/v1 为准 |
 
 ---
 
@@ -95,6 +95,7 @@ api-contract:
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
 - [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 档审查的先重派高能力审查档）
 - [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录 `code_rounds/spec_rounds`、implementation/review/spec 墙钟、report 目录、review profile/evidence version 与 finding 路由）
+- [ ] 本轮任务集全部收尾完成：状态与按 source 必需的追踪/反馈记录已提交，执行/审查/测试结果均已接收；不存在未完成的本轮必要动作。单元 `done` 或单个任务独审通过不等于 develop 完成
 
 ---
 
