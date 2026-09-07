@@ -33,6 +33,29 @@ function delegatesTracked(source) {
   });
 }
 
+function hasCommand(source, pattern) {
+  return String(source || '').split(/\r?\n/).some(line => {
+    const command = line.trim();
+    return command && !command.startsWith('#') && pattern.test(command);
+  });
+}
+
+function delegatesViaHusky(active, source) {
+  // Husky v9 的生效入口只 source 同目录的 h；h 再按入口名转到
+  // .husky/pre-commit。三段都能静态确认时，才把它视为有效委托。
+  if (!hasCommand(source, /^\.\s+["']?\$\(dirname\s+["']?\$0["']?\)["']?\/h["']?$/)) return false;
+  const huskyRuntime = path.join(path.dirname(active), 'h');
+  const projectHook = path.join(path.dirname(path.dirname(active)), path.basename(active));
+  if (!fs.existsSync(huskyRuntime) || !fs.existsSync(projectHook)) return false;
+
+  const runtimeSource = fs.readFileSync(huskyRuntime, 'utf8');
+  const forwardsNamedHook = hasCommand(runtimeSource, /^n=\$\(basename\s+["']?\$0["']?\)$/)
+    && hasCommand(runtimeSource, /^s=\$\(dirname\s+["']?\$\(dirname\s+["']?\$0["']?\)["']?\)\/\$n$/)
+    && hasCommand(runtimeSource, /^sh\s+-e\s+["']?\$s["']?\s+["']?\$@["']?$/);
+  if (!forwardsNamedHook) return false;
+  return delegatesTracked(fs.readFileSync(projectHook, 'utf8'));
+}
+
 function isExecutable(file) {
   if (process.platform === 'win32') return true;
   return (fs.statSync(file).mode & 0o111) !== 0;
@@ -55,13 +78,16 @@ function inspect(root, methodRoot) {
   } else {
     const activeBody = fs.readFileSync(active);
     result.activeHash = hash(activeBody);
-    const delegates = delegatesTracked(activeBody.toString('utf8'));
+    const activeSource = activeBody.toString('utf8');
+    const delegates = delegatesTracked(activeSource);
+    const huskyDelegates = !delegates && delegatesViaHusky(active, activeSource);
     if (!isExecutable(active)) {
       result.state = 'degraded';
       result.signals.push('active-not-executable');
     }
     if (Buffer.compare(trackedBody, activeBody) === 0) result.install = 'exact-copy';
     else if (delegates) result.install = 'delegates-tracked';
+    else if (huskyDelegates) result.install = 'husky-delegates-tracked';
     else {
       result.state = 'degraded';
       result.install = 'drift-or-custom';

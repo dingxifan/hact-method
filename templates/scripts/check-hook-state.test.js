@@ -27,6 +27,37 @@ assert.ok(inspect(root).signals.includes('active-tracked-drift'), '只有注释�
 fs.writeFileSync(active, '#!/bin/sh\necho custom\n');
 assert.ok(inspect(root).signals.includes('active-tracked-drift'), '未知自定义 hook 必须报告漂移');
 
+const huskyDir = path.join(root, '.husky');
+const huskyRuntimeDir = path.join(huskyDir, '_');
+fs.mkdirSync(huskyRuntimeDir, { recursive: true });
+assert.strictEqual(spawnSync('git', ['-C', root, 'config', 'core.hooksPath', '.husky/_']).status, 0,
+  '设置 Husky hooksPath 失败');
+const huskyActive = path.join(huskyRuntimeDir, 'pre-commit');
+const huskyRuntime = path.join(huskyRuntimeDir, 'h');
+const huskyProjectHook = path.join(huskyDir, 'pre-commit');
+fs.writeFileSync(huskyActive, '#!/usr/bin/env sh\n. "$(dirname "$0")/h"\n');
+fs.writeFileSync(huskyRuntime, [
+  '#!/usr/bin/env sh',
+  'n=$(basename "$0")',
+  's=$(dirname "$(dirname "$0")")/$n',
+  '[ ! -f "$s" ] && exit 0',
+  'sh -e "$s" "$@"',
+  'exit $?',
+  '',
+].join('\n'));
+fs.writeFileSync(huskyProjectHook, 'npx lint-staged\nsh scripts/pre-commit-hook.sh\n');
+const huskyResult = inspect(root);
+assert.strictEqual(huskyResult.state, 'available', '标准 Husky 两层转发应通过');
+assert.strictEqual(huskyResult.install, 'husky-delegates-tracked', 'Husky 转发应明确标识安装形态');
+
+fs.writeFileSync(huskyProjectHook, '# sh scripts/pre-commit-hook.sh\nnpx lint-staged\n');
+assert.ok(inspect(root).signals.includes('active-tracked-drift'), 'Husky 项目 hook 只有注释委托必须降级');
+fs.writeFileSync(huskyProjectHook, 'sh scripts/pre-commit-hook.sh\n');
+fs.writeFileSync(huskyRuntime, '#!/usr/bin/env sh\nexit 0\n');
+assert.ok(inspect(root).signals.includes('active-tracked-drift'), 'Husky 运行时未转发项目 hook 必须降级');
+assert.strictEqual(spawnSync('git', ['-C', root, 'config', '--unset', 'core.hooksPath']).status, 0,
+  '还原 hooksPath 失败');
+
 const methodRoot = path.join(root, 'method');
 fs.mkdirSync(path.join(methodRoot, 'templates', 'scripts'), { recursive: true });
 fs.writeFileSync(path.join(methodRoot, 'templates', 'scripts', 'pre-commit-hook.sh'), '#!/bin/sh\necho newer\n');
