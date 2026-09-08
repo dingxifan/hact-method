@@ -103,7 +103,7 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；字段格式、AC 权威层级与 reference 锚规则由模板承接。每包只写相对 as-built 的 delta，normative core 超过 8–12KB 时拆包或迁 non-normative appendix。**数量**：≤4 主线逐个写、>4 可启并行隔离执行单元（各 2–3 包，见「隔离单元使用」）；隔离单元只返回内容，由主线写文件。每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
+骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；字段格式、AC 权威层级与 reference 锚规则由模板承接。每包只写相对 as-built 的 delta，normative core 超过 8–12KB 时拆包或迁 non-normative appendix。主线直接撰写；只有模块独立、共享定义稳定且工作量足以节时才委派，不按任务数量触发。子代理直接写获准的独立任务包文件，返回路径与待决项，主线维护共享 sprint/status。每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
 
 下表只列**模板讲不了的判断 / 跨文件来源**（中）+ **该字段验证归属**（右，显式标谁机械、谁留人）：
 
