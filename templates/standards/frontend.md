@@ -1,6 +1,6 @@
 # 前端编码规范（通用模板 · 栈无关）
 
-> 本文件是候选规则库。项目启动时由 draft-foundation（V0 首播）/ draft-tech-design（存量兜底）按 `schema.md` 选择通过准入门槛的当前稳定默认，改写为带稳定 id 与 `applies-if` 的规则条目；禁止整节复制或按版本追加。
+> 本文件是候选规则库。draft-foundation 只取 V0 骨架实际命中项；首期 draft-tech-design 再按真实 PRD/TRD 补齐适用规则。条目须过 `schema.md` 准入，带稳定 id 与 `applies-if`；禁止整节复制或按版本追加。
 > **本文件只保留栈无关的原则与纪律**；栈特定写法（组件规范 / UI 库陷阱 / 状态库 / 构建工具）见对应**栈子模板** `frontend-{栈}.md`（如 `frontend-vue3.md`），播种时按 `project.md` 技术层选用并与本文件叠加。项目用的栈无子模板 → 仅用本文件，栈特定约定直接写项目根 standards。
 > 通用候选在此维护；色彩值、断点值、业务状态枚举等本期契约回 design.md/PRD/TRD，不进入项目 Standards。
 

@@ -11,7 +11,7 @@
 | Gate | 内涵 | 签于哪个 task |
 |---|---|---|
 | **G1** | 本期 PRD 通过——产品需求清晰、用户故事完整、acceptance criteria 制定 | `draft-prd-vN` 任务尾部 |
-| **G2** | 本期技术设计通过——TRD（接口/数据结构）+ 3 份 standards 完成；**V0 走骨架**：地基设计通过（foundation.md 实际档达标 + 走骨架设计 + standards 首播） | `draft-tech-design`（V1+）/ `draft-foundation`（V0）任务尾部 |
+| **G2** | 本期技术设计通过——TRD（接口/数据结构）+ 3 份 standards 完成；**V0 走骨架**：仅获准 V0 行实际档达标 + 一根最薄切片设计 + 命中的最小 standards | `draft-tech-design`（V1+）/ `draft-foundation`（V0）任务尾部 |
 | **G3** | 开发包就绪——sprint 拆解完成、queue 写满、任务依赖明确 | `plan-sprint` 任务尾部 |
 | **G4** | 开发完成——所有开发任务 [merged]、联调通过、人工验收通过 | `manual-test` 任务尾部 |
 | **G5** | 迭代收尾——偏离对账 + feedback 分流 + project.md 合并 完成 | `wrap-up-iteration` 任务尾部 |

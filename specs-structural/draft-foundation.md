@@ -4,15 +4,15 @@
 **Gate**: G2（v0 地基设计验收）
 **属性**: —
 
-> V0 地基设计：据项目根 `foundation.md`（地基蓝图）定栈、给每块跨切面关注点选定具体形式并验"实际档 ≥ 应有档"、首期播种 standards、定走骨架范围与标杆切片，签 G2(v0)。**只产设计文档，不产代码**（公共代码归 V0 `develop(source=foundation)`）。
+> V0 地基设计：据项目根 `foundation.md`（地基蓝图）定栈，只纳入稳定、跨切面且晚建代价高的承重项，给 V0 行选定形式并验"实际档 ≥ 应有档"，写命中的最小 standards，定一根标杆切片，签 G2(v0)。**只产设计文档，不产代码**（公共代码归 V0 `develop(source=foundation)`）。
 
 ---
 
 ## 前置条件
 
-- **触发**：init-project 完成且 `foundation.md` 已播种（A 类项目的 V0，先于 V1 PRD）
+- **触发**：init-project 完成、`foundation.md` 已播种且用户已选择走 V0（先于 V1 PRD）
 - **前置 Gate**：无——V0 无 PRD、无 G1，是 A 类流程在 init 之后、V1 之前的走骨架阶段
-- **需确认**：技术栈偏好（语言 / 框架 / 数据库 / UI 库）
+- **需确认**：V0 范围与 G2；技术栈偏好仅在缺失或存在真实取舍时确认
 - **执行位置**：项目仓 `../{name}/`
 
 ---
@@ -29,9 +29,9 @@
 
 | 产物 | 路径 | 内容 |
 |------|------|------|
-| foundation.md（更新） | `{name}/foundation.md` | 「二」表「实际形式·档」列逐行回填；实际档 ≥ 应有档，安全项=构造级（项目根活文档，原地更新） |
-| foundation-design.md | `{name}/iterations/v0/foundation-design.md` | 走骨架设计：地基件清单 + 作用域构造级落地机制 + 标杆穿透切片（供 develop 建造的薄设计） |
-| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 按 Standards schema 首播当前稳定默认规则；此后原地更新当前真值，不追加版本史 |
+| foundation.md（更新） | `{name}/foundation.md` | 各行标 V0/V1+；只给 V0 行填写具体形式与实际档，安全项若纳入则为构造级 |
+| foundation-design.md | `{name}/iterations/v0/foundation-design.md` | 仅含获准地基件 + 一根标杆穿透切片；不得含 V1 额外交付 |
+| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 只写 V0 地基件、标杆与测试命令直接命中的最小规则；其余由首期 TRD 补齐 |
 | project.md（技术层） | `{name}/project.md` | 栈 / 数据库 / 模块划分 / 测试框架 |
 | decisions.md | `{name}/decisions.md` | 关键架构决策（栈理由 / 各地基件形式 / 安全项构造级机制） |
 | gates.md | `{name}/iterations/v0/gates.md` | G2 签署 |
@@ -42,9 +42,9 @@
 ## 完成判据（= G2(v0) 判据）
 
 - [ ] 技术栈已定并写入 `project.md` 技术层
-- [ ] `foundation.md` 每个关注点都有「实际形式」，且**实际档 ≥ 应有档**（数据隔离 / 鉴权等安全敏感项 = 构造级）
-- [ ] `iterations/v0/foundation-design.md` 含地基件清单 + 作用域构造级落地 + 标杆穿透切片
-- [ ] 三份 standards 已首期播种（**含**测试基建约定 + 视觉地基约定）
+- [ ] `foundation.md` 每行已判 V0/V1+；V0 行有实际形式且**实际档 ≥ 应有档**，安全敏感项 = 构造级
+- [ ] `iterations/v0/foundation-design.md` 仅含获准地基件 + 一根标杆穿透切片，无 V1 额外交付
+- [ ] 测试命令与 V0 实际命中的最小 standards 已写；未命中层允许保留空桩
 - [ ] G2 已签，`status.yml` 已更新
 - [ ] 未产任何代码（公共代码归 V0 develop）
 - [ ] 完成判据已核对

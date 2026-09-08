@@ -39,7 +39,7 @@
 | feedback.md | `{name}/feedback.md` | 复制自 `templates/feedback.md` |
 | design.md | `{name}/design.md` | 复制自 `templates/design.md`（空模板，`draft-ux` Step 1.3 填变量） |
 | foundation.md | `{name}/foundation.md` | 复制自 `templates/foundation.md`（**地基蓝图**空模板，Step 5 共识讨论填领域地图 + 地基关注点登记 + 安全项应有档=构造级；下游 V0 走骨架据此建） |
-| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 空桩；V0 按 `templates/standards/schema.md` 首播当前稳定默认规则，后续只更新当前真值 |
+| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 空桩；V0 只写骨架命中的最小规则，完整首播由首期 `draft-tech-design` 兜底 |
 | _meta/input/ | `{name}/_meta/input/` | 空目录，存放背景材料和上下文文档 |
 | _meta/sessions/ | `{name}/_meta/sessions/` | 空目录，存放跨会话接续文件 |
 | hact-notes 仓（每成员） | `gitee.com/{notes-org}/hact-notes-{姓名}` | 私有仓 + 登记入 `_meta/hact-config.md`（决策#21） |
@@ -71,7 +71,8 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `draft-foundation`（V0 地基设计） | 项目仓 + 地基蓝图就位，A 类先走 **V0 走骨架**（地基设计→G2→develop 建骨架），骨架跑通后才进 V1 draft-prd-vN | `{name}/foundation.md` |
+| `draft-foundation`（V0 地基设计） | 存在稳定、跨切面且晚建代价高的约束，用户选择走 V0 | `{name}/foundation.md` |
+| `draft-prd-vN` | 无 V0 准入项或范围过大，跳过 V0 直接进 V1 | `{name}/foundation.md` |
 | `dispatch-new` | 项目仓就位，B 类流程可启动 | `{name}/b-tasks.md` |
 
 ---

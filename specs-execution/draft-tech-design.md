@@ -202,9 +202,9 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 ### Step 7：维护项目活文档（地基蓝图增补 + Standards）
 
-**地基蓝图增补（`foundation.md`，post-V0 维护——与 standards 增补同理）**：foundation.md 是项目根跨迭代活文档（V0 `draft-foundation` 播种）。本期设计若识别出**新的跨切面关注点**——新核心实体贯穿全局 / 新跨切面技术地基（新错误类目、新作用域维度、新全局拦截）/ 上期 develop 经 feedback 上来的地基缺口——则**原地增补** foundation.md：「一、领域地图」补核心实体；「二、关注点登记」补新行 + 立**应有档**（安全敏感项=构造级，同 V0 纪律）。**准入门槛照旧**：只收已证明跨切面 + 稳定的，本期一次性 / 含糊的不进、留 escape 再提拔。
+**地基蓝图增补（`foundation.md`，首期与 post-V0 维护——与 standards 增补同理）**：foundation.md 是项目根跨迭代活文档（init 播种，V0 可选）。本期设计若识别出**新的跨切面关注点**——新核心实体贯穿全局 / 新跨切面技术地基（新错误类目、新作用域维度、新全局拦截）/ 上期 develop 经 feedback 上来的地基缺口——则**原地增补** foundation.md：「一、领域地图」补核心实体；「二、关注点登记」补新行 + 立**应有档**（安全敏感项=构造级，同 V0 纪律）。**准入门槛照旧**：只收已证明跨切面 + 稳定的，本期一次性 / 含糊的不进、留 escape 再提拔。
 
-> **≥机械级的档位不能空口立**（同 V0 探针纪律，见 `../hact-method-lab/templates/review-briefs/foundation-review.md`）——声明构造级 / 机械级时，「实际形式·档」列必须落到**落地手段的具体位置**（文件:行 / 规则名），二选一：
+> **≥机械级的档位不能空口立**（同 V0 探针纪律，见 `../hact-method-lab/templates/review-briefs/foundation-review.md`）——声明构造级 / 机械级时，「阶段 / 实际形式·档」列必须落到**落地手段的具体位置**（文件:行 / 规则名），二选一：
 > - **手段已在**：亲手写一条违规、跑对应检查（type-check / lint / 裸 SQL / 越权路由，按项目栈），**真被挡**才算数；没被挡就是实际档低于声明，当场降档。探针临时文件跑完即删、不进 commit。
 > - **手段本期才建**：登记为「待建·应有档 {档}」，并在本步产出里注明该关注点须由 `plan-sprint` 拆的**地基跟进包**实建，其 AC 必须写「写违规反例、跑检查、验证真被挡」。
 >
@@ -214,7 +214,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 > **存量守卫（未走 V0、无 foundation.md 的项目）**：本步整体跳过；只有通过 Standards 准入的稳定默认才更新下方当前规则表，不为此顺手新建 foundation.md。
 
-三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，只承接 PRD/TRD/design/Foundation/check/test 之后剩下的、暂不能由更强权威对象承接的默认规则。新项目已由 V0 首播；存量空桩需要首播时视为三个 layer 都有候选。禁止按 vN 追加历史段。
+三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的**当前稳定默认规则表**，只承接 PRD/TRD/design/Foundation/check/test 之后剩下的、暂不能由更强权威对象承接的默认规则。走过 V0 的项目也只已有骨架命中项；首期 V1 与存量空桩一样，按本期真实需要补齐适用 layer。禁止按 vN 追加历史段。
 
 **先做候选扫描，不先加载模板**。主线从本期已写 TRD、Foundation/design 变化、项目 feedback 的 `[规范]`/Standards 相关行、notes 的 `[规范]` 标签行和现有规则 id + `applies-if` 生成 `0..N` 条 `standards-candidate`，每条只含：目标 layer、触发事实、为什么是跨任务长期默认、可能新增/替换/删除的 rule id。以下任一也触发候选：测试机制或视觉地基 enforcement 发生变化；项目 Standards 为空；用户明确要求做 Standards cleanup。
 
@@ -244,7 +244,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 - 新项目：测试框架已由 V0 确立 → 本期沿用；机制变化时更新同一规则，不另加版本段。
 - 存量项目（未走 V0）：在此确立框架，写入 standards-backend 与 项目根 `project.md` 技术层；若项目尚无测试运行器，标记为迁移待办——补 standards 测试约定 + 在项目装运行器后，backend develop 的测试步方可正常跑（见 `develop.md` 阶段 A 测试基建缺失处理）。
 
-**视觉地基约定（可视区地基，含前端时不可省）**：新项目由 V0 首播，本期沿用；只有 enforcement 或默认约束变化才形成 candidate。存量项目在此首播。项目 Standards 以规则 id 引用视觉地基的 enforcement，Foundation 承接全局入口/主题强制档，design.md 承接具体 token 真值，不在 Standards 重复三份全文。
+**视觉地基约定（可视区地基，含前端时不可省）**：V0 纳入视觉地基时沿用其最小规则；V0 未纳入或未走 V0 时，本期在真实页面需求下首播。项目 Standards 以规则 id 引用视觉地基的 enforcement，Foundation 承接全局入口/主题强制档，design.md 承接具体 token 真值，不在 Standards 重复三份全文。
 
 有候选/cleanup 时汇总检查：字段完整、无重复/矛盾、无版本追加史；TRD 关键契约留在 TRD，不以“覆盖所有 TRD 细节”为目标。最终 G2 确认时附一行：`Standards：跳过（0 candidate）` 或 `保留 {N} / 新增 {N} / 删除或迁移 {N}`；机械过程中不另播报。
 

@@ -30,7 +30,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | TRD | `iterations/vN/trd.md` | Markdown，套结构化模板 `templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位，供 `scripts/check-docs.js` 解析与交叉对账） |
-| 共享规范 | 项目根 `standards-shared.md` | 当前稳定默认规则表；V0 首播，V1+ 原地更新当前真值，不追加版本史 |
+| 共享规范 | 项目根 `standards-shared.md` | 当前稳定默认规则表；V0 只写骨架命中项，首期 V1 补齐适用规则，之后原地更新当前真值 |
 | 前端规范 | 项目根 `standards-frontend.md` | 同上 |
 | 后端规范 | 项目根 `standards-backend.md` | 同上（含「测试框架约定」节） |
 | 地基蓝图增补（条件） | 项目根 `foundation.md` | **仅本期识别出新跨切面关注点时**：原地增补领域地图 / 关注点登记 + 立应有档（V0 播种、本任务 post-V0 维护，与 standards 同纪律；Step 7）。**≥机械级须落到落地手段位置**（文件:行 / 规则名）+ 反例验证，或登记「待建」交 `plan-sprint` 拆地基跟进包；给不出则只能立人审级 |

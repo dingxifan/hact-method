@@ -275,13 +275,13 @@
 
 ### 14. `draft-foundation`
 
-> V0 地基设计：据 `foundation.md` 定栈、给每块跨切面关注点选定形式并验强制边、首播 standards、定走骨架范围与标杆切片。**只产设计、不产代码**（公共代码归 `develop(source=foundation)`）。
+> V0 地基设计：据 `foundation.md` 定栈，只纳入稳定、跨切面且晚建代价高的承重项，验这些 V0 行的强制边，写命中的最小 standards，定一根标杆切片。**只产设计、不产代码**（公共代码归 `develop(source=foundation)`）。
 
 - **discipline**: `architecture`
-- **完成判据**: foundation.md「实际形式·档」逐行 ≥ 应有档（安全项构造级）+ foundation-design.md 含地基件 + 标杆切片 + 三份 standards 首播 + 栈入 project.md + G2(v0) 签
-- **主要产物**: `foundation.md`（更新）+ `iterations/v0/foundation-design.md` + 三份 standards 首播 + `project.md` 技术层 + `iterations/v0/gates.md`
-- **关联 Gate**: **G2**（v0；与 draft-tech-design 同槽，architecture 签字，判据为地基验收：每块选定形式且达标 + 标杆切片定 + standards 播种）
-- **前置条件**: init-project 完成、`foundation.md` 已播种（A 类项目 V0，先于 V1 PRD）
+- **完成判据**: foundation.md 已判 V0/V1+，V0 行实际档达标（安全项构造级）+ foundation-design.md 仅含获准地基件与一根标杆切片 + 命中的最小 standards + 栈入 project.md + G2(v0) 签
+- **主要产物**: `foundation.md`（更新）+ `iterations/v0/foundation-design.md` + 最小 standards 增量 + `project.md` 技术层 + `iterations/v0/gates.md`
+- **关联 Gate**: **G2**（v0；与 draft-tech-design 同槽，architecture 签字，只验获准 V0 行 + 标杆切片 + 命中规则）
+- **前置条件**: init-project 完成、`foundation.md` 已播种，且存在满足 V0 准入门槛的高改造成本约束（先于 V1 PRD）
 - **属性**: 无（迭代固定 v0）
 
 详见 `specs-structural/draft-foundation.md`。

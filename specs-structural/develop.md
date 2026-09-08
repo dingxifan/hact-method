@@ -13,7 +13,7 @@
 - **触发**：任务包已入 queue，状态为 [可取]
 - **文件**：对应 layer 的 `standards-{layer}.md` + `standards-shared.md` 已存在（`draft-tech-design` 产物）
 - **source=sprint**：G3 已签（`plan-sprint` 完成）
-- **source=foundation**：G2(v0) 已签（`draft-foundation` 完成）；建造单元 = `iterations/v0/foundation-design.md`（地基件 + 标杆切片），全栈、无任务包队列
+- **source=foundation**：G2(v0) 已签（`draft-foundation` 完成）；建造单元 = `iterations/v0/foundation-design.md`（获准的最小地基件 + 一根标杆切片），执行层按真实切片决定、无任务包队列
 - **source=integration**：上游联调脚本失败场景已记录，修复任务包由 `generate-integration-tests` 派出
 - **source=manual-test**：验收问题已记录，修复任务包由 `manual-test` 派出
 - **source=bug / optimization**：任务包由 `dispatch-new` 派出，无 Gate 前置

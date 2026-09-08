@@ -71,7 +71,7 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，`check-sprint.js` / `check-gate.js` 的取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
 **特殊桩（不走 templates/）**：
-- 项目根三份 Standards：建空桩；V0 `draft-foundation` 按 `templates/standards/schema.md` 首播当前稳定默认规则（存量由 draft-tech-design 兜底），后续只更新当前真值
+- 项目根三份 Standards：建空桩；走 V0 时 `draft-foundation` 只写骨架实际命中的最小规则，完整首播由首期 `draft-tech-design` 兜底，后续只更新当前真值
 
 同时写入以下文件：
 - **运行时入口与项目配置（新项目默认双运行时）**：依次执行 `templates/runtime/cc.md` 与 `templates/runtime/codex.md` 的「项目初始化映射」。入口只引用共同启动正文，不复制协议；具体目录和文件只由映射定义；若目标路径已有文件，先报告差异，禁止覆盖存量配置
@@ -234,32 +234,32 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 
 **5.3 填 `foundation.md`：**
 - **「一、领域地图」**：填核心实体表 + 作用域 + 不变式（无则写"无"）。
-- **「二、地基关注点登记 + 强制边」**：技术内生清单逐行勾选/删减；从「一」补**领域涌现**行（尤其那个贯穿全局作用域 → 必有一行"数据隔离/作用域"）。
-- **立应有档（init 的核心价值）**：逐行确认「应有档」。⚠️ **安全敏感项（数据隔离/鉴权/越权）= 构造级，不可议价**——向用户点明：bar 不在这立，下游再好的人也会滑到手写弱边、漏一行就泄数据（mail-ai/JHH 实证）。「实际形式·档」留空，V0 选栈后填。
+- **「二、地基关注点登记 + 强制边」**：技术内生清单逐行勾选/删减；从「一」补**领域涌现**行（尤其那个贯穿全局作用域 → 必有一行"数据隔离/作用域"）。预置行只是候选，不自动进入 V0。
+- **立应有档与阶段（init 的核心价值）**：逐行确认「应有档」，并按 Step 5.4 标 `V0` / `V1+`。⚠️ **安全敏感项（数据隔离/鉴权/越权）= 构造级，不可议价**——向用户点明：bar 不在这立，下游再好的人也会滑到手写弱边、漏一行就泄数据（mail-ai/JHH 实证）。V0 行的具体形式由 `draft-foundation` 填，V1+ 行写推迟理由。
 
 > **尺寸纪律**：中小型项目这步是一场短讨论 + 半页 foundation.md，别滚成分析瘫痪。完成判据 = "地基播了种、各方认了"，不是"全貌全想透"；含糊项留空，等开发中 escape 提拔。
 
-**5.4 决定要不要走 V0 走骨架**（A 类项目）：默认**走**——把跨切面地基（瓶颈管道 / 作用域 repo / 外壳 / 主题框架）在 V1 之前一次性建对。**微型项目可声明跳过**（如几页的小工具，多一整轮设计+build 不划算，与 `draft-ux: 需要/不需要` 对称）：
-- **走 V0**（默认）→ `draft-foundation` 建 `iterations/v0/`，走 V0 流程。
-- **跳过 V0** → **不建 `iterations/v0/`**，直接进 V1；地基代码在 V1 内随功能组织、standards 等首期簇由 `draft-tech-design` 兜底（**等同存量路径**）。**代价**：放弃 V0「强制边在 build 前焊死」的保证，靠 plan-sprint 视觉地基包 + develop 兜——仅微型 / 低风险项目适用。
+**5.4 决定要不要走 V0 走骨架**（A 类项目）：V0 **不默认走**。只有至少一项候选约束同时满足下列三项才走：
+1. 已证明会被多个功能共同经过，且不是为某个 V1 功能专设；
+2. 约束已稳定，并且晚建会横切多层/多模块、迁移数据或扩大安全风险；
+3. 能用一根最薄真实切片证明，不需要预建未来功能。
+
+- **走 V0** → `draft-foundation` 建 `iterations/v0/`；只建命中上述门槛的承重项 + 一根标杆切片。
+- **跳过 V0** → **不建 `iterations/v0/`**，直接进 V1；地基随首批功能建立，Standards 首播由 `draft-tech-design` 承接。项目小并不是唯一理由——没有高改造成本的稳定跨切面约束就应跳过。
+
+「V1 马上要用」「以后也许会用」「想把模板一次配齐」都不是 V0 准入理由。若预计范围超过一个正常中型 develop 任务，先删到最难后补的约束；仍超出则跳过 V0，把其余内容放回 V1。
+
+按本次决定回填 `foundation.md` 最后一列：获准项写 `V0（具体形式待 draft-foundation）`，其余写 `V1+（理由）`。
 
 > `iterations/v0/` 是否存在 = V0 路径的机器信号（跨会话推断据此判，见项目仓共同启动协议 Step 1）；跳过则该目录不存在、推断自然落到 V1。
 
-🚫 等用户拍板走 / 跳
+🚫 等用户一次确认地基蓝图与走 / 跳决定
 
 **5.5 提交：**
 ```bash
 cd "../{name}"
 git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git push
 ```
-
-```
-✅ 地基蓝图就位：foundation.md 已播种（领域地图 + N 个地基关注点，安全项应有档=构造级）。
-→ 下一步：移交
-继续？
-```
-
-🚫 等用户确认地基蓝图无误才继续
 
 ---
 
@@ -273,7 +273,7 @@ git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git pus
 - 连接登记：connections.yml（已播种，`check-conn.js check` 通过）
 → 下一步（按 Step 5.4 的 V0 决定）：
 - **走 V0**：`draft-foundation`（V0 地基设计，依 foundation.md 选形式、定栈）→ 签 G2(v0) → `develop(source=foundation)` 建骨架 → V0 端到端跑通后进 V1 `draft-prd-vN`。
-- **跳过 V0**（微型项目）：直接 V1 `draft-prd-vN`（地基随功能在 V1 内建，存量兜底路径）。
+- **跳过 V0**：直接 V1 `draft-prd-vN`（地基随首批功能建立，存量兜底路径）。
 - B 类需求：直接用 `dispatch-new`。
 ```
 

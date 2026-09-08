@@ -37,7 +37,7 @@
 - 仅一个 layer 有 `[可取]` 任务 → 直接定层，播报「当前执行层：{layer}（唯一有可取任务的层）」后继续，不等待
 - 两层都有 `[可取]` 任务且用户未指明 → 🚫 问「当前执行层：frontend / backend？」等确认
 
-**`source=foundation` 全栈，跳过本步。**
+**`source=foundation` 的执行层由 foundation-design 的真实切片决定，跳过本步。**
 
 **Gate 前置检查（按 source）**
 
@@ -50,18 +50,18 @@
 
 `source=foundation` 时会话启动改走本块——**不走** sprint 拾取/认领/批次分支/前端设计门；**主循环 + 末端照常**，仅三处替换：
 - **判定 foundation 模式**（无任务包、无 source 字段可读）：由项目状态判——`iterations/v0/gates.md` G2 已签 **且** `status.yml` 无 `[merged]` 的 `foundation` task（即项目仓共同启动协议 Step 1「先判 V0」推断出的本模式），或用户明示走骨架。
-- **全栈、不问执行层**：走骨架横跨前后端，跳过「第零步」。
-- **建造单元 = `iterations/v0/foundation-design.md`**：对象 = 其「地基件清单」逐件 + 「标杆穿透切片」。地基件互锁（管道/作用域 repo/外壳/主题/信封彼此依赖）→ **串行建在单条 `foundation-v0` 分支、共一个 PR**：
+- **不问执行层**：按 foundation-design 的真实切片覆盖必要层；不为凑“全栈”创建不存在的 frontend/backend，跳过「第零步」。
+- **建造单元 = `iterations/v0/foundation-design.md`**：对象 = 其中获准的最小「地基件清单」+ 一根「标杆穿透切片」；标为 V1+ 的关注点和任何“V0 额外交付”均不实现。获准件互锁时串行建在单条 `foundation-v0` 分支、共一个 PR：
   ```bash
   git checkout -b foundation-v0   # 从 master 切
   ```
   status.yml：`iterations.v0` 块已由 draft-foundation 建（仅 G2）；此处只往 `tasks` **追加** `{ id: foundation, source: foundation, status: taken-by, branch: foundation-v0 }`（不重建 v0 块）。
-- **跳过前端设计门**：走骨架建主题**框架**用占位 token（design.md 真值由 V1 `draft-ux` 填），不实现具体画面 → 无 design.md 覆盖可对、无前端设计人工门。
+- **跳过前端设计门**：视觉地基获准进入 V0 时只建占位框架；未获准时标杆页面保持最小无装修形态，不预装完整主题。两者都不实现具体画面 → 无 design.md 覆盖可对、无前端设计人工门。
 - **三处替换**（其余主循环 / 末端不变）：
-  ① 阶段 A 隔离执行单元 **自读 `foundation-design.md` 对应件 + `foundation.md` 该关注点行 + relevant standards**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
+  ① 阶段 A 隔离执行单元 **自读 `foundation-design.md` 对应件 + `foundation.md` 对应 V0 行 + relevant standards**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
   ② 阶段 B 独审读 **`../hact-method-lab/templates/review-briefs/foundation-review.md`**（替代 develop-review：验强制边实际档≥应有档 + 命门 + 标杆质量）。
   ③ 末端状态更新走下方「`source=foundation`」分支（无 sprint.md；登记标杆切片）。
-> 安全敏感预检（末端·合并前）：走骨架本就含数据隔离/鉴权的构造级落地 → **必然触发** architecture 裁决门，按既有规则等 architecture discipline 签后合并。
+> 安全敏感预检（末端·合并前）：按实际 diff 判断。若 V0 含数据隔离、鉴权、迁移等安全敏感改动，触发 architecture 裁决门；不因 `source=foundation` 名称本身自动触发。
 
 **source=bug/optimization 进料（B 类）**
 
