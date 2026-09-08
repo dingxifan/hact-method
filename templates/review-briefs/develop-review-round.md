@@ -47,7 +47,7 @@ findings: []
 #   status: open | verified-closed | advisory
 ```
 
-同一根因的调用语法/输入变体合并到同一 id 的 evidence，不按变体数增加 finding。`started_at/completed_at` 由编排器在事件发生时写入；逐轮耗时按需由两者计算，不重复持久化分钟字段。
+同一根因的调用语法/输入变体合并到同一 id 的 evidence，不按变体数增加 finding。事件计时可选；如记录则由编排器当场写入，不事后补估、不强制对齐，不构成复审完成门。
 
 报告中的 `reviewed_base/reviewed_head` 必须是当前仓真实存在的 commit/tree；`changed_files` 与 `diff_sha256` 必须从这两个对象机械重算。`conclusion: pass` 时不得残留 `severity: blocking + status: open`；targeted 报告须逐条回写每个 `target_finding_ids` 的关闭或仍开放状态。
 

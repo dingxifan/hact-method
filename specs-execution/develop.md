@@ -149,7 +149,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 - `do-not/escalate-if` 的冲突是否已被上游裁决，承接方是否真实存在且未 merged；
 - `supersedes` 对象是否已删除、重新出现调用方或已由别包退役。
 
-**先建审计锚**：编排器在事件发生时取 ISO-8601 时间，不让执行者事后估算。A 类记录写 `iterations/vN/code-reviews/{task-id}/preflight.md`，B 类写 `b-reviews/{task-id}/preflight.md`，格式用 `templates/review-briefs/develop-preflight-record.md`。开始核对时记录 `started_at`；确认工作树不含本任务外改动后，记录固定 `base_ref=$(git rev-parse HEAD)` 与当前 `base_tree=$(git write-tree)`。
+**先建审计锚**：固定 Git 基线必需，事件计时可选且不事后估算。A 类记录写 `iterations/vN/code-reviews/{task-id}/preflight.md`，B 类写 `b-reviews/{task-id}/preflight.md`，格式用 `templates/review-briefs/develop-preflight-record.md`。确认工作树不含本任务外改动后，记录固定 `base_ref=$(git rev-parse HEAD)` 与当前 `base_tree=$(git write-tree)`。
 
 未命中则记 `freshness: pass`、`timing: before-code` 和一行正常摘要后继续，不逐面填表。命中时才展开漂移面、证据与路由，并在改代码前按根因处理：`example-error / contract-drift` 修任务包或发 `revise-doc`，`scope-gap` 补承接任务；只复核变化的契约，不跑代码审查。修订闭合后重新 preflight；需用户裁决时返回 blocked。结束时写 `result`；时间戳可选，不补估或强制对齐。此处产生的轮次计入 `spec_rounds`，不计 `code_rounds`。
 
