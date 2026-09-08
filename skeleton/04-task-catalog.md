@@ -245,7 +245,7 @@
 - **关联 Gate**: —
 - **属性**: `target-source`（bug / optimization）
 
-> dispatch-new 只派包，不实现。新 B 包必须交给 `develop(source=bug/optimization)`；既有手动 diff 仅在用户明确要求时走当前运行时的兼容审查入口，且仍须有 preflight 记录。
+> dispatch-new 只派包，不实现。新 B 包必须交给 `develop(source=bug/optimization)`；既有手动 diff 仅在用户明确要求时走Codex的兼容审查入口，且仍须有 preflight 记录。
 
 详见 `specs-structural/dispatch-new.md`。
 

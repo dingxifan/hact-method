@@ -136,7 +136,7 @@ node ../hact-method-lab/templates/scripts/check-as-built-ledger.js vN .
 
 linter（+ 门卫）守**格式**；**内容有效性派隔离审查单元做陌生视角复核**（防同上下文自评盖章）。
 
-**派发**：派普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——审查单元据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。具体模型见运行时映射；审查维度改动去改该 brief（单一来源），不在此重述。
+**派发**：派普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/prd-review.md` 按 brief 执行，只告知本期迭代版本 vN——审查单元据 brief **自读**定稿 prd.md（+ background.md），陌生视角逐查三维度（内部一致性 / AC 可验性 / 覆盖完整），输出问题清单（禁 pass 盖章）。模型按项目 Codex 配置；审查维度改动去改该 brief（单一来源），不在此重述。
 
 AI 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用户拍板。
 
@@ -170,7 +170,7 @@ AI 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用
 
 ## 隔离单元使用
 
-PRD 生成全程纯对话；**唯一隔离审查在 Step 7.5**——定稿后派普通档隔离审查单元审内容有效性（格式归 linter，内容归独立审查，具体模型见运行时映射）。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
+PRD 生成全程纯对话；**唯一隔离审查在 Step 7.5**——定稿后派普通档隔离审查单元审内容有效性（格式归 linter，内容归独立审查，模型按项目 Codex 配置）。存量项目未铺 `check-docs.js` 时，格式核对退回 `../hact-method-lab/skeleton/06-gates.md` §7 G1/G2 段人工逐条兜底（Step 7.5 内容审查照常派）。
 
 ---
 

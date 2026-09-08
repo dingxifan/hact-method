@@ -225,7 +225,7 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 每轮 dispatch/completion 当场写 `started_at/completed_at`；逐轮耗时按需由时间戳计算，不重复持久化分钟字段。round report 本身不计入被审实现 tree，最终随状态提交。
 
-**能力分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 是写代码/生成任务，使用当前运行时映射的执行档；阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 普通审查档；sensitive 或 `source=foundation` → 高能力审查档。具体模型只在运行时映射表定义。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
+**能力分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 是写代码/生成任务，使用Codex 项目入口的执行档；阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 普通审查档；sensitive 或 `source=foundation` → 高能力审查档。具体模型只在Codex 项目入口表定义。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
 
 **finding 路由与有界复审**：
 
@@ -297,7 +297,7 @@ git commit -m "{见上}"
 git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领时已锁定
 ```
 
-执行代码托管操作创建 PR；平台入口与禁用工具以当前运行时映射为准。PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
+执行代码托管操作创建 PR；平台入口与禁用工具以Codex 项目入口为准。PR description 是本次交付的唯一记录，需完整填写。**每任务一节**（单元素集即一节）：
 
 ```markdown
 ## {单元素集：task-id：任务标题 ／ 多元素集：v{N} {layer}层批量实现，含 task-id-1 / task-id-2 …}
@@ -450,7 +450,7 @@ context-state:
   key-decisions: [...]       # 已授权范围与已确认门的出处、适用条件
 ```
 
-此记录只描述执行意图与恢复线索，不替代任务包、`status.yml`、审查或测试证据。只保存无凭据的运行标识；运行时专属状态查询/等待方式按当前运行时实现，不写入任务或 Gate。wave 仍使用原 `wave-progress/v1` JSON 与校验器作为整组恢复依据，上述补充信息写当前任务 progress，不改变 wave JSON schema。
+此记录只描述执行意图与恢复线索，不替代任务包、`status.yml`、审查或测试证据。只保存无凭据的运行标识；运行时专属状态查询/等待方式按Codex实现，不写入任务或 Gate。wave 仍使用原 `wave-progress/v1` JSON 与校验器作为整组恢复依据，上述补充信息写当前任务 progress，不改变 wave JSON schema。
 
 **断点续做**（含主循环、末端及合并后收尾）：
 1. 读本轮任务集、任务包与进度记录，核已授权范围、当前阶段及下一动作。旧记录缺新字段时从任务/审查/PR 证据重建，不要求重做实现或重新授权。

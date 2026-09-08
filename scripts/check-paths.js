@@ -24,7 +24,7 @@ const path = require('path');
 
 // 运行时文本所在处：这些是 CC 会逐字读取、或被复制进项目仓的内容
 const RUNTIME_DIRS = ['skeleton', 'specs-structural', 'specs-execution', 'guide', 'templates'];
-const RUNTIME_FILES = ['CLAUDE.md', 'BRIEF.md'];
+const RUNTIME_FILES = ['AGENTS.md', 'BRIEF.md'];
 const EXT = /\.(md|js|sh|yml)$/;
 
 // 盘符路径（E:\... / E:/...）与 WSL 挂载路径（/mnt/e/...）

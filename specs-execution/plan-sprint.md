@@ -128,7 +128,7 @@
 
 ### Step 3.5：任务包独立证据审查
 
-**派发**：默认只派一个普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，告知本期迭代版本 vN + `review-scope: full`。审查员一次自读 PRD、TRD、全部任务包 normative core，以及本期涉及的 project.md 技术约束、Foundation 与共享契约，统一核 AC→task 覆盖、依赖和共享资产全局关系。任务包数量本身不触发分批；具体模型见运行时映射。
+**派发**：默认只派一个普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，告知本期迭代版本 vN + `review-scope: full`。审查员一次自读 PRD、TRD、全部任务包 normative core，以及本期涉及的 project.md 技术约束、Foundation 与共享契约，统一核 AC→task 覆盖、依赖和共享资产全局关系。任务包数量本身不触发分批；模型按项目 Codex 配置。
 
 只有“PRD + TRD + 全部 normative core + 本期涉及的项目约束”预计会超过当前模型的**无 compact 审查预算**时，才按业务模块切分，而不是按任意 2–3 包切：每批依赖闭合，派发 `review-scope: module:{任务包列表}`，只读这些包回链的 PRD 功能段/TRD 模块段。模块审查结束后派 `review-scope: global-summary`；该审查员自行运行 `node ../hact-method-lab/templates/scripts/build-task-review-index.js vN .`，只读其最小索引 + PRD AC 清单 + TRD 模块标题 + 各批 findings，不再读全部 frontmatter，专核跨批 AC 遗漏、共享资产 source-of-truth 与依赖断边。
 > brief 查 AC 忠实/完备、oracle/example 可复算、api-contract、视觉地基与 risk。审查维度原文固化在 brief 文件，此处不重述。

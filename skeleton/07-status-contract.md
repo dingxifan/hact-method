@@ -45,7 +45,7 @@
 ```yaml
 project: {项目名}                # string，项目名
 schema: 1                        # int，本契约 schema 版本号；字段演进靠它兼容
-generated_by: hact-method        # string，固定 hact-method（运行时中立）
+generated_by: hact-method        # string，固定 hact-method（Codex）
 
 iterations:                      # 按版本分块；每期一个 key
   v1:

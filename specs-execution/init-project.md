@@ -71,14 +71,14 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，`check-sprint.js` / `check-gate.js` 的取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
 同时写入以下文件：
-- **运行时入口与项目配置（新项目默认双运行时）**：依次执行 `templates/runtime/cc.md` 与 `templates/runtime/codex.md` 的「项目初始化映射」。入口只引用共同启动正文，不复制协议；具体目录和文件只由映射定义；若目标路径已有文件，先报告差异，禁止覆盖存量配置
+- **Codex 入口与配置**：复制 `templates/AGENTS.md` 到项目根并替换占位；复制 `templates/.codex/agents/*.toml` 到 `.codex/agents/`、`templates/gitee-ops.md` 到项目根 `gitee-ops.md`。不创建 CC 文件；已有入口/配置逐项合并，不覆盖。
 - `scripts/check-docs.js`：内容复制自 `templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
 - `scripts/check-as-built-ledger.js`：内容复制自 `templates\scripts\check-as-built-ledger.js`（走过 V0 后的 PRD 前置证据账本 linter；无 V0 自动 not-required）
 - `scripts/check-gate.js`：内容复制自 `templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
 - `scripts/check-sprint.js`：内容复制自 `templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
 - `scripts/check-b-task.js`：内容复制自 `templates\scripts\check-b-task.js`（B 类入口硬边界；拦 `contract-impact` 非 none 与已知共享契约/迁移路径）
 - `scripts/check-hook-state.js`：内容复制自 `templates\scripts\check-hook-state.js`（只读报告实际生效 hook、tracked 门卫与方法论模板三方状态；不安装、不覆盖）
-- `scripts/check-runtime-project.js`：内容复制自 `templates\scripts\check-runtime-project.js`（只读诊断双入口与两套运行时配置是否齐备；只报告缺口，不安装、不覆盖）
+- `scripts/check-codex-project.js`：内容复制自 `templates\scripts\check-codex-project.js`（只读诊断 Codex 入口与角色配置形状；只报告缺口，不安装、不覆盖）
 - `scripts/check-integration-evidence.js`：内容复制自 `templates\scripts\check-integration-evidence.js`（核联调结果中已执行场景的共同证据路径真实存在、未运行场景有明确原因与移交）
 - `scripts/check-ux.js`：内容复制自 `templates\scripts\check-ux.js`（draft-ux 产物结构 linter，纯 Node 无外部依赖；`draft-ux` Step 7 签字 commit 时门卫自动核 ux-flows.md 两段结构 + prototype-map.md AC 覆盖表 + prototype.html 存在）
 - `scripts/check-reusables.js`：内容复制自 `templates\scripts\check-reusables.js`（`reusables.md` 登记表 linter，纯 Node 无外部依赖；门卫在「改了 reusables.md」或「本次 commit 有文件删除/改名」时自动核登记路径是否还在——该表被 `draft-tech-design`/`plan-sprint`/`draft-prd-vN` 当权威源读，失真则那些检查静默放行）
@@ -101,7 +101,7 @@ git init
 # 装 pre-commit 门卫（.git/hooks 不随 clone 走，故源文件已 tracked 在 scripts/，此处装进生效位）
 cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 node scripts/check-hook-state.js --method-root ../hact-method-lab
-node scripts/check-runtime-project.js --runtime both
+node scripts/check-codex-project.js
 git add .
 git commit -m "feat: 初始化项目 {name}"
 ```
@@ -284,13 +284,13 @@ git add foundation.md && git commit -m "docs: 地基蓝图 v1 播种" && git pus
 | 项目仓已存在部分文件（历史遗留） | 不覆盖已有文件，仅补缺失的文件和目录 |
 | 项目名中途要改 | 需手动 rename 目录，代价较高；务必在 Step 1 确认后再创建，确认后不更改 |
 | git init 失败（Step 4.1） | 检查目录权限，修复后重新执行，不跳过 git 初始化 |
-| 存量项目缺双运行时文件 | 先运行 `node ../hact-method-lab/templates/scripts/check-runtime-project.js --runtime both --root .` 只读列差异（不要求项目已铺新脚本）；逐仓获得授权后按两份映射合并补齐，禁止覆盖存量入口、agents 或 hook |
+| 存量项目升级 Codex 入口 | 用方法论当前 `check-codex-project.js --root .` 只读列缺口；逐仓确认后在独立 worktree 合并配置，项目自有 hook/凭据/在制品保留 |
 
 ---
 
 ## 隔离单元使用
 
-无。全程由主线使用当前运行时的文件与命令能力直接执行。
+无。全程由主线使用Codex的文件与命令能力直接执行。
 
 ---
 

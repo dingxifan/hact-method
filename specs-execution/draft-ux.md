@@ -228,7 +228,7 @@ AI 问 3–5 个视觉基调问题：
 
 ## Step 5：独立对抗审查
 
-启动全新隔离审查单元（纯审查/一致性核对；能力档位与具体模型见运行时映射），读 `templates/review-briefs/prototype-review.md`（含自读指令），告知本期版本 vN，由审查单元自读 `prototype-map.md` + `prototype.html`，输出 findings 与未完成验证。若当前运行时无法提供独立上下文，标记 `blocked`，不得由同一执行会话自审替代。
+启动全新隔离审查单元（纯审查/一致性核对；能力档位与模型按项目 Codex 配置），读 `templates/review-briefs/prototype-review.md`（含自读指令），告知本期版本 vN，由审查单元自读 `prototype-map.md` + `prototype.html`，输出 findings 与未完成验证。若Codex无法提供独立上下文，标记 `blocked`，不得由同一执行会话自审替代。
 
 **结果处理**：
 
@@ -327,7 +327,7 @@ git commit -m "feat(ux): v{N} 交互流程图 + 原型 [{项目名}]"
 
 ## 隔离单元使用
 
-**Step 5 独立对抗审查**：启动全新隔离审查单元，按运行时映射选择普通审查档，读 `templates/review-briefs/prototype-review.md`；审查单元自读 `prototype-map.md` + `prototype.html`，不收主线上下文。审查维度改动去改 brief 文件（单一来源）。
+**Step 5 独立对抗审查**：启动全新隔离审查单元，按Codex 项目入口选择普通审查档，读 `templates/review-briefs/prototype-review.md`；审查单元自读 `prototype-map.md` + `prototype.html`，不收主线上下文。审查维度改动去改 brief 文件（单一来源）。
 
 其余步骤（缺口问答、内部消化、决策对答、原型生成、走查）均为主线工作或对话推进，不使用隔离单元。
 

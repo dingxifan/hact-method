@@ -18,7 +18,7 @@ gitee:
 
 # ssh:
 #   prod:
-#     mcp-alias: <Claude Code 里配的 SSH server 名>   # deploy 走 MCP 时用它；换机需重配，check 会提示
+#     mcp-alias: <Codex 里配的 SSH server 名>   # deploy 走 MCP 时用它；换机需重配，check 会提示
 #     host: <ip 或域名>
 #     user: <登录用户>
 #     identity-file: ~/.ssh/id_xxx

@@ -29,7 +29,7 @@
 
 ```
 hact-method/
-├── CLAUDE.md             项目级 Claude Code 薄入口
+├── AGENTS.md             项目级 Codex 薄入口
 ├── AGENTS.md             项目级 Codex 薄入口
 ├── BRIEF.md              项目背景 / 目标 / 阶段 / 关键设计决策（28 条）
 ├── STATUS.md             当前状态

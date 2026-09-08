@@ -86,7 +86,7 @@
 
 ### Step 3：跑后端测试
 
-读 `integration-tests/scripts-v{N}.md`，为每条穿透流分配稳定场景 id（如 `BE-01`），按运行时映射启动纯执行单元：
+读 `integration-tests/scripts-v{N}.md`，为每条穿透流分配稳定场景 id（如 `BE-01`），按Codex 项目入口启动纯执行单元：
 - 每条流一个执行单元，执行该流的脚本序列，**在推不动处（某步转换失败 / 边不存在 / 队列不消费）即停并报断点**——穿透的价值正在这里
 - 每步请求/响应状态码、去敏后的关键 headers/body 摘要和最终状态查询结果写入 `integration-tests/evidence/vN/{场景-id}/transcript.txt`；不得把 Authorization、cookie、PII 或真凭据落盘
 - 返回：每步结果（✅/❌）+ HTTP 状态码 + 关键字段摘要 + transcript 项目相对路径 + 断在哪一步及现象
@@ -147,9 +147,9 @@
 **完整档步骤**（必跑迭代或用户选「是」）：
 
 1. 确认前端页面可打开
-2. 由主线或只读调查单元读取 ux-flows.md + prototype.html（若存在），生成运行时中立的前端场景定义 `integration-tests/frontend/v{N}-scenarios.md`（上限 15 条，优先主流程 + 跨模块集成点）。每条分配稳定场景 id，并至少包含前置条件、用户操作、可观察预期与证据类型；共同证据目录固定为 `integration-tests/evidence/vN/{场景-id}/`，具体执行脚本由当前运行时映射生成。prototype.html 存在时软核对场景覆盖是否齐全（不设硬闸口，超 15 条按上限降级 backlog）
+2. 由主线或只读调查单元读取 ux-flows.md + prototype.html（若存在），生成Codex的前端场景定义 `integration-tests/frontend/v{N}-scenarios.md`（上限 15 条，优先主流程 + 跨模块集成点）。每条分配稳定场景 id，并至少包含前置条件、用户操作、可观察预期与证据类型；共同证据目录固定为 `integration-tests/evidence/vN/{场景-id}/`，具体执行脚本由Codex 项目入口生成。prototype.html 存在时软核对场景覆盖是否齐全（不设硬闸口，超 15 条按上限降级 backlog）
    - **禁恒真式断言**：不得用**元素计数**判 UI 元素消失/弹窗关闭——组件库普遍在关闭后保留 DOM 节点（计数恒 ≥1），该断言在构造上无法侦测关闭，**永远绿**。判"消失/关闭"一律按**可见性**（`offsetParent === null` / 实测尺寸为 0）。每条断言写完自问一遍：**被测行为反过来时，这条会不会红？**不会红即无效断言，重写。
-3. 按运行时映射把场景定义编译为可执行脚本，更新脚本索引并追加前端部分；commit + push
+3. 按Codex 项目入口把场景定义编译为可执行脚本，更新脚本索引并追加前端部分；commit + push
 4. 按模块启动纯执行单元运行浏览器场景，证据落 `integration-tests/evidence/vN/{场景-id}/`，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`。仅在模块数据、环境和写入产物均隔离时并行，否则串行；运行时不支持隔离执行时由主线串行执行。完成前运行 `node ../hact-method-lab/templates/scripts/check-integration-evidence.js integration-tests/result-{日期}.md .`；已执行无证据、未运行无原因均阻断
 5. **视觉冒烟断言**（涉视觉基线迭代必做，≤3 条固定、不计入 15 条上限）：在关键页面加载后通过浏览器场景能力执行 JS，实测以下确定值，取数源 = `design.md`「〇、视觉冒烟锚点」段，不符即 `[阻断]`：
    - **主色覆盖**：`getComputedStyle(document.documentElement).getPropertyValue('--el-color-primary').trim()`（按本项目 UI 库主色变量名调整）== design.md 主色 token —— 抓「token 定义了没覆盖库主题」
@@ -212,7 +212,7 @@ node ../hact-method-lab/templates/scripts/check-integration-evidence.js integrat
 | Step 2（后端穿透流生成） | 只读调查单元读取 PRD AC 主流程+分支，提出 backend 穿透流 | 按"每终态一条、禁 fixture 抄近路"提出流与脚本索引；只返回内容，由主线落盘 | 失败则主线生成 |
 | Step 3（按穿透流） | 每条流一个纯执行单元 | 传入流描述、脚本序列、后端地址、独立实体/前缀；**推不动处即停报断点**；返回每步结果 + 状态码 + 断点 | 失败则主线串行执行 |
 | Step 4B 边界闸真调 | 不使用隔离单元；探测 ⚖️ 由主线扫桩点，真调 🚫 由主线在用户点头并提供样本后执行 | — | 无凭据/环境则降级移交，非静默 |
-| Step 4.5（完整档·前端） | 只读调查单元提出中立场景；纯执行单元按运行时映射跑场景 | 上限 15 条；prototype 软核对覆盖；返回每条结果与证据，不直接写共享结果文件 | 失败则主线生成场景或串行执行 |
+| Step 4.5（完整档·前端） | 只读调查单元提出中立场景；纯执行单元按Codex 项目入口跑场景 | 上限 15 条；prototype 软核对覆盖；返回每条结果与证据，不直接写共享结果文件 | 失败则主线生成场景或串行执行 |
 
 ---
 
