@@ -4,6 +4,8 @@
 
 ## 规范加载
 
+存量项目若仍有 `standards-{shared,frontend,backend}.md`，升级须先按 `../hact-method-lab/guide/02-一期完整流程.md` 的迁移说明在独立 worktree 完成约束归位与活跃任务接线；不得因方法论同步而静默忽略尚未迁移的项目规则。迁移完成前，沿用项目上次确认的方法论版本处理进行中任务。
+
 本仓使用 hact-method 的执行规范。Step 1 推断出 `task.type` 后，只加载对应路径的单份规范，不得预加载多份：
 
 | task.type | 规范路径 | 备注 |

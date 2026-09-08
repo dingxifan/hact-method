@@ -17,7 +17,7 @@ asset-writes: []
 assert.strictEqual(valid.source, 'bug');
 assert.deepStrictEqual(contractPathHits(valid.files), []);
 
-const dangerous = ['iterations/v2/trd.md', 'standards-shared.md', 'db/migrations/002.sql', 'api/openapi.yaml'];
+const dangerous = ['iterations/v2/trd.md', 'project.md', 'foundation.md', 'standards-shared.md', 'db/migrations/002.sql', 'api/openapi.yaml'];
 assert.strictEqual(contractPathHits(dangerous).length, dangerous.length, '共享契约路径必须全部命中');
 assert.strictEqual(contractPathHits(['src/service.ts', 'tests/service.test.ts']).length, 0, '普通实现路径不得误报');
 assert.ok(contractDiffSignals('+export enum OrderStatus { Pending }').length, '导出 enum 改动必须命中');
@@ -61,6 +61,13 @@ const memberHead = runGit(['write-tree']);
 fs.writeFileSync(diffTask, `---\nsource: bug\ncontract-impact: none\nfiles:\n  - src/models/profile.ts\nasset-writes: []\n---\n`);
 assert.ok(validateDiff(diffTask, base, memberHead, repo).some(error => /修改公开类型成员/.test(error)),
   '已有 exported interface 增删成员必须命中');
+runGit(['read-tree', `${base}^{tree}`]);
+fs.writeFileSync(path.join(repo, 'project.md'), '## 技术层\n允许新增未确认的数据出站路径\n');
+runGit(['add', 'project.md']);
+const projectHead = runGit(['write-tree']);
+fs.writeFileSync(diffTask, `---\nsource: bug\ncontract-impact: none\nfiles:\n  - project.md\nasset-writes: []\n---\n`);
+assert.ok(validateDiff(diffTask, base, projectHead, repo).some(error => /固定 diff 命中共享契约.*project.md/.test(error)),
+  '技术约束迁入 project.md 后，B 类不能从实际 diff 夹带修订');
 fs.rmSync(temp, { recursive: true, force: true });
 
 console.log('✅ check-b-task 正反夹具通过');

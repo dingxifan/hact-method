@@ -65,7 +65,7 @@
 
 **典型任务**：
 - `draft-prd-vN`（含 G1 签字）
-- `draft-tech-design`（含 G2 签字；出 TRD + 3 份 standards）
+- `draft-tech-design`（含 G2 签字；出 TRD + 验证入口）
 - `revise-doc`（修订归项目根）
 - `plan-sprint`（含 G3 签字）
 - `develop`（写代码 + per-task 独立审查 + 推 PR 并合并到 master）
@@ -106,7 +106,7 @@
 - **可读**：本人完全可读写；管理者对 `[规范]`/`[checklist]`/`[方法论]` 条目**只读**（经 `harvest-notes` 收割上提，见 `04-task-catalog.md`）；其他开发者无权限
 - **不写**：任何他人的 notes 仓
 
-**与公共层的关系**：个人 notes 是"原料"，公共层（hact-method 的 `templates/standards`、`templates/checklists`、`_meta/plans/方法论待议.md`）是"成品"。管理者跑 `harvest-notes` 把验证有效的个人条目去重择优、上提为公共。这条"个人攒 → 上提公共"是 **pull 模型**（拉取，非推送），与 dispatch 拉取池哲学一致，且开发者全程**无需 hact-method 写权限**。
+**与公共层的关系**：个人 notes 是"原料"，公共层（hact-method 的 `templates/checklists`、`_meta/plans/方法论待议.md`）是"成品"。管理者跑 `harvest-notes` 把验证有效的个人条目去重择优、上提为公共。这条"个人攒 → 上提公共"是 **pull 模型**（拉取，非推送），与 dispatch 拉取池哲学一致，且开发者全程**无需 hact-method 写权限**。
 
 ---
 
@@ -131,7 +131,7 @@
 | 场景 | 归属 | 理由 |
 |---|---|---|
 | 修订已签 Gate 的产物（如 PRD 已签 G1 要改） | **项目根** | 修订归项目根（BRIEF.md 决策 #11）。发现需要修订时，结束当前任务 → 在项目根拉 `revise-doc` 任务，不就地改 |
-| Gate 5 收尾要更新 standards / decisions | **项目根** | 反向沉淀产物仍是编排动作 |
+| Gate 5 收尾要更新 project / decisions | **项目根** | 反向沉淀产物仍是编排动作 |
 | 部署（hotfix / 合并部署 / 单期部署，全包） | **项目根** | 部署一律归项目根（BRIEF.md 决策 #9） |
 | 派新 BUG / 派新优化（B 类入口） | **项目根** | B 类入口在项目根（BRIEF.md 决策 #5） |
 | 跨项目方法论调整提案 | **hact-method** | 任何方法论文件改动都在 hact-method |

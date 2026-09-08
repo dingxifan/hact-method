@@ -21,7 +21,7 @@ sprint_id: <待填>          # 所属 Sprint 标识，如 v4-s1；由 plan-sprin
 layers: <待填>             # [frontend] / [backend] / [shared]（数组写法）
 source: <待填>             # sprint / integration / manual-test / bug / optimization
 task_type: <待填>          # dev-frontend（layers=[frontend]）/ dev-backend（layers=[backend]）/ shared 时显式指定
-contract-impact: <待填>    # governed（只实现已签 PRD/TRD/Foundation/Standards）/ none（不触及共享契约）；B 类只能 none
+contract-impact: <待填>    # governed（只实现已确认 PRD/TRD/Foundation/project 技术约束）/ none（不触及共享契约）；B 类只能 none
 # baseline: visual        # 仅「视觉地基包」加此行；普通任务包不写。见顶部说明 + plan-sprint Step 2
 # design-reference-format: sliced-v1  # frontend 必填；存量 design 无「八、页面规格」时填 legacy-full；backend/shared 删除
 urgency: normal           # normal（默认）/ hotfix
@@ -51,9 +51,8 @@ acceptance-criteria:
     oracle: <可执行判据 / 计算方式 / 状态条件>
     example: <可选；封闭输入与派生结果>
     golden: false
-relevant-standards:
-  - <待填>                # 只列 applies-if 命中的规则：`RULE-ID · standards-{layer}.md § 条目标题`；frontend 的 design.md 规格锚写入下方 reference，不重复列
 reference:
+  # 按本任务实际边界引用 project.md 技术选择、Foundation 不变量、共享契约与 check/test/config；不复制其正文。
   - <待填>                # 仅列实现决策必需锚点。frontend sliced-v1 须含 `design.md § 全局视觉基线` + 相关页面标题；legacy-full 须明确写 `design.md 全文（存量）`
   # 前端任务：reference 须含 ux-flows.md 对应功能段锚（若文件存在）
   # 后端任务：reference 须含 trd.md 错误码/服务流程对应章节锚

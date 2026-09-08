@@ -11,7 +11,7 @@
 | Gate | 内涵 | 签于哪个 task |
 |---|---|---|
 | **G1** | 本期 PRD 通过——产品需求清晰、用户故事完整、acceptance criteria 制定 | `draft-prd-vN` 任务尾部 |
-| **G2** | 本期技术设计通过——TRD（接口/数据结构）+ 3 份 standards 完成；**V0 走骨架**：仅获准 V0 行实际档达标 + 一根最薄切片设计 + 命中的最小 standards | `draft-tech-design`（V1+）/ `draft-foundation`（V0）任务尾部 |
+| **G2** | 本期技术设计通过——TRD（接口/数据结构）+ 验证入口完成；**V0 走骨架**：仅获准 V0 行实际档达标 + 一根最薄切片设计 + 验证入口 | `draft-tech-design`（V1+）/ `draft-foundation`（V0）任务尾部 |
 | **G3** | 开发包就绪——sprint 拆解完成、queue 写满、任务依赖明确 | `plan-sprint` 任务尾部 |
 | **G4** | 开发完成——所有开发任务 [merged]、联调通过、人工验收通过 | `manual-test` 任务尾部 |
 | **G5** | 迭代收尾——偏离对账 + feedback 分流 + project.md 合并 完成 | `wrap-up-iteration` 任务尾部 |
@@ -29,7 +29,7 @@ Gate 不是独立的实体——它是**一组 task 的状态聚合**。
 | Gate | 关联任务集合 |
 |---|---|
 | **G1** | 本期 `draft-prd-vN` [merged] + 任意 `revise-doc(target=prd)` [merged]（如有） |
-| **G2** | V1+：本期 `draft-tech-design` [merged] + 任意 `revise-doc(target=trd\|standards)` [merged]（如有）；**V0：本期 `draft-foundation`（签 G2(v0) 即地基设计验收，走骨架 `develop(source=foundation)` 在 G2 后建）** |
+| **G2** | V1+：本期 `draft-tech-design` [merged] + 任意 `revise-doc(target=trd\|foundation)` [merged]（如有）；**V0：本期 `draft-foundation`（签 G2(v0) 即地基设计验收，走骨架 `develop(source=foundation)` 在 G2 后建）** |
 | **G3** | 本期 `plan-sprint` [merged] |
 | **G4** | 本期所有 `develop(source=sprint)` [merged] + `generate-integration-tests` [merged] + 所有 `develop(source=integration)` [merged] + `manual-test` [merged] + 所有 `develop(source=manual-test)` [merged] |
 | **G5** | 本期 `wrap-up-iteration` [merged] + 本期 `deploy` [merged]（部署失败 / 纯文档迭代不阻断 G5 签字，见下注） |
@@ -81,7 +81,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 **但准备段（G1-G3）可以早起**：
 
-- vN G4 期（开发循环）时，vN+1 可以并行做 G1（PRD 起草）+ G2（TRD/standards）+ G3（sprint 拆解）
+- vN G4 期（开发循环）时，vN+1 可以并行做 G1（PRD 起草）+ G2（TRD/foundation）+ G3（sprint 拆解）
 - 一旦 vN G4 完成，vN+1 自然进入开发循环——无缝衔接
 
 **展示形态**（项目根视图）：
@@ -94,7 +94,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 ## 6. Gate 跟修订的关系
 
-**已签的 Gate 不撤销**——即使后期通过 `revise-doc` 修订了 PRD/TRD/standards：
+**已签的 Gate 不撤销**——即使后期通过 `revise-doc` 修订了 PRD/TRD/foundation：
 
 - G1 已签 + 之后 `revise-doc(target=prd)` → G1 仍是"已签"，但 PRD 内容更新；revise-doc 自身要走 `[merged]` 才结束
 - 这种设计避免"已经走到 G3 还要回头折腾 G1 状态"的混乱

@@ -3,7 +3,7 @@
 > 运行时加载本文时，当前任务是为新项目做 **V0 地基设计**：定栈，只纳入稳定、跨切面且晚建代价高的承重项，给这些 V0 行选定形式并验"实际档 ≥ 应有档"，定一根最薄标杆切片，签 G2(v0)。
 > **只产文档（设计），不产代码。** 公共形式的代码（瓶颈管道 / 作用域 repo / 外壳 / 主题框架 / 错误信封）由下游 `develop(source=foundation)` 物化——设计预写代码 = 空中建筑（铁律）。
 
-**上下文密度**：中。读 `foundation.md` + 背景 + project.md；输出更新 foundation.md + 骨架命中的最小 standards + `iterations/v0/foundation-design.md`。
+**上下文密度**：中。读 `foundation.md` + 背景 + project.md；输出更新 foundation.md + project.md + `iterations/v0/foundation-design.md`。
 
 ---
 
@@ -31,12 +31,10 @@ mkdir -p "iterations/v0"
 - 项目根 `foundation.md`（核心输入：领域地图 + 关注点登记 + 应有档）
 - `_meta/input/` 背景材料
 - 项目根 `project.md` / `decisions.md` / `reusables.md`
-- `../hact-method-lab/templates/standards/backend.md` / `frontend.md`
-- `../hact-method-lab/templates/standards/schema.md`（项目 Standards 的职责、准入与条目格式）
 
 **首次定栈**（V0 必为首期）：技术栈偏好尚未确认时才询问用户（语言 / 框架 / 数据库 / UI 库）；已有明确输入则直接写入项目根 `project.md` 技术层，后续迭代复用、不再重复确认。
 
-开场说：「我将做 V0 地基设计：先按准入门槛删掉应留给 V1 的关注点，再为获准承重项定栈、形式和强制边，写命中的最小 standards，最后定一根标杆切片、签 G2。**这步只出设计，骨架代码在下一步 develop 建。**」
+开场说：「我将做 V0 地基设计：先按准入门槛删掉应留给 V1 的关注点，再为获准承重项定栈、形式和强制边，最后定一根标杆切片、签 G2。**这步只出设计，骨架代码在下一步 develop 建。**」
 
 🚫 仅技术栈偏好缺失或存在真实取舍时等待用户确认
 
@@ -99,21 +97,11 @@ Step 1 已确认的范围不再另设等待点；若安全项无法达到构造�
 
 ---
 
-## 第三层：Standards + 收尾
+## 第三层：验证入口 + 收尾
 
-### Step 4：写最小 Standards
+### Step 4：确认验证入口
 
-三份 `standards-{shared,frontend,backend}.md` 是项目根跨迭代的当前稳定默认规则表。V0 **只写本轮地基件、标杆切片与测试命令直接命中的规则**；不做全项目首播、不为填满三层复制模板。首期 `draft-tech-design` 再按真实 PRD/TRD 补齐适用规则。
-
-**来源规则**：只从公共 layer / 当前栈候选中抽取 V0 实际命中的条目，并过 `templates/standards/schema.md` 准入门槛。个人 notes 与其余候选留给首期 `draft-tech-design` 一次处理，避免 V0 先做一遍全量规范筛选。
-
-**测试基建约定（不可省）**：在实际执行层对应的 Standards 中写最小测试框架约定——框架选型 + `npm run test`（或等价）命令 + 测试文件位置。这是下游 develop 验证地基件的前提；不为不存在的 backend/frontend 层另建测试框架。在此确立命令，并写入 `project.md` 技术层。
-
-**视觉规则按需**：只有视觉地基本身通过 V0 准入时，才写全局样式入口及本轮实际执行的机械规则；否则留给 V1 `draft-ux` / `draft-tech-design`，V0 不为占位页面预装完整设计系统。
-
-> **强制档诚实化**：`grade` 高于人审级时必须给真实 enforcement id；给不出机制时降为人审级或迁入 waiver/backlog，不得把期望档写成已实现事实。Foundation 已登记的不变式与探针不在 Standards 重复展开。
-
-检查实际写入的条目字段完整、无重复/矛盾；未命中的 standards 文件保持空桩合法。架构不变式由 Foundation 覆盖，不复制进 Standards。
+在 `project.md` 技术层写明实际切片的测试框架、测试位置与命令入口；配置和脚本保有唯一可执行真值。缺少的运行器由本轮 develop 建立，不为不存在的层建工具。视觉机制按获准 V0 范围落地，真值由后续 design.md 承接。
 
 ---
 
@@ -126,10 +114,10 @@ Step 1 已确认的范围不再另设等待点；若安全项无法达到构造�
 
 ### Step 6：G2(v0) 签字
 
-> **签字前置**：foundation.md 中 V0 行实际档 ≥ 应有档（安全项构造级）+ foundation-design.md 只含获准地基件与一根标杆切片 + 命中的最小 standards 与测试命令就位 + 栈写入 project.md。V1+ 行不阻断 G2(v0)。
+> **签字前置**：foundation.md 中 V0 行实际档 ≥ 应有档（安全项构造级）+ foundation-design.md 只含获准地基件与一根标杆切片 + 测试框架与命令入口已确定 + 栈写入 project.md。V1+ 行不阻断 G2(v0)。
 
 ```
-✅ V0 地基设计完成：栈 = {…}；获准地基件 [N] 件；标杆切片 = {…}；只写入 [N] 条命中 Standards；其余关注点留 V1+。
+✅ V0 地基设计完成：栈 = {…}；获准地基件 [N] 件；标杆切片 = {…}；验证入口已确定；其余关注点留 V1+。
 要签 G2(v0) 吗？
 ```
 
@@ -142,7 +130,7 @@ Step 1 已确认的范围不再另设等待点；若安全项无法达到构造�
 
 **更新项目根 `status.yml`**（字段见 `../hact-method-lab/skeleton/07-status-contract.md`）：建 `iterations.v0` 块、`gates.G2 = { signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 
-执行 `git add foundation.md standards-shared.md standards-frontend.md standards-backend.md iterations/v0/foundation-design.md iterations/v0/gates.md project.md decisions.md status.yml && git commit -m "feat(foundation): v0 地基设计完成，G2 签署 [{项目名}]" && git push`
+执行 `git add foundation.md iterations/v0/foundation-design.md iterations/v0/gates.md project.md decisions.md status.yml && git commit -m "feat(foundation): v0 地基设计完成，G2 签署 [{项目名}]" && git push`
 
 移交：「V0 地基设计完成，下一步建走骨架 —— `develop(source=foundation)` 按 `iterations/v0/foundation-design.md` 建地基件 + 标杆切片，骨架端到端跑通后才进 V1 `draft-prd-vN`。」
 

@@ -41,11 +41,11 @@
 | `layers` | `[frontend]` / `[backend]` / `[shared]`（数组，可多值）/ `null` | `develop` |
 | `task_type` | `dev-frontend` / `dev-backend`（单值路由键；layers 跨层时由分配者指定主） | `develop` |
 | `source` | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` | `develop` |
-| `target` | `prd` / `trd` / `standards` | `revise-doc` |
+| `target` | `prd` / `trd` / `foundation` / `project` | `revise-doc` |
 | `target-source` | `bug` / `optimization` | `dispatch-new` |
 | `version` | `vN`（迭代版本号） | `draft-prd-vN`, `draft-ux`, `draft-tech-design`, `wrap-up-iteration` |
 
-`layers` 和 `source` 的组合决定 `develop` 任务加载哪份 standards 和如何理解任务上下文（详见 §6 develop 条目）。
+`layers` 和 `source` 的组合决定 `develop` 的任务上下文与验证范围（详见 §6 develop 条目）。
 
 ---
 
@@ -96,15 +96,13 @@
 
 ### 4. `draft-tech-design`
 
-> 写本期技术设计：TRD（接口/数据结构）+ 三份 standards。
+> 写本期技术设计：TRD（接口/数据结构）+ 项目约束与验证入口。
 
 - **discipline**: `architecture`
-- **完成判据**: TRD 完整 + 3 份 standards 完整 + 在任务尾部询问"要不要签 G2"
-- **主要产物**: 4 份文件——
+- **完成判据**: TRD 完整 + 验证入口可查 + 在任务尾部询问"要不要签 G2"
+- **主要产物**: TRD 及按需更新的项目约束——
   - `iterations/vN/trd.md`（迭代内）
-  - 项目根 `standards-shared.md`（跨迭代当前稳定默认规则表；按 id 增量加载）
-  - 项目根 `standards-frontend.md`（同上）
-  - 项目根 `standards-backend.md`（同上）
+  - `project.md` 技术层与本期涉及的 `foundation.md`
 - **关联 Gate**: **G2**（可选签于任务尾部）
 - **前置条件**: G1 已签
 - **属性**: `version`（vN）
@@ -121,7 +119,7 @@
 - **完成判据**: queue 写满本期 develop 任务包 + sprint.md 反映当前拆解 + 在任务尾部询问"要不要签 G3"
 - **主要产物**: 多个 develop 任务包（在 queue/）+ `iterations/vN/sprint.md`
 - **关联 Gate**: **G3**（可选签于任务尾部）
-- **前置条件**: G2 已签（TRD + standards 就位）
+- **前置条件**: G2 已签（TRD + 验证入口就位）
 - **属性**: 无
 
 详见 `specs-structural/plan-sprint.md`。
@@ -130,16 +128,16 @@
 
 ### 6. `revise-doc`
 
-> 修订一份已签 Gate 的产物文档（PRD / TRD / standards）。
+> 修订已确认的 PRD / TRD / Foundation / project.md 技术约束。
 
 - **discipline**: 派生——
   - `target=prd` → `product`
   - `target=trd` → `architecture`
-  - `target=standards` → `architecture`
+  - `target=foundation` / `target=project` → `architecture`
 - **完成判据**: 修订内容 commit + 在 backlog 记录修订原因 + 判断下游影响（已签 Gate 不撤销，只记录变更）
 - **主要产物**: 更新对应文档 + `backlog.md` 加 `[修订]` 条目
 - **关联 Gate**: 不签新 Gate（已签的不撤销，只记录变更）
-- **属性**: `target`（prd / trd / standards）+ `reason`（字符串）
+- **属性**: `target`（prd / trd / foundation / project）+ `reason`（字符串）
 
 详见 `specs-structural/revise-doc.md`。
 
@@ -225,7 +223,7 @@
 - **discipline**: `management`
 - **完成判据**: 三步全部完成 + 在任务尾部询问"要不要签 G5"
 - **主要产物**:
-  - 反向更新的 PRD/TRD/standards/decisions（来自偏离对账）
+  - 反向更新的 PRD/TRD/foundation/decisions（来自偏离对账）
   - 分流进执行人个人 notes 的反馈条目（`[规范]`/`[checklist]`/`[方法论]`），由 harvest-notes 后续上提
   - 清空的 `feedback.md`
   - 更新的 `project.md`（去除"开发中"标注）
@@ -260,7 +258,7 @@
 - **discipline**: `management`
 - **完成判据**: 遍历 `_meta/hact-config.md` 登记的成员 notes 仓完成 + 优秀条目去重择优写入公共层 + 收割游标推进
 - **主要产物**:
-  - `templates/standards/{backend|frontend}.md` 新增条目（来自成员 `[规范]`）
+  - 方法论待议中的约束建议（来自成员 `[规范]`）
   - `templates/checklists/{backend|frontend}-checklist.md` 新增项（来自成员 `[checklist]`）
   - `_meta/plans/方法论待议.md` 新增条目（来自成员 `[方法论]`）
   - `_meta/hact-config.md` 收割游标更新
@@ -275,12 +273,12 @@
 
 ### 14. `draft-foundation`
 
-> V0 地基设计：据 `foundation.md` 定栈，只纳入稳定、跨切面且晚建代价高的承重项，验这些 V0 行的强制边，写命中的最小 standards，定一根标杆切片。**只产设计、不产代码**（公共代码归 `develop(source=foundation)`）。
+> V0 地基设计：据 `foundation.md` 定栈，只纳入稳定、跨切面且晚建代价高的承重项，验这些 V0 行的强制边，定一根标杆切片。**只产设计、不产代码**（公共代码归 `develop(source=foundation)`）。
 
 - **discipline**: `architecture`
-- **完成判据**: foundation.md 已判 V0/V1+，V0 行实际档达标（安全项构造级）+ foundation-design.md 仅含获准地基件与一根标杆切片 + 命中的最小 standards + 栈入 project.md + G2(v0) 签
-- **主要产物**: `foundation.md`（更新）+ `iterations/v0/foundation-design.md` + 最小 standards 增量 + `project.md` 技术层 + `iterations/v0/gates.md`
-- **关联 Gate**: **G2**（v0；与 draft-tech-design 同槽，architecture 签字，只验获准 V0 行 + 标杆切片 + 命中规则）
+- **完成判据**: foundation.md 已判 V0/V1+，V0 行实际档达标（安全项构造级）+ foundation-design.md 仅含获准地基件与一根标杆切片 + 验证入口 + 栈入 project.md + G2(v0) 签
+- **主要产物**: `foundation.md`（更新）+ `iterations/v0/foundation-design.md` + `project.md` 技术层 + `iterations/v0/gates.md`
+- **关联 Gate**: **G2**（v0；与 draft-tech-design 同槽，architecture 签字，只验获准 V0 行 + 标杆切片 + 验证入口）
 - **前置条件**: init-project 完成、`foundation.md` 已播种，且存在满足 V0 准入门槛的高改造成本约束（先于 V1 PRD）
 - **属性**: 无（迭代固定 v0）
 

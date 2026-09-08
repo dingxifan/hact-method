@@ -15,7 +15,7 @@
 - **文件**：
   - `backlog.md`（偏离记录）
   - `feedback.md`（各阶段反馈）
-  - `iterations/vN/prd.md` / `trd.md` / `standards-*.md`
+  - `iterations/vN/prd.md` / `trd.md` / 项目根 `foundation.md`
 
 ---
 

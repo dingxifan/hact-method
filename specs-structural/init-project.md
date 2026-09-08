@@ -39,7 +39,6 @@
 | feedback.md | `{name}/feedback.md` | 复制自 `templates/feedback.md` |
 | design.md | `{name}/design.md` | 复制自 `templates/design.md`（空模板，`draft-ux` Step 1.3 填变量） |
 | foundation.md | `{name}/foundation.md` | 复制自 `templates/foundation.md`（**地基蓝图**空模板，Step 5 共识讨论填领域地图 + 地基关注点登记 + 安全项应有档=构造级；下游 V0 走骨架据此建） |
-| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 空桩；V0 只写骨架命中的最小规则，完整首播由首期 `draft-tech-design` 兜底 |
 | _meta/input/ | `{name}/_meta/input/` | 空目录，存放背景材料和上下文文档 |
 | _meta/sessions/ | `{name}/_meta/sessions/` | 空目录，存放跨会话接续文件 |
 | hact-notes 仓（每成员） | `gitee.com/{notes-org}/hact-notes-{姓名}` | 私有仓 + 登记入 `_meta/hact-config.md`（决策#21） |

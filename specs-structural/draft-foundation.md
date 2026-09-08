@@ -4,7 +4,7 @@
 **Gate**: G2（v0 地基设计验收）
 **属性**: —
 
-> V0 地基设计：据项目根 `foundation.md`（地基蓝图）定栈，只纳入稳定、跨切面且晚建代价高的承重项，给 V0 行选定形式并验"实际档 ≥ 应有档"，写命中的最小 standards，定一根标杆切片，签 G2(v0)。**只产设计文档，不产代码**（公共代码归 V0 `develop(source=foundation)`）。
+> V0 地基设计：据项目根 `foundation.md`（地基蓝图）定栈，只纳入稳定、跨切面且晚建代价高的承重项，给 V0 行选定形式并验"实际档 ≥ 应有档"，定一根标杆切片，签 G2(v0)。**只产设计文档，不产代码**（公共代码归 V0 `develop(source=foundation)`）。
 
 ---
 
@@ -31,7 +31,6 @@
 |------|------|------|
 | foundation.md（更新） | `{name}/foundation.md` | 各行标 V0/V1+；只给 V0 行填写具体形式与实际档，安全项若纳入则为构造级 |
 | foundation-design.md | `{name}/iterations/v0/foundation-design.md` | 仅含获准地基件 + 一根标杆穿透切片；不得含 V1 额外交付 |
-| standards-{shared,frontend,backend}.md | `{name}/standards-*.md` | 只写 V0 地基件、标杆与测试命令直接命中的最小规则；其余由首期 TRD 补齐 |
 | project.md（技术层） | `{name}/project.md` | 栈 / 数据库 / 模块划分 / 测试框架 |
 | decisions.md | `{name}/decisions.md` | 关键架构决策（栈理由 / 各地基件形式 / 安全项构造级机制） |
 | gates.md | `{name}/iterations/v0/gates.md` | G2 签署 |
@@ -44,7 +43,7 @@
 - [ ] 技术栈已定并写入 `project.md` 技术层
 - [ ] `foundation.md` 每行已判 V0/V1+；V0 行有实际形式且**实际档 ≥ 应有档**，安全敏感项 = 构造级
 - [ ] `iterations/v0/foundation-design.md` 仅含获准地基件 + 一根标杆穿透切片，无 V1 额外交付
-- [ ] 测试命令与 V0 实际命中的最小 standards 已写；未命中层允许保留空桩
+- [ ] project.md 已写明实际切片的测试框架、位置与命令入口
 - [ ] G2 已签，`status.yml` 已更新
 - [ ] 未产任何代码（公共代码归 V0 develop）
 - [ ] 完成判据已核对
@@ -64,7 +63,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `develop`(source=foundation) | 走骨架设计 + 地基蓝图 + standards → 建地基件与标杆切片 | `{name}/iterations/v0/foundation-design.md` + `foundation.md` |
+| `develop`(source=foundation) | 走骨架设计 + 地基蓝图 + 验证入口 → 建地基件与标杆切片 | `{name}/iterations/v0/foundation-design.md` + `foundation.md` |
 
 ---
 

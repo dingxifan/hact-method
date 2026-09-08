@@ -43,7 +43,7 @@
 **反向查询路径**：
 
 ```
-task.type → spec → standards
+task.type → spec → 任务契约与验证
 ```
 
 具体清单见 `04-task-catalog.md`；spec 按 discipline 组织见 `03-disciplines.md`。

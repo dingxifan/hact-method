@@ -7,7 +7,7 @@
 
 | 标签 | 记什么 | 去向 |
 |---|---|---|
-| `[规范]` | 觉得该成为团队编码规范的经验、踩过的坑 | harvest-notes → `templates/standards` |
+| `[规范]` | 觉得该成为团队编码规范的经验、踩过的坑 | harvest-notes → 方法论待议（仅有复用证据的约束建议） |
 | `[checklist]` | 自检容易漏、该专门核查的项 | harvest-notes → `templates/checklists` |
 | `[方法论]` | 流程 / 协作 / 方法论层面的问题或建议 | harvest-notes → 方法论待议 |
 | `[心得]` | 纯个人心得、复盘、随想 | 私有，**永不上提** |

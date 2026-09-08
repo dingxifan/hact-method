@@ -41,7 +41,7 @@ function runAudit(taskId = TASK_ID) {
 }
 
 function reportText({ taskId, round, mode, prior, targets, baseRef, base, head,
-  changedFiles, started, completed, conclusion, standardsChecked, body = 'findings: []' }) {
+  changedFiles, started, completed, conclusion, body = 'findings: []' }) {
   const evidence = diffEvidence(base, head);
   assert.deepStrictEqual(evidence.names, [...changedFiles].sort(), 'fixture changed files must be real');
   return `---
@@ -58,7 +58,6 @@ reviewed_head: ${head}
 diff_sha256: ${evidence.hash}
 changed_files:
 ${changedFiles.map(file => `  - ${file}`).join('\n')}
-standards_checked: [${(standardsChecked || (taskId === TASK_ID ? ['BE-TEST-01'] : [])).join(', ')}]
 started_at: ${started}
 completed_at: ${completed}
 escalate_to_full: false
@@ -87,7 +86,7 @@ layers: [backend]
 source: bug
 risk: standard
 status: taken-by:cc
-relevant-standards: [BE-TEST-01 · standards-backend.md § 测试机制]
+reference: [project.md § 验证入口]
 files:
   - scripts/check-guard.js
   - tests/enforcement/guard.spec.ts
@@ -156,13 +155,13 @@ result: pass
 
   const roundOnePath = path.join(tempRoot, `b-reviews/${TASK_ID}/round-01.md`);
   const canonicalRoundOne = fs.readFileSync(roundOnePath, 'utf8');
-  const historicalRound = canonicalRoundOne.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json');
+  const historicalRound = canonicalRoundOne.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json\nstandards_checked: [BE-OLD-01]');
   const historicalStatus = canonicalStatus.replace('    spec_minutes: 1',
     '    review_profile_version: develop-review-profile/v1\n    issues: []\n    spec_minutes: 1');
   write(`b-reviews/${TASK_ID}/round-01.md`, historicalRound);
   write('status.yml', historicalStatus);
   write('archived-profile.json', '{"selector_revision":1,"historical":true}\n');
-  assert.strictEqual(runAudit().status, 0, 'old profile fields are inert; no selector is needed');
+  assert.strictEqual(runAudit().status, 0, 'old profile and standards fields are inert; no retired files are needed');
   assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), historicalRound, 'audit must not rewrite historical reports');
   assert.strictEqual(fs.readFileSync(path.join(tempRoot, 'status.yml'), 'utf8'), historicalStatus);
   assert.strictEqual(fs.readFileSync(path.join(tempRoot, 'archived-profile.json'), 'utf8'), '{"selector_revision":1,"historical":true}\n');
@@ -178,15 +177,9 @@ result: pass
     severity: blocking
     status: open`), 'utf8');
   assert.match(runAudit().stdout, /conclusion=pass 但仍有 open blocking/, 'open blocker must fail pass');
-  fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(/^standards_checked:.*\n/m, ''), 'utf8');
-  assert.match(runAudit().stdout, /standards_checked 缺失/, 'v2 full missing standards_checked must fail');
   fs.writeFileSync(roundOnePath, canonicalRoundOne
-    .replace('schema: develop-review-round/v2', 'schema: develop-review-round/v2x')
-    .replace(/^standards_checked:.*\n/m, ''), 'utf8');
+    .replace('schema: develop-review-round/v2', 'schema: develop-review-round/v2x'), 'utf8');
   assert.match(runAudit().stdout, /未知 round schema|round schema 必须/, 'unknown schema must not fall open to legacy');
-  fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(
-    'standards_checked: [BE-TEST-01]', 'standards_checked: [BE-TEST-01, FE-EXTRA-01]'), 'utf8');
-  assert.match(runAudit().stdout, /任务包外 id/, 'full extra standards id must fail');
   fs.writeFileSync(roundOnePath, canonicalRoundOne, 'utf8');
 
   write('src/unrelated.ts', 'export const unrelated = true;\n');
@@ -245,7 +238,7 @@ result: pass
   assert.match(runAudit().stdout, /open blocking/, 'restarting a process cannot silently drop a blocker');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
   const priorRound = fs.readFileSync(roundOnePath, 'utf8');
-  const historicalPrior = priorRound.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json');
+  const historicalPrior = priorRound.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json\nstandards_checked: [BE-OLD-01]');
   fs.writeFileSync(roundOnePath, historicalPrior, 'utf8');
   assert.strictEqual(runAudit().status, 0, 'new targeted review can continue an old full report without profile');
   assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), historicalPrior);
@@ -254,8 +247,8 @@ result: pass
   const currentTask = fs.readFileSync(currentTaskPath, 'utf8');
   fs.writeFileSync(currentTaskPath, currentTask
     .replace('title: 收紧 enforcement', 'title: 明确此包边界')
-    .replace('BE-TEST-01 · standards-backend.md § 测试机制', 'BE-TEST-02 · standards-backend.md § 修订接线'), 'utf8');
-  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace('standards_checked: [BE-TEST-01]', 'standards_checked: [BE-TEST-02]'), 'utf8');
+    .replace('reference: [project.md § 验证入口]', 'reference: [project.md § 验证入口, foundation.md § 边界]'), 'utf8');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
   assert.strictEqual(runAudit().status, 0, 'local contract revision uses targeted; historical reports remain unchanged');
   fs.writeFileSync(currentTaskPath, currentTask, 'utf8');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
@@ -264,9 +257,6 @@ result: pass
   assert.strictEqual(runAudit().status, 0, 'targeted may verify a local new finding without restarting full');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace('status: verified-closed', `status: verified-closed${localFinding.replace('verified-closed', 'open')}`), 'utf8');
   assert.match(runAudit().stdout, /conclusion=pass 但仍有 open blocking/, 'local findings cannot be skipped to pass');
-  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace(
-    'standards_checked: [BE-TEST-01]', 'standards_checked: [FE-EXTRA-01]'), 'utf8');
-  assert.match(runAudit().stdout, /任务包外 id/, 'targeted standards_checked must be subset of task standards');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
 
   git(['read-tree', baseTree]);

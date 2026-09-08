@@ -30,7 +30,8 @@ function parseFrontmatter(source) {
 function contractPathHits(files) {
   const patterns = [
     /(^|\/)iterations\/v[^/]+\/(prd|trd|gates)\.md$/i,
-    /(^|\/)(standards-(shared|frontend|backend)|foundation|design)\.md$/i,
+    // 存量规则文件在项目迁移完成前仍受保护；不再生成或加载这些文件。
+    /(^|\/)(standards-(shared|frontend|backend)|project|foundation|design)\.md$/i,
     /(^|\/)(migrations?|schema|openapi|swagger|contracts?|shared\/types?)(\/|\.|$)/i,
     /\.(proto|avsc)$/i,
   ];

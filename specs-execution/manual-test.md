@@ -49,12 +49,12 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 
 🚫 等用户选择后再继续（⚖️ 例外：用户开场已明确表达主线意图——如直接说「开始验收」——本列表跳过不出，播报一行后直接继续）
 
-用户选 [1] → 继续下方（精确读取 prd.md + 项目根 standards-shared.md）
+用户选 [1] → 继续下方（精确读取 prd.md + 本期 trd.md 的测试环境约定）
 用户选其他 → 按用户描述判断，加载对应 exec spec 执行
 
 三条件满足 → 精确读取：
 - `iterations/vN/prd.md`（acceptance criteria 段落）
-- 项目根 `standards-shared.md`（测试环境约定段落）
+- `iterations/vN/trd.md`（测试环境约定段落）
 - 项目根 `backlog.md` 中**本期**的 `[欠账]` 条目（develop / 独审期发现、本期无人认领的功能缺口）——这是它们在 G4 前唯一的出口，逐条带进 Step 2 交给用户定夺，不得静默跳过
 
 ---
@@ -66,7 +66,7 @@ generate-integration-tests 尚未完成（{未满足条件}），无法开始人
 - [ ] 数据库指向测试库（非生产库）
 - [ ] 前端页面可打开
 
-**任一未就绪** → 引导用户逐步建立（参照项目根 `standards-shared.md` 测试环境约定段落），就绪后继续。
+**任一未就绪** → 引导用户逐步建立（参照`iterations/vN/trd.md` 测试环境约定段落），就绪后继续。
 
 ```
 ✅ 测试环境确认：{服务地址} 可访问，数据库为测试库。
@@ -237,7 +237,7 @@ git push
 ## Step 6：feedback 检查
 
 回顾本次验收：
-- 反复出现的问题类型 → 说明 standards 或 TRD 有缺口，写入 项目根 `feedback.md`（格式：`{日期} | {发现} | 建议更新到 {文件哪节}`）
+- 反复出现的问题类型 → 说明 项目约束或 TRD 有缺口，写入 项目根 `feedback.md`（格式：`{日期} | {发现} | 建议更新到 {文件哪节}`）
 - 联调通过但验收仍发现的问题 → 说明联调场景覆盖不足，写入 项目根 `feedback.md`，供下次 generate-integration-tests 参考
 - 无发现 → 跳过
 

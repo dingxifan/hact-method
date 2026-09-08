@@ -15,7 +15,7 @@
   - `iterations/vN/trd.md`（接口定义）
   - `iterations/vN/prd.md`（acceptance criteria，测试场景来源）
   - 本期 sprint/任务包的边界、依赖和退役声明，以及相关实现与既有验证证据
-  - 项目根 `standards-shared.md`（测试环境约定段落）
+  - `iterations/vN/trd.md`（测试环境约定段落）
   - 项目根 `design.md`（完整档「〇、视觉冒烟锚点」段——视觉冒烟断言取数源）
 
 ---
@@ -40,7 +40,7 @@
 | 修复任务包（[阻断] 失败时） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（[不阻断] 失败时） | `backlog.md` | `- [ ] {日期} \| [不阻断] {描述} \| 联调发现` |
 | 进度断点（compact 时写入） | `_meta/sessions/generate-integration-tests-progress.md` | 场景结论与修复/补缝 task-id；恢复核结果记录中的基线与问题，不重复有效验证 |
-| feedback.md 条目（发现共性问题时） | `feedback.md` | `{日期} \| {发现} \| 建议更新到 {standards/trd 哪节}` |
+| feedback.md 条目（发现共性问题时） | `feedback.md` | `{日期} \| {发现} \| 建议更新到 {Foundation/TRD/检查入口}` |
 
 ---
 

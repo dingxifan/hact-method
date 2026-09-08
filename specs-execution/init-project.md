@@ -70,9 +70,6 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - 项目根 `foundation.md`：复制自 `templates\foundation.md`（**地基蓝图**空模板——领域地图 / 关注点登记槽位留空，本 spec **Step 5 共识讨论**时填；技术内生清单与安全项「应有档=构造级」已预置。下游 V0 走骨架据此建骨架）
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，`check-sprint.js` / `check-gate.js` 的取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 
-**特殊桩（不走 templates/）**：
-- 项目根三份 Standards：建空桩；走 V0 时 `draft-foundation` 只写骨架实际命中的最小规则，完整首播由首期 `draft-tech-design` 兜底，后续只更新当前真值
-
 同时写入以下文件：
 - **运行时入口与项目配置（新项目默认双运行时）**：依次执行 `templates/runtime/cc.md` 与 `templates/runtime/codex.md` 的「项目初始化映射」。入口只引用共同启动正文，不复制协议；具体目录和文件只由映射定义；若目标路径已有文件，先报告差异，禁止覆盖存量配置
 - `scripts/check-docs.js`：内容复制自 `templates\scripts\check-docs.js`（产物结构 linter，纯 Node 无外部依赖；`draft-prd-vN` Step 7.4 / `draft-tech-design` Step 4 自检 PRD/TRD 结构与交叉一致性时调用）
@@ -245,7 +242,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 3. 能用一根最薄真实切片证明，不需要预建未来功能。
 
 - **走 V0** → `draft-foundation` 建 `iterations/v0/`；只建命中上述门槛的承重项 + 一根标杆切片。
-- **跳过 V0** → **不建 `iterations/v0/`**，直接进 V1；地基随首批功能建立，Standards 首播由 `draft-tech-design` 承接。项目小并不是唯一理由——没有高改造成本的稳定跨切面约束就应跳过。
+- **跳过 V0** → **不建 `iterations/v0/`**，直接进 V1；地基随首批功能建立，测试框架与运行入口由 `draft-tech-design` 在 project.md 确定。项目小并不是唯一理由——没有高改造成本的稳定跨切面约束就应跳过。
 
 「V1 马上要用」「以后也许会用」「想把模板一次配齐」都不是 V0 准入理由。若预计范围超过一个正常中型 develop 任务，先删到最难后补的约束；仍超出则跳过 V0，把其余内容放回 V1。
 

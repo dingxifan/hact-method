@@ -11,7 +11,7 @@
 ## 前置条件
 
 - **触发**：任务包已入 queue，状态为 [可取]
-- **文件**：对应 layer 的 `standards-{layer}.md` + `standards-shared.md` 已存在（`draft-tech-design` 产物）
+- **文件**：任务 reference 中的项目技术约束、Foundation、TRD/共享契约及测试入口可查
 - **source=sprint**：G3 已签（`plan-sprint` 完成）
 - **source=foundation**：G2(v0) 已签（`draft-foundation` 完成）；建造单元 = `iterations/v0/foundation-design.md`（获准的最小地基件 + 一根标杆切片），执行层按真实切片决定、无任务包队列
 - **source=integration**：上游联调脚本失败场景已记录，修复任务包由 `generate-integration-tests` 派出
@@ -33,7 +33,7 @@
 | `layers` | string[] | ✅ | `[frontend]` / `[backend]` / `[shared]` |
 | `source` | enum | ✅ | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` |
 | `task_type` | enum | ✅ | `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）/ layers=[shared] 时由分配者在任务包中指定 |
-| `contract-impact` | enum | ✅（新包） | `governed` = 只实现已经签署/修订完成的 PRD、TRD、Foundation、Standards，不在 develop 中改契约；`none` = 不触及共享契约。`source=bug/optimization` 只能为 `none`；若需求本身要修订契约，必须先退出 B 类走 `revise-doc` 或新 A 类迭代，再重新规划 |
+| `contract-impact` | enum | ✅（新包） | `governed` = 只实现已经确认/修订完成的 PRD、TRD、Foundation、project.md 技术约束，不在 develop 中改契约；`none` = 不触及共享契约。`source=bug/optimization` 只能为 `none`；若需求本身要修订契约，必须先退出 B 类走 `revise-doc` 或新 A 类迭代，再重新规划 |
 | `urgency` | enum | ✅ | `normal`（默认）/ `hotfix` |
 | `risk` | enum | ✅ | `standard`（默认）/ `sensitive`。触及 develop 合并前安全敏感预检四类之一时填 `sensitive`：权限 / 认证 / 数据隔离、不可逆数据操作、金额 / 计费计算、对外不可撤销副作用；否则填 `standard`，**存疑即 `sensitive`**。缺省按 `standard` 处理。develop 侧按**有效 risk** 消费（自报 `sensitive` 或主线四类语义扫命中即升档并回改本字段），末端安全敏感预检基于 diff 独立判定、不唯此字段（决策#29，见 `specs-execution/develop.md`） |
 | `title` | string | ✅ | 简短描述，15字以内 |
@@ -43,12 +43,11 @@
 | `supersedes` | string[] | ✅ | 本包取代的既有实体，无则 `[]`。一行一条并写清是什么：代码路径（旧实现 / 旧分支 / 将无调用方的模块）、lint 规则 id、spec 文件、`decisions #N`。非空即欠一笔**退役账**：develop 在 PR description 逐条给「已下线 / 保留 + 解除条件」，`wrap-up-iteration` 于签 G5 前核对。**不进 `check-sprint.js` 必填校验**（存量项目任务包无此字段，机械必填会全线红） |
 | `ac-format` | enum | ✅ | 新任务固定 `intent-oracle-v1`；存量缺省按旧格式兼容，不要求批量回填 |
 | `acceptance-criteria` | string[] | ✅ | 3–5 条，每条是一个 block scalar，含回链 tag + `intent` + `oracle`；`example` 可选，默认是派生说明，不高于 oracle。仅输入封闭、可按 oracle 复算且经写包独审确认的例子标 `golden: true`，develop 才承担字面物化义务；其余测试物化 intent/oracle |
-| `relevant-standards` | string[] | ✅ | 只列 `applies-if` 命中的稳定规则 id，并附 `standards-{layer}.md` / `standards-shared.md` 条目标题。无命中填 `[]`；frontend 另由 `reference` 指向 design.md 的全局基线和相关页面规格，存量无稳定锚时才全文读取 |
 | `design-reference-format` | enum | frontend 条件必填 | `sliced-v1`：design 已有全局基线 + 页面规格结构；`legacy-full`：存量 design 尚无稳定页面标题。backend/shared 不写 |
 | `reference` | string[] | ✅ | 只列做实现决策必需的权威锚。普通情况不接受全文；仅 `design-reference-format=legacy-full` 允许 `design.md 全文（存量）`。frontend `sliced-v1` 须含全局视觉基线和相关页面标题；无其他必需锚可填 `[]` |
 | `context` | string | ✅ | 关键实现切入点（如：`GoalList.vue L142 handleDelete()`…） |
 | `known-risks` | string[] | ✅ | 只列本任务新打开或显著放大的实际风险；无则 `[]` |
-| `do-not` | string[] | ✅ | 只列本任务真实 scope 边；通用编码/凭据红线由 Standards 与 develop 全局纪律承接；无则 `[]` |
+| `do-not` | string[] | ✅ | 只列本任务真实 scope 边；凭据与真实性红线由 develop 全局纪律承接；无则 `[]` |
 | `escalate-if` | string[] | ✅ | 只列无法从权威原文自行裁决的分支；无则 `[]` |
 | `depends_on` | string[] | ✅ | 本任务依赖的前置 task-id 列表，无依赖填 `[]`。两类来源：① 编译/接口依赖（下游引用上游新增的共享类型/接口，须等上游合并）② 共享资产消费（多任务写同一表/枚举/共享类型时，指向 source-of-truth 任务）。`check-sprint.js` 对 `files` 与 `asset-writes` 做两两交叉核验；共享写集没有任一方向的依赖路径即 FAIL。与 sprint.md「依赖」列、status.yml `depends_on` 三处一致 |
 | `api-contract` | object | 条件 | 仅 `layers=[backend]` 且该接口被前端消费时必填；由 plan-sprint 推导写入，develop 只读；见下方格式说明 |
@@ -104,12 +103,12 @@ api-contract:
 
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `plan-sprint`（source=sprint） | 任务包（含 files / AC / standards 引用） | iterations/vN/queue/*.md |
+| `plan-sprint`（source=sprint） | 任务包（含 files / AC / reference 契约锚） | iterations/vN/queue/*.md |
 | `draft-foundation`（source=foundation） | 走骨架设计（地基件清单 + 标杆切片）+ 地基蓝图 | iterations/v0/foundation-design.md + 项目根 foundation.md |
 | `generate-integration-tests`（source=integration） | 失败联调场景 + 修复任务包 | iterations/vN/queue/*.md |
 | `manual-test`（source=manual-test） | 验收问题 + 修复任务包 | iterations/vN/queue/*.md |
 | `dispatch-new`（source=bug/optimization） | B 类任务包 | b-queue/*.md |
-| `revise-doc`（影响任务包时） | 更新后的任务包或 standards 变更说明 | iterations/vN/queue/{task-id}.md 或 b-queue/{task-id}.md 更新 |
+| `revise-doc`（影响任务包时） | 更新后的任务包或 项目约束变更说明 | iterations/vN/queue/{task-id}.md 或 b-queue/{task-id}.md 更新 |
 
 **输出给**
 

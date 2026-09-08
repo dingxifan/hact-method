@@ -33,7 +33,7 @@ _meta/plans/YYYY-MM-DD-[阶段名]/
 |------|------|
 | 立项新项目（`init-project`） | 在本仓执行，用 Bash 创建 `../{project-name}/` |
 | 方法论调整（修改 skeleton / specs / templates） | 在本仓执行，直接编辑方法论文件。信息来源见下方「方法论调整信息来源」 |
-| 收割个人积累上提（`harvest-notes`） | 在本仓执行，遍历成员 notes 仓只读收割，去重择优写入公共层（templates/standards、templates/checklists、方法论待议） |
+| 收割个人积累上提（`harvest-notes`） | 在本仓执行，遍历成员 notes 仓只读收割，去重择优写入公共层（templates/checklists、方法论待议） |
 | 跨项目浏览 / 对比 | 在本仓执行 |
 
 > 第三个工作区「个人积累（hact-notes）」是开发者私有仓，不在本仓、也不在项目仓——见 `skeleton/02-workspaces.md` §4。
@@ -114,9 +114,6 @@ git -C {项目仓} worktree remove {临时目录}
 ├── project.md               ← 跨迭代项目快照
 ├── decisions.md             ← 架构决策记录
 ├── design.md                ← 视觉规格
-├── standards-shared.md      ← 跨层稳定默认规则（项目级当前态；按 applies-if/id 增量加载）
-├── standards-frontend.md    ← 前端编码规范（同上）
-├── standards-backend.md     ← 后端编码规范（同上，含测试框架约定）
 ├── reusables.md             ← 可复用资产
 ├── backlog.md               ← 积压与偏离
 ├── feedback.md              ← 各阶段反馈

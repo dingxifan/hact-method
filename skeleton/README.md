@@ -37,7 +37,7 @@ hact-method/
 ├── specs-structural/     第二阶段：每个 task 的完整结构契约（继承 04）
 ├── specs-execution/      第四阶段：每个 task 的执行规范 + 隔离单元协议（继承 03 密度声明）
 ├── projects/             具体项目的编排目录（含 iterations/）
-├── templates/            模板（项目模板、standards 模板等）
+├── templates/            模板（项目模板、审查 brief 等）
 └── _meta/                研发过程产物（plans / input）
 ```
 

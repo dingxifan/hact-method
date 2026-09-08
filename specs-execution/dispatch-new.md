@@ -3,7 +3,7 @@
 > 运行时加载本文时，当前任务是处理一条 B 类入口：收到 bug 报告或优化需求，判断是否属于 B 类，写任务包入 queue，记入 b-tasks.md。
 > 本 task 是轻量派发任务，通常 10 分钟内完成。
 
-**上下文密度**：低。不加载实现代码；读取当前已签 PRD/TRD、Foundation 与命中的 Standards，判断是否触及共享契约。
+**上下文密度**：低。不加载实现代码；读取当前已签 PRD/TRD、Foundation 与 project.md 技术约束，判断是否触及共享契约。
 
 ---
 
@@ -34,7 +34,7 @@
 | 影响两个及以上模块的核心逻辑 | 跨模块重构 |
 | 需要产品决策（新用户场景 / 新功能边界） | 超出已有 PRD 范围 |
 | 修改或删除已有接口路径 / 参数 / 字段 | breaking change，可能影响已有客户端或数据 |
-| 需要修改已签 PRD/TRD、Foundation、Standards、design.md 或 gates.md | 共享契约不能在 B 类实现包中顺手改 |
+| 需要修改已签 PRD/TRD、Foundation、project.md 技术约束、design.md 或 gates.md | 共享契约不能在 B 类实现包中顺手改 |
 | 新增或改变共享 API/事件、公共类型/枚举、数据库表/列/约束/迁移、状态词汇/转换边 | **纯加法也属于契约变更**；先修订权威文档并重新规划 |
 
 **未改共享契约、仅在既有扩展点内做实现纯加法时，逐条判定**：
@@ -49,7 +49,7 @@
 **升级 A 类时输出**：
 ```
 此需求涉及 {跨模块核心逻辑 / 产品决策 / breaking change / 共享契约修订 / 业务逻辑复杂 / 风险不可控}，不能作为 B 类实现包派发。
-本 dispatch-new task 终止：产品意图变化走 draft-prd-vN；既有意图下的契约修订走 revise-doc(target={prd|trd|foundation|standards|design})，修订完成后重新 plan-sprint。
+本 dispatch-new task 终止：产品意图变化走 draft-prd-vN；既有意图下的契约修订走 revise-doc(target={prd|trd|foundation|project})；视觉规格按 draft-ux 更新。修订完成后重新 plan-sprint。
 ```
 
 **全部不满足升 A 条件** → 继续 Step 2。
@@ -116,7 +116,7 @@ golden: false
 【共享契约影响】
 - contract-impact: none
 - asset-writes: [{本任务写入的共享资产稳定键；无则 []}]
-- 依据：{为什么不需要修改已签 PRD/TRD/Foundation/Standards/design 或公共 schema/API/type/enum/event/state}
+- 依据：{为什么不需要修改已确认 PRD/TRD/Foundation/project 技术约束/design 或公共 schema/API/type/enum/event/state}
 
 [layer=frontend 时额外输出]
 【视觉参照】design.md §{节} / prototype.html {路径}

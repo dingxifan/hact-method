@@ -47,7 +47,7 @@ function stripComment(s) { return s.replace(/\s+#.*$/, '').trim(); } // 去行�
 const REQUIRED = ['task-id', 'sprint_id', 'layers', 'source', 'task_type', 'contract-impact',
   'urgency', 'risk', 'title', 'description', 'depends_on', 'files', 'asset-writes', 'supersedes',
   'ac-format', 'acceptance-criteria',
-  'relevant-standards', 'reference', 'context', 'known-risks', 'do-not', 'escalate-if'];
+  'reference', 'context', 'known-risks', 'do-not', 'escalate-if'];
 
 /* ---------- frontmatter 容错解析 ----------
  * 取首个 --- 与下一个 --- 之间。顶格 `key:` 为字段；支持：
@@ -115,7 +115,7 @@ function parseFrontmatter(p) {
 
 function valEmpty(key, v) {
   if (!v) return true;                                  // 字段缺失
-  if (v.type === 'inline-empty-list') return !['depends_on', 'asset-writes', 'supersedes', 'relevant-standards', 'reference', 'known-risks', 'do-not', 'escalate-if'].includes(key);
+  if (v.type === 'inline-empty-list') return !['depends_on', 'asset-writes', 'supersedes', 'reference', 'known-risks', 'do-not', 'escalate-if'].includes(key);
   if (v.type === 'list') return v.items.filter(x => x && !x.includes(PLACEHOLDER)).length === 0;
   const t = (v.text || '').trim();
   return t === '' || t.includes(PLACEHOLDER);
@@ -539,7 +539,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
   let previousEscalated = false, previousReviewedHead = '', lastConclusion = '';
   const openBlocking = new Set();
   let declaredTaskFiles = [];
-  let relevantStandardIds = [];
   let taskPackageSchema = '';
   if (!foundationReview) {
     const taskPackages = findTaskPackages(root, id);
@@ -550,9 +549,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       const packageFm = parseFrontmatter(taskPackages[0]);
       taskPackageSchema = scalarText(packageFm && packageFm['package-schema']);
       declaredTaskFiles = listItems(packageFm && packageFm.files).map(normalizeFileAsset).sort();
-      relevantStandardIds = [...new Set(listItems(packageFm && packageFm['relevant-standards'])
-        .map(item => (item.match(/^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+/) || [])[0])
-        .filter(Boolean).map(item => item.toUpperCase()))].sort();
     }
   }
   let firstReportStarted = NaN, lastReportCompleted = NaN;
@@ -574,16 +570,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       errors.push(`${file}: 未知 round schema=${reportSchema}`);
     if (evidenceVersion === 'develop-review-round/v2' && reportSchema !== 'develop-review-round/v2')
       errors.push(`${file}: review_evidence_version=v2 时 round schema 必须为 develop-review-round/v2`);
-    if (reportSchema === 'develop-review-round/v2') {
-      if (!rp.standards_checked) errors.push(`${file}: v2 standards_checked 缺失`);
-      else if (!foundationReview && index === reports.length - 1) {
-        const checked = [...new Set(listItems(rp.standards_checked).map(item => item.toUpperCase()))].sort();
-        const extras = checked.filter(item => !relevantStandardIds.includes(item));
-        if (extras.length) errors.push(`${file}: standards_checked 含任务包外 id：${extras.join(', ')}`);
-        if (mode === 'full' && JSON.stringify(checked) !== JSON.stringify(relevantStandardIds))
-          errors.push(`${file}: full standards_checked 必须与 relevant-standards 完整对账`);
-      }
-    }
     if (index === 0 && mode !== 'full') errors.push(`${file}: 首轮必须 full`);
     if (previousEscalated && mode !== 'full') errors.push(`${file}: 上轮要求 escalate_to_full，本轮却非 full`);
     if (!isSha40(r('base_ref'))) errors.push(`${file}: base_ref 非固定 40 位 SHA`);

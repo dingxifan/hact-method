@@ -132,7 +132,7 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 | `code_reviews[].spec_rounds` | int ≥0（非枚举） |
 | `code_reviews[].freshness` | pass / revised |
 | `code_reviews[].review_report_dir` | 项目根相对路径；A 类 `iterations/vN/code-reviews/{task-id}`，B 类 `b-reviews/{task-id}` |
-| `code_reviews[].review_evidence_version` | 新任务 `develop-review-round/v2`；要求每轮 schema 精确匹配并核 `standards_checked`。存量缺失记 legacy/unknown，不把缺字段当零使用 |
+| `code_reviews[].review_evidence_version` | 新任务 `develop-review-round/v2`；要求每轮 schema 精确匹配。旧审查的已退役字段保留历史但不消费 |
 | `code_reviews[].implementation_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
 | `code_reviews[].review_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
 | `code_reviews[].spec_minutes` | int ≥0（非枚举）；多段规格澄清累计值 |

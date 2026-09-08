@@ -3,7 +3,7 @@
 
 ## 自读输入
 
-项目 `foundation.md`、`iterations/v0/foundation-design.md`、固定 diff 和必要调用链、命中 standards，以及构建/测试/标杆切片证据。独立核实，不接收执行者自评。
+项目 `foundation.md`、`iterations/v0/foundation-design.md`、固定 diff 和必要调用链、project.md 技术约束，以及构建/测试/标杆切片证据。独立核实，不接收执行者自评。
 
 ## 检查内容
 

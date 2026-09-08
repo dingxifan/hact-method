@@ -37,7 +37,6 @@ function task(format, refs, schema2 = true) {
     '    (源：PRD AC-01)',
     '    intent: 可审批退款',
     '    oracle: 点击通过后状态为已通过',
-    'relevant-standards: []',
     ...(format ? [`design-reference-format: ${format}`] : []),
     'reference:',
     ...refs.map(ref => `  - ${ref}`),
@@ -59,6 +58,7 @@ write('iterations/v2/sprint.md', '| task-id | title | layers | 依赖 | 状态 |
 write('status.yml', 'tasks:\n  - id: demo-v2-001\n    source: sprint\n    iteration: v2\n    layer: frontend\n    status: 可取\n    depends_on: []\n    delivery: 可并行\n');
 write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款审批页\n');
 write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页']));
+assert.strictEqual(run().status, 0, '新任务无 Standards 文件或引用字段仍能通过完整 G3 检查');
 assert.doesNotMatch(run().stdout, /\[reference design\]/, '有效全局+页面 design 锚不应报 design finding');
 assert.doesNotMatch(run().stdout, /字段「supersedes」/, 'schema 2 的 supersedes: [] 是明确无取代关系，不得误报为空字段');
 write('design.md', '## 〇、视觉冒烟锚点\n## 十一、页面规格（v1.2）\n### 退款审批页\n');

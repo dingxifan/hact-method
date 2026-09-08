@@ -4,7 +4,7 @@
 **Gate**: G2（可选签于任务尾部）
 **属性**: `version`
 
-> 读 PRD 输出疑点清单，确认后写 TRD；三份 Standards 必须存在，但普通迭代只按候选增量维护（允许 0 变更），签 G2。
+> 读 PRD 输出疑点清单，确认后写 TRD、核项目约束与验证入口，签 G2。
 
 ---
 
@@ -30,10 +30,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | TRD | `iterations/vN/trd.md` | Markdown，套结构化模板 `templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位，供 `scripts/check-docs.js` 解析与交叉对账） |
-| 共享规范 | 项目根 `standards-shared.md` | 当前稳定默认规则表；V0 只写骨架命中项，首期 V1 补齐适用规则，之后原地更新当前真值 |
-| 前端规范 | 项目根 `standards-frontend.md` | 同上 |
-| 后端规范 | 项目根 `standards-backend.md` | 同上（含「测试框架约定」节） |
-| 地基蓝图增补（条件） | 项目根 `foundation.md` | **仅本期识别出新跨切面关注点时**：原地增补领域地图 / 关注点登记 + 立应有档（V0 播种、本任务 post-V0 维护，与 standards 同纪律；Step 7）。**≥机械级须落到落地手段位置**（文件:行 / 规则名）+ 反例验证，或登记「待建」交 `plan-sprint` 拆地基跟进包；给不出则只能立人审级 |
+| 地基蓝图增补（条件） | 项目根 `foundation.md` | **仅本期识别出新跨切面关注点时**：原地增补领域地图 / 关注点登记 + 立应有档（init 播种、本任务按涉及边界维护；Step 7）。**≥机械级须落到落地手段位置**（文件:行 / 规则名）+ 反例验证，或登记「待建」交 `plan-sprint` 拆地基跟进包；给不出则只能立人审级 |
 | G2 签字 | `iterations/vN/gates.md` | `- [x] G2：TRD 已确认 — YYYY-MM-DD` |
 | decisions.md 更新 | `decisions.md` | 表格追加：决策 / 原因 / 日期 |
 | project.md 更新（技术层） | `project.md` | 追加或更新技术层内容 |
@@ -64,7 +61,7 @@
 - [ ] **【linter·存在】** 测试环境约定段落存在且非空（"完整"由人核）
 - [ ] 不可视区 AC 的 oracle 已精化到状态码/错误码/断言；普通 example 与 oracle 一致但不升格为字面契约，回链载体真承接对应 AC
 - [ ] Step 5 独立内容审查已跑、问题清单已与用户处理（陌生视角验内部一致性 / AC 真承接 / 字段满足画面 / 覆盖，linter 兜不住的内容残量；隔离审查不可用则阻断，不以主线自审替代）
-- [ ] 三份 Standards 已存在（shared / frontend / backend）；本期 candidate 已处理，0 candidate 时文件保持不变
+- [ ] project.md 技术选择与测试入口可查；本期涉及的 Foundation 不变量已核对
 - [ ] decisions.md 已追加本期架构决策
 - [ ] project.md 技术层已更新
 - [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 实体↔表 + AC↔回链两条交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，不额外派隔离单元）
@@ -85,8 +82,8 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `plan-sprint` | TRD + 当前三份 Standards（本期可 0 变更），G2 已签 | `iterations/vN/trd.md` + 项目根 `standards-*.md` |
-| `revise-doc`（如有修订） | TRD / standards 被标记为待修订 | backlog `[修订]` 条目 |
+| `plan-sprint` | TRD + 项目技术约束与验证入口，G2 已签 | `iterations/vN/trd.md` + 项目根 `project.md` / `foundation.md` |
+| `revise-doc`（如有修订） | TRD / Foundation 被标记为待修订 | backlog `[修订]` 条目 |
 
 ---
 

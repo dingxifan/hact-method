@@ -1,6 +1,6 @@
 # exec: revise-doc
 
-> 运行时加载本文时，当前任务是对一份已签 Gate 的文档（PRD / TRD / Foundation / Standards）做最小化修订，记录原因，判断下游影响。
+> 运行时加载本文时，当前任务是对已确认的 PRD / TRD / Foundation / project.md 技术约束做最小化修订，记录原因，判断下游影响。
 > 已签 Gate 不撤销，只记录变更；修订范围严格最小化，不借机重写或扩展。
 
 **上下文密度**：低–中。只读目标文档 + backlog，不加载代码。
@@ -26,7 +26,7 @@
 （创建 revise-doc 任务包时，由触发方按此规范生成 task-id 写入任务包）
 
 读任务包，确认：
-- `target`：`prd` / `trd` / `foundation` / `standards`
+- `target`：`prd` / `trd` / `foundation` / `project`
 - `reason`：修订原因（触发来源 + 具体问题）
 
 ---
@@ -40,7 +40,7 @@
 | `prd` | `iterations/vN/prd.md` |
 | `trd` | `iterations/vN/trd.md` |
 | `foundation` | 项目根 `foundation.md` |
-| `standards` | 项目根 `standards-{backend\|frontend\|shared}.md`（跨迭代活文档，由 reason 决定具体文件） |
+| `project` | 项目根 `project.md` 技术层（当前技术选择与约束；普通状态更新不走契约修订） |
 
 定位 `reason` 所指的具体段落，输出：
 ```
@@ -99,7 +99,7 @@
 | `prd` | 是否影响 TRD 的接口 / 数据结构？ | 是 → 创建 `revise-doc(target=trd)` 任务包，写入 queue；不在本会话改 TRD |
 | `trd` | 是否影响已派发的 queue 任务包？ | 是 → 更新对应任务包的 intent/oracle/reference，在任务包备注「TRD 已修订，请重新拾取」 |
 | `foundation` | 是 claim-only 还是 invariant 变化？ | claim-only → 只更新声明/机制锚；invariant 变化 → 新开地基跟进任务，禁止静默要求当前包扩 scope |
-| `standards` | 是否影响进行中的 develop task？ | 是 → 更新对应规则 id/条目引用；变更说明留修订记录，不塞进 `relevant-standards` |
+| `project` | 是否改变已确认的技术选择或约束？ | 说明适用范围和下游影响，修订后更新相关任务 reference；涉及代码的另按授权安排，不在文档修订中实施 |
 
 **AC 漂移兜底**：对受影响任务包重跑 intent/oracle 对账；example 按 oracle 复算。intent/oracle 变化才更新测试契约；仅 example 算错则改 example 或取消 golden，不创建代码整改。只复核受影响 AC，不重跑完整任务包/代码审查。
 

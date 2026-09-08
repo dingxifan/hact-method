@@ -10,11 +10,11 @@
 
 ## 前置条件
 
-- **Gate**：G2 已签（TRD + 三份 standards 就位）
+- **Gate**：G2 已签（TRD + 验证入口 就位）
 - **文件**：
   - `iterations/vN/prd.md`（AC 来源，任务包 AC 须能回链到此）
   - `iterations/vN/trd.md`
-  - 项目根 `standards-shared.md` / `standards-frontend.md` / `standards-backend.md`（跨迭代活文档）
+  - 项目根 project.md 技术层、Foundation 与涉及的契约/检查配置
   - `reusables.md`（了解可复用资产，避免任务包重复指派已有实现）
 
 ---
@@ -62,7 +62,7 @@
 
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `draft-tech-design` | TRD + 三份 standards，G2 已签 | `iterations/vN/trd.md` + `standards-*.md` |
+| `draft-tech-design` | TRD + 验证入口，G2 已签 | `iterations/vN/trd.md` + `project.md` / `foundation.md` |
 
 **输出给**
 

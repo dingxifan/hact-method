@@ -28,6 +28,13 @@
 
 ---
 
+## 实现边界
+
+- 不擅自改变已确认的业务行为、项目技术选择与数据不变量；等价实现可自行选择，改变约束须先修对应权威对象。
+- 不把未经运行时校验的外部输入或持久化 JSON 当作可信契约；不让错误在转换层静默丢失，不以成功响应掩盖失败。
+- 不泄露凭据或隐私，不把验证环境连到生产数据，不以删断言、跳测试或扩大白名单换取通过；必要验证未运行须明确说明。
+- 同一业务口径已有权威实现时复用；合理的新实现不为遵守旧文件名或 helper 写法而强行改造。实现方法由执行者决定，注释解释约束与必要取舍，不写过程流水账。
+
 ## 会话启动（主线）
 
 **第零步：确定进料与执行层（⚖️ 默认判定）**
@@ -58,7 +65,7 @@
   status.yml：`iterations.v0` 块已由 draft-foundation 建（仅 G2）；此处只往 `tasks` **追加** `{ id: foundation, source: foundation, status: taken-by, branch: foundation-v0 }`（不重建 v0 块）。
 - **跳过前端设计门**：视觉地基获准进入 V0 时只建占位框架；未获准时标杆页面保持最小无装修形态，不预装完整主题。两者都不实现具体画面 → 无 design.md 覆盖可对、无前端设计人工门。
 - **三处替换**（其余主循环 / 末端不变）：
-  ① 阶段 A 隔离执行单元 **自读 `foundation-design.md` 对应件 + `foundation.md` 对应 V0 行 + relevant standards**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
+  ① 阶段 A 隔离执行单元 **自读 `foundation-design.md` 对应件 + `foundation.md` 对应 V0 行 + 相关项目约束与测试入口**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
   ② 阶段 B 独审读 **`../hact-method-lab/templates/review-briefs/foundation-review.md`**（替代 develop-review：验强制边实际档≥应有档 + 命门 + 标杆质量）。
   ③ 末端状态更新走下方「`source=foundation`」分支（无 sprint.md；登记标杆切片）。
 > 安全敏感预检（末端·合并前）：按实际 diff 判断。若 V0 含数据隔离、鉴权、迁移等安全敏感改动，触发 architecture 裁决门；不因 `source=foundation` 名称本身自动触发。
@@ -66,7 +73,7 @@
 **source=bug/optimization 进料（B 类）**
 
 - B 类由 `dispatch-new` 写入 `b-queue/` 后，统一从本 `develop` 入口拾取；一次只取用户点名的一个 task-id，不与 sprint 批次混跑。
-- 认领前运行 `node ../hact-method-lab/templates/scripts/check-b-task.js b-queue/{task-id}.md --root .`，直接使用已同步的方法论当前版。另人工核 `contract-impact=none`，且 `files` 不含已签 PRD/TRD/Foundation/Standards/design、迁移/schema/公共契约路径；命中即阻断并转 `revise-doc` 或新 A 类迭代，不得边写代码边改契约。
+- 认领前运行 `node ../hact-method-lab/templates/scripts/check-b-task.js b-queue/{task-id}.md --root .`，直接使用已同步的方法论当前版。另人工核 `contract-impact=none`，且 `files` 不含已确认 PRD/TRD/Foundation/project 技术约束/design、迁移/schema/公共契约路径；命中即阻断并转 `revise-doc` 或新 A 类迭代，不得边写代码边改契约。
 - 无 Gate、无 sprint.md、无 iteration；任务包路径为 `b-queue/{task-id}.md`，审查/预检记录目录为 `b-reviews/{task-id}/`，分支名与 PR 粒度均为 `{task-id}`。
 - 状态 `[可取]` 时认领并同步 `status.yml`；`[taken-by]` 时按断点续做对账。状态已 `[done]/[merged]` 则先说明现状，不重复实现。
 - 主循环、freshness preflight、独立审查、末端全量和状态更新照常；所有文中的 vN 参数对 B 类替换为“无 iteration”。
@@ -173,8 +180,7 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 1. **自读上下文**（精确加载，不全量）：
    - 任务包 normative core（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）；non-normative appendix 仅在疑点需要历史解释时查
-   - 只读 `relevant-standards` 命中的规则 id；不加载同文件其它条目
-   - 只读 `reference` 列出的符号/章节/行号锚，不读全文
+   - 按 `reference` 读取 project.md 技术约束、Foundation、TRD/共享契约与检查配置的必要章节；契约锚有缺口则沿真实调用链核实
    - **frontend 额外**：读 `design.md`「全局视觉基线」+ 任务包 `reference` 点名的页面规格；存量 design 或任务包未给稳定页面锚时才全文读取（视觉规格唯一参照）。再读 `ux-flows.md` 对应功能段（若存在，按 title 匹配）与 `prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
 2. **读懂**：以每条 AC 的 `intent` 为目标、`oracle` 为判据；普通 example 仅帮助理解，冲突时返回 `example-error`，不得用代码迁就。只有 `golden: true` 的 example 是字面契约。
 3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块。若任务包已点名资产或 `reusables.md` 是小而直接可定位的登记表，隔离执行单元自行精读相关段；只有需跨目录搜索、核对登记真实性或存在多个候选时才派只读调查单元。已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
@@ -193,7 +199,7 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 隔离执行单元返回 `done` 时，编排器立即记录 `implementation_completed_at`。实现墙钟由 `implementation_started_at/completed_at` 按需计算，不重复持久化分钟字段。这段只覆盖首次实现；从第一轮独审开始到最终通过的整改与等待属于 review wall-clock，避免重叠。
 
-> **测试基建缺失**（项目无测试运行器）：隔离执行单元返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先补 项目根 `standards-backend.md`「测试框架约定」+ 项目装运行器，约定由 `draft-tech-design` 维护 Standards 时确立、存量项目迁移时补建）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 隔离审查单元按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
+> **测试基建缺失**（项目无测试运行器）：隔离执行单元返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先核 project.md 技术层和脚本入口，并补装对应测试运行器）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 隔离审查单元按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
 
 ### 阶段 B · 隔离证据审查单元（自读权威原文）
 
@@ -354,9 +360,9 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 ### feedback 检查 / 就地分流
 
 回顾本次实现，识别值得沉淀的发现：
-- 遇到 standards 未覆盖的决策（视觉 / 接口边界等）且反复出现
+- 遇到 项目约束未覆盖的决策（视觉 / 接口边界等）且反复出现
 - 上下文重置协议被触发（记录触发原因，供后续调整任务拆分粒度 / context 估量策略参考——估量降低触发概率但不消除，单任务做爆仍走重置）
-- 独立审查反复揪出同类问题（可能 standards / checklist 有空缺）
+- 独立审查反复揪出同类问题（可能 契约 / checklist 有空缺）
 - 独审「建议」级 finding 中需**跨期处理**的（非本 PR 必修）：评估规模，≤3 文件且改动独立 → 建议走 B 类快速通道；否则入 项目根 `backlog.md`（格式：`- [ ] {日期} | [CR-建议] {描述} | {文件路径}`）。合并前决定纳入当前任务的修复仍须走整改、复审与末端验证；合并后只分流记录，不以行数少为由直接在 master 追加未审代码。
 - 无发现 → 跳过
 
@@ -364,8 +370,8 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 | source | 去向 |
 |---|---|
-| `sprint` / `integration` / `manual-test`（A 类）·**规范该怎么改** | 写入 项目根 `feedback.md`，标明候选规则的 applies-if 与重复适用证据；下期先过 Standards 准入。跨切面不变式缺口明确投 Foundation，不把事故叙事直接塞进 Standards |
-| `sprint` / `integration` / `manual-test`（A 类）·**本期代码的具体缺口** | 写入 项目根 `backlog.md`（格式：`- [ ] {日期} \| [欠账] {描述} \| 源：develop {vN} {task-id}`）。指本期该有而无人做的东西：**上期有的能力本期没了**（入口/选项/路径回归）、**跨包交集无人认领**（本包不做、也没见别的包做）、**standards 或 foundation 声明的约束在代码里没有落地手段**。**不写进 feedback.md**——feedback 的出口在 `wrap-up-iteration`（G5 之后），本期验收前拦不住任何东西；`[欠账]` 由 `manual-test` 会话启动读入，G4 前必过一遍 |
+| `sprint` / `integration` / `manual-test`（A 类）·**跨任务改进** | 写入 feedback.md；项目不变量回 Foundation，技术取舍回 project.md/decisions.md，可执行检查回 check/test/config，不累积通用规则库 |
+| `sprint` / `integration` / `manual-test`（A 类）·**本期代码的具体缺口** | 写入 项目根 `backlog.md`（格式：`- [ ] {日期} \| [欠账] {描述} \| 源：develop {vN} {task-id}`）。指本期该有而无人做的东西：**上期有的能力本期没了**（入口/选项/路径回归）、**跨包交集无人认领**（本包不做、也没见别的包做）、**Foundation 声明的约束在代码里没有落地手段**。**不写进 feedback.md**——feedback 的出口在 `wrap-up-iteration`（G5 之后），本期验收前拦不住任何东西；`[欠账]` 由 `manual-test` 会话启动读入，G4 前必过一遍 |
 | `bug` / `optimization`（B 类） | **就地分流**：当场誊入本人个人 notes（`../hact-notes-{name}/notes.md`）：编码规范 → `[规范]`、自检漏项 → `[checklist]`、流程 / 方法论问题 → `[方法论]`；项目架构决策 → 项目 `decisions.md`；无价值 → 不记。誊入后在 notes 仓 commit + push（不碰 hact-method） |
 
 > 写入项目 `decisions.md` 前先看活跃条目是否已超过 30 条，或最早条目所属迭代是否已过去 5 期以上；若触发阈值，先按文件头约定把纯历史/已取代条目归档到 `decisions-history.md`，再追加本次决策。

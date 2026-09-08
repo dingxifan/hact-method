@@ -64,7 +64,7 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 
 ## 第二步：去重择优
 
-对收割篮逐条，对照公共层现有内容（`templates/standards/*`、`templates/checklists/*`、`方法论待议.md`）判断。`[规范]` 先按 `templates/standards/schema.md` 过准入；未达到跨任务、长期稳定门槛的项目事实不上提为公共 Standards：
+对收割篮逐条，对照 templates/checklists 与方法论待议去重。`[规范]` 中通用编码常识不收割；有独立反例与明确项目外复用价值的约束建议进入待议，项目特有事实留原仓。
 
 | 情况 | 处理 |
 |---|---|
@@ -72,7 +72,6 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 | 多人提同一问题 | 合并为一条，取最完整措辞 |
 | 单人、通用、有价值 | 采纳 |
 | 单人、仅个人/单项目相关、不通用 | 不上提，游标备注"已阅未采" |
-| `[规范]` 未过 Standards 准入，但事故/建议有复用价值 | 改投 `_meta/plans/方法论待议.md`，不写入 layer 候选库 |
 
 ```
 ✅ 去重择优完成：采纳 {M} 条 / 合并 {K} 组 / 丢弃 {X} 条
@@ -87,12 +86,12 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 
 | 来源标签 | 目的地 | 操作 |
 |---|---|---|
-| `[规范]` | `templates/standards/{backend\|frontend\|shared}.md`（按内容归层；跨层条目写入 `shared.md`） | 按 schema 写成可独立选择的候选规则；更新同类当前规则，不追加版本/事故叙事 |
+| `[规范]` | `_meta/plans/方法论待议.md` | 只记录值得评估的约束缺口与反例；后续按职责修已有入口，不自动变成公共禁令 |
 | `[checklist]` | `templates/checklists/{backend\|frontend}-checklist.md` | 追加至对应分类 `[ ]` |
 | `[方法论]` | `_meta/plans/方法论待议.md` | 追加 `- [ ] {日期} \| {问题} \| 来源：{成员} notes harvest` |
 
 ```
-✅ 写入公共层完成：standards +{a} / checklists +{b} / 待议 +{c}
+✅ 写入公共层完成：checklists +{b} / 待议 +{a+c}
 → 下一步：推进游标
 ```
 
@@ -103,12 +102,12 @@ git -C "{本地路径}" fetch origin 2>/dev/null && git -C "{本地路径}" pull
 更新 `_meta/hact-config.md` 收割游标表：每成员记本次收割到的 commit / 时间戳 + 采纳条目数。
 
 ```bash
-git add templates/standards/ templates/checklists/ _meta/plans/方法论待议.md _meta/hact-config.md
+git add templates/checklists/ _meta/plans/方法论待议.md _meta/hact-config.md
 git commit -m "chore: harvest-notes 收割上提（{日期}）"
 ```
 
 ```
-✅ harvest-notes 完成：上提 standards {a} / checklist {b} / 待议 {c}，游标已推进。
+✅ harvest-notes 完成：上提 checklist {b} / 待议 {a+c}，游标已推进。
 方法论类条目已进待议清单，可在后续方法论调整会话处理。
 要 push 到 master 吗？
 ```

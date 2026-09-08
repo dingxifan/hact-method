@@ -199,7 +199,7 @@ node ../hact-method-lab/templates/scripts/check-integration-evidence.js integrat
 
 ### Step 7：feedback 检查
 
-- 多个 `[阻断]` 根因相同 → 写入 项目根 `feedback.md`（`{日期} | {发现} | 建议更新到 {standards/trd 哪节}`）
+- 多个 `[阻断]` 根因相同 → 写入 项目根 `feedback.md`（`{日期} | {发现} | 建议更新到 {Foundation/TRD/检查入口}`）
 - 完整档浏览器能力无法覆盖的场景比预期多 → 记录，供下期调整策略（如改用直接导航替代 UI 点击链）
 - 无发现 → 跳过
 

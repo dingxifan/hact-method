@@ -60,7 +60,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ### `architecture`
 
-**范围**：技术架构与编码规范——TRD（接口/数据结构设计）、shared/frontend/backend standards 写作。
+**范围**：技术架构与约束——TRD（接口/数据结构设计）、项目技术选择与 Foundation 不变量。
 
 **边界**：
 
@@ -68,7 +68,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 - 不包含任务协调（→ `dispatch`）
 - 不写代码、不审 PR
 
-**典型工作**：起草和修订 TRD、写本期 standards、修订 standards、设计接口边界。
+**典型工作**：起草和修订 TRD、维护项目约束、设计接口边界。
 
 ---
 
@@ -103,7 +103,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 
 ### `dev-frontend`
 
-**范围**：前端开发——前端组件实现、视觉规格落地、前端单元测试、浏览器场景执行。具体框架/UI 库属项目技术栈层（`project.md` 技术层 + standards 栈子模板），不在本骨架预设。
+**范围**：前端开发——前端组件实现、视觉规格落地、前端单元测试、浏览器场景执行。具体框架/UI 库属项目技术栈层（`project.md` 技术层 + 实际依赖配置），不在本骨架预设。
 
 **边界**：
 
@@ -111,13 +111,13 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 - 不包含联调测试设计（→ `integration-testing`）
 - 代码审查由 `develop` 内置隔离审查单元承担（非独立 discipline）
 
-**典型工作**：拉 `develop(layer=frontend)` 任务，按 `standards-frontend.md` 写前端代码（框架按项目栈），per-task 独立审查通过后推 PR 并合并。
+**典型工作**：拉 `develop(layer=frontend)` 任务，按已确认的设计与契约 写前端代码（框架按项目栈），per-task 独立审查通过后推 PR 并合并。
 
 ---
 
 ### `dev-backend`
 
-**范围**：后端开发——服务端业务实现（路由/服务分层）、数据库交互、API 实现、后端单元测试。具体框架/ORM 属项目技术栈层（`project.md` 技术层 + standards 栈子模板），不在本骨架预设。
+**范围**：后端开发——服务端业务实现（路由/服务分层）、数据库交互、API 实现、后端单元测试。具体框架/ORM 属项目技术栈层（`project.md` 技术层 + 实际依赖配置），不在本骨架预设。
 
 **边界**：
 
@@ -125,7 +125,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 - 不包含 API 设计（→ `architecture`）
 - 代码审查由 `develop` 内置隔离审查单元承担（非独立 discipline）
 
-**典型工作**：拉 `develop(layer=backend)` 任务，按 `standards-backend.md` 写代码，per-task 独立审查通过后推 PR 并合并。
+**典型工作**：拉 `develop(layer=backend)` 任务，按已确认的接口与数据契约 写代码，per-task 独立审查通过后推 PR 并合并。
 
 ---
 
@@ -151,7 +151,7 @@ discipline 与 task 的关系：每个 task 挂**单一** discipline（path X，
 | task         | 派生维度     | 取值                                                                        |
 | ------------ | -------- | ------------------------------------------------------------------------- |
 | `develop`    | `layers` | `[frontend]` → `dev-frontend` / `[backend]` → `dev-backend`               |
-| `revise-doc` | `target` | `prd` → `product` / `trd` → `architecture` / `standards` → `architecture` |
+| `revise-doc` | `target` | `prd` → `product` / `trd`、`foundation`、`project` → `architecture` |
 
 
 实施上：task 创建时把派生结果写到 denormalized 字段 `task.discipline`，下游查询直接读字段，无运行时计算开销。

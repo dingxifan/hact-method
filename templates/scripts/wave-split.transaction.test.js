@@ -39,7 +39,6 @@ task_type: dev-backend
 layers: [backend]
 source: sprint
 risk: standard
-relevant-standards: []
 files: [src/a.ts]
 ---
 `);
@@ -76,7 +75,6 @@ reviewed_base: ${baseTree}
 reviewed_head: ${reviewedHead}
 diff_sha256: ${diffHash}
 changed_files: [src/a.ts]
-standards_checked: []
 started_at: 2026-09-04T00:01:00Z
 completed_at: 2026-09-04T00:02:00Z
 escalate_to_full: false
