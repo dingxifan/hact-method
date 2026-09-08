@@ -59,6 +59,14 @@ write('status.yml', 'tasks:\n  - id: demo-v2-001\n    source: sprint\n    iterat
 write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款审批页\n');
 write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页']));
 assert.strictEqual(run().status, 0, '新任务无 Standards 文件或引用字段仍能通过完整 G3 检查');
+write('iterations/v2/ux-flows.md', '## 场景列表\n### 用户任务：U1 完成审批\n- S1：确认结果\n');
+assert.match(run().stdout, /reference 用户任务/, '用户任务原文存在时前端必须承接 U-id');
+write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页', 'ux-flows.md § U1 S1']));
+assert.strictEqual(run().status, 0, '真实 U/S 锚可通过');
+write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页', 'ux-flows.md § U1 S9']));
+assert.match(run().stdout, /不存在的 U\/S-id/, '不存在的场景不能因 U-id 正确而放行');
+fs.unlinkSync(path.join(root, 'iterations/v2/ux-flows.md'));
+write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页']));
 assert.doesNotMatch(run().stdout, /\[reference design\]/, '有效全局+页面 design 锚不应报 design finding');
 assert.doesNotMatch(run().stdout, /字段「supersedes」/, 'schema 2 的 supersedes: [] 是明确无取代关系，不得误报为空字段');
 write('design.md', '## 〇、视觉冒烟锚点\n## 十一、页面规格（v1.2）\n### 退款审批页\n');

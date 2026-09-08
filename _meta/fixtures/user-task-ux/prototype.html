@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="UTF-8"><title>用户任务动线回归夹具</title>
+<style>body{font:18px system-ui;max-width:680px;margin:40px auto}button,input{font:inherit;padding:8px;margin:8px}section[hidden],p[hidden]{display:none}</style>
+<h1>用户任务动线回归夹具</h1><p>虚构数据，仅验证任务结果与状态连续性。</p>
+<section id="home"><h2>待处理事项</h2><p>U1：写明处理意见，提交并确认结果。</p><button id="start">处理事项</button></section>
+<section id="edit" hidden><h2>填写处理意见</h2><label>意见<input id="note"></label>
+<p><label><input type="checkbox" id="fail">模拟本次提交失败</label></p>
+<button id="submit">提交意见</button><button id="cancel">取消并保留草稿</button><p id="error" role="alert" hidden>提交失败，意见已保留，请取消模拟失败后重试。</p></section>
+<section id="result" hidden><h2>处理完成</h2><p id="saved"></p><button id="back">返回待办</button></section>
+<script>
+const home=document.querySelector('#home'),edit=document.querySelector('#edit'),result=document.querySelector('#result');
+const note=document.querySelector('#note'),error=document.querySelector('#error');
+const key='hact-synthetic-ux-draft';
+function show(view){for(const el of [home,edit,result])el.hidden=el!==view;}
+document.querySelector('#start').onclick=()=>{note.value=localStorage.getItem(key)||'';show(edit);note.focus();};
+note.oninput=()=>localStorage.setItem(key,note.value);
+document.querySelector('#cancel').onclick=()=>{localStorage.setItem(key,note.value);show(home);};
+document.querySelector('#submit').onclick=()=>{
+  if(new URLSearchParams(location.search).has('broken'))return;
+  if(document.querySelector('#fail').checked){error.hidden=false;return;}
+  if(!note.value.trim()){error.textContent='请先填写意见';error.hidden=false;return;}
+  document.querySelector('#saved').textContent='已提交：'+note.value;error.hidden=true;localStorage.removeItem(key);show(result);
+};
+document.querySelector('#back').onclick=()=>show(home);
+</script></html>

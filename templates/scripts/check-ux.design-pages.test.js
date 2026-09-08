@@ -1,27 +1,37 @@
 #!/usr/bin/env node
 'use strict';
-const assert = require('assert');
-const childProcess = require('child_process');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
-
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-ux-pages-'));
-const script = path.join(__dirname, 'check-ux.js');
-function write(rel, text) { const file = path.join(root, rel); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text); }
-function run() { return childProcess.spawnSync(process.execPath, [script, 'v3', root], { encoding: 'utf8' }); }
-
-write('iterations/v3/prd.md', '## 核心功能\n### 功能：退款审批 `新增`\n**draft-ux**：需要\n**Acceptance Criteria**：\n- AC-01\n');
-write('iterations/v3/ux-flows.md', '## 场景列表\n- S1：审批\n## 流程图\n```mermaid\nflowchart TD\nA-->B\n```\n');
-write('iterations/v3/prototype-map.md', '## 前端 AC 覆盖\n| AC | 场景 | HTML 锚点 |\n|---|---|---|\n| AC-01 | S1 | #approve |\n');
-write('iterations/v3/prototype.html', '<button id="approve">approve</button>');
-write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 旧页面\n');
-assert.match(run().stderr, /退款审批/, '已有全局基线但新增页面缺规格必须失败');
-write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款\n');
-assert.match(run().stderr, /退款审批/, '旧页面前缀不得冒充新功能页面');
-write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款审批页\n');
-assert.strictEqual(run().status, 0, '补入本期页面规格后应通过');
-write('design.md', '## 〇、视觉冒烟锚点\n## 十一、页面规格（v1.2）\n### 退款审批页\n## 十二、其它\n### 干扰项\n');
-assert.strictEqual(run().status, 0, '页面规格不得绑定固定章节编号，且解析须止于下一个二级章节');
-fs.rmSync(root, { recursive: true, force: true });
-console.log('✅ check-ux design 页面覆盖夹具通过');
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path');
+const {validate}=require('./check-ux.js');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'hact-ux-journey-'));
+const write=(p,s)=>{const file=path.join(root,p);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,s);};
+const base='iterations/v3/';
+const ux='## 场景列表\n### 用户任务：U1 完成审批\n- 目标：决定并确认结果\n- 起点：收到待办\n- 完成：结果可见\n- 相关功能：浏览待办、提交审批\n- S1：主路径完成审批\n- S2：失败保留输入后重试\n- S3：取消后恢复输入\n## 流程图\n\x60\x60\x60mermaid\nflowchart TD\nA-->B\n\x60\x60\x60\n';
+const map='## 前端 AC 覆盖\n| AC | 用户任务 | 场景 | HTML 锚点 | 页面规格 |\n|---|---|---|---|---|\n| AC-01 | U1 | S1、S2 | #start、#done | 工作台 |\n| AC-02 | U1 | S1、S3 | #cancel | 工作台 |\n## 排除 AC\n| AC | 排除原因 |\n|---|---|\n| AC-03 | 后端数据约束 |\n## 动线验证\n| 场景 | 结果 | 证据 |\n|---|---|---|\n| S1 | 通过 | iterations/v3/ux-evidence/S1.txt |\n| S2 | 通过 | iterations/v3/ux-evidence/S2.txt |\n| S3 | 通过 | iterations/v3/ux-evidence/S3.txt |\n';
+try {
+  write(base+'prd.md','## 核心功能\n### 功能：浏览待办\n**draft-ux**：需要\n- AC-01：待办可见\n### 功能：提交审批\n**draft-ux**：需要\n- AC-02：审批结果可见\n- AC-03：数据库约束\n');
+  write(base+'ux-flows.md',ux);write(base+'prototype-map.md',map);
+  write(base+'prototype.html','<button id="start">开始</button><button id="cancel">取消</button><p id="done">结果</p>');
+  write('design.md','## 八、页面规格\n### 工作台\n');
+  for(const s of ['S1','S2','S3'])write(base+'ux-evidence/'+s+'.txt','synthetic index fixture; not browser evidence\n');
+  assert.deepStrictEqual(validate('v3',root),[],'两个功能可由一个用户任务/页面承接，无须功能同名页面');
+  write('design.md','## 十一、页面规格（v3）\n### 工作台\n## 十二、其它\n### 干扰\n');
+  assert.deepStrictEqual(validate('v3',root),[],'页面章节编号不固定');
+  write(base+'prototype-map.md',map.replace('AC-01 | U1','AC-99 | U1'));
+  assert.ok(validate('v3',root).some(e=>/AC 未声明/.test(e)),'不能只检查生成者自报的 AC');
+  write(base+'prototype-map.md',map.replace('AC-03 | 后端数据约束','AC-01 | 后端数据约束'));
+  assert.ok(validate('v3',root).some(e=>/同时覆盖/.test(e)));
+  write(base+'prototype-map.md',map.replaceAll('工作台','未知页面'));
+  assert.ok(validate('v3',root).some(e=>/页面规格引用不存在/.test(e)));
+  write(base+'prototype-map.md',map.replace('S1、S2','S1、S9'));
+  assert.ok(validate('v3',root).some(e=>/场景与用户任务不匹配/.test(e)));
+  write(base+'prototype-map.md',map.replace('S2 | 通过','S2 | 未运行'));
+  assert.ok(validate('v3',root).some(e=>/动线未通过/.test(e)));
+  write(base+'prototype-map.md',map.replace('#start','#missing'));
+  assert.ok(validate('v3',root).some(e=>/锚点缺失/.test(e)));
+  write(base+'prototype-map.md',map);
+  fs.unlinkSync(path.join(root,base+'ux-evidence/S2.txt'));
+  assert.ok(validate('v3',root).some(e=>/证据缺失/.test(e)));
+  write(base+'ux-flows.md',ux.replace('- 完成：结果可见',''));
+  assert.ok(validate('v3',root).some(e=>/缺少有效 完成/.test(e)));
+} finally {fs.rmSync(root,{recursive:true,force:true});}
+console.log('✅ 用户任务/多对多页面/独立 AC 核对/证据索引正反例通过（不证明 UI 行为）');

@@ -12,7 +12,7 @@
 
 - **触发**：G1 已签，`iterations/vN/prd.md` 已存在
 - **Gate**：G1 未签则阻断
-- **draft-ux 前置**：PRD 中有任何功能标记 `draft-ux: 需要`，且 `iterations/vN/prototype.html` 不存在 → 阻断，提示先完成 `draft-ux`
+- **draft-ux 前置**：PRD 标 `draft-ux: 需要` 时，动线/原型/映射/浏览器证据、独审与用户确认必须对应当前版本；不能只凭 HTML 存在放行
 - **文件**：`project.md`（了解技术约束和已有决策）；`reusables.md`（了解已有共享组件，避免重复建议）
 
 ---

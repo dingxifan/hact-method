@@ -81,12 +81,12 @@
 
 ### 3. `draft-ux`
 
-> 从 PRD 功能出发消化交互流程，输出可交互 HTML 原型，在 TRD 开始前确认交互逻辑。
+> 从 PRD 中的用户目标出发设计跨功能动线，再安排页面与控件；实际走查任务结果与恢复路径，在 TRD 前确认体验。
 
 - **discipline**: `product`
 - **完成判据**: 场景/流程图无遗漏无死路 + prototype.html 可点击走通全部路径 + 落实 design.md 视觉规范 + 独立对抗审查通过 + 用户实际走查确认
-- **主要产物**: `iterations/vN/ux-flows.md`（场景列表+流程图）+ `iterations/vN/prototype.html` + `iterations/vN/prototype-map.md`（AC/场景/锚点映射）+ `design.md`（首次时生成初稿）
-- **关联 Gate**: 无独立 Gate；可选前置于 G2，由执行人判断是否触发——但若 PRD 中有功能标记 `draft-ux: 需要`，`draft-tech-design` 对 G2 强制阻断，直到本任务产出 `prototype.html`
+- **主要产物**: ux-flows（U-id 用户任务/S-id 场景+流程图）、prototype.html、prototype-map（AC/U/S/锚点/页面及证据索引）、ux-evidence 与 design 页面规格
+- **关联 Gate**: 无独立 Gate；PRD 标 `draft-ux: 需要` 时，G2 前须完成原型动线验证、独审和对应版本的用户接受，不能仅以 HTML 存在放行
 - **前置条件**: `draft-prd-vN` 已完成、G1 已签；纯数据管理类页面（标准增删改查、无分支流程）可跳过
 - **属性**: `version`（vN）
 

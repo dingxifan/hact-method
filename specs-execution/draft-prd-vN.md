@@ -176,7 +176,7 @@ PRD 生成全程纯对话；**唯一隔离审查在 Step 7.5**——定稿后派
 
 ## 上下文管理
 
-- 方向 + 骨架一次确认后（Step 2–3 末、Step 4 前）compact 一次——场景 / 讨论可压，功能契约阶段保持完整上下文以保跨功能一致。
-- compact 前在 `_meta/sessions/draft-prd-progress.md` 记：已确认功能清单 + 各骨架一句话 + MVP 排除项。
+- 不在固定步骤 compact；Codex 压缩/恢复后回读当前用户目标、原始契约与已确认范围再继续。
+- 确认时就在 `_meta/sessions/draft-prd-progress.md` 记已确认范围、关键取舍前提和 MVP 排除项；不等压缩时补记。
 
 **断点续做**：读 `iterations/vN/prd.md`（有内容 → 已过 Step 4）、`gates.md`（G1 签 → 完成）、`_meta/sessions/draft-prd-progress.md`（上次停在哪个功能），从未完成功能继续，不重做已确认内容。

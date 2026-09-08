@@ -54,7 +54,7 @@ acceptance-criteria:
 reference:
   # 按本任务实际边界引用 project.md 技术选择、Foundation 不变量、共享契约与 check/test/config；不复制其正文。
   - <待填>                # 仅列实现决策必需锚点。frontend sliced-v1 须含 `design.md § 全局视觉基线` + 相关页面标题；legacy-full 须明确写 `design.md 全文（存量）`
-  # 前端任务：reference 须含 ux-flows.md 对应功能段锚（若文件存在）
+  # 涉及用户任务时 reference 须含 ux-flows.md 的 U-id/S-id 锚；前端新格式必须给 U-id。保留任务完成/失败/恢复语义，不把功能列表当动线。
   # 后端任务：reference 须含 trd.md 错误码/服务流程对应章节锚
 context: <待填>           # 关键实现切入点，如 GoalList.vue L142 handleDelete()
 known-risks: []           # 只列本任务新打开/显著放大的实际风险；无则 []

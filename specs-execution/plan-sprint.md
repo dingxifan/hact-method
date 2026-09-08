@@ -56,7 +56,7 @@
 
 ### Step 2：输出任务骨架
 
-疑点确认后输出骨架——**每任务只一行**，不写详细字段：
+先按已确认用户任务确定可验证闭环，再按共享资产和技术依赖划分开发包；一个包可以是任务的一部分，但必须能指出整条任务的其余承接方。疑点确认后输出骨架——**每任务只一行**，不写详细字段：
 
 ```markdown
 ## Sprint 骨架 · v{N} · {项目名}
@@ -115,7 +115,7 @@
 | `contract-impact` | 实现已确认 PRD/TRD/Foundation/project 技术约束的任务填 `governed`；完全不触及共享契约填 `none`。本字段不授权改契约，发现权威文档需变更先停下走 revise-doc | check-sprint·枚举；Step 3.5 核契约是否已先修订 |
 | `risk` | 默认 `standard`；若任务触及 develop 合并前安全敏感预检四类之一（权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）则填 `sensitive`；**存疑即 sensitive**（只升不降，决策#29）。缺省即 standard，存量任务包不回填 | Step 3.5 独审第⑥类 + check-sprint 启发 🧑；develop 侧按有效 risk 兜底 |
 | `acceptance-criteria` | 不发明无来源 AC。每条拆 `intent`（PRD 行为）+ `oracle`（PRD/TRD 判据）；`example` 可省且默认非权威。仅封闭输入、可独立复算并在 Step 3.5 通过的例子标 `golden: true` | check-sprint·回链/格式；Step 3.5 独立复算与忠实性 |
-| `design-reference-format` / `reference` | frontend：design 有页面规格结构填 `sliced-v1`，reference 链全局视觉基线 + 本任务页面标题；视觉地基包只需全局基线。存量 design 无页面结构填 `legacy-full` + `design.md 全文（存量）`。另链 ux-flows 对应场景（若存在）；backend 链 TRD 错误/服务流程 | check-sprint·design/稳定锚 ² |
+| `design-reference-format` / `reference` | frontend：design 有页面规格结构填 `sliced-v1`，reference 链全局视觉基线 + 本任务页面标题；视觉地基包只需全局基线。存量 design 无页面结构填 `legacy-full` + `design.md 全文（存量）`。另链 ux-flows 对应 U-id/S-id（若存在）；backend 链 TRD 错误/服务流程 | check-sprint·design/稳定锚 ² |
 | `supersedes` | 来源 = TRD 里「本期废除 / 改判 / 替换既有实现」的表述 + `decisions.md` 被本期取代的条目。判据是**取代关系**而非改动关系：改一个函数不算，让某实现从此无调用方才算。无则 `[]`——宁可空着，不为凑数写。 | 交付时逐条结账（develop §退役账）；G5 核对 |
 | `api-contract`（`layers=[backend]` 且被前端依赖） | 来源 = TRD 数据模型 + design.md 画面字段需求 + 已写前端任务包草稿（表格列/表单字段）；request 取 TRD query/body，response 取前端实际消费字段（平铺规则在模板）；**全部后端包写完统一向用户确认字段结构** | Step 3.5·推导正确性；用户确认 |
 

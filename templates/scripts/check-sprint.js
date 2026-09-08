@@ -1082,6 +1082,18 @@ function checkSprint(iteration, root) {
       if (/frontend/.test(p.layersStr) && fs.existsSync(path.join(iterDir, 'ux-flows.md'))
           && !refs.some(r => /ux-flows/i.test(r)))
         fail('reference ux-flows', where, `${p.id}：前端任务 reference 未含 ux-flows 稳定锚`);
+      if (fs.existsSync(path.join(iterDir, 'ux-flows.md'))) {
+        const ux = fs.readFileSync(path.join(iterDir, 'ux-flows.md'), 'utf8');
+        const users = new Set([...ux.matchAll(/^### 用户任务：(U\d+)\s/gm)].map(m => m[1]));
+        const scenes = new Set([...ux.matchAll(/^- (S\d+)：/gm)].map(m => m[1]));
+        const flowRefs = refs.filter(r => /ux-flows/i.test(r));
+        const targets = flowRefs.flatMap(r => [...r.matchAll(/\b[US]\d+\b/g)].map(m => m[0]));
+        if (users.size && /frontend/.test(p.layersStr) && scalarText(p.fm.baseline) !== 'visual'
+            && !targets.some(id => users.has(id)))
+          fail('reference 用户任务', where, `${p.id}：前端任务须引用 ux-flows 中真实 U-id`);
+        if (users.size && targets.some(id => !users.has(id) && !scenes.has(id)))
+          fail('reference 用户任务', where, `${p.id}：ux-flows 引用了不存在的 U/S-id`);
+      }
       if (/backend/.test(p.layersStr) && !refs.some(r => /trd/i.test(r)))
         fail('reference trd', where, `${p.id}：后端任务 reference 未含 trd 稳定锚`);
     }

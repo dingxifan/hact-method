@@ -181,7 +181,7 @@ preflight 通过后，主线记录 `implementation_started_at` 并直接实现�
 1. **自读上下文**（精确加载，不全量）：
    - 任务包 normative core（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）；non-normative appendix 仅在疑点需要历史解释时查
    - 按 `reference` 读取 project.md 技术约束、Foundation、TRD/共享契约与检查配置的必要章节；契约锚有缺口则沿真实调用链核实
-   - **frontend 额外**：读 `design.md`「全局视觉基线」+ 任务包 `reference` 点名的页面规格；存量 design 或任务包未给稳定页面锚时才全文读取（视觉规格唯一参照）。再读 `ux-flows.md` 对应功能段（若存在，按 title 匹配）与 `prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
+   - **frontend 额外**：读 `design.md`「全局视觉基线」+ 任务包 `reference` 点名的页面规格；存量 design 或任务包未给稳定页面锚时才全文读取（视觉规格唯一参照）。再读 `ux-flows.md` 对应用户任务 U-id / 场景 S-id（若存在，按 reference 的 U/S 锚读取）与 `prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
 2. **读懂**：以每条 AC 的 `intent` 为目标、`oracle` 为判据；普通 example 仅帮助理解，冲突时返回 `example-error`，不得用代码迁就。只有 `golden: true` 的 example 是字面契约。
 3. **计划 + 复用**：按业务闭环和依赖确认当前单元。直接查相关 reusables 和真实调用点；独立且较大的调查才委派。已有同语义权威实现优先复用；不同职责不得仅因写法相似强行合并。hotfix 保持必要修复范围。
 4. **写**：主线或获准单元将代码直接落入对应工作树。独立写入可分 worktree 并行，但共享索引/状态文件/数据库/端口须隔离或串行。子单元返回变更路径、验证与未完成项，不在消息中搬运整份代码。
@@ -424,7 +424,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 开跑前人工门 | **前端设计到位确认**（design.md / prototype 覆盖本批次画面） | 无（backend-only 跳过） |
-| 执行者额外加载 | `design.md` 全局视觉基线 + 任务包点名页面规格（存量无稳定锚才全文）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
+| 执行者额外加载 | `design.md` 全局视觉基线 + 任务包点名页面规格（存量无稳定锚才全文）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应用户任务 U-id / 场景 S-id（若存在）| 无 |
 | 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint / type-check / style lint（命令按项目栈）｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
 | 独立审查侧重 | AC 忠实 + 机械保真（变量非硬编码）；视觉到位归人工门 | AC 忠实 + 测试品类齐全 + 标准合规 |
 

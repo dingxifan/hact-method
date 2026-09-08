@@ -115,7 +115,7 @@
 → 下一步：project.md 合并
 ```
 
-> **compact 时机**：feedback 条目较多（>10 条）时，第二步完成后做一次 compact，再进入第三步。compact 前确认 feedback.md 已清空、decisions.md 已更新。
+> **恢复**：分流完成即保存真实去向；压缩/恢复后核 feedback 与 decisions 的实际状态，从未完成项继续，不按条目数强制 compact。
 
 ---
 

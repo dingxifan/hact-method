@@ -12,6 +12,7 @@
 - 本目录 `review-scope.md`：按可信开发方前提核任务要求，不把防有意绕过扩成新 oracle 或加固包。
 - PRD（用户 G1 签字认可的需求事实）：`full` 读全文；`module` 只读指定包回链的功能/AC 段
 - TRD（本期技术契约）：`full` 读全文；`module` 只读指定包 reference/模块命中的段
+- 用户任务：本期 ux-flows（如有），核开发包共同承接目标、跨页状态和失败/恢复；reference 的 U/S 不能只写名字而内容无承接。
 - 项目约束：project.md 技术层、Foundation 与本期涉及的共享契约/检查入口
 - 视觉规格（仅当有 frontend 任务时）：项目根 `design.md`（核地基包是否覆盖其 token）
 - 任务包（待审产物）：默认读取 `iterations/vN/queue/*.md` 全部 `[可取]` 任务包；只有派发者明确说明已超过无 compact 预算并给出业务模块边界时才读指定模块，分批后另有全局总核兜 AC/共享资产/依赖
