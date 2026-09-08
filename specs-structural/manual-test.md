@@ -28,7 +28,7 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 验收报告 | `iterations/vN/acceptance-report.md` | 见 `../hact-method-lab/templates/acceptance-report.md` |
-| G4 签字 | `iterations/vN/gates.md` | `- [x] G4：验收通过 — YYYY-MM-DD` |
+| G4 签字 | `status.yml iterations.vN.gates` | `iterations.vN.gates.G4: { signed: true, date: YYYY-MM-DD }` |
 | 修复任务包（如有） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（范围外问题） | `backlog.md` | 标注「超出本期范围，留下期」 |
 | 进度跟踪 | `_meta/sessions/manual-test-progress.md` | 本轮派发任务清单 + 历史轮次 + 当前状态 |
@@ -45,7 +45,7 @@
 - [ ] 【linter】所有 develop(source=manual-test) 任务已 [merged]（`check-gate.js G4` 核 status.yml）
 - [ ] 【linter】验收报告已写，结论为"通过"（`check-gate.js G4` 核）
 - [ ] 完成判据已核对（`check-gate.js G4` 退出码 0 + 语义残量人签；存量无脚本退回 `skeleton/06-gates.md` §7 G4/G5 段人工逐条核对兜底，不额外派隔离单元）
-- [ ] G4 已签（`gates.md` 已记录 + commit）
+- [ ] G4 已签（`status.yml` 已记录 + commit）
 
 ---
 
@@ -62,8 +62,8 @@
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
 | `develop`（source=manual-test） | 验收问题修复任务包 | `iterations/vN/queue/{task-id}.md` |
-| `deploy` | G4 已签，可部署 | `gates.md` |
-| `wrap-up-iteration` | G4 已签，可并行启动收尾 | `gates.md` |
+| `deploy` | G4 已签，可部署 | `status.yml` |
+| `wrap-up-iteration` | G4 已签，可并行启动收尾 | `status.yml` |
 
 ---
 

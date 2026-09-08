@@ -24,7 +24,6 @@
 **建 V0 迭代目录**（不存在则建）：
 ```bash
 mkdir -p "iterations/v0"
-[ -f iterations/v0/gates.md ] || printf '# Gates · v0（走骨架）\n\n- [ ] G2：地基设计已确认 —\n' > iterations/v0/gates.md
 ```
 
 **必读文件**：
@@ -123,14 +122,11 @@ Step 1 已确认的范围不再另设等待点；若安全项无法达到构造�
 
 🚫 等用户确认
 
-用户确认 → 写 `iterations/v0/gates.md`：
-```markdown
-- [x] G2：地基设计已确认 — {YYYY-MM-DD}
-```
+用户明确确认后，仅更新以下 status 签署字段。
 
 **更新项目根 `status.yml`**（字段见 `../hact-method-lab/skeleton/07-status-contract.md`）：建 `iterations.v0` 块、`gates.G2 = { signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 
-执行 `git add foundation.md iterations/v0/foundation-design.md iterations/v0/gates.md project.md decisions.md status.yml && git commit -m "feat(foundation): v0 地基设计完成，G2 签署 [{项目名}]" && git push`
+执行 `git add foundation.md iterations/v0/foundation-design.md  project.md decisions.md status.yml && git commit -m "feat(foundation): v0 地基设计完成，G2 签署 [{项目名}]" && git push`
 
 移交：「V0 地基设计完成，下一步建走骨架 —— `develop(source=foundation)` 按 `iterations/v0/foundation-design.md` 建地基件 + 标杆切片，骨架端到端跑通后才进 V1 `draft-prd-vN`。」
 
@@ -149,4 +145,4 @@ Step 1 已确认的范围不再另设等待点；若安全项无法达到构造�
 ## 上下文管理 / 断点续做
 
 - Step 1（架构轮廓确认后）可做一次 compact，compact 前在 `_meta/sessions/draft-foundation-progress.md` 记录：栈选型 + 架构轮廓（各块形式选型）。
-- **断点续做**：读 `foundation.md`「阶段 / 实际形式·档」列判断填到哪、读 `iterations/v0/foundation-design.md` 判断写到哪、读 `iterations/v0/gates.md` 判断 G2 是否已签；以工作区实际为准，从未完成处继续。
+- **断点续做**：读 `foundation.md`「阶段 / 实际形式·档」列判断填到哪、读 `iterations/v0/foundation-design.md` 判断写到哪、读 `status.yml iterations.v0.gates` 判断 G2 是否已签；以工作区实际为准，从未完成处继续。

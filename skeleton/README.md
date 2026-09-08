@@ -6,9 +6,9 @@
 
 按层级递进：
 
-1. **[`01-identity.md`](01-identity.md)** — 身份模型：谁是谁？git author + web 登录映射同一 user；权限通过 user-discipline 关联表达
+1. **[`01-identity.md`](01-identity.md)** — 身份模型：谁是谁？提交归属与实际授权分开，任务负责人登记在 status
 2. **[`02-workspaces.md`](02-workspaces.md)** — 三个工作区按"心态"切割：hact-method（方法论）/ 项目根（项目）/ hact-notes（个人积累）
-3. **[`03-disciplines.md`](03-disciplines.md)** — 8 个 discipline = 任务知识的聚类（含运行时上下文管理 heat map）
+3. **[`03-disciplines.md`](03-disciplines.md)** — 8 个 discipline = 任务知识的聚类（不参与授权或模型分配）
 4. **[`04-task-catalog.md`](04-task-catalog.md)** — 14 个 task type 完整字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）
 5. **[`05-state-machine.md`](05-state-machine.md)** — 4 个状态（可取 / taken-by / done / merged）+ 流转 + 软锁 + 异常转移
 6. **[`06-gates.md`](06-gates.md)** — 5 个 Gate + 子状态聚合 + A 类 vs B 类 + 多迭代展示
@@ -17,8 +17,7 @@
 ## 核心设计原则
 
 - **任务驱动，不是身份驱动**——用户登录就是自己，task.type 决定加载哪份规范
-- **path X**——task 单 discipline (1:N)；user 多 discipline (M:N)
-- **discipline 不是身份**——是任务知识的聚类维度，给规范作者 + 拉取准入用
+- **discipline 不是身份**——是任务知识的聚类维度，只供查找知识，不参与准入
 - **早期保持简单**——异常情况（暂停 / 召回 / 放弃）靠人沟通，不形式化（详见 05 §4 异常转移）
 - **复杂工作不预定义**——方法论调整等发散性工作不强行做 task type
 - **签字归属内容**——Gate 签字合并到最近前置任务，不另立 sign-gate task

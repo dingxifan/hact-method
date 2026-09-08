@@ -396,18 +396,10 @@ function parseCodeReviews(statusPath) {
 
 const REVIEW_AUDIT_FIELDS = [
   'review_report_dir',
-  'implementation_started_at', 'implementation_completed_at',
-  'review_started_at', 'review_completed_at',
-  'spec_minutes',
 ];
 const isUInt = v => /^\d+$/.test(v || '');
 const isSha40 = v => /^[0-9a-f]{40}$/i.test(v || '');
 const isSha256 = v => /^[0-9a-f]{64}$/.test(v || '');
-const parseIso = v => {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(v || '')) return NaN;
-  return Date.parse(v);
-};
-const ceilMinutes = (start, end) => Math.ceil((end - start) / 60000);
 
 function gitOutput(root, args, encoding = 'utf8') {
   return childProcess.execFileSync('git', args, {
@@ -482,21 +474,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     errors.push(`未知 review_evidence_version=${evidenceVersion}`);
   const foundationReview = id === 'foundation';
   if (!['pass', 'revised'].includes(cr.freshness)) errors.push('freshness 必须为 pass 或 revised');
-  const implStart = parseIso(cr.implementation_started_at);
-  const implEnd = parseIso(cr.implementation_completed_at);
-  const reviewStart = parseIso(cr.review_started_at);
-  const reviewEnd = parseIso(cr.review_completed_at);
-  if (!options.preMerge) {
-    if (![implStart, implEnd, reviewStart, reviewEnd].every(Number.isFinite)) {
-      errors.push('四个 started/completed 字段须为带时区 ISO-8601');
-    } else {
-      if (implStart > implEnd) errors.push('implementation_started_at 晚于 completed_at');
-      if (implEnd !== reviewStart) errors.push('implementation_completed_at 必须等于 review_started_at，避免墙钟留白或重叠');
-      if (reviewStart > reviewEnd) errors.push('review_started_at 晚于 completed_at');
-    }
-    if (!isUInt(cr.spec_minutes)) errors.push('spec_minutes 须为 int>=0');
-  }
-
   const relDir = cr.review_report_dir || '';
   const absRoot = path.resolve(root);
   const absDir = path.resolve(root, relDir);
@@ -518,7 +495,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     const p = k => scalarText(pf && pf[k]);
     preflightBaseRef = p('base_ref');
     preflightBaseTree = p('base_tree');
-    const pfStart = parseIso(p('started_at')), pfEnd = parseIso(p('completed_at'));
     if (!pf || p('task_id') !== id) errors.push('preflight task_id 不匹配');
     if (!['before-code', 'retroactive'].includes(p('timing'))) errors.push('preflight timing 非法');
     if (!['pass', 'revised'].includes(p('result'))) errors.push('preflight result 未闭合');
@@ -527,10 +503,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       if (gitObjectType(root, p('base_ref')) !== 'commit') errors.push('preflight base_ref 不是当前仓可解析的 commit');
       if (gitObjectType(root, p('base_tree')) !== 'tree') errors.push('preflight base_tree 不是当前仓可解析的 tree');
     }
-    if (![pfStart, pfEnd].every(Number.isFinite) || pfStart > pfEnd) errors.push('preflight 时间非法');
-    if (Number.isFinite(pfStart) && Number.isFinite(pfEnd) && isUInt(cr.spec_minutes)
-        && Number(cr.spec_minutes) < ceilMinutes(pfStart, pfEnd))
-      errors.push('status spec_minutes 小于 preflight 时间戳可计算的最低墙钟');
   }
 
   const reports = fs.readdirSync(absDir).filter(f => /^round-\d{2}\.md$/.test(f)).sort();
@@ -551,7 +523,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       declaredTaskFiles = listItems(packageFm && packageFm.files).map(normalizeFileAsset).sort();
     }
   }
-  let firstReportStarted = NaN, lastReportCompleted = NaN;
   if (taskPackageSchema === '2' && evidenceVersion !== 'develop-review-round/v2')
     errors.push('package-schema=2 必须写 review_evidence_version=develop-review-round/v2');
   const findingId = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-F\\d{3}$`);
@@ -561,7 +532,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     const mode = r('mode');
     const risk = r('risk');
     const reportSchema = r('schema');
-    const started = parseIso(r('started_at')), completed = parseIso(r('completed_at'));
     if (!rp || r('task_id') !== id) errors.push(`${file}: task_id 不匹配`);
     if (Number(r('round')) !== index + 1) errors.push(`${file}: round 与文件序号不符`);
     if (!['full', 'targeted'].includes(mode)) errors.push(`${file}: mode 非法`);
@@ -595,7 +565,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
         }
       }
     }
-    if (![started, completed].every(Number.isFinite) || started > completed) errors.push(`${file}: 时间非法`);
     if (!['pass', 'revise', 'evidence-needed'].includes(r('conclusion'))) errors.push(`${file}: conclusion 非法`);
     if (!['true', 'false'].includes(r('escalate_to_full'))) errors.push(`${file}: escalate_to_full 非布尔`);
     if (mode === 'targeted') {
@@ -623,16 +592,10 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     }
     if (r('conclusion') === 'pass' && openBlocking.size)
       errors.push(`${file}: conclusion=pass 但仍有 open blocking finding：${[...openBlocking].join(', ')}`);
-    if (index === 0) firstReportStarted = started;
-    lastReportCompleted = completed;
     previousReviewedHead = r('reviewed_head');
     lastConclusion = r('conclusion');
     previousEscalated = r('escalate_to_full') === 'true';
   });
-  if (reports.length && Number.isFinite(reviewStart) && firstReportStarted !== reviewStart)
-    errors.push('review_started_at 与首轮 report.started_at 不一致');
-  if (reports.length && Number.isFinite(reviewEnd) && lastReportCompleted !== reviewEnd)
-    errors.push('review_completed_at 与末轮 report.completed_at 不一致');
   if (reports.length && lastConclusion !== 'pass') errors.push('末轮 report.conclusion 必须为 pass');
   if (reports.length && previousEscalated) errors.push('末轮仍要求 escalate_to_full，审查尚未闭合');
   if (openBlocking.size) errors.push(`审查链仍有 open blocking findings：${[...openBlocking].join(', ')}`);
@@ -668,7 +631,7 @@ function checkReviewAudit(taskId, root) {
       && Number(cr.rounds) !== Number(cr.code_rounds) + Number(cr.spec_rounds))
     errors.push('rounds 必须等于 code_rounds + spec_rounds');
   const missing = REVIEW_AUDIT_FIELDS.filter(k => !(k in cr));
-  if (missing.length) errors.push(`缺墙钟/report 字段：${missing.join('/')}`);
+  if (missing.length) errors.push(`缺report 字段：${missing.join('/')}`);
   else errors.push(...reviewAuditErrors(root, taskId, cr));
   if (errors.length) fail('review 审计', statusPath, `${taskId}: ${errors.join('；')}`);
   else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、逐轮报告与墙钟证据均合法`);
@@ -1235,7 +1198,7 @@ function checkSprint(iteration, root) {
 
   // 9. 审计留痕完备性：已 [merged] 的任务须有 code_reviews[] 条目（develop 末端义务，长期要求）
   //    并须记 rounds（2026-07-30 加的独审轮数仪器）。本项在「标记 [merged]」那次 commit 上触发——
-  //    develop 末端 `git add {任务包} sprint.md status.yml` 已命中 hook 的 sprint/queue 路由，无需改路由。
+  //    status-only merged 提交由 check-gate --staged 触发单任务审查核对。
   //    实证驱动：file-extract v2 十一个任务全部在仪器落地后合并，rounds 记录数 0、两个任务连条目都没有，
   //    而无任何机械检查发现——仪器装了不响，与它要解的问题同一失效类。
   if (stTasks === null) {
@@ -1257,12 +1220,12 @@ function checkSprint(iteration, root) {
       const taskPackage = packages.find(p => p.id === id);
       if (!taskPackage || !taskPackage.strictSchema) {
         // 已合并的旧包只做“是否有历史审查条目”的可追溯性检查；不要把新 schema 的
-        // 固定 diff 和墙钟约束反向施加到它的原始审计物上。
+        // 固定 diff 约束反向施加到它的原始审计物上。
         if (!('rounds' in cr)) noRounds.push(id);
         legacyPackages.push(id);
         continue;
       }
-      if (!('rounds' in cr)) { noRounds.push(id); continue; }
+      if (!('rounds' in cr)) { badRounds.push(id + '(缺 rounds)'); continue; }
       if (!/^\d+$/.test(cr.rounds) || Number(cr.rounds) < 1) badRounds.push(`${id}(rounds=${cr.rounds})`);
       if (!('code_rounds' in cr) || !('spec_rounds' in cr)) {
         noSplit.push(id);
@@ -1290,20 +1253,20 @@ function checkSprint(iteration, root) {
     if (badSplit.length)
       fail('审计留痕', 'status.yml', `rounds 拆分非法或总数不相等：${badSplit.join(', ')}`);
     if (noSplit.length)
-      human('审计留痕', `有 code_reviews 条目但缺 code_rounds/spec_rounds：${noSplit.join(', ')} —— 存量可保留；新合并任务须区分代码轮与规格轮`);
+      fail('审计留痕', 'status.yml', `schema 2 缺 code_rounds/spec_rounds：${noSplit.join(', ')}`);
     if (partialAudit.length)
-      fail('审计留痕', 'status.yml', `墙钟/report 字段只写了一部分：${partialAudit.join('；')}`);
+      fail('审计留痕', 'status.yml', `report 字段只写了一部分：${partialAudit.join('；')}`);
     if (badAudit.length)
-      fail('审计留痕', 'status.yml', `墙钟/report 审计非法：${badAudit.join('；')}`);
+      fail('审计留痕', 'status.yml', `report 审计非法：${badAudit.join('；')}`);
     if (noAudit.length)
-      human('审计留痕', `有 code_reviews 条目但缺墙钟/report 字段：${noAudit.join(', ')} —— 存量可保留；新合并任务须自动记录 implementation/review/spec 分钟与逐轮报告`);
+      fail('审计留痕', 'status.yml', `schema 2 缺必需 report 审计字段：${noAudit.join(', ')}`);
     if (legacyPackages.length)
-      human('审计留痕', `存量任务包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 未验证固定 diff 与墙钟契约`);
+      human('审计留痕', `存量任务包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 未验证固定 diff 契约`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
     else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
              && !partialAudit.length && !badAudit.length && !noAudit.length && !legacyPackages.length)
-      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds、墙钟与逐轮 reports`);
+      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds 与逐轮 reports`);
   }
 
   // 语义残量（留人签）

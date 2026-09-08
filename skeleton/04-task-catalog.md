@@ -218,15 +218,13 @@
 
 ### 11. `wrap-up-iteration`
 
-> Gate 5 三步收尾：偏离对账 / feedback 审阅 / project.md 合并。机械化分流，1 分钟内可完成。
+> Gate 5 必要收尾：偏离闭合、项目事实与用户确认；可选经验不阻断。
 
 - **discipline**: `management`
 - **完成判据**: 三步全部完成 + 在任务尾部询问"要不要签 G5"
 - **主要产物**:
   - 反向更新的 PRD/TRD/foundation/decisions（来自偏离对账）
-  - 分流进执行人个人 notes 的反馈条目（`[规范]`/`[checklist]`/`[方法论]`），由 harvest-notes 后续上提
-  - 清空的 `feedback.md`
-  - 更新的 `project.md`（去除"开发中"标注）
+  - 本期真实变化的 `project.md` 与 status 中的 G5 签署
 - **关联 Gate**: **G5**（可选签于任务尾部）
 - **前置条件**: G4 已签（与 `deploy` 任务并行可执行，无依赖）
 - **属性**: `version`（vN）
@@ -245,7 +243,7 @@
 - **关联 Gate**: —
 - **属性**: `target-source`（bug / optimization）
 
-> dispatch-new 只派包，不实现。新 B 包必须交给 `develop(source=bug/optimization)`；既有手动 diff 仅在用户明确要求时走Codex的兼容审查入口，且仍须有 preflight 记录。
+> dispatch-new 可先只读诊断；已授权开发则派短包后直接衔接 `develop(source=bug/optimization)`；既有手动 diff 仅在用户明确要求时走Codex的兼容审查入口，且仍须有 preflight 记录。
 
 详见 `specs-structural/dispatch-new.md`。
 
@@ -256,15 +254,14 @@
 > 收割成员个人积累，把验证有效的规范 / checklist / 方法论建议上提到公共层。
 
 - **discipline**: `management`
-- **完成判据**: 遍历 `_meta/hact-config.md` 登记的成员 notes 仓完成 + 优秀条目去重择优写入公共层 + 收割游标推进
+- **完成判据**: 本次明确授权的来源已整理，采纳理由与未覆盖项已说明；不要求登记或游标
 - **主要产物**:
   - 方法论待议中的约束建议（来自成员 `[规范]`）
   - `templates/checklists/{backend|frontend}-checklist.md` 新增项（来自成员 `[checklist]`）
   - `_meta/plans/方法论待议.md` 新增条目（来自成员 `[方法论]`）
-  - `_meta/hact-config.md` 收割游标更新
 - **关联 Gate**: —
-- **前置条件**: 无强前置（可与任何迭代并行）；依赖 `_meta/hact-config.md` 成员仓登记
-- **执行约束**: 对成员 notes 仓**只读**；写权限仅限公共层（hact-method）。收割不回写成员仓——靠游标记录"上次收割点"避免重复
+- **前置条件**: 用户明确要求；仅使用获准来源
+- **执行约束**: 可选整理、不回写来源、不自动批准规则；不访问未授权私人资料
 - **属性**: 无
 
 详见 `specs-structural/harvest-notes.md`。
@@ -277,7 +274,7 @@
 
 - **discipline**: `architecture`
 - **完成判据**: foundation.md 已判 V0/V1+，V0 行实际档达标（安全项构造级）+ foundation-design.md 仅含获准地基件与一根标杆切片 + 验证入口 + 栈入 project.md + G2(v0) 签
-- **主要产物**: `foundation.md`（更新）+ `iterations/v0/foundation-design.md` + `project.md` 技术层 + `iterations/v0/gates.md`
+- **主要产物**: `foundation.md`（更新）+ `iterations/v0/foundation-design.md` + `project.md` 技术层 + `status.yml iterations.v0.gates`
 - **关联 Gate**: **G2**（v0；与 draft-tech-design 同槽，architecture 签字，只验获准 V0 行 + 标杆切片 + 验证入口）
 - **前置条件**: init-project 完成、`foundation.md` 已播种，且存在满足 V0 准入门槛的高改造成本约束（先于 V1 PRD）
 - **属性**: 无（迭代固定 v0）

@@ -1,73 +1,21 @@
 # task: dispatch-new
 
-**discipline**: `dispatch`
+**discipline**: `dispatch`（知识分类）
 **Gate**: —
-**属性**: `target-source`
+**属性**: `target-source: bug | optimization`
 
-> B 类入口：收到 bug 报告或优化需求，判断是否属于 B 类，写任务包入 queue，记入 b-tasks.md。
+## 前置与产物
 
----
+由 bug 报告或局部优化需求触发，无迭代/Gate 前置。允许先只读诊断实际代码；是否 B 类按意图、兼容性与实际影响判断，详见执行层。
 
-## 前置条件
-
-- **触发**：收到 bug 报告或优化需求（来自用户 / 测试 / 外部反馈）
-- **无 Gate 前置**：B 类任务随时可进入，不依赖当前迭代状态
-- **B 类判定**：以下三条任意命中即升级 A 类——①修改或删除已有接口/字段（breaking change）；②跨模块核心逻辑；③需要产品决策。纯加法 schema 变更（新增可选字段/参数）按业务逻辑复杂度 + 风险可控性二次判定，详见 `specs-execution/dispatch-new.md §Step 1`
-
----
-
-## 字段规范
-
-| 字段 | 类型 | 必填 | 取值 / 说明 |
-|------|------|:----:|------------|
-| `target-source` | enum | ✅ | `bug`（缺陷修复）/ `optimization`（功能优化） |
-
-派发出的 develop 任务包字段规范见 `specs-structural/develop.md §字段规范`，其中：
-- `source` 固定为 `bug` 或 `optimization`（与 `target-source` 一致）
-- `urgency` 按紧急程度填 `normal` 或 `hotfix`
-
----
-
-## 主要产物
-
-| 产物 | 路径 | 格式 |
-|------|------|------|
-| develop 任务包 | `b-queue/{task-id}.md` | 见 develop.md §字段规范 |
-| b-tasks.md 条目 | `b-tasks.md` | 见下方格式 |
-
-**b-tasks.md 行格式：**
-
-```markdown
-| {task-id} | {target-source} | {urgency} | {title} | {状态} | {日期} |
-```
-
-状态流转：`[可取]` → `[taken-by]` → `[merged]`（与 queue 中任务包状态同步）
-
----
+产物只有 `b-queue/{task-id}.md` 的短契约与 `status.yml tasks[]` 的一条状态记录。任务状态只由 status 维护，不再新增 b-tasks.md 总账。
 
 ## 完成判据
 
-- [ ] B 类判定通过（或已升级 A 类并终止本 task）
-- [ ] 任务包字段完整、无空值（`risk` 缺省按 `standard`）
-- [ ] `urgency` 已按影响程度判断填写
-- [ ] b-tasks.md 已追加条目
+- 问题、预期、可验证条件及原始依据明确；不把猜测当复现，不自行决定新业务承诺。
+- 短包包含执行层所列字段；可省 A 类 module/sprint 等规划元数据，AC 不凑条数。
+- `none` 不夹带契约改动；`governed` 有确认依据、受影响资产与兼容性验证，仍不能顺手修订已签规格、迁移数据或破坏调用方。
+- `check-b-task.js` 通过，状态已登记并在授权分支提交。
+- 有开发授权则继续 develop；仅诊断/派发请求不扩大成开发/发布授权。
 
----
-
-## 接口约定
-
-**输入来自**
-
-| 上游 | 交接内容 | 格式 |
-|------|---------|------|
-| 用户 / 外部反馈 | bug 报告或优化需求 | 对话 |
-
-**输出给**
-
-| 下游 task | 交接内容 | 格式 |
-|-----------|---------|------|
-| `develop`（source=bug / optimization） | 任务包（[可取] 状态） | `b-queue/{task-id}.md` |
-
----
-
-> **工作内容 / 边界场景 / 异常处理见 `specs-execution/dispatch-new.md`（执行层）。** 本契约只定义字段 / 产物 / 完成判据 / 接口；运行时加载的是执行层。
+字段语义沿用 `specs-structural/develop.md`；B 类字段子集及操作见 `specs-execution/dispatch-new.md`。

@@ -1,16 +1,12 @@
-<!--
-  sprint.md 模板 · plan-sprint 产物 · 存 iterations/vN/sprint.md · live 引用（不入项目仓）
-  人看的汇总视图（机器侧状态以项目根 status.yml 为准）。每行对应 queue/ 里一个任务包。
-  填写：替换 {占位}；状态初始全 [可取]，PR 列初始全 —；交付列 串行/可并行 取自 plan-sprint Step 2 交付判定（⚖️ 默认判定）。
-  多迭代并行时各迭代各写自己的 iterations/vN/sprint.md，queue 天然隔离。
--->
 # Sprint v{N} · {项目名}
 
-| task-id | title | layers | 依赖 | 状态 | PR | 交付 |
-|---------|-------|--------|------|------|----|------|
-| {id} | {标题} | backend | — | [可取] | — | 串行 |
-| {id} | {标题} | backend | — | [可取] | — | 可并行 |
-| {id} | {标题} | frontend | {依赖 id} | [可取] | — | 可并行 |
+规划索引，不维护状态/负责人/PR 副本；实时进度读 `status.yml tasks[]`，任务范围与验收读 queue。旧表状态列仅作历史，不参与恢复判断。
+
+| task-id | title | layers | 依赖 | 交付 |
+|---------|-------|--------|------|------|
+| {id} | {标题} | backend | — | 串行 |
+| {id} | {标题} | frontend | {依赖 id} | 可并行 |
 
 ## 依赖说明
-- {task-id}（可并行）blocked-by {task-id}（串行）：{原因一句话，为何必须先合并}
+
+- {必要先后与原因；详细写集/契约在任务包，不复制}

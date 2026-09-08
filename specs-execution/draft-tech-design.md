@@ -15,7 +15,7 @@
 
 **前置检查：G1 是否已签**
 
-读 `iterations/vN/gates.md`（路径不存在时读 `iterations/` 目录找最新版本）：
+读 `status.yml iterations.vN.gates`（路径不存在时读 `iterations/` 目录找最新版本）：
 - G1 未签 → 阻断：「⚠️ G1 未通过，PRD 尚未确认，请先完成 draft-prd-vN 再启动技术设计。」
 - G1 已签 → 继续
 
@@ -141,7 +141,7 @@
 
 **§ 共享组件建议**：表格格式，引用 reusables.md 已有资产（标"已有，建议复用"），新建议标明路径。
 
-> 若共享组件建议被拒绝并需追加到 项目根 `reusables.md`「建议已拒绝」，写入前先看该表是否已超过 20 条；若触发阈值，先按文件头约定把纯历史拒绝建议归档到 `reusables-history.md`，再追加本期拒绝项。
+> 重要且仍影响后续判断的拒绝理由引用 decisions 或 PR 即可，不新增拒绝建议流水账。
 
 **AC 覆盖自检**（写完七段后）：回看每条 PRD `AC-nn` 都有载体回链（接口/模块/场景，载体无关）。齐全性 Step 4 check-docs 机械核（逐条正反向），此处只肉眼扫补漏；linter 报"AC 未被承接"且确认本期不做 → 列疑点向用户确认范围调整 vs 设计遗漏，不静默丢。
 
@@ -222,7 +222,7 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 更新 项目根 `decisions.md`，追加本期关键架构决策（格式：决策 / 原因 / 日期）。
 
-> 追加前先看活跃条目是否已超过 30 条，或最早条目所属迭代是否已过去 5 期以上；若触发阈值，先按文件头约定把纯历史/已取代条目归档到 `decisions-history.md`，再追加本期决策。
+> 仅登记仍影响后续实现的重要取舍；历史按实际阅读需要归档，不以条数/期数阻断。
 
 > **边界**：技术选型有重大变更（替换已有依赖）→ 写入 项目根 `decisions.md` 并说明原因，不静默替换。
 
@@ -241,14 +241,11 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 🚫 等用户确认
 
-用户确认 → 写 `iterations/vN/gates.md`：
-```markdown
-- [x] G2：TRD 已确认 — {YYYY-MM-DD}
-```
+用户明确确认后，仅更新以下 status 签署字段。
 
 **更新项目根 `status.yml`**（字段见 `../hact-method-lab/skeleton/07-status-contract.md`）：将 `iterations.vN.gates.G2` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。
 
-执行 `git add iterations/vN/trd.md project.md foundation.md decisions.md iterations/vN/gates.md status.yml && git commit -m "feat(trd): v{N} TRD 完成，G2 签署 [{项目名}]" && git push`（只暂存本次实际变更且存在的文件）
+执行 `git add iterations/vN/trd.md project.md foundation.md decisions.md  status.yml && git commit -m "feat(trd): v{N} TRD 完成，G2 签署 [{项目名}]" && git push`（只暂存本次实际变更且存在的文件）
 
 **feedback 检查**（签 G2 后）：
 - 疑点清单超过 5 条且多条根因相同（如 PRD 对某类场景描述方式有共性问题）→ 写入 项目根 `feedback.md`（格式：`{日期} | {发现} | 建议在 draft-prd-vN 的开放问题清零步骤中加强 {具体环节}`）
@@ -285,5 +282,5 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 **断点续做**：
 - 读 `iterations/vN/trd.md` 判断写到哪一段（按 7 段结构对照）
 - 读 project.md 的技术选择、验证入口及 Foundation 本期变更判断是否完成
-- 读 `iterations/vN/gates.md` 判断 G2 是否已签
+- 读 `status.yml iterations.vN.gates` 判断 G2 是否已签
 - 从未完成的段落或文件继续

@@ -13,7 +13,7 @@
 - **构建失败不重启服务**：保留旧版本运行，记录错误上报，等修复后重走步骤
 - **判据是产物不是退出码**：上一条的「构建失败」不能只看 `build-command` 的退出码——**构建根本没跑**（有人直接 `pm2 restart`）或跑了但产物没落地时，退出码判据完全无效（没执行的命令不会返回非零）。必须以 `build-artifact` 存在且**新于本次拉取的 HEAD 提交时间**为准。实测事故：某前端 `.next` 缺失，`next start` 每次立即退出、pm2 无延迟重启，累计 **574 次「Could not find a production build」+ 17 次 EADDRINUSE**（重启太密，端口未释放就自撞），而三道"构建失败"闸一道都没响——因为构建从来没被执行过。
 - **健康检查未通过不算完成**：服务重启成功不等于部署成功，必须健康检查通过才记录结果
-- **hotfix 快速通道须有授权**：urgency=hotfix 的任务需有 `dispatch` discipline 用户授权后才能不等 G4 部署
+- **hotfix 快速通道须有授权**：urgency=hotfix 的任务需用户或其明确指定发布审批人授权后才能不等 G4 部署
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## 会话启动
 
-读任务包，确认 `target`（目标环境，如 `prod` / `staging`）。触发前置（A 类 G4 已签 / B 类积累批量 / hotfix 须 `dispatch` 授权）见 structural `前置条件` + 红线。
+读任务包，确认 `target`（目标环境，如 `prod` / `staging`）。触发前置（A 类 G4 已签 / B 类积累批量 / hotfix 须明确发布授权）见 structural `前置条件` + 红线。
 
 **先确认连接可用**：跑 `node scripts/check-conn.js check --live`。红则先修连接再谈部署——连不上服务器时后面每一步都会以更难读的形态失败。服务器坐标从 `connections.yml` 取：`ssh.{target}.mcp-alias` / `ssh.{target}.host` / `ssh.{target}.app-dir`（服务器上的仓库目录）；实际使用哪种远端命令通道由Codex 项目入口决定。连接与凭据遵循项目内 `connections.yml` 与 `~/.hact/secrets.env` 的分层约定。
 

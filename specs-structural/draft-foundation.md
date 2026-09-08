@@ -33,7 +33,7 @@
 | foundation-design.md | `{name}/iterations/v0/foundation-design.md` | 仅含获准地基件 + 一根标杆穿透切片；不得含 V1 额外交付 |
 | project.md（技术层） | `{name}/project.md` | 栈 / 数据库 / 模块划分 / 测试框架 |
 | decisions.md | `{name}/decisions.md` | 关键架构决策（栈理由 / 各地基件形式 / 安全项构造级机制） |
-| gates.md | `{name}/iterations/v0/gates.md` | G2 签署 |
+| Gate 状态 | `{name}/status.yml` | G2 签署 |
 | status.yml | `{name}/status.yml` | `iterations.v0` 块 + `gates.G2` |
 
 ---

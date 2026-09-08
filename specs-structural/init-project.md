@@ -33,7 +33,6 @@
 |------|------|---------|
 | project.md | `{name}/project.md` | 复制自 `templates/project.md` |
 | reusables.md | `{name}/reusables.md` | 复制自 `templates/reusables.md` |
-| b-tasks.md | `{name}/b-tasks.md` | 复制自 `templates/b-tasks.md` |
 | decisions.md | `{name}/decisions.md` | 复制自 `templates/decisions.md` |
 | backlog.md | `{name}/backlog.md` | 复制自 `templates/backlog.md` |
 | feedback.md | `{name}/feedback.md` | 复制自 `templates/feedback.md` |
@@ -41,7 +40,6 @@
 | foundation.md | `{name}/foundation.md` | 复制自 `templates/foundation.md`（**地基蓝图**空模板，Step 5 共识讨论填领域地图 + 地基关注点登记 + 安全项应有档=构造级；下游 V0 走骨架据此建） |
 | _meta/input/ | `{name}/_meta/input/` | 空目录，存放背景材料和上下文文档 |
 | _meta/sessions/ | `{name}/_meta/sessions/` | 空目录，存放跨会话接续文件 |
-| hact-notes 仓（每成员） | `gitee.com/{notes-org}/hact-notes-{姓名}` | 私有仓 + 登记入 `_meta/hact-config.md`（决策#21） |
 | connections.yml | `{name}/connections.yml` | 复制自 `templates/connections.yml`（外部连接登记，入库·零机密；机密真值在机器本地 `~/.hact/secrets.env`） |
 
 ---
@@ -53,7 +51,6 @@
 - [ ] `foundation.md` 已经 Step 5 共识讨论播种（领域地图非空 + 地基关注点登记 + 安全敏感项应有档=构造级）
 - [ ] git 已初始化，初始 commit 已完成
 - [ ] Gitee 远端已绑定并推送，团队成员已添加为协作者
-- [ ] 每个成员的 `hact-notes-{姓名}` 仓已创建并登记入 `_meta/hact-config.md`（已登记者跳过）
 - [ ] `connections.yml` 已播种，`node scripts/check-conn.js check` 通过
 
 ---
@@ -72,7 +69,7 @@
 |-----------|---------|------|
 | `draft-foundation`（V0 地基设计） | 存在稳定、跨切面且晚建代价高的约束，用户选择走 V0 | `{name}/foundation.md` |
 | `draft-prd-vN` | 无 V0 准入项或范围过大，跳过 V0 直接进 V1 | `{name}/foundation.md` |
-| `dispatch-new` | 项目仓就位，B 类流程可启动 | `{name}/b-tasks.md` |
+| `dispatch-new` | 项目仓就位，B 类流程可启动 | `{name}/status.yml` |
 
 ---
 

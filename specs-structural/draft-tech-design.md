@@ -31,7 +31,7 @@
 |------|------|------|
 | TRD | `iterations/vN/trd.md` | Markdown，套结构化模板 `templates/trd.md`（固定 7 段 header + `### 表：` + `### 接口：` + 槽位，供 `scripts/check-docs.js` 解析与交叉对账） |
 | 地基蓝图增补（条件） | 项目根 `foundation.md` | **仅本期识别出新跨切面关注点时**：原地增补领域地图 / 关注点登记 + 立应有档（init 播种、本任务按涉及边界维护；Step 7）。**≥机械级须落到落地手段位置**（文件:行 / 规则名）+ 反例验证，或登记「待建」交 `plan-sprint` 拆地基跟进包；给不出则只能立人审级 |
-| G2 签字 | `iterations/vN/gates.md` | `- [x] G2：TRD 已确认 — YYYY-MM-DD` |
+| G2 签字 | `status.yml iterations.vN.gates` | `iterations.vN.gates.G2: { signed: true, date: YYYY-MM-DD }` |
 | decisions.md 更新 | `decisions.md` | 表格追加：决策 / 原因 / 日期 |
 | project.md 更新（技术层） | `project.md` | 追加或更新技术层内容 |
 | 进度断点（compact 时写入） | `_meta/sessions/draft-tech-design-progress.md` | 疑点清单答案摘要 + TRD 骨架（接口列表 / 模块划分 / 共享组件） |
@@ -65,7 +65,7 @@
 - [ ] decisions.md 已追加本期架构决策
 - [ ] project.md 技术层已更新
 - [ ] 【linter】判据 `check-docs.js` 全绿（退出码 0，含 PRD↔TRD 实体↔表 + AC↔回链两条交叉对账）+ 语义判据签字人已确认（见 `skeleton/06-gates.md` §7；存量项目无 linter 时退回人工逐条核对兜底，不额外派隔离单元）
-- [ ] G2 已签（`gates.md` 已记录 + commit）
+- [ ] G2 已签（`status.yml` 已记录 + commit）
 
 ---
 

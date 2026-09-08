@@ -15,20 +15,19 @@
 -->
 ---
 package-schema: 2          # 新任务固定 2；存量缺省按 legacy 兼容，不批量回填
-task-id: <待填>            # 唯一标识，命名 {项目缩写}-v{N}-{三位序号}，如 hact-v4-001；对应 sprint.md 行
+task-id: <待填>            # 唯一标识，命名 {项目缩写}-v{N}-{三位序号}，如 hact-v4-001；对应 status.yml task-id（A 类另有 sprint 规划行）
 module: <待填>             # TRD「模块拆分」中的稳定模块名；供预算分批与 global-summary 建最小索引，不从 context 猜
 sprint_id: <待填>          # 所属 Sprint 标识，如 v4-s1；由 plan-sprint 填
 layers: <待填>             # [frontend] / [backend] / [shared]（数组写法）
 source: <待填>             # sprint / integration / manual-test / bug / optimization
 task_type: <待填>          # dev-frontend（layers=[frontend]）/ dev-backend（layers=[backend]）/ shared 时显式指定
-contract-impact: <待填>    # governed（只实现已确认 PRD/TRD/Foundation/project 技术约束）/ none（不触及共享契约）；B 类只能 none
+contract-impact: <待填>    # governed（只实现已确认 PRD/TRD/Foundation/project 技术约束）/ none（不触及共享契约）；B 类局部兼容 governed 见 dispatch-new
 # baseline: visual        # 仅「视觉地基包」加此行；普通任务包不写。见顶部说明 + plan-sprint Step 2
 # design-reference-format: sliced-v1  # frontend 必填；存量 design 无「八、页面规格」时填 legacy-full；backend/shared 删除
 urgency: normal           # normal（默认）/ hotfix
 risk: standard            # standard（默认，普通审查档）/ sensitive（高能力审查档；触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）；存疑即 sensitive（只升不降，develop 侧另按有效 risk + diff 独立预检兜底）
 risk-note:                # 可选。check-sprint 的启发词命中而你判定是误报时，理由写这里（如"命中『迁移』只因 files 含历史迁移文件路径，本包不改 schema"）。本字段不参与启发扫描，故解释文字不会再次自我触发
 title: <待填>              # 简短描述，≤15 字
-status: 可取               # plan-sprint 初始写「可取」；流转：可取 → taken-by:{user} → done → merged
 description: <待填>        # 格式「当前状态 → 期望状态」，不写"实现XXX"
 depends_on: []            # 前置 task-id 列表，无依赖填 []；与 sprint.md 依赖列、status.yml depends_on 三处一致
 files:

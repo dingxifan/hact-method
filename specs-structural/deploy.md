@@ -12,7 +12,7 @@
 
 - **常规部署（A 类迭代）**：G4 已签（manual-test 通过）
 - **B 类独立部署**：无进行中的 A 类迭代时，B 类 [merged] 任务积累到一定程度，由有 `dispatch` discipline 的用户主动触发；无需 G4
-- **hotfix 快速通道**：`urgency=hotfix` 的 develop 任务 [merged] 后，可不等 G4，由有 `dispatch` discipline 的用户授权后立即部署
+- **hotfix 快速通道**：`urgency=hotfix` 的 develop 任务 [merged] 后，可不等 G4，由用户或其明确指定发布审批人授权后立即部署
 - **文件**：`connections.yml`（服务器坐标 / SSH 凭据引用，`init-project` 播种）+ `deployment.config`（构建命令 / 健康检查端点 / 重启命令与自动化策略，首次部署时创建）
 
 ---
@@ -52,7 +52,7 @@
 
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `manual-test`（常规） | G4 已签 | `gates.md` |
+| `manual-test`（常规） | G4 已签 | `status.yml` |
 | `develop`（hotfix 快速通道） | hotfix PR [merged]，授权已给 | 任务包 `urgency=hotfix` |
 
 **输出给**

@@ -30,19 +30,21 @@ B 类任务包创建后统一由 `develop(source=bug/optimization)` 拾取，复
 
 先读当前分支、工作树与上游状态。使用用户指定的方法论分支/版本，不自动切 master。新任务建立基线前可 fetch 并在工作树干净、无活跃写入且当前分支有上游时快进同步；进行中任务先恢复已有基线，不因一次提问或压缩重复 pull。无关在制品保留，远端不可用只阻断必须依赖远端的动作。个人 notes 仅实际收割/写入时访问。
 
+采用本版单源状态前，存量项目须逐仓核对 status 与旧 Gate/任务记录、已获用户确认的签署和实际 Git；同步更新项目 check-gate/check-sprint/check-b-task 与既有 hook 的委托路由（不覆盖原 hook）。未核对或旧 hook 仍只盯 gates.md 时沿用获准旧版，不只删文件、不在一次普通开发中自动迁移。历史 Markdown 可保留，但升级后不再双写或作为进度真相。
+
 ## Step 1：状态推断与规范加载
 
 1. 读取 `project.md`。
-2. 读取相关 `gates.md`。存在 `iterations/v0/` 时先判断 V0，避免被预建的空 `v1/` 误导。
-3. 读取 `iterations/vN/sprint.md`，由状态列和 PR 列判断任务进度。
-4. 用户已明确指定任一 `task.type` 时优先加载该规范并由规范自身核前置；用户只给 task-id 时，先在 iteration queue / `b-queue/` / `status.yml` 解析其 source 与状态：B 类 task-id 无论当前 A 类处于哪个 Gate，均优先路由 `develop(source=bug/optimization)`。没有显式任务时再按下表推断。
+2. 读取 `status.yml iterations.*.gates`。存在 `iterations/v0/` 时先判断 V0，避免被预建的空 `v1/` 误导。
+3. 读取 `status.yml tasks[]` 判断状态、负责人和 PR；sprint 仅在规划问题时读，旧 Markdown 状态不参与推断。
+4. 用户已明确指定任一 `task.type` 时优先加载该规范并由规范自身核前置；用户只给 task-id 时，先在 iteration queue / `b-queue/` 查契约，并在 `status.yml` 解析其 source 与状态：B 类 task-id 无论当前 A 类处于哪个 Gate，均优先路由 `develop(source=bug/optimization)`。没有显式任务时再按下表推断。
 
 | 状态信号 | 人类说明 | 推断任务类型 |
 |---|---|---|
-| `phase=v0;G2=0` | `v0/gates.md` G2 未签 | `draft-foundation` |
+| `phase=v0;G2=0` | status 中 V0 G2 未签 | `draft-foundation` |
 | `phase=v0;G2=1;foundation=unmerged` | V0 G2 已签，但 `status.yml` 无已合并的 `foundation` task | `develop(source=foundation)` |
 | `phase=v0;foundation=merged` | V0 `foundation` task 已合并 | `continue-v1`，继续按下列 V1 信号判断 |
-| `class=B;status=available` | `b-queue/` 或 `status.yml` 有 source=bug/optimization 的 `[可取]` 任务 | `develop(source=bug/optimization)`，列出或拾取指定任务 |
+| `class=B;status=available` | `status.yml` 有 source=bug/optimization 的 `[可取]` 任务 | `develop(source=bug/optimization)`，列出或拾取指定任务 |
 | `class=B;status=active` | B 类任务为 `[taken-by]` 或 `[done]` | `develop(source=bug/optimization)`，按 task-id 续做 |
 | `phase=v1;G1=0` | G1 未签 | `draft-prd-vN` |
 | `phase=v1;G1=1;G2=0;ux=required;outputs=incomplete` | PRD 任一功能需 UX，`prototype.html` / `prototype-map.md` / `ux-flows.md` 任一未齐 | `draft-ux` |

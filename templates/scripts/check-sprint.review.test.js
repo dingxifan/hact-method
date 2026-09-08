@@ -155,6 +155,18 @@ result: pass
 
   const roundOnePath = path.join(tempRoot, `b-reviews/${TASK_ID}/round-01.md`);
   const canonicalRoundOne = fs.readFileSync(roundOnePath, 'utf8');
+  const preflightFile = path.join(tempRoot, 'b-reviews', TASK_ID, 'preflight.md');
+  const canonicalPreflight = fs.readFileSync(preflightFile, 'utf8');
+  const withoutTime = source => source.replace(/^\s*(?:(?:implementation|review)_(?:started|completed)_at|spec_minutes|started_at|completed_at):[^\n]*\n/gm, '');
+  write('status.yml', withoutTime(canonicalStatus));
+  fs.writeFileSync(roundOnePath, withoutTime(canonicalRoundOne));
+  fs.writeFileSync(preflightFile, withoutTime(canonicalPreflight));
+  assert.strictEqual(runAudit().status, 0, '无任何成本时间字段仍按真实 Git 和完整审查链通过');
+  fs.writeFileSync(roundOnePath, withoutTime(canonicalRoundOne).replace('mode: full', 'mode: targeted'));
+  assert.notStrictEqual(runAudit().status, 0, '时间可省，首轮 full 仍不可省');
+  write('status.yml', canonicalStatus);
+  fs.writeFileSync(roundOnePath, canonicalRoundOne);
+  fs.writeFileSync(preflightFile, canonicalPreflight);
   const historicalRound = canonicalRoundOne.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json\nstandards_checked: [BE-OLD-01]');
   const historicalStatus = canonicalStatus.replace('    spec_minutes: 1',
     '    review_profile_version: develop-review-profile/v1\n    issues: []\n    spec_minutes: 1');

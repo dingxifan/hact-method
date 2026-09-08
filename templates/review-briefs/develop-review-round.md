@@ -12,8 +12,6 @@ reviewed_base: <commit/tree SHA>
 reviewed_head: <commit/tree SHA>
 diff_sha256: <`git diff --binary reviewed_base reviewed_head` 原始字节的 SHA-256，64 位小写 hex>
 changed_files: []
-started_at: <ISO-8601>
-completed_at: <ISO-8601>
 escalate_to_full: false
 conclusion: pass | revise | evidence-needed
 ---

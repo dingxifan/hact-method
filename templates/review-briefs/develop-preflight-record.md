@@ -3,8 +3,6 @@
 task_id: <待填>
 source: sprint | foundation | integration | manual-test | bug | optimization
 timing: before-code | retroactive
-started_at: <ISO-8601>
-completed_at: <ISO-8601>
 base_ref: <固定 commit SHA>
 base_tree: <git write-tree SHA>
 result: pass | revised | blocked
@@ -31,4 +29,4 @@ findings: []
 #   closed_by: <修订锚；未关闭写 null>
 ```
 
-`timing: retroactive` 只表示接管已有 diff 后补核，不得改写为 `before-code`。本记录只保留事件时间戳，分钟数不重复持久化；`status.yml.code_reviews[].spec_minutes` 在终态汇总 preflight / revise-doc 等多段规格墙钟。`result` 非 `pass/revised` 或任一 finding 未关闭时，不进入实现/独审。
+`timing: retroactive` 只表示接管已有 diff 后补核，不得改写为 `before-code`。时间戳与成本计时可选，不作为完成门，也不事后补估。`result` 非 `pass/revised` 或任一 finding 未关闭时，不进入实现/独审。

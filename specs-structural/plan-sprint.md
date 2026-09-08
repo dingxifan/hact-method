@@ -30,8 +30,8 @@
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | 各 develop 任务包 | `iterations/vN/queue/{task-id}.md`（每个任务独立一个文件） | 见 develop.md §字段规范（字段清单以该节为准；`risk` 缺省按 `standard`） |
-| sprint.md | `iterations/vN/sprint.md` | 套模板 `templates/sprint.md`（7 列汇总表 + 「## 依赖说明」段；人看的视图，机器侧状态以 status.yml 为准） |
-| G3 签字 | `iterations/vN/gates.md` | `- [x] G3：开发包就绪 — YYYY-MM-DD` |
+| sprint.md | `iterations/vN/sprint.md` | 套模板 `templates/sprint.md`（5 列规划表 + 「## 依赖说明」段；人看的视图，机器侧状态以 status.yml 为准） |
+| G3 签字 | `status.yml iterations.vN.gates` | `iterations.vN.gates.G3: { signed: true, date: YYYY-MM-DD }` |
 | 进度断点（compact 时写入） | `_meta/sessions/plan-sprint-progress.md` | 任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单答案摘要 |
 
 **任务包命名规则**：`{task-id}` 格式为 `{项目缩写}-{vN}-{序号}`，如 `auth-v1-001`。
@@ -52,7 +52,7 @@
 - [ ] 每个任务的 `交付` 列已填（`串行` 或 `可并行`），判断理由已向用户说明并确认；该列仍是团队共享写集/依赖边界，G4 的单人 wave 只改变当轮执行形态，不回写本列
 - [ ] **【linter】** sprint.md 已写，queue↔sprint.md↔status.yml 三方一致（`check-sprint.js` 三方一致）
 - [ ] 完成判据已核对（`check-sprint.js` 退出码 0 + `🧑` 段语义残量人签；存量项目无脚本则退回 `skeleton/06-gates.md` §7 G3 段人工逐条核对）
-- [ ] G3 已签（`gates.md` 已记录 + commit）
+- [ ] G3 已签（`status.yml` 已记录 + commit）
 
 ---
 
@@ -68,7 +68,7 @@
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `develop`（多个） | 任务包（[可取] 状态）+ sprint.md（追踪 PR / 状态） | `iterations/vN/queue/{task-id}.md` + `iterations/vN/sprint.md` |
+| `develop`（多个） | 任务包（[可取] 状态）+ status.yml（追踪 PR / 状态） | `iterations/vN/queue/{task-id}.md` + `status.yml` |
 
 ---
 

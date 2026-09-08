@@ -10,7 +10,7 @@
 
 ## 前置条件
 
-- **触发**：本期所有 `source=sprint` 的 develop 任务全部 [merged]（sprint.md 全行状态为已合并）
+- **触发**：本期所有 `source=sprint` 的 develop 任务全部 [merged]（status 中本期 source=sprint 全部已合并）
 - **文件**：
   - `iterations/vN/trd.md`（接口定义）
   - `iterations/vN/prd.md`（acceptance criteria，测试场景来源）

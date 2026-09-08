@@ -1,5 +1,6 @@
 ﻿# status.yml · 机器侧状态契约（项目根，由 init-project 创建一次）
-# 字段定义见 ../hact-method-lab/skeleton/07-status-contract.md。机器侧消费者（check-sprint.js / check-gate.js）直接 YAML.parse 取数。
+# 字段定义见 ../hact-method-lab/skeleton/07-status-contract.md。机器侧消费者（check-sprint.js / check-gate.js）按受控 YAML 结构读取。
+# 序列化：沿用下方缩进与块式 tasks；Gate 用 signed/date 内联或分行对象，不随意改紧凑 YAML 形态。
 # 写入纪律：每次只改对应字段，其余不动；显式写 null，不省略键。
 # 总规则：凡往 iterations/vN/queue/ 写任务包处，同步往 tasks[] 追加一条；状态流转按 task-id 改。
 
@@ -17,7 +18,8 @@ iterations:
       G5: { signed: false, date: null }
 # v0 走骨架（A 类项目，先于 V1）：draft-foundation 建 iterations.v0 块，仅 G2（无 G1/G3-5）：
 #   v0:
-#     gates: { G2: { signed: false, date: null } }
+#     gates:
+#       G2: { signed: false, date: null }
 # 后续迭代由 draft-prd-vN 签 G1 时按需新增 vN 块（结构同 v1）
 
 tasks: []
@@ -28,7 +30,6 @@ tasks: []
 #    source: sprint          # sprint / foundation / integration / manual-test / bug / optimization
 #    title: ...
 #    type: develop           # 13 种 task type
-#    discipline: dev-backend # 8 种 discipline
 #    layer: backend          # frontend / backend / shared / null
 #    status: 可取            # 可取 / taken-by / done / merged
 #    assigned_to: null
@@ -54,9 +55,4 @@ code_reviews: []
 #    freshness: revised      # pass / revised；写代码前是否命中过期并完成修订
 #    review_report_dir: iterations/v1/code-reviews/{task-id}  # B 类为 b-reviews/{task-id}
 #    review_evidence_version: develop-review-round/v2          # 新任务必填；存量缺失按 legacy/unknown
-#    implementation_started_at: 2026-08-09T01:00:00Z
-#    implementation_completed_at: 2026-08-09T01:42:00Z
-#    review_started_at: 2026-08-09T01:42:00Z
-#    review_completed_at: 2026-08-09T02:18:00Z
-#    spec_minutes: 4             # preflight/revise-doc 多段规格澄清累计墙钟，int >= 0；implementation/review 分钟由时间戳按需计算
 #    # 问题与处置只在 review_report_dir 下逐轮报告维护；不另填 issues/comment。

@@ -13,7 +13,7 @@
 
 ## 会话启动
 
-**前置：G2 是否已签** — 读 `iterations/vN/gates.md`：未签 → 阻断「⚠️ G2 未通过，TRD 未确认，先完成 draft-tech-design 再规划 Sprint」；已签 → 继续。
+**前置：G2 是否已签** — 读 `status.yml iterations.vN.gates`：未签 → 阻断「⚠️ G2 未通过，TRD 未确认，先完成 draft-tech-design 再规划 Sprint」；已签 → 继续。
 
 **必读文件**（可用只读调查单元并行读并返回带路径摘要；不可用则主线顺序读）：
 - `iterations/vN/prd.md`（AC 来源——任务包 AC 须回链至此，G2 后开发链中段唯一回看 PRD 的窗口）
@@ -103,7 +103,7 @@
 
 ### Step 3：逐个写任务包
 
-骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；字段格式、AC 权威层级与 reference 锚规则由模板承接。每包只写相对 as-built 的 delta，normative core 超过 8–12KB 时拆包或迁 non-normative appendix。主线直接撰写；只有模块独立、共享定义稳定且工作量足以节时才委派，不按任务数量触发。子代理直接写获准的独立任务包文件，返回路径与待决项，主线维护共享 sprint/status。每包入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`。
+骨架确认后套 `../hact-method-lab/templates/queue/task-package.md`（YAML frontmatter，`check-sprint.js` 据此 parse）为每任务写完整字段包（字段权威见 `specs-structural/develop.md §字段规范`）；字段格式、AC 权威层级与 reference 锚规则由模板承接。每包只写相对 as-built 的 delta，normative core 超过 8–12KB 时拆包或迁 non-normative appendix。主线直接撰写；只有模块独立、共享定义稳定且工作量足以节时才委派，不按任务数量触发。子代理直接写获准的独立任务包文件，返回路径与待决项，主线维护共享 sprint/status。每包入 `iterations/vN/queue/{task-id}.md`，状态只在 status.yml 登记 `可取`。
 
 下表只列**模板讲不了的判断 / 跨文件来源**（中）+ **该字段验证归属**（右，显式标谁机械、谁留人）：
 
@@ -149,7 +149,7 @@
 
 ### Step 4：写 sprint.md
 
-套模板 `../hact-method-lab/templates/sprint.md` 汇总生成 `iterations/vN/sprint.md`——每行对应 queue/ 一个任务包（task-id / title / layers / 依赖 / 状态 `[可取]` / PR `—` / 交付），附「## 依赖说明」段（可并行任务 blocked-by 串行任务 + 一句话原因）。
+套模板 `../hact-method-lab/templates/sprint.md` 汇总生成 `iterations/vN/sprint.md`——每行对应 queue/ 一个任务包（task-id / title / layers / 依赖 / 交付），附「## 依赖说明」段（可并行任务 blocked-by 串行任务 + 一句话原因）。
 
 > 多迭代并行（vN 与 vN+1 同时有任务）时各迭代各写自己的 `iterations/vN/sprint.md`，queue 天然隔离于各自迭代目录，互不干扰。
 
@@ -184,11 +184,11 @@
 
 🚫 等用户确认
 
-用户确认 → 写 `iterations/vN/gates.md`：`- [x] G3：开发包就绪 — {YYYY-MM-DD}`。
+用户明确确认后，仅更新以下 status 签署字段。
 
 **更新 status.yml**：`iterations.vN.gates.G3` 改为 `{ signed: true, date: {YYYY-MM-DD} }`（tasks[] 已在 Step 4.5 填好）。
 
-`git add iterations/vN/queue/ iterations/vN/sprint.md iterations/vN/gates.md status.yml && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
+`git add iterations/vN/queue/ iterations/vN/sprint.md  status.yml && git commit -m "feat(sprint): v{N} sprint 规划完成，G3 签署 [{项目名}]" && git push`
 
 **feedback 检查（签 G3 后）**：疑点超 3 条且根因集中（如 TRD 某类接口描述普遍不完整）/ 拆分中发现 TRD 多处遗漏需反复修订 → 写 项目根 `feedback.md`（`{日期} | {发现} | {建议}`）；无则跳过。
 

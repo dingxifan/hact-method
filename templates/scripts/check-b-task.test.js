@@ -68,6 +68,48 @@ const projectHead = runGit(['write-tree']);
 fs.writeFileSync(diffTask, `---\nsource: bug\ncontract-impact: none\nfiles:\n  - project.md\nasset-writes: []\n---\n`);
 assert.ok(validateDiff(diffTask, base, projectHead, repo).some(error => /固定 diff 命中共享契约.*project.md/.test(error)),
   '技术约束迁入 project.md 后，B 类不能从实际 diff 夹带修订');
+const shortPackage = (file, impact = 'governed') => [
+  '---', 'package-schema: 2', 'task-id: demo-b-001', 'source: bug',
+  'title: profile display', 'description: missing label -> display existing label',
+  'context: Existing caller accepts optional label; verify absent and present values',
+  'risk: standard', 'contract-impact: ' + impact, 'files:', '  - ' + file,
+  'asset-writes:', '  - type:Profile', 'depends_on: []', 'do-not: []',
+  'reference:', '  - issue-12 confirmed display intent and caller compatibility',
+  'acceptance-criteria:', '  - |-',
+  '    intent: Display the existing profile label',
+  '    oracle: Both missing and present labels retain prior behavior', '---', ''
+].join('\n');
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts'));
+assert.deepStrictEqual(validateDiff(diffTask, base, memberHead, repo), [],
+  '有依据的局部公共类型变更可进入 governed 的独立语义审查');
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts', 'none'));
+assert.ok(validateDiff(diffTask, base, memberHead, repo).some(e => /修改公开类型成员/.test(e)));
+fs.writeFileSync(diffTask, shortPackage('project.md'));
+assert.ok(validateDiff(diffTask, base, projectHead, repo).some(e => /project.md/.test(e)),
+  'governed 也不能夹带已签规格修订');
+fs.writeFileSync(diffTask, shortPackage('db/migrations/002.sql'));
+assert.ok(validate(diffTask).some(e => /迁移路径/.test(e)));
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts').replace(/reference:\n  - .*\n/, 'reference: []\n'));
+assert.ok(validate(diffTask).some(e => /reference/.test(e)), 'governed 无依据不通过');
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts').replace(/asset-writes:\n  - .*\n/, 'asset-writes: []\n'));
+assert.ok(validate(diffTask).some(e => /共享资产/.test(e)));
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts').replace(/    oracle:.*\n/, ''));
+assert.ok(validate(diffTask).some(e => /intent\/oracle/.test(e)));
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts').replace('depends_on: []', 'depends_on: [demo-b-000]'));
+assert.deepStrictEqual(validate(diffTask), [], '短包可使用紧凑依赖数组');
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts').replace('package-schema: 2', 'package-schema: 3'));
+assert.ok(validate(diffTask).some(e => /未知 package-schema/.test(e)));
+fs.writeFileSync(diffTask, shortPackage('src/models/profile.ts').replace('\n---\n', '\n  - |-\n    intent: another behavior\n---\n'));
+assert.ok(validate(diffTask).some(e => /intent\/oracle/.test(e)), '第二条 AC 不能漏 oracle');
+fs.writeFileSync(diffTask, shortPackage('status.yml'));
+assert.ok(validate(diffTask).some(e => /status.yml/.test(e)), '实现 diff 不得夹带签署状态');
+runGit(['read-tree', base + '^{tree}']);
+fs.writeFileSync(path.join(repo, 'src', 'models', 'user.ts'), 'const sql = "ALTER TABLE users ADD role TEXT";\n');
+runGit(['add', 'src/models/user.ts']);
+const ddlHead = runGit(['write-tree']);
+fs.writeFileSync(diffTask, shortPackage('src/models/user.ts'));
+assert.ok(validateDiff(diffTask, base, ddlHead, repo).some(e => /数据库 DDL/.test(e)),
+  'governed 不能从普通源码夹带迁移 DDL');
 fs.rmSync(temp, { recursive: true, force: true });
 
 console.log('✅ check-b-task 正反夹具通过');

@@ -10,18 +10,14 @@
 #   iterations/vN/prd.md|as-built-ledger.md → check-as-built-ledger.js（走过 V0 时）
 #   iterations/vN/trd.md            → check-docs.js（PRD+TRD 交叉）
 #   iterations/vN/sprint.md|queue/*.md → check-sprint.js vN（只认 .md——.gitkeep 不触发，init 提交 queue 必然为空）
-#   iterations/vN/gates.md 新增 G4/G5 → check-gate.js G{N} vN
+#   status.yml 新签 Gate / merged → check-gate.js --staged
 #   b-queue/*.md                  → check-b-task.js（B 类不得夹带共享契约修订）
 #   integration-tests/result-*.md → check-integration-evidence.js（已执行有证据、未运行有原因）
 #   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
 #   connections.yml                 → check-conn.js（零机密 + 凭据引用完备 + 凭据落位安全）
 #   任何 staged 文件                → check-secrets.js（反查 ~/.hact/secrets.env 的真值）
 #
-# 触发条件依赖共暂存（暗礁）：linter 按 staged 的**产物文件**路由——check-docs 看
-#   prd/trd、check-sprint 看 sprint/queue。签 Gate 时若把产物与 gates.md 分两次 commit
-#   （产物先入、单独 commit 签字），签字那次只 stage gates.md → check-docs/check-sprint
-#   不重跑（G4/G5 例外：check-gate 看 gates.md 自身新增行，照跑）。故签 G1/G2/G3 时须把
-#   产物与 gates.md **同次暂存**，门卫才在签字点复验结构。属「护栏非密码锁」范围。
+# 状态签署/终态提交直接路由检查，不依赖重复更新 Markdown。
 #
 # 兼容（暗礁，见 hact-method HOOK 存档）：
 #   - 脚本缺失（存量仓未铺 scripts/check-*.js）→ 该检查 no-op 放行，绝不拦死。
@@ -89,21 +85,16 @@ for dir in $iter_dirs; do
     run scripts/check-sprint.js "$ver"
   fi
 
-  # --- gates.md 新增 G4/G5（check-gate.js）---
-  if echo "$staged" | grep -qE "^${dir}gates\.md$"; then
-    # 只看本次 diff 新增（+）行里已签署（[x]）的 G4/G5——未签行（新建 gates.md 时全行为+）不触发检查
-    added_gates=$(git diff --cached -U0 -- "${dir}gates.md" \
-      | grep -E '^\+' | grep -E '\[x\]' | grep -oE 'G[45]' | sort -u)
-    for g in $added_gates; do
-      run scripts/check-gate.js "$g" "$ver"
-    done
-  fi
-
   # --- ux-flows / prototype（check-ux.js）---
   if echo "$staged" | grep -qE "^${dir}(ux-flows\.md|prototype\.html|prototype-map\.md)$"; then
     run scripts/check-ux.js "$ver"
   fi
 done
+
+# --- 单源状态：新签 Gate 与新 merged 任务 ---
+if echo "$staged" | grep -qE '^status\.yml$'; then
+  run scripts/check-gate.js --staged
+fi
 
 # --- B 类任务包契约边界（check-b-task.js）---
 b_tasks=$(echo "$staged" | grep -E '^b-queue/.*\.md$' || true)

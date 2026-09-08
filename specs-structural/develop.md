@@ -26,6 +26,8 @@
 
 ## 字段规范
 
+B 类使用 `specs-execution/dispatch-new.md` 的短包子集，不要求 A 类 module/sprint 等规划元数据或凑 AC 条数；字段语义沿用下表。固定改动审查、实际回归和敏感裁决不省略。
+
 > **序列化锁定**：任务包用 **YAML frontmatter** 承载下表全部字段（`---` 包裹），模板见 `templates/queue/task-package.md`，`check-sprint.js`（G3 linter）据此机械 parse。下表字段 + 条件 `api-contract` / `baseline` 是字段的**单一真相**。
 
 | 字段 | 类型 | 必填 | 取值 / 说明 |
@@ -37,7 +39,7 @@
 | `layers` | string[] | ✅ | `[frontend]` / `[backend]` / `[shared]` |
 | `source` | enum | ✅ | `sprint` / `foundation` / `integration` / `manual-test` / `bug` / `optimization` |
 | `task_type` | enum | ✅ | `dev-frontend`（layers=[frontend]）/ `dev-backend`（layers=[backend]）/ layers=[shared] 时由分配者在任务包中指定 |
-| `contract-impact` | enum | ✅（新包） | `governed` = 只实现已经确认/修订完成的 PRD、TRD、Foundation、project.md 技术约束，不在 develop 中改契约；`none` = 不触及共享契约。`source=bug/optimization` 只能为 `none`；若需求本身要修订契约，必须先退出 B 类走 `revise-doc` 或新 A 类迭代，再重新规划 |
+| `contract-impact` | enum | ✅（新包） | `governed` = 只实现已经确认/修订完成的 PRD、TRD、Foundation、project.md 技术约束，不在 develop 中改契约；`none` = 不触及共享契约。B 类可为 `none` 或有明确依据的局部兼容 `governed`，范围见 dispatch-new；不得借此修订已签规格或增加业务承诺 |
 | `urgency` | enum | ✅ | `normal`（默认）/ `hotfix` |
 | `risk` | enum | ✅ | `standard`（默认）/ `sensitive`。触及 develop 合并前安全敏感预检四类之一时填 `sensitive`：权限 / 认证 / 数据隔离、不可逆数据操作、金额 / 计费计算、对外不可撤销副作用；否则填 `standard`，**存疑即 `sensitive`**。缺省按 `standard` 处理。develop 侧按**有效 risk** 消费（自报 `sensitive` 或主线四类语义扫命中即升档并回改本字段），末端安全敏感预检基于 diff 独立判定、不唯此字段（决策#29，见 `specs-execution/develop.md`） |
 | `title` | string | ✅ | 简短描述，15字以内 |
@@ -78,9 +80,9 @@ api-contract:
 | 产物 | 路径 | 格式 |
 |------|------|------|
 | PR | 代码仓库 | PR description 含 5 段：task-id / 改动摘要 / AC 验证 / 偏离说明 / 遗留问题 |
-| sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[merged]`，PR 列 → `#N` |
-| preflight / review rounds | A 类 `iterations/vN/code-reviews/{task-id}/`；B 类 `b-reviews/{task-id}/` | `preflight.md` + `round-NN.md`；含固定 Git tree、finding 及处置、full/targeted scope 与逐轮时间戳 |
-| code_reviews[] 审计索引 | 项目根 `status.yml` | 每 task 一条（结论、轮次/墙钟、report 目录与证据版本），由 develop 末端写入；不复制逐条问题 |
+| 任务状态与 PR | `status.yml tasks[]` | 唯一动态源；不更新任务包/sprint 的重复状态 |
+| preflight / review rounds | A 类 `iterations/vN/code-reviews/{task-id}/`；B 类 `b-reviews/{task-id}/` | `preflight.md` + `round-NN.md`；含固定 Git tree、finding 及处置与 full/targeted scope；时间戳可选 |
+| code_reviews[] 审计索引 | 项目根 `status.yml` | 每 task 一条（结论、结论/轮次、report 目录与证据版本），由 develop 末端写入；不复制逐条问题 |
 | 执行进度 / 上下文重置记录 | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：已授权任务集与当前交付批次 / 当前阶段 / 下一动作 / 待接收单元 / 证据引用 / 已用尝试 / 已完成文件 / 阻塞点 / 关键决策；阶段切换或中断时更新，旧记录缺新增字段从权威证据重建；wave 整组恢复仍以既有 wave-progress/v1 为准 |
 
 ---
@@ -95,8 +97,8 @@ api-contract:
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] 已发现的组合缺口及证据已在 PR 遗留问题或补缝任务中移交；不打回独立合规的原包
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
-- [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 范围审查的先补 sensitive 边界独审）
-- [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录轮次、时间、report 目录与证据版本；finding 路由在报告中可追溯）
+- [ ] **安全敏感改动**（权限/认证/数据隔离等四类）已有用户或其明确指定审批人的具体风险裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 范围审查的先补 sensitive 边界独审）
+- [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录轮次、report 目录与证据版本；finding 路由在报告中可追溯）
 - [ ] 已授权任务集全部收尾完成：状态与按 source 必需的追踪/反馈记录已提交，执行/审查/测试结果均已接收；不存在未完成的本轮必要动作。单元 `done` 或单个任务独审通过不等于 develop 完成
 
 ---

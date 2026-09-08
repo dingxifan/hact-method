@@ -111,6 +111,8 @@
 
 ## Step 6：commit
 
+有已登记的修订任务时，按 task-id 在 status.yml 更新状态；修订与必要级联任务真正闭合且产物进入获准目标分支后才标 merged。先提交/提 PR 但未完成合入时仍是 done，不用“已通知”代替完成。状态与本次变化共同提交，不另写任务包状态副本。
+
 ```bash
 git add {修订的文件} backlog.md {受影响的任务包（如有）}
 git commit -m "fix(doc): {修订内容摘要} [{项目名}]"

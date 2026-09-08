@@ -173,7 +173,7 @@ git branch -d fix/mt-{desc}
 **不满足 → 写 develop 任务包**：
 - `source=manual-test`
 - `task-id` 命名：`{项目缩写}-mt-{三位序号}`，如 `hact-mt-001`
-- 写入 `iterations/vN/queue/{task-id}.md`，状态 `[可取]`
+- 写入 `iterations/vN/queue/{task-id}.md`，状态只在 status.yml 登记 `可取`
 - **同步往项目根 `status.yml` 的 `tasks[]` 追加一条**（`source: manual-test`、`type: develop`、`iteration: vN`、`sprint: null`、`status: 可取`，字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
 - 执行 commit + push，任务包对开发者可见：
   ```bash
@@ -229,9 +229,9 @@ git branch -d fix/mt-{desc}
 
 🚫 等用户确认
 
-用户确认后，写入 `iterations/vN/gates.md`；**同步在项目根 `status.yml` 将 `iterations.vN.gates.G4` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。执行：
+用户确认后，**只在项目根 `status.yml` 将 `iterations.vN.gates.G4` 改为 `{ signed: true, date: {YYYY-MM-DD} }`**（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`；文件不存在则先从 `../hact-method-lab/templates/status.yml` 补建）。执行：
 ```bash
-git add iterations/vN/gates.md iterations/vN/acceptance-report.md status.yml
+git add  iterations/vN/acceptance-report.md status.yml
 git commit -m "chore: 验收通过，G4 签署 [{项目名}]"
 git push
 ```
@@ -255,9 +255,9 @@ git push
 ## 上下文管理
 
 **断点续做**（会话中断后重新开启）：
-1. 读 `iterations/vN/gates.md`：G4 已签 → 任务完成
+1. 读 `status.yml iterations.vN.gates`：G4 已签 → 任务完成
 2. 读 `_meta/sessions/manual-test-progress.md`：确认本轮已派修复任务清单和当前状态
-3. 读 `queue/`：找 source=manual-test 的任务包，核实各自状态
+3. 读 status.yml：核本期 source=manual-test 状态，必要时回读任务包
 4. 读 `iterations/vN/acceptance-report.md`：确认已记录的问题列表
 5. 从上次停在的节点继续
 

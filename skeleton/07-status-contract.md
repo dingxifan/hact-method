@@ -8,7 +8,7 @@
 
 ## 一、为什么有这份契约
 
-机器侧取数如果靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`gates.md` 复选框，就是在读「为人写的叙述性 markdown」——运行时每次生成时排版会漂移，取数持续出错。
+机器侧取数如果靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`status.yml` 复选框，就是在读「为人写的叙述性 markdown」——运行时每次生成时排版会漂移，取数持续出错。
 
 **解法**：把「机器要的结构化状态」从「人看的叙述文档」里彻底分离，单独落到一份 schema 锁死的 `status.yml`。
 
@@ -22,10 +22,10 @@
 
 `status.yml` 放在**项目根**，一个项目一份，覆盖全部迭代 + 全部 B 类任务。原因：
 
-- **B 类是项目级的**：B 类任务（bug / optimization）跨迭代、不归任何一期 Gate 流，其总账 `b-tasks.md` 本就在项目根。两个迭代之间（vN 已签 G5、vN+1 未起）没有「活跃迭代」，迭代级文件无处安放 B 类——项目级文件永远在。
+- **B 类是项目级的**：B 类任务（bug / optimization）跨迭代、不归任何一期 Gate 流，其状态在项目根 status.yml。两个迭代之间（vN 已签 G5、vN+1 未起）没有「活跃迭代」，迭代级文件无处安放 B 类——项目级文件永远在。
 - **创建只一次**：随 `init-project` 建一次，此后永远存在，不必每期重建。
 - **多迭代并行天然支持**：`iterations` 按版本分块，`tasks[]` 带 `iteration` 字段区分归属。
-- A 类任务包按 `iterations/vN/queue/` 物理隔离，B 类任务包在项目根 `b-queue/`——只是**状态投影集中到一个文件**，投影 ≠ 源文件。
+- A 类任务包按 `iterations/vN/queue/` 物理隔离，B 类任务包在项目根 `b-queue/`——契约按目录隔离，动态状态独立集中在 status.yml，不是从 Markdown 派生。
 - **任务包路径派生规则**：`iteration: null`（B 类）→ `b-queue/{task-id}.md`；`iteration: vN`（A 类）→ `iterations/vN/queue/{task-id}.md`。
 
 ---
@@ -36,7 +36,7 @@
 - **创建**：`init-project` 从模板创建一次，含 `iterations.v1.gates`（全未签）+ 空 `tasks[]`。
 - **更新**：此后每个状态转移由所属 exec spec「做一个填一个」（见第五节）。
 - **健壮性**：任何更新步骤写入前若文件不存在（历史项目、断点等），先从 `templates/status.yml` 补建再写，不报错中断。
-- **不动现有 markdown**：`sprint.md`/`gates.md`/`queue/*.md` 保留为「人看的视图」，机器侧不读它们取状态；两边漂移由 `check-sprint.js` 的三方一致检查兜住。
+- **动态状态只写 status**：任务状态/负责人/分支/PR 与 Gate 签署只在此维护。任务包是契约、sprint 是规划，不维护实时状态副本；旧 gates/b-tasks 仅历史参考，不生成新文件。queue↔sprint↔status 检查保留任务登记与规划覆盖，不要求重复可变状态。
 
 ---
 
@@ -67,7 +67,6 @@ tasks:
     source: sprint               # enum，见下
     title: 用户表与权限          # string，列表显示用
     type: develop               # enum，14 种 task type
-    discipline: dev-backend     # enum，8 种 discipline
     layer: backend              # enum，frontend / backend / shared / null
     status: merged              # enum，可取 / taken-by / done / merged
     assigned_to: zhangsan       # string Gitee login，未认领为 null
@@ -82,7 +81,6 @@ tasks:
     source: bug
     title: 登录偶发 500
     type: develop
-    discipline: dev-backend
     layer: backend
     status: 可取
     assigned_to: null
@@ -109,11 +107,6 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
     freshness: revised           # enum，pass / revised
     review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
     review_evidence_version: develop-review-round/v2   # 新任务 round 报告 schema；存量缺失按 legacy/unknown
-    implementation_started_at: 2026-08-09T01:00:00Z  # ISO-8601，preflight 通过后当场记录
-    implementation_completed_at: 2026-08-09T01:42:00Z # 首轮独审 dispatch 前当场记录
-    review_started_at: 2026-08-09T01:42:00Z          # 首轮 full dispatch
-    review_completed_at: 2026-08-09T02:18:00Z        # 最终独审通过
-    spec_minutes: 4              # int ≥0，preflight/revise-doc 多段规格澄清墙钟总和；implementation/review 分钟由时间戳按需计算
 ```
 
 ### 枚举对齐
@@ -131,13 +124,8 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 | `code_reviews[].code_rounds` | int ≥1（非枚举） |
 | `code_reviews[].spec_rounds` | int ≥0（非枚举） |
 | `code_reviews[].freshness` | pass / revised |
-| `code_reviews[].review_report_dir` | 项目根相对路径；A 类 `iterations/vN/code-reviews/{task-id}`，B 类 `b-reviews/{task-id}` |
-| `code_reviews[].review_evidence_version` | 新任务 `develop-review-round/v2`；要求每轮 schema 精确匹配。旧审查的已退役字段保留历史但不消费 |
-| `code_reviews[].implementation_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
-| `code_reviews[].review_started_at/completed_at` | ISO-8601，开始不得晚于结束 |
-| `code_reviews[].spec_minutes` | int ≥0（非枚举）；多段规格澄清累计值 |
 
-> 三个 rounds 字段是次数。`rounds` 为兼容总数；implementation 从 preflight 通过到首次 full dispatch，review 从首次 full dispatch 到最终通过（含等待与整改），两者由各自时间戳按需计算，不另存派生分钟。`spec_minutes` 累加可能分散在 preflight/revise-doc 的规格澄清时间，无法由一对边界时间戳表达，故继续持久化。时间戳由编排器在事件发生时写，禁止事后估算；下游消费者可忽略未知键。
+> rounds/code_rounds/spec_rounds 为审查次数与恢复依据；时间戳/分钟成本字段可选且不阻断，不补估、不强制对齐。固定 Git 基线、审查范围、报告链与 finding 闭合仍必需。
 >
 > 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验核固定 diff、targeted 继承链与问题闭合，并对缺必要字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
 

@@ -8,7 +8,7 @@
  *
  * 用法（在项目仓根目录执行）：
  *   node scripts/check-gate.js G4 vN     # 验 G4：manual-test 修复任务全 merged + 验收报告结论=通过
- *   node scripts/check-gate.js G5 vN     # 验 G5：feedback 已清空 + project.md 无"开发中"
+ *   node scripts/check-gate.js G5 vN     # 验 G5：本期开发/修订任务闭合 + 项目事实文件存在
  *
  * 退出码：有任一 FAIL → 1；全 pass → 0；用法错误 / 自身出错 → 2。
  *
@@ -19,6 +19,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const cp = require('child_process');
 
 const findings = []; // {level:'fail'|'pass'|'human', rule, loc, msg}
 const fail  = (rule, loc, msg) => findings.push({ level: 'fail',  rule, loc, msg });
@@ -47,19 +48,22 @@ function cleanVal(v) {
  */
 function parseTasks(statusPath) {
   if (!exists(statusPath)) return null; // 调用方负责区分"无文件"与"空 tasks"
-  const lines = readLines(statusPath);
+  return parseTasksSource(fs.readFileSync(statusPath, 'utf8'));
+}
+function parseTasksSource(source) {
+  const lines = source.split(/\r?\n/);
   const tasks = [];
   let inTasks = false, baseIndent = null, cur = null;
   const flush = () => { if (cur) { tasks.push(cur); cur = null; } };
 
   for (const raw of lines) {
-    const line = raw.replace(/\t/g, '  ');
-    if (/^tasks:\s*$/.test(line)) { inTasks = true; continue; }
+    const line = raw.replace(/\t/g, '  ').replace(/\s+#.*$/, '');
+    if (line.trim() === '' || /^\s*#/.test(line)) continue;
+    if (/^tasks:\s*\[\]\s*(?:#.*)?$/.test(line)) return [];
+    if (/^tasks:\s*(?:#.*)?$/.test(line)) { inTasks = true; continue; }
     if (!inTasks) continue;
     // 顶格非空行（无缩进且非列表项）→ tasks 段结束
     if (/^\S/.test(line) && !/^-/.test(line)) { flush(); break; }
-    if (line.trim() === '') continue;
-
     const item = line.match(/^(\s*)-\s+(.*)$/);
     if (item) {
       const indent = item[1].length;
@@ -77,7 +81,7 @@ function parseTasks(statusPath) {
     if (kv && cur) cur[kv[1]] = cleanVal(kv[2]);
   }
   flush();
-  return tasks;
+  return inTasks && tasks.every(t => t.id && ['可取', 'taken-by', 'done', 'merged'].includes(t.status)) ? tasks : null;
 }
 
 /* ---------------- G4 ---------------- */
@@ -117,48 +121,125 @@ function checkG4(iteration, root) {
 
 /* ---------------- G5 ---------------- */
 function checkG5(iteration, root) {
-  // 判据2：feedback.md 已清空（仅剩标题/空白，无数据行）
-  const fbPath = path.join(root, 'feedback.md');
-  if (!exists(fbPath)) {
-    pass('G5:feedback已清空', 'feedback.md 不存在（视为无残留）');
-  } else {
-    const lines = readLines(fbPath);
-    const residue = lines.filter(l => {
-      const t = l.trim();
-      if (t === '') return false;
-      if (/^#\s/.test(t)) return false;        // 标题行
-      if (/^-{3,}$/.test(t)) return false;     // 分隔线
-      return true;                              // 其余即残留数据
-    });
-    if (residue.length) fail('G5:feedback已清空', `${fbPath}`, `feedback.md 未清空，残留 ${residue.length} 行（首行：${residue[0].trim().slice(0, 40)}…）`);
-    else pass('G5:feedback已清空', 'feedback.md 已清空');
+  const statusPath = path.join(root, 'status.yml');
+  const tasks = parseTasks(statusPath);
+  if (tasks === null) fail('G5:任务闭合', statusPath, '缺 status.yml');
+  else {
+    const pending = tasks.filter(t => t.iteration === iteration
+      && (t.type === 'develop' || t.type === 'revise-doc' || ['sprint', 'integration', 'manual-test', 'revise-doc'].includes(t.source))
+      && t.status !== 'merged');
+    if (pending.length) fail('G5:任务闭合', statusPath, '本期必要任务未 merged：' + pending.map(t => t.id || '?').join(', '));
+    else pass('G5:任务闭合', '本期已登记开发/修订任务闭合');
   }
+  const projectPath = path.join(root, 'project.md');
+  if (!exists(projectPath)) fail('G5:项目事实', projectPath, '缺 project.md');
+  else pass('G5:项目事实', 'project.md 存在；准确性由用户确认，不检查其他迭代措辞');
+  human('G5:人签', '本期偏离、承诺缺口与退役账处置是否正确，project 是否符合事实；可选经验与归档不阻断');
+}
 
-  // 判据3：project.md 无"开发中"标注
-  const pjPath = path.join(root, 'project.md');
-  if (!exists(pjPath)) {
-    fail('G5:project无开发中', pjPath, 'project.md 不存在');
-  } else {
-    const lines = readLines(pjPath);
-    const hits = lines.map((l, n) => ({ l, n: n + 1 })).filter(x => x.l.includes('开发中'));
-    if (hits.length) fail('G5:project无开发中', `${pjPath}:${hits[0].n}`, `project.md 残留「开发中」标注 ${hits.length} 处（首处 L${hits[0].n}）`);
-    else pass('G5:project无开发中', 'project.md 无「开发中」标注');
+// 受控 status schema：迭代两空格、gates 四空格、Gate 六空格；Gate 值支持 inline/block。
+// 不从旧 Markdown 复选框读取状态；格式不支持时报错而非推断已签。
+function parseGates(source) {
+  const result = new Map();
+  let inIterations = false, version = null, inGates = false, gate = null;
+  for (const raw of source.split(/\r?\n/)) {
+    const line = raw.replace(/\s+#.*$/, '');
+    if (!line.trim() || /^\s*#/.test(line)) continue;
+    if (/^iterations:\s*$/.test(line)) { inIterations = true; continue; }
+    if (/^\S/.test(line)) { inIterations = false; continue; }
+    if (!inIterations) continue;
+    const v = line.match(/^  (v\d+(?:\.\d+)*):\s*$/);
+    if (v) { version = v[1]; inGates = false; gate = null; continue; }
+    if (/^    gates:\s*$/.test(line)) { inGates = true; continue; }
+    if (!version || !inGates) throw new Error('不支持的 iterations/gates 格式：' + line.trim());
+    const g = line.match(/^      (G[1-5]):\s*(.*)$/);
+    if (g) {
+      gate = version + ':' + g[1];
+      if (result.has(gate)) throw new Error('重复 Gate：' + gate);
+      result.set(gate, { signed: false, date: null });
+      if (!g[2]) continue;
+      const value = g[2].match(/^\{\s*signed:\s*(true|false),\s*date:\s*([^}]+?)\s*\}$/);
+      if (!value) throw new Error('Gate 须写 signed/date：' + gate);
+      result.set(gate, { signed: value[1] === 'true', date: cleanVal(value[2]) });
+      continue;
+    }
+    const property = line.match(/^        (signed|date):\s*(.+?)\s*$/);
+    if (!gate || !property) throw new Error('不支持的 Gate 格式：' + line.trim());
+    if (property[1] === 'signed') {
+      if (!['true', 'false'].includes(property[2])) throw new Error('signed 须为布尔');
+      result.get(gate).signed = property[2] === 'true';
+    } else result.get(gate).date = cleanVal(property[2]);
   }
+  return result;
+}
 
-  // 语义残量（留人签）
-  human('G5:人签', 'backlog `[偏离]` 是否全部处理得当（建 revise-doc / 记 decisions）、feedback 分流是否准确——语义判断，由签字人确认');
+function checkStaged(root) {
+  const git = args => cp.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  const currentSource = git(['show', ':status.yml']);
+  let previousSource = '';
+  try { previousSource = git(['show', 'HEAD:status.yml']); } catch { /* 新建 status */ }
+  const current = parseGates(currentSource), previous = parseGates(previousSource);
+  const signed = [...current].filter(([key, value]) => value.signed && !previous.get(key)?.signed);
+  const tasks = parseTasksSource(currentSource);
+  const oldTasks = new Map((parseTasksSource(previousSource) || []).map(t => [t.id, t]));
+  if (tasks === null) throw new Error('缺可解析 tasks 段（按 status 模板块式写入）');
+  const merged = tasks.filter(t => t.status === 'merged' && oldTasks.get(t.id)?.status !== 'merged' &&
+    (t.type === 'develop' || ['sprint', 'foundation', 'integration', 'manual-test', 'bug', 'optimization'].includes(t.source)));
+  // 只核本次状态事件的产物，不因其他迭代在制品阻断认领/登记。
+  const inputs = new Set(['status.yml']);
+  for (const [key] of signed) inputs.add('iterations/' + key.split(':')[0]);
+  if (signed.length) for (const file of ['project.md', 'foundation.md', 'design.md']) inputs.add(file);
+  for (const task of merged) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(task.id)) throw new Error('非法 task-id');
+    if (['bug', 'optimization'].includes(task.source)) {
+      inputs.add('b-queue/' + task.id + '.md');
+      inputs.add('b-reviews/' + task.id);
+    } else {
+      if (!/^v\d+(?:\.\d+)*$/.test(task.iteration || '')) throw new Error('A 类任务缺合法 iteration');
+      inputs.add('iterations/' + task.iteration);
+    }
+  }
+  // 不能用工作树中未暂存的通过产物替已暂存的另一版本背书。
+  const dirty = git(['diff', '--name-only', '--', ...inputs]);
+  if (dirty.trim()) throw new Error('状态提交的相关产物有未暂存变化，请一并暂存后复核：' + dirty.trim());
+  const run = (script, args) => {
+    const full = path.join(root, 'scripts', script);
+    if (!exists(full)) { human('存量脚本', script + ' 未安装，须按规范人工核对并补铺'); return; }
+    try { cp.execFileSync(process.execPath, [full, ...args], { cwd: root, stdio: 'inherit' }); }
+    catch { fail('状态提交检查', full, args.join(' ') + ' 未通过'); }
+  };
+  for (const [key, value] of signed) {
+    const [version, gate] = key.split(':');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value.date || '')) fail('Gate 日期', key, '已签必须有 YYYY-MM-DD 日期');
+    if (version === 'v0') {
+      if (gate !== 'G2') fail('V0 Gate', key, 'V0 仅 G2');
+    } else {
+      for (let n = 1; n < Number(gate.slice(1)); n++)
+        if (!current.get(version + ':G' + n)?.signed) fail('Gate 前置', key, '缺 G' + n + ' 签署');
+    }
+    const dir = path.join('iterations', version);
+    if (gate === 'G1') run('check-docs.js', ['--prd', path.join(dir, 'prd.md')]);
+    if (gate === 'G2' && version !== 'v0') run('check-docs.js', [path.join(dir, 'prd.md'), path.join(dir, 'trd.md')]);
+    if (gate === 'G3') run('check-sprint.js', [version]);
+    if (gate === 'G4') checkG4(version, root);
+    if (gate === 'G5') checkG5(version, root);
+    human('Gate 确认', key + ' 必须对应用户明确确认；字段和脚本不代替人签');
+  }
+  // status-only merged 仍核审查证据，不依赖顺手改 sprint/queue。
+  for (const task of merged) run('check-sprint.js', ['--review', task.id, root]);
 }
 
 /* ---------------- 主流程 ---------------- */
 function main() {
   const [gate, iteration, rootArg] = process.argv.slice(2);
   const root = rootArg || process.cwd();
-  if (!gate || !iteration || !/^G[45]$/.test(gate)) {
-    console.error('用法: node check-gate.js <G4|G5> <vN> [项目根]');
+  if (gate !== '--staged' && (!iteration || !/^G[45]$/.test(gate) || !/^v\d+(?:\.\d+)*$/.test(iteration))) {
+    console.error('用法: node check-gate.js <G4|G5> <vN> [项目根]；或在项目根运行 --staged');
     process.exit(2);
   }
   try {
-    if (gate === 'G4') checkG4(iteration, root);
+    if (gate === '--staged') checkStaged(root);
+    else if (gate === 'G4') checkG4(iteration, root);
     else checkG5(iteration, root);
   } catch (e) {
     console.error('check-gate 自身出错（非产物问题）:', e.message);
@@ -184,4 +265,5 @@ function main() {
   process.exit(fails.length ? 1 : 0);
 }
 
-main();
+if (require.main === module) main();
+module.exports = { parseGates, parseTasks, parseTasksSource };

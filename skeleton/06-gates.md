@@ -64,7 +64,7 @@ Gate 不是独立的实体——它是**一组 task 的状态聚合**。
 | 入口 task | `init-project`（首次）/ `draft-prd-vN`（vN > v1） | `dispatch-new` |
 | 流程 | 线性段（G1→G2→G3）+ 开发循环（G4 期）+ 收尾（G5）| 单任务流：dispatch-new → develop → merged → 部署 |
 | 部署时机 | G4 已签后（默认合并部署）| hotfix 立即 / normal 等下次合并部署 |
-| 总账文件 | `iterations/vN/gates.md`（Gate 签字状态）| `b-tasks.md`（项目内所有 B 类任务总账，恒定 2 会期）|
+| 总账文件 | `status.yml iterations.vN.gates`（Gate 签字状态）| `status.yml tasks[]`（项目级 B 类任务）|
 | 多迭代并行 | A 类一次只能一个迭代在 dispatch（vN+1 不早于 vN G4）| 不受 A 类约束，常态运行 |
 
 **B 类没有 Gate 的原因**：
@@ -110,8 +110,8 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 完成判据按**核对机制**分两类：
 
-- **【linter】判据**：结构完备（字段/段落在不在）+ 交叉一致（PRD↔TRD、queue↔sprint↔status）+ 状态/文件可查（任务全 merged、报告结论、feedback 清空）这类，由确定性检查器机械核——跑一万次结果一致、不受上下文失真影响。**G1–G5 全覆盖**：**G1/G2** 用 `scripts/check-docs.js`（PRD/TRD 结构 + 交叉）、**G3** 用 `scripts/check-sprint.js`（任务包字段/AC回链/三方一致）、**G4/G5** 用 `scripts/check-gate.js`（状态 + 文件薄检查）。
-- **语义判据**：如"用户故事完整""AC 是否用户真要的""用户是否真验收通过""feedback 分流对不对"，机器判不了，由**对应职能的人**在签字时确认。
+- **【linter】判据**：结构完备（字段/段落在不在）+ 交叉一致（PRD↔TRD、queue↔sprint↔status）+ 状态/文件可查（任务全 merged、报告结论）这类，由确定性检查器机械核——跑一万次结果一致、不受上下文失真影响。**G1–G5 全覆盖**：**G1/G2** 用 `scripts/check-docs.js`（PRD/TRD 结构 + 交叉）、**G3** 用 `scripts/check-sprint.js`（任务包字段/AC回链/三方一致）、**G4/G5** 用 `scripts/check-gate.js`（状态 + 文件薄检查）。
+- **语义判据**：如"用户故事完整""AC 是否用户真要的""用户是否真验收通过""欠账与偏离去向是否正确"，机器判不了，由**对应职能的人**在签字时确认。
 
 哪几条判据标【linter】由各 task 的 `specs-structural` 完成判据节标注。**统一模型**：所有 Gate = 跑对应检查器（退出码 0 = 结构判据通过）+ 脚本 `🧑` 段列出的语义残量由签字人确认——**不额外派隔离核对单元**（各 Gate 通用）。
 
@@ -127,7 +127,7 @@ A 类约束（来自 BRIEF.md）：**vN+1 的 dispatch 阶段不早于 vN 的 G4
 
 ### G4 / G5（薄检查器 check-gate.js）
 
-> `check-gate.js` 覆盖 G4/G5 完成判据里**确定性可查**的部分（G4：source=manual-test 修复任务全 merged + 验收报告结论=通过；G5：feedback.md 已清空 + project.md 无"开发中"）。语义核心（用户是否真验收通过、feedback 分流对不对、偏离处理对不对）机器判不了，显式留签字人确认。设计沉淀：`_meta/plans/2026-06-19-structural-review/sub3b-G345检查器-design.md`。
+> `check-gate.js` 覆盖 G4/G5 完成判据里**确定性可查**的部分（G4：source=manual-test 修复任务全 merged + 验收报告结论=通过；G5：本期必要开发/修订任务已 merged + project.md 存在）。语义核心（用户是否真验收通过、feedback 分流对不对、偏离处理对不对）机器判不了，显式留签字人确认。设计沉淀：`_meta/plans/2026-06-19-structural-review/sub3b-G345检查器-design.md`。
 
 1. 跑 `node scripts/check-gate.js G{N} vN`（在项目仓根目录）。退出码 0 = 该 task 全部【linter】判据通过；退出码 1 → 按报告逐条修产物、重跑到绿（签字 commit 的门卫会强制此事——红则拦 commit，跳过/伪造 pass 机制上做不到）。
 2. 脚本 `🧑 留签字人确认` 段列出的语义残量由签字人确认（G4：用户明确说验收通过、反馈问题已处理；G5：backlog `[偏离]` 处理得当、feedback 分流准确）。签字时复核，无需另派隔离单元。

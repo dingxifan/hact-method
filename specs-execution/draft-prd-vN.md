@@ -31,8 +31,8 @@
 | 观察 | 结论 |
 |---|---|
 | `iterations/` 空或不存在 | 首期 v1，直接开始 |
-| `iterations/v1/` 有但无 `gates.md` | v1 进行中未签 G1，从断点续 |
-| 最新 `iterations/vN/gates.md` 含 `G1: ✓` | 进 [v2+] 建新迭代目录，再读 项目根 `project.md` |
+| `iterations/v1/` 存在，status 中 G1 未签 | v1 进行中未签 G1，从断点续 |
+| 最新一期 status 中 G1.signed=true 且用户明确启动下一期 | 进 [v2+] 建新迭代目录，再读 项目根 `project.md` |
 
 **[v2+] 建本期目录**：version=vN（N≥2）时，若 `iterations/vN/` 不存在 → ⚖️ 播报「即将开始 v{N}，创建 iterations/v{N}/queue/done」并直接执行 `mkdir -p "iterations/v{N}/queue/done"`（可逆操作，不等确认；版本号判断有歧义时才停下问）。已存在则跳过（断点续场景）。首期 v1 由 init-project 预建。
 
@@ -154,11 +154,11 @@ AI 据清单与用户过一遍：真问题 → 改 PRD；属产品取舍 → 用
 
 🚫 等用户确认
 
-用户确认 → 在 `iterations/vN/gates.md` 写 `- [x] G1：PRD 已确认 — {YYYY-MM-DD}`。
+用户明确确认后，仅更新以下 status 签署字段。
 
 **更新项目根 `status.yml`**（机器侧状态契约；字段见 `../hact-method-lab/skeleton/07-status-contract.md`；不存在先从 `../hact-method-lab/templates/status.yml` 补建）：确保 `iterations.vN.gates` 块存在（v1 已由 init-project 建，v2+ 在此新增该期块、G1–G5 未签）→ 将 `iterations.vN.gates.G1` 改为 `{ signed: true, date: {YYYY-MM-DD} }`。
 
-`git add iterations/vN/prd.md iterations/vN/as-built-ledger.md iterations/vN/gates.md status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`（未走 V0 时不 add 不存在的账本）
+`git add iterations/vN/prd.md iterations/vN/as-built-ledger.md  status.yml && git commit -m "feat(prd): v{N} PRD 完成，G1 签署 [{项目名}]" && git push`（未走 V0 时不 add 不存在的账本）
 
 > PRD 定稿后发现遗漏关键功能 → 建 `revise-doc(target=prd)`，不直接改已签 PRD。
 
@@ -179,4 +179,4 @@ PRD 生成全程纯对话；**唯一隔离审查在 Step 7.5**——定稿后派
 - 不在固定步骤 compact；Codex 压缩/恢复后回读当前用户目标、原始契约与已确认范围再继续。
 - 确认时就在 `_meta/sessions/draft-prd-progress.md` 记已确认范围、关键取舍前提和 MVP 排除项；不等压缩时补记。
 
-**断点续做**：读 `iterations/vN/prd.md`（有内容 → 已过 Step 4）、`gates.md`（G1 签 → 完成）、`_meta/sessions/draft-prd-progress.md`（上次停在哪个功能），从未完成功能继续，不重做已确认内容。
+**断点续做**：读 `iterations/vN/prd.md`（有内容 → 已过 Step 4）、`status.yml`（G1 签 → 完成）、`_meta/sessions/draft-prd-progress.md`（上次停在哪个功能），从未完成功能继续，不重做已确认内容。

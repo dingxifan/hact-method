@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// B 类任务包硬边界：只能修既有行为，不能夹带共享契约修订。
+// B 类边界：none 不夹带契约；governed 需明确依据。静态信号不能证明兼容性。
 const fs = require('fs');
 const path = require('path');
 const childProcess = require('child_process');
@@ -15,7 +15,9 @@ function parseFrontmatter(source) {
     const top = line.match(/^([A-Za-z_][\w-]*):\s*(.*?)\s*(?:#.*)?$/);
     if (top) {
       key = top[1];
-      out[key] = top[2] === '[]' ? [] : top[2].replace(/^['"]|['"]$/g, '');
+      out[key] = /^\[.*\]$/.test(top[2])
+        ? top[2].slice(1, -1).split(',').map(item => item.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean)
+        : top[2].replace(/^['"]|['"]$/g, '');
       continue;
     }
     const item = line.match(/^\s+-\s+(.+?)\s*(?:#.*)?$/);
@@ -31,11 +33,17 @@ function contractPathHits(files) {
   const patterns = [
     /(^|\/)iterations\/v[^/]+\/(prd|trd|gates)\.md$/i,
     // 存量规则文件在项目迁移完成前仍受保护；不再生成或加载这些文件。
-    /(^|\/)(standards-(shared|frontend|backend)|project|foundation|design)\.md$/i,
+    /(^|\/)(standards-(shared|frontend|backend)|project|foundation|design|status)\.md$/i,
     /(^|\/)(migrations?|schema|openapi|swagger|contracts?|shared\/types?)(\/|\.|$)/i,
     /\.(proto|avsc)$/i,
+    /(^|\/)status\.yml$/i,
   ];
   return files.filter(file => patterns.some(pattern => pattern.test(String(file).replace(/\\/g, '/'))));
+}
+
+function prohibitedPathHits(files) {
+  return contractPathHits(files).filter(file => /(^|\/)status\.yml$/i.test(normalizeDeclaredFile(file)) ||
+    /(^|\/)(?:iterations\/v[^/]+\/(?:prd|trd|gates)\.md|(?:standards-(?:shared|frontend|backend)|project|foundation|design|status)\.md|migrations?(?:\/|\.|$))/i.test(normalizeDeclaredFile(file)));
 }
 
 function normalizeDeclaredFile(file) {
@@ -118,12 +126,13 @@ function validateDiff(file, base, head, root = process.cwd()) {
   const declared = new Set((Array.isArray(fm && fm.files) ? fm.files : []).map(normalizeDeclaredFile));
   const undeclared = changedFiles.filter(changed => !declared.has(changed.replace(/\\/g, '/')));
   if (undeclared.length) errors.push(`固定 diff 含未声明 files：${undeclared.join('、')}`);
-  const pathHits = contractPathHits(changedFiles);
+  const governed = fm && fm['contract-impact'] === 'governed';
+  const pathHits = governed ? prohibitedPathHits(changedFiles) : contractPathHits(changedFiles);
   if (pathHits.length) errors.push(`固定 diff 命中共享契约/迁移路径：${pathHits.join('、')}`);
   const signals = contractDiffSignals(diff);
-  if (signals.length) errors.push(`固定 diff 出现共享契约变更信号：${signals.join('；')}`);
+  if (governed ? signals.some(signal => signal.startsWith('数据库 DDL:')) : signals.length) errors.push(`固定 diff 出现共享契约变更信号：${signals.join('；')}`);
   const memberSignals = publicContractSignals(root, base, head, changedFiles);
-  if (memberSignals.length) errors.push(`固定 diff 修改公开类型成员：${memberSignals.join('；')}`);
+  if (!governed && memberSignals.length) errors.push(`固定 diff 修改公开类型成员：${memberSignals.join('；')}`);
   return errors;
 }
 
@@ -134,11 +143,34 @@ function validate(file) {
   if (!fm) return ['缺 YAML frontmatter'];
   if (!['bug', 'optimization'].includes(String(fm.source || '').toLowerCase()))
     errors.push(`source=${fm.source || '<缺失>'}，B 类只能 bug/optimization`);
-  if (String(fm['contract-impact'] || '').toLowerCase() !== 'none')
-    errors.push('contract-impact 必须为 none；若为 governed 或需修订契约，应退出 B 类');
+  if ('package-schema' in fm && String(fm['package-schema']) !== '2') errors.push('未知 package-schema，不能当作存量包放行');
+  const impact = String(fm['contract-impact'] || '');
+  if (!['none', 'governed'].includes(impact)) errors.push('contract-impact 必须为 none 或 governed');
+  const nonempty = value => typeof value === 'string' && value.trim() && !/<待填>|TODO/.test(value);
+  if (String(fm['package-schema']) === '2' || impact === 'governed') {
+    if (!['standard', 'sensitive'].includes(fm.risk)) errors.push('risk 必须为 standard 或 sensitive');
+    for (const key of ['task-id', 'title', 'description', 'context', 'risk'])
+      if (!nonempty(fm[key])) errors.push(`缺有效 ${key}`);
+    for (const key of ['files', 'reference'])
+      if (!Array.isArray(fm[key]) || !fm[key].length || !fm[key].every(nonempty)) errors.push(`缺有效 ${key} 列表`);
+    for (const key of ['depends_on', 'do-not'])
+      if (!Array.isArray(fm[key])) errors.push(`缺 ${key} 列表；无则 []`);
+    const ac = source.match(/^acceptance-criteria:\s*\n((?:[ \t]+.*\n|\s*\n)*)/m);
+    const criteria = ac ? ac[1].split(/^[ \t]+-[ \t]+\|[-+]?[ \t]*$/m).slice(1) : [];
+    if (!criteria.length || criteria.some(item => ['intent', 'oracle'].some(key => {
+      const match = item.match(new RegExp('^[ \\t]+' + key + ':[ \\t]*(.+)$', 'm'));
+      return !match || !nonempty(match[1]);
+    }))) errors.push('每条 acceptance-criteria 都需可验证的 intent/oracle');
+  }
+  if (impact === 'governed') {
+    if (String(fm['package-schema']) !== '2') errors.push('governed 必须使用 package-schema: 2 的短包');
+    if (!Array.isArray(fm['asset-writes']) || !fm['asset-writes'].length || !fm['asset-writes'].every(nonempty))
+      errors.push('governed 必须列出受影响共享资产，不能填 []');
+    // reference/context 承接已确认意图、兼容边界与验证入口；真实性由 preflight 与独立审查核对。
+  }
   if (!('asset-writes' in fm)) errors.push('缺 asset-writes；无共享写集也必须填 []');
   const files = Array.isArray(fm.files) ? fm.files : [];
-  const hits = contractPathHits(files);
+  const hits = impact === 'governed' ? prohibitedPathHits(files) : contractPathHits(files);
   if (hits.length) errors.push(`files 命中共享契约/迁移路径：${hits.join('、')}`);
   return errors;
 }

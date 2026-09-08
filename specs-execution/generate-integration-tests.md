@@ -26,7 +26,7 @@
 
 ## 会话启动
 
-**前置检查**：读 `iterations/vN/sprint.md`，确认所有 `source=sprint` 的 develop 任务状态全部为 [merged]。
+**前置检查**：读 `status.yml tasks[]`，确认本期所有 `source=sprint` 的 develop 任务状态全部为 merged。
 
 有未合并任务 → 阻断：
 ```
@@ -222,7 +222,7 @@ node ../hact-method-lab/templates/scripts/check-integration-evidence.js integrat
 **断点续做**：
 1. 读 `_meta/sessions/generate-integration-tests-progress.md`：确认已跑场景、修复/补缝 task-id 与当前档位
 2. 读本期 `integration-tests/result-{日期}.md`：核基线、组合问题处置与已有测试证据；用当前 diff 判断失效范围，缺组合记录时补核，不把旧全绿当完成
-3. 读 `queue/`：找 source=integration 任务包，确认修复状态
+3. 读 status.yml：核本期 source=integration 修复状态，必要时回读任务包
 4. 从首个缺证或受影响项继续，等修复 [merged] 后定向复测；旧接缝报告可作证据引用，已核且未失效的内容不重做
 
 `_meta/sessions/generate-integration-tests-progress.md` 结构：

@@ -35,6 +35,12 @@ write('status.yml', status('merged'));
 assert.strictEqual(ready('demo-v1-002').status, 0, '外部依赖 merged 应可认领');
 write('status.yml', status('taken-by'));
 assert.strictEqual(ready('demo-v1-002').status, 1, '外部依赖未 merged 必须阻断');
+const stalePackagePath = path.join(root, 'iterations/v1/queue/demo-v1-001.md');
+const stalePackage = fs.readFileSync(stalePackagePath, 'utf8');
+fs.writeFileSync(stalePackagePath, stalePackage.replace('source: sprint', 'source: sprint\nstatus: merged'));
+assert.strictEqual(ready('demo-v1-002').status, 1, '旧任务包伪 merged 不覆盖 status 中未合并依赖');
+fs.writeFileSync(stalePackagePath, stalePackage);
+
 write('status.yml', status('可取'));
 assert.strictEqual(ready('demo-v1-001,demo-v1-002').status, 0, '同批依赖拓扑闭合应通过');
 assert.strictEqual(ready('demo-v1-002,demo-v1-001').status, 1, '同批依赖逆序必须阻断');

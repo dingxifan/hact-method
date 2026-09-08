@@ -13,7 +13,7 @@
 
 契约、授权范围与测试证据每次首次审查必核；其余按实际改动和受影响调用链选取，不另生成维度清单或记录未命中项。已有证据先核其对应版本、验证内容与实际结果；只有改动、失败或具体疑点影响有效性时才补跑。复审只核受影响范围。
 
-- **contract / scope-and-secrets（核心）**：intent/oracle 是否实现；是否违反 do-not、project.md 技术选择或 Foundation 不变量、越出授权 files/asset-writes、引入秘密。普通 example 与 oracle 冲突转 `revise-doc`；仅 golden=true 要求字面测试。B 类核实际 contract-impact=none；共享 schema/API/type/enum/event/state 变化须转契约修订，不能按自报放行。
+- **contract / scope-and-secrets（核心）**：intent/oracle 是否实现；是否违反 do-not、project.md 技术选择或 Foundation 不变量、越出授权 files/asset-writes、引入秘密。普通 example 与 oracle 冲突转 `revise-doc`；仅 golden=true 要求字面测试。B 类 none 不得夹带共享契约；governed 须独立核原始意图、兼容边界、调用方与回归证据。字段齐全不能证明兼容；破坏兼容、迁移或与已签规格冲突须先处理上游决策。
 - **test-evidence（核心）**：逐项对照独立契约，核项目字段是否漏定义、错设可选，约束和接线是否正确；有限清单可用参数化测试完整覆盖，不强制逐项写报告。不能从被测 schema 自抄期望证明其正确。库通用算法用代表性接线正反例即可；共享 schema 已验证且未改变时，消费者只验调用/错误处理，不重复其全套字段测试。自定义转换、跨字段约束和已知缺陷定向验证。外部输入与持久化 JSON 不可因编译时类型而免运行时校验；错误信封须通过真实边界断言，service 单测不能代替转换层接线证据。
 - **enforcement**：对改动的规则及其声明范围核合法正控、常见违规反控和真实接线；已有有效反例不重复发明。适用信任前提，不穷尽语法绕过变体。
 - **design-fidelity**：核改动界面的视觉规格和取消/失败/空态等交互；不逐项重审未受影响页面。

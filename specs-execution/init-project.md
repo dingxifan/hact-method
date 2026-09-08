@@ -65,7 +65,7 @@ echo "" > "../{name}/b-queue/.gitkeep"
 
 **复制自 `templates\{产物名}.md`**，把文件内 `{项目名}` 替换为实际项目名，写完确认非空（templates/ 是格式单一真相源，structural §主要产物 只列指针）：
 
-- 项目根 `project.md` / 项目根 `reusables.md` / 项目根 `b-tasks.md` / 项目根 `decisions.md` / 项目根 `backlog.md` / 项目根 `feedback.md`
+- 项目根 `project.md` / 项目根 `reusables.md` / 项目根 `decisions.md` / 项目根 `backlog.md` / 项目根 `feedback.md`
 - 项目根 `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
 - 项目根 `foundation.md`：复制自 `templates\foundation.md`（**地基蓝图**空模板——领域地图 / 关注点登记槽位留空，本 spec **Step 5 共识讨论**时填；技术内生清单与安全项「应有档=构造级」已预置。下游 V0 走骨架据此建骨架）
 - `status.yml`：复制自 `templates\status.yml`（机器侧状态契约，`check-sprint.js` / `check-gate.js` 的取数源，项目级单文件，建一次永远存在；字段见 `../hact-method-lab/skeleton/07-status-contract.md`）
@@ -76,7 +76,7 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - `scripts/check-as-built-ledger.js`：内容复制自 `templates\scripts\check-as-built-ledger.js`（走过 V0 后的 PRD 前置证据账本 linter；无 V0 自动 not-required）
 - `scripts/check-gate.js`：内容复制自 `templates\scripts\check-gate.js`（Gate 完成判据薄检查器，纯 Node 无外部依赖；`manual-test` 签 G4 前 / `wrap-up-iteration` 签 G5 前核对状态与文件可查判据时调用）
 - `scripts/check-sprint.js`：内容复制自 `templates\scripts\check-sprint.js`（G3 任务包 linter，纯 Node 无外部依赖；`plan-sprint` Step 4.7 签 G3 前核对任务包字段完备 / AC 回链 / queue↔sprint↔status 三方一致时调用）
-- `scripts/check-b-task.js`：内容复制自 `templates\scripts\check-b-task.js`（B 类入口硬边界；拦 `contract-impact` 非 none 与已知共享契约/迁移路径）
+- `scripts/check-b-task.js`：内容复制自 `templates\scripts\check-b-task.js`（B 类入口硬边界；校验 none/governed 的依据与范围，保留规格/迁移边界）
 - `scripts/check-hook-state.js`：内容复制自 `templates\scripts\check-hook-state.js`（只读报告实际生效 hook、tracked 门卫与方法论模板三方状态；不安装、不覆盖）
 - `scripts/check-codex-project.js`：内容复制自 `templates\scripts\check-codex-project.js`（只读诊断 Codex 入口与角色配置形状；只报告缺口，不安装、不覆盖）
 - `scripts/check-integration-evidence.js`：内容复制自 `templates\scripts\check-integration-evidence.js`（核联调结果中已执行场景的共同证据路径真实存在、未运行场景有明确原因与移交）
@@ -180,41 +180,7 @@ curl -X PUT "https://gitee.com/api/v5/repos/{owner}/{repo}/collaborators/{userna
 ✅ 成员添加完成：{zhangsan ✅ / lisi ✅ / ...}
 ```
 
-**4.5 创建并登记成员个人积累仓（hact-notes）：**
-
-个人 notes 仓**跟人、跨项目**——每人一个，建在**团队 Gitee 命名空间**下，不随项目重复创建。
-
-先确认命名空间：从 `_meta\hact-config.md`「全局配置」读取 `notes-org`（当前值 `dingxifan`）；缺失则向用户询问一次并补写入配置。
-
-> ⚠️ **`dingxifan` 是 Gitee 企业版（enterprise）不是组织（org）**：建仓必须用 `POST /enterprises/{notes-org}/repos`，用 `/orgs/...` 会 404。
-
-对每个成员（含项目发起人自己）：
-
-1. 查 hact-config.md「成员个人积累仓登记表」是否已有该成员
-   - 已登记 → 跳过（已有 notes 仓）
-   - 未登记 → 继续
-2. 未登记成员，用 `node scripts/check-conn.js get gitee.token` 取 token（需对企业 `{notes-org}` 有建仓权限），用 API 在企业下创建私有仓并只加本人为 push 协作者：
-
-   ```bash
-   # 在企业下创建私有仓（auto_init 便于后续直接写 notes.md）
-   # 注意：企业版用 /enterprises/ 接口（不是 /orgs/），且私有用 public=0（不认 private=true）
-   curl -X POST "https://gitee.com/api/v5/enterprises/{notes-org}/repos" \
-     -d "access_token={token}&name=hact-notes-{username}&path=hact-notes-{username}&public=0&auto_init=true"
-
-   # 只加本人为 push 协作者：其他开发者不加 → 无读权限；管理者作为企业 admin 天然只读
-   curl -X PUT "https://gitee.com/api/v5/repos/{notes-org}/hact-notes-{username}/collaborators/{username}" \
-     -d "access_token={token}&permission=push"
-   ```
-
-   建好后用 `templates/hact-notes/notes.md` 初始化该仓 `notes.md`（clone → 写入 → push），并提示成员 clone 到本地 `../hact-notes-{username}\`
-3. 把成员写入 hact-config.md「成员个人积累仓登记表」（仓地址 `gitee.com/{notes-org}/hact-notes-{username}`）+「收割游标」表（游标初始"尚未收割"）
-
-> 权限模型：仓私有；只本人是 push 协作者 → 其他开发者无权限；管理者作为企业 admin 对所有 notes 仓天然只读 → 正好用于 `harvest-notes` 收割。已存在的成员直接跳过创建，只确保已登记。
-> 完整操作手册（含中途加人、初始化、验证、排错、成员离开）见 `guide/05-个人积累仓管理.md`。
-
-```
-✅ 成员 notes 仓登记完成：{新登记 X 名 / 已存在 Y 名}
-```
+个人积累工具由成员自行选择，不在立项时建仓或登记，不构成立项完成判据。
 
 ---
 

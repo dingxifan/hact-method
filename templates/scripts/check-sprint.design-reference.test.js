@@ -59,6 +59,9 @@ write('status.yml', 'tasks:\n  - id: demo-v2-001\n    source: sprint\n    iterat
 write('design.md', '## 〇、视觉冒烟锚点\n## 八、页面规格\n### 退款审批页\n');
 write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页']));
 assert.strictEqual(run().status, 0, '新任务无 Standards 文件或引用字段仍能通过完整 G3 检查');
+write('iterations/v2/sprint.md', '| task-id | title | layers | 依赖 | 交付 |\n| demo-v2-001 | 退款审批页 | frontend | — | 可并行 |\n');
+assert.strictEqual(run().status, 0, '任务包无状态、sprint 五列规划仍通过 G3');
+
 write('iterations/v2/ux-flows.md', '## 场景列表\n### 用户任务：U1 完成审批\n- S1：确认结果\n');
 assert.match(run().stdout, /reference 用户任务/, '用户任务原文存在时前端必须承接 U-id');
 write('iterations/v2/queue/demo-v2-001.md', task('sliced-v1', ['design.md § 全局视觉基线', 'design.md § 退款审批页', 'ux-flows.md § U1 S1']));
@@ -106,7 +109,7 @@ assert.strictEqual(run().status, 0, '历史包不因部分新审计字段倒填�
 assert.match(run().stdout, /存量任务包仅核历史审查条目存在/, '兼容放行须明确审计边界');
 assert.doesNotMatch(run().stdout, /均有合法 rounds、墙钟/, '旧包不得被宣称已通过新版完整审计');
 write('iterations/v2/queue/demo-v2-001.md', task('legacy-full', ['design.md 全文（存量）']));
-assert.match(run().stdout, /墙钟\/report 字段只写了一部分/, 'schema 2 仍校验审计完整性');
+assert.match(run().stdout, /schema 2 缺必需 report 审计字段/, 'schema 2 仍校验审计完整性');
 write('iterations/v2/queue/demo-v2-001.md', legacyTask);
 write('status.yml', mergedStatus);
 assert.match(run().stdout, /code_reviews\[\] 无条目/, '旧包仍须保留历史审查条目');
