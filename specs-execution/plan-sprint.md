@@ -202,7 +202,7 @@
 |--------|-------------|------------|---------|
 | 会话启动 | 只读调查单元并行读 6 份输入文件（纯读取+带路径摘要） | — | 读取失败则主线单独读 |
 | Step 3 独立模块 | 足够大的不重叠任务包子集 | 契约位置、任务边界和写入路径；返回文件与待决项 | 失败则主线接管 |
-| Step 3.5 独立审查 | 默认一个隔离审查单元联合审全部任务包，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 只告知 vN；超过无 compact 预算才按业务模块切，随后加一次 frontmatter/AC/共享资产全局总核 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
+| Step 3.5 独立审查 | 默认冷上下文联合审任务包，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 超出单次有效审查范围时按业务模块切，随后核 AC/共享资产全局关系 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
 **共享写入**：子代理只写获准的不同任务包文件；sprint/status 和共享契约由主线串行维护，不在消息中返回整份 YAML 让主线重抄。
 
