@@ -80,6 +80,13 @@ findings: []
 write('iterations/v1/code-reviews/demo-v1-001/preflight.md', 'accepted audit\n');
 assert.strictEqual(check(report, 'demo-v1-001').status, 0, '前序 accepted 源码、审计目录与本轮 progress 应在白名单');
 const validReport = fs.readFileSync(path.join(root, report), 'utf8');
+// 每次 check 都启动新进程；模拟摘要压缩后的恢复，不模拟模型内部 compaction。
+for (let restart = 0; restart < 3; restart += 1) {
+  write(progress, 'context-state:\n  task-set: [demo-v1-001, demo-v1-002]\n  phase: implementation\n  next-action: resume second task\n');
+  assert.strictEqual(check(report, 'demo-v1-001,demo-v1-002').status, 0, '新进程按原始 Git/report 恢复 accepted 前缀');
+  assert.strictEqual(fs.readFileSync(path.join(root, report),'utf8'),validReport,'恢复不重写已完成审查');
+}
+
 fs.writeFileSync(path.join(root, report), validReport.replace('conclusion: pass', 'conclusion: revise'));
 assert.strictEqual(check(report, 'demo-v1-001').status, 1, '未通过的 final report 不得成为 accepted 白名单');
 fs.writeFileSync(path.join(root, report), validReport);

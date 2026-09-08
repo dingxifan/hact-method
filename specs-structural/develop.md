@@ -8,6 +8,10 @@
 
 ---
 
+## 执行责任
+
+主线可直接实现并连续推进已授权任务集；仅独立且有收益的工作委派。首次审查使用不继承实现历史的 Codex 子代理；压缩/恢复从原始契约、实际 Git、既有报告和 progress 重建状态，不自动重开任务或清零轮次。
+
 ## 前置条件
 
 - **触发**：任务包已入 queue，状态为 [可取]
@@ -77,7 +81,7 @@ api-contract:
 | sprint.md 状态 + PR 列更新 | `iterations/vN/sprint.md` | 状态列 → `[merged]`，PR 列 → `#N` |
 | preflight / review rounds | A 类 `iterations/vN/code-reviews/{task-id}/`；B 类 `b-reviews/{task-id}/` | `preflight.md` + `round-NN.md`；含固定 Git tree、finding 及处置、full/targeted scope 与逐轮时间戳 |
 | code_reviews[] 审计索引 | 项目根 `status.yml` | 每 task 一条（结论、轮次/墙钟、report 目录与证据版本），由 develop 末端写入；不复制逐条问题 |
-| 执行进度 / 上下文重置记录 | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：任务集 / 当前阶段 / 下一动作 / 待接收单元 / 证据引用 / 已用尝试 / 已完成文件 / 阻塞点 / 关键决策；阶段切换或中断时更新，旧记录缺新增字段从权威证据重建；wave 整组恢复仍以既有 wave-progress/v1 为准 |
+| 执行进度 / 上下文重置记录 | `_meta/sessions/develop-{task-id}-progress.md` | context-state YAML：已授权任务集与当前交付批次 / 当前阶段 / 下一动作 / 待接收单元 / 证据引用 / 已用尝试 / 已完成文件 / 阻塞点 / 关键决策；阶段切换或中断时更新，旧记录缺新增字段从权威证据重建；wave 整组恢复仍以既有 wave-progress/v1 为准 |
 
 ---
 
@@ -91,9 +95,9 @@ api-contract:
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] 已发现的组合缺口及证据已在 PR 遗留问题或补缝任务中移交；不打回独立合规的原包
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
-- [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 档审查的先重派高能力审查档）
+- [ ] **安全敏感改动**（权限/认证/数据隔离等四类）若执行人无 `architecture` 授权，已经有该授权者裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 范围审查的先补 sensitive 边界独审）
 - [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录轮次、时间、report 目录与证据版本；finding 路由在报告中可追溯）
-- [ ] 本轮任务集全部收尾完成：状态与按 source 必需的追踪/反馈记录已提交，执行/审查/测试结果均已接收；不存在未完成的本轮必要动作。单元 `done` 或单个任务独审通过不等于 develop 完成
+- [ ] 已授权任务集全部收尾完成：状态与按 source 必需的追踪/反馈记录已提交，执行/审查/测试结果均已接收；不存在未完成的本轮必要动作。单元 `done` 或单个任务独审通过不等于 develop 完成
 
 ---
 

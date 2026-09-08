@@ -1,10 +1,10 @@
 # exec: develop
 
 > 运行时加载本文时，当前任务是从 queue 拾取一个**任务集**，逐任务实现 + 独立审查，推一个 PR **并合并到 master**。
-> **执行模型**：主线负责编排与接续（定标 / 新鲜度核对 / 设计门 / finding 路由 / 失败恢复 / 末端全量 / 提交 + 合并）；每个任务的「读懂→计划→写→自绿」由隔离执行单元跑。隔离审查单元自读权威原文、按证据分类 finding；只有当前可达的行为/机制缺陷进入代码回炉。
+> **执行模型**：主线负责整个已授权任务集，可直接理解、实现、自测与整改；仅将独立且有收益的工作委派。每个开发任务保留独立审查，主线按固定快照与原始契约处理 finding、集成、提交和收尾。
 > **无独立 pr-review 环节**（决策#24）：代码质量由 per-task 独立证据审查 + 全量绿把关，develop 自审自合并。仅安全敏感改动保留一道人工裁决。
 
-**上下文密度**：中。主线只持编排状态 + 末端全量；per-task 上下文载入下沉到隔离执行单元，故**批次可放大**。本 spec 处理**一次会话**，任务集 size ≥ 1：`交付=可并行` 任务共一个 PR；`交付=串行` 任务各自一个 PR，会话内可串行多个（每任务完整跑「主循环+末端」后切回 master，再启下一个）。
+**长程执行**：授权范围可跨多次上下文压缩；当前只展开一个可验证单元的必要细节。任务、Git、progress 和审查报告持久保存工作状态，聊天摘要只帮助定位。批次/PR 粒度按依赖和交付需求选择，不以压缩次数决定停止。
 
 ---
 
@@ -14,11 +14,11 @@
 
 ## 主线接续协议
 
-本轮以已确定的任务集为执行范围；仅指定 layer 不等于授权清空该层队列。范围和必需确认已有明确结论且适用条件未变时沿用，不重复询问；范围、设计或风险变化时重新核对应边界。
+本轮以用户已授权的任务集为执行范围。明确要求完成已确认 sprint 时，可覆盖该 sprint 在授权时的任务集合并按依赖持续推进；仅指定 layer 不等于授权清空队列。新增任务、改契约或部署仍须对应授权。授权范围与当前批次分别记录；只认领当前可执行批次，未就绪任务保留原状态。范围和必需确认已有明确结论且适用条件未变时沿用，不重复询问；范围、设计或风险变化时重新核对应边界。
 
 | 收到的结果 | 主线下一动作 |
 |---|---|
-| 实现单元返回 `done` | 核实际改动、测试结果与未满足 AC，按阶段 B 固定快照并立即派审；`done` 不是 develop 完成 |
+| 主线实现完成或单元返回 `done` | 核实际改动、测试结果与未满足 AC，按阶段 B 固定快照并立即派审；`done` 不是 develop 完成 |
 | 审查返回 finding | 按 finding action 分流；授权内代码整改立即重派，随后 targeted 复审；不能用进度汇报替代动作 |
 | 当前任务审查通过 | 记录证据，按 individual / batch / wave 既有顺序进入末端或下一任务 |
 | 测试或隔离单元仍在运行 | 接收结果前保持等待；可做不冲突的已授权编排工作，不重复派发同一写入单元 |
@@ -42,7 +42,7 @@
 用户点名 `b-queue/{task-id}.md` 或 task-id 形如 `*-b-*` 时，先读该任务包，确定 `source=bug/optimization` 与 layer；B 类不要求存在活跃 iteration。其余进料读 `iterations/vN/sprint.md` 的 layers 列与状态列：
 - 用户开场已指明层 → 按用户指定，播报即可
 - 仅一个 layer 有 `[可取]` 任务 → 直接定层，播报「当前执行层：{layer}（唯一有可取任务的层）」后继续，不等待
-- 两层都有 `[可取]` 任务且用户未指明 → 🚫 问「当前执行层：frontend / backend？」等确认
+- 两层都有 `[可取]` 任务且用户已授权完整 sprint → 按依赖自动选就绪任务；只有范围尚未确定时 → 🚫 问「当前执行层：frontend / backend？」等确认
 
 **`source=foundation` 的执行层由 foundation-design 的真实切片决定，跳过本步。**
 
@@ -65,7 +65,7 @@
   status.yml：`iterations.v0` 块已由 draft-foundation 建（仅 G2）；此处只往 `tasks` **追加** `{ id: foundation, source: foundation, status: taken-by, branch: foundation-v0 }`（不重建 v0 块）。
 - **跳过前端设计门**：视觉地基获准进入 V0 时只建占位框架；未获准时标杆页面保持最小无装修形态，不预装完整主题。两者都不实现具体画面 → 无 design.md 覆盖可对、无前端设计人工门。
 - **三处替换**（其余主循环 / 末端不变）：
-  ① 阶段 A 隔离执行单元 **自读 `foundation-design.md` 对应件 + `foundation.md` 对应 V0 行 + 相关项目约束与测试入口**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
+  ① 阶段 A 执行者 **自读 `foundation-design.md` 对应件 + `foundation.md` 对应 V0 行 + 相关项目约束与测试入口**（替代任务包）；自绿照常（build/type/lint/test + 标杆切片端到端跑通）。
   ② 阶段 B 独审读 **`../hact-method-lab/templates/review-briefs/foundation-review.md`**（替代 develop-review：验强制边实际档≥应有档 + 命门 + 标杆质量）。
   ③ 末端状态更新走下方「`source=foundation`」分支（无 sprint.md；登记标杆切片）。
 > 安全敏感预检（末端·合并前）：按实际 diff 判断。若 V0 含数据隔离、鉴权、迁移等安全敏感改动，触发 architecture 裁决门；不因 `source=foundation` 名称本身自动触发。
@@ -80,7 +80,7 @@
 
 **拾取任务（source=sprint）：形成任务集与当轮执行形态**
 
-读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按 `交付` 字段分两路。候选任务只有在以下条件满足时才算可拾取：其 `depends_on` 要么已 `[merged]`，要么同时进入本轮任务集且排在它之前；跨 layer 或未纳入本轮的依赖必须先合并。**两路共用估量标准**：以「主线编排 + 末端全量检测不触发 compact」为截止线，按各任务 `files` 估改动面取前缀子集；超出估量线的任务留 `[可取]` 下轮拾取。
+读 `iterations/vN/sprint.md`，找当前 layer 且状态为 `[可取]` 的任务，按 `交付` 字段分两路。候选任务只有在以下条件满足时才算可拾取：其 `depends_on` 要么已 `[merged]`，要么同时进入当前交付批次且排在它之前；跨 layer 或未纳入本轮的依赖必须先合并。**两路共用估量标准**：按依赖闭合、独立验证与交付时机取当前单元/批次。余下已授权任务继续留在 progress 的任务集内，当前批次收尾后自动拾取；压缩本身不截断授权范围。跨 layer 依赖先完成并合并，现有 wave 仍只含同层标准风险任务。
 
 - **交付=串行**：取本 layer 全部 `[可取]` 串行任务，按 task-id 升序，估量后取头部前缀。每个串行任务各自一个 PR，会话内串行完成（每任务跑完「主循环+末端」后切回 master，再启下一个）。
 - **交付=可并行**：本 layer 无 `[可取]` 串行任务时，取本 layer 全部就绪的 `[可取]` 可并行任务，按依赖拓扑序，估量后取依赖闭合的前缀子集。全部可并行任务共一个 PR。
@@ -106,7 +106,7 @@ node ../hact-method-lab/templates/scripts/check-sprint.js --ready {task-id-1},{t
 
 估量完成后直接通知用户并进入认领（无需等确认）：
 ```
-本轮任务集：[task-id...]（{individual：串行任务各自 PR / 可并行共一 PR；single-operator-wave：一条分支、一个 PR}，估约 {N} 处改动）{若截断：，剩余 [id...] 留下轮}
+已授权任务集：[task-id...]；当前交付批次：[task-id...]（{individual：串行任务各自 PR / 可并行共一 PR；single-operator-wave：一条分支、一个 PR}，估约 {N} 处改动）{若分批：，剩余 [id...] 在本次授权内自动接续}
 ```
 
 **认领**：集合内所有任务包状态改为 `[taken-by: {user}]`，同步在项目根 `status.yml` 把每个 task 的 `status` 改 `taken-by`、`assigned_to` 填 `{user}`（机器侧契约，见 `../hact-method-lab/skeleton/07-status-contract.md`）。
@@ -141,7 +141,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 任务进入主循环时逐个执行，不在批次开头一次性为全部任务预写。这样同分支批次中，前一任务已通过审查的 tree 会成为下一任务的 `base_tree`，两棵 tree 的 diff 只含当前任务。只查依赖合并后可能变化的面：
 
 - 本批首任务先运行 `node ../hact-method-lab/templates/scripts/check-sprint.js --worktree-from-reports none . --progress {本轮task-id-list}`；
-- 后续任务用此前每个已通过任务的最终 round report（逗号分隔）替换 `none`，保留 `--progress` 本轮任务集。检查器只允许这些报告声明的 accepted changed files、各自 review 目录中的审计产物，以及显式任务的未暂存 `_meta/sessions/develop-{task-id}-progress.md`；其他 dirty path 或任一 stash 均阻断。progress 不得暂存进实现 tree，最终作为收尾记录单独提交；已忽略的本地 progress 按项目现有策略保留，不强制入库。
+- 后续任务用此前每个已通过任务的最终 round report（逗号分隔）替换 `none`，保留 `--progress` 当前交付批次。检查器只允许这些报告声明的 accepted changed files、各自 review 目录中的审计产物，以及显式任务的未暂存 `_meta/sessions/develop-{task-id}-progress.md`；其他 dirty path 或任一 stash 均阻断。progress 不得暂存进实现 tree，最终作为收尾记录单独提交；已忽略的本地 progress 按项目现有策略保留，不强制入库。
 
 - `files` 是否仍是当前落点，`reference` 的符号/章节/行号锚是否仍存在；
 - 上游是否已完成本包原计划新建的机制，或改变了接口、状态、阈值；
@@ -168,24 +168,24 @@ preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失�
 
 ## 主循环：逐任务「执行 → 独立审查」（per task，依赖序串行）
 
-> **可并行任务集或 `single-operator-wave`**：对每个任务按依赖拓扑序串行走「工作树白名单核对 → 该任务 freshness preflight → 隔离执行单元 → 隔离审查单元」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突）。当前任务通过后保留其 accepted implementation tree；其审计目录保持未暂存，下一任务由白名单检查识别，不把报告混入 `base_tree`。下一任务再取新的 preflight `base_tree`，不得复用批次起点。全部通过后进末端（一次）。**individual 串行任务多个**：每个任务各自串行完成「preflight + 主循环 + 末端」，末端后切回 master 再启下一个。主线只编排、收结果、浮决策，**不把 per-task 上下文拉进主线**。
+> **可并行任务集或 `single-operator-wave`**：对每个任务按依赖拓扑序串行走「工作树白名单核对 → 该任务 freshness preflight → 实现与自测 → 独立审查」一轮（被依赖的先做，**不并行**——串行单工作树无写冲突）。当前任务通过后保留其 accepted implementation tree；其审计目录保持未暂存，下一任务由白名单检查识别，不把报告混入 `base_tree`。下一任务再取新的 preflight `base_tree`，不得复用批次起点。全部通过后进末端（一次）。**individual 串行任务多个**：每个任务各自串行完成「preflight + 主循环 + 末端」，末端后切回 master 再启下一个。主线只加载当前单元的必要原文；已完成单元只保留契约与证据指针。共享工作树上的单元仍串行，委派不改变此边界。
 
 > **wave 的任务级 commit**：每个任务独审通过、按其 fixed diff 再算有效 risk 仍为 standard 后，提交该任务 accepted implementation、preflight 与完整 round 报告链，形成稳定的 `{task-id} → commit/report` 边界；一个 PR 可含多个任务 commit。审计物进 commit 后，下一任务 fixed diff 仍从新 base tree 起，不会混入本任务实现 diff。该边界用于断点恢复和必要时拆 prefix，不取消 per-task review。
 
-**wave 中途升档/拆分 transaction**：某任务 fixed diff 令有效 risk 升 sensitive 时立即停止，不把它并入 wave PR，并按 sensitive 重派高能力独审。此前通过任务的 implementation + 审计物均已在 per-task commits：① 以最后通过 commit 建 prefix 分支，在独立 worktree 对每个 prefix task 运行 `--review-chain`（合并前审查链，不依赖终态 `code_reviews[]`）与末端全量；② 在原 dirty 工作树执行 `git switch -c {当前 task-id}`（保留在制品、建立真实 individual branch），并验证当前 branch 正是该 task-id；③ 在 prefix worktree 与原工作树写同一 split 状态：prefix `[done]`，当前 `[taken-by]` + branch={task-id}，未开始任务全部 `[可取]` 且清空 assigned_to/branch；④ prefix PR 合并后把 prefix 任务落 `[merged]` 并写终态 `code_reviews[]`。无 prefix 时跳过①④，仍执行②③。不得 stash、还原或删除在制品；任一步失败则整组保持原 wave 状态，不做半套状态写入。
+**wave 中途升档/拆分 transaction**：某任务 fixed diff 令有效 risk 升 sensitive 时立即停止，不把它并入 wave PR，并按 sensitive 补充 sensitive 独审。此前通过任务的 implementation + 审计物均已在 per-task commits：① 以最后通过 commit 建 prefix 分支，在独立 worktree 对每个 prefix task 运行 `--review-chain`（合并前审查链，不依赖终态 `code_reviews[]`）与末端全量；② 在原 dirty 工作树执行 `git switch -c {当前 task-id}`（保留在制品、建立真实 individual branch），并验证当前 branch 正是该 task-id；③ 在 prefix worktree 与原工作树写同一 split 状态：prefix `[done]`，当前 `[taken-by]` + branch={task-id}，未开始任务全部 `[可取]` 且清空 assigned_to/branch；④ prefix PR 合并后把 prefix 任务落 `[merged]` 并写终态 `code_reviews[]`。无 prefix 时跳过①④，仍执行②③。不得 stash、还原或删除在制品；任一步失败则整组保持原 wave 状态，不做半套状态写入。
 
-### 阶段 A · 隔离执行单元（读懂 → 计划 → 写 → 自绿）
+### 阶段 A · 实现（读懂 → 计划 → 写 → 自绿）
 
-preflight 通过后，编排器立即记录 `implementation_started_at`。主线派隔离执行单元，告知 `{task-id}` + layer + `{迭代 vN | B 类无 iteration}`，令其自治完成：
+preflight 通过后，主线记录 `implementation_started_at` 并直接实现。独立且足够大的子任务可委派，提供任务、写集、契约位置和完成条件；按任务依赖分解，不按文件数触发。委派需要的上下文继承方式见项目 AGENTS；无可用代理时主线实现照常。
 
 1. **自读上下文**（精确加载，不全量）：
    - 任务包 normative core（A 类 `iterations/vN/queue/{task-id}.md` / B 类 `b-queue/{task-id}.md`）；non-normative appendix 仅在疑点需要历史解释时查
    - 按 `reference` 读取 project.md 技术约束、Foundation、TRD/共享契约与检查配置的必要章节；契约锚有缺口则沿真实调用链核实
    - **frontend 额外**：读 `design.md`「全局视觉基线」+ 任务包 `reference` 点名的页面规格；存量 design 或任务包未给稳定页面锚时才全文读取（视觉规格唯一参照）。再读 `ux-flows.md` 对应功能段（若存在，按 title 匹配）与 `prototype.html` 对应交互路径（若存在，作交互基准，happy path 之外的分支照原型走通）
 2. **读懂**：以每条 AC 的 `intent` 为目标、`oracle` 为判据；普通 example 仅帮助理解，冲突时返回 `example-error`，不得用代码迁就。只有 `golden: true` 的 example 是字面契约。
-3. **计划 + 复用**：按 `files` 估规模，>3 文件 / 跨模块则内部按依赖序拆模块。若任务包已点名资产或 `reusables.md` 是小而直接可定位的登记表，隔离执行单元自行精读相关段；只有需跨目录搜索、核对登记真实性或存在多个候选时才派只读调查单元。已有资产**必须复用、不重造**。`urgency=hotfix` → 走最小化修复路径，不拆模块。
-4. **写**：逐模块实现并**落盘**。>5 文件 / 跨模块可在写集不重叠时再派隔离执行单元分模块（frontend 按组件、backend 按 controller/service 拆；属执行单元内部事务，主线不介入）。
-5. **自绿（首次实现，共享工作树）**：跑本任务目标测试与必要的 `build` / `type-check` / `lint`；不可视区 AC 的 intent/oracle 落成有辨别力的 runnable test，`golden: true` 的 example 再字面 1:1 物化。普通 example 不制造额外字面测试义务。完整仓 `build/type/lint/test` 只在末端跑一次；整改轮默认只跑 finding 反例与受影响回归，不在每轮重复整链。无对应命令则跳过。同一测试修 3 次仍红时返回 blocked，先查 oracle/contract，不硬磨代码。
+3. **计划 + 复用**：按业务闭环和依赖确认当前单元。直接查相关 reusables 和真实调用点；独立且较大的调查才委派。已有同语义权威实现优先复用；不同职责不得仅因写法相似强行合并。hotfix 保持必要修复范围。
+4. **写**：主线或获准单元将代码直接落入对应工作树。独立写入可分 worktree 并行，但共享索引/状态文件/数据库/端口须隔离或串行。子单元返回变更路径、验证与未完成项，不在消息中搬运整份代码。
+5. **自绿（首次实现，共享工作树）**：跑本任务目标测试与必要的 `build` / `type-check` / `lint`；不可视区 AC 的 intent/oracle 落成有辨别力的 runnable test，`golden: true` 的 example 再字面 1:1 物化。普通 example 不制造额外字面测试义务。最终交付前保留一次必要全量/集成验证；同版本同环境的有效结果直接复用，不重复运行；整改轮默认只跑 finding 反例与受影响回归，不在每轮重复整链。无对应命令则跳过。同一测试修 3 次仍红时返回 blocked，先查 oracle/contract，不硬磨代码。
 6. **返回结构**给主线：
    ```yaml
    status: done | blocked
@@ -197,13 +197,13 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
    blocked: { reason: "do-not 边界拿不准 / 信息不足以决策 / 视觉缺口 / 测试反复红 / 测试基建缺失", detail: "..." }  # status=blocked 时填
    ```
 
-隔离执行单元返回 `done` 时，编排器立即记录 `implementation_completed_at`。实现墙钟由 `implementation_started_at/completed_at` 按需计算，不重复持久化分钟字段。这段只覆盖首次实现；从第一轮独审开始到最终通过的整改与等待属于 review wall-clock，避免重叠。
+阶段 A 完成时，主线记录 `implementation_completed_at`。实现墙钟由 `implementation_started_at/completed_at` 按需计算，不重复持久化分钟字段。这段只覆盖首次实现；从第一轮独审开始到最终通过的整改与等待属于 review wall-clock，避免重叠。
 
-> **测试基建缺失**（项目无测试运行器）：隔离执行单元返回 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先核 project.md 技术层和脚本入口，并补装对应测试运行器）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 隔离审查单元按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
+> **测试基建缺失**（项目无测试运行器）：执行者记录 `blocked: 测试基建缺失`。**不静默跳过、不假装通过**——主线上报：不可视区任务**阻塞待补**（先核 project.md 技术层和脚本入口，并补装对应测试运行器）；若用户判定必须先推进（基建一时补不上），明确标记该不可视区 AC **未经测试验证（降级）**、PR「遗留问题」写明、由阶段 B 隔离审查单元按 AC 审代码兜底 + 下游 manual-test 验收兜底——**临时降级、非常态**。
 
 ### 阶段 B · 隔离证据审查单元（自读权威原文）
 
-隔离执行单元返回 `done` 后，编排器立即记录 `review_started_at`。A 类 round report 写 `iterations/vN/code-reviews/{task-id}/round-{NN}.md`，B 类写 `b-reviews/{task-id}/round-{NN}.md`，格式用 `templates/review-briefs/develop-review-round.md`。
+阶段 A 完成后，主线记录 `review_started_at`，与 implementation_completed_at 对齐。A 类 round report 写 `iterations/vN/code-reviews/{task-id}/round-{NN}.md`，B 类写 `b-reviews/{task-id}/round-{NN}.md`，格式用 `templates/review-briefs/develop-review-round.md`。
 
 > **撞到本任务外的改动时怎么办**（实测 2026-08-30，三个仓同时中招）：另一个会话在同一工作树里提交了与本任务无关的改动，diff 因此不干净。两条合法出路——
 > - **让它成为合法基线**：若那条误落 commit 恰好以本任务的认领 commit 为父，直接把 `master` 快进到它并推送，本任务分支据此重锚基线，被审 diff 就只剩本任务文件。**无历史改写、无重复 commit、原 SHA 与作者信息保留**，是最省事的一种。
@@ -219,13 +219,13 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并按 `git diff --binary {reviewed_base} {reviewed_head}` 的原始字节计算 SHA-256。首次 `reviewed_base` 取**当前任务** preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。B 类在派审前另运行 `node ../hact-method-lab/templates/scripts/check-b-task.js {task-package} --diff {reviewed_base} {reviewed_head} --root .`，用方法论当前版检查器对实际固定 diff 复核共享契约边界；非 0 退出 B 类并升级，不得继续独审。
 
-**首次 full review**：主线派隔离审查单元读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），告知 task-id、layer、迭代、有效 risk 和固定 base/head。审查员自读权威输入，按 brief 与实际改动确定检查范围；模式、报告和升级条件按轮次模板。
+**首次 full review**：主线以 `fork_turns="none"` 派不继承实现历史的 Codex 审查子代理（实际接口不支持空历史时报告缺口），读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 task-id、layer、迭代、有效 risk、固定 base/head 和权威输入位置。审查员自读权威输入，按 brief 与实际改动确定检查范围；模式、报告和升级条件按轮次模板。
 
 **整改 targeted review**：传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；全新审查员可读前次**独立报告**，但仍不得接收开发者自评。核目标 finding、修复增量与受影响调用链；局部新发现可在 targeted 处理。升级全审条件与任务轮次上限统一按 `templates/review-briefs/develop-review-round.md`，新增文件/模块本身不触发 full。
 
 每轮 dispatch/completion 当场写 `started_at/completed_at`；逐轮耗时按需由时间戳计算，不重复持久化分钟字段。round report 本身不计入被审实现 tree，最终随状态提交。
 
-**能力分级（按有效 risk，不唯任务包自报——决策#29）**：阶段 A 是写代码/生成任务，使用Codex 项目入口的执行档；阶段 B 是纯审查。**有效 risk 判定（⚖️，只升不降）**：任务包 `risk: sensitive`，**或**主线按安全敏感四类（见末端预检类别）语义扫任务包 title/description/AC/files 命中任一 → 按 sensitive 处理；两者皆无 → standard。standard → 普通审查档；sensitive 或 `source=foundation` → 高能力审查档。具体模型只在Codex 项目入口表定义。**升档时同步改正**该任务包与 status.yml 的 `risk` 为 `sensitive`（漏标修正，供末端预检与审计），并播报一行升档理由。
+**风险与模型**：按任务与固定 diff 核安全敏感四类；任一命中则有效 risk 为 sensitive，修正任务包/status，不因模型更强而降风险。模型与推理默认继承当前会话；已批准的角色覆盖配置才生效，不按旧型号表猜能力。风险升高时独审须覆盖新增安全边界，未覆盖前不得合并。
 
 **finding 路由与有界复审**：
 
@@ -233,7 +233,7 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 | action | 动作 | 复审范围 |
 |---|---|---|
-| `fix-code` / `fix-mechanism` | 重派隔离执行单元修对应稳定 finding ids | 下一轮 `targeted` 只复审该行为、反例、受影响回归与增量 diff；报告触发 `escalate_to_full` 才追加 full |
+| `fix-code` / `fix-mechanism` | 主线修对应稳定 finding ids；需要时接续已有执行单元 | 下一轮 `targeted` 只复审该行为、反例、受影响回归与增量 diff；报告触发 `escalate_to_full` 才追加 full |
 | `revise-doc` / `downgrade-claim` | 修任务包或发 `revise-doc`；代码文件数必须为 0 | 只复核 contract/claim 一致性，不重跑完整代码审查；计 `spec_rounds` |
 | `global-gap-review` | 核承接方并创建补缝任务；A 类把组合证据移交联调，B 类/V0 按自身契约与授权边界处理 | 原包可独立合规时不打回；不可用待联调替代本包必要验证 |
 | `backlog` | 记入遗留/waiver | 不重审 |
@@ -247,7 +247,7 @@ preflight 通过后，编排器立即记录 `implementation_started_at`。主线
 
 主线先核 `blocked.detail`、实际工作区、单元运行状态、权威输入及已用轮次，再决定下一动作：
 
-- **可恢复的执行问题**：仓内可查的信息未读、工具中断或执行单元上下文不足 → 主线补齐证据，按「隔离执行单元失败协议」恢复/重派，无需用户重复批准实现。单元仍活跃则接收其结果；确认已中断才对账并恢复同一单元工作，不盲目重做。测试静默或超时不算绿；重跑前核原进程状态，不并发启动重复写入或有副作用的测试。
+- **可恢复的执行问题**：仓内可查的信息未读、工具中断或执行单元上下文不足 → 主线补齐证据，按「实现失败与恢复协议」恢复/重派，无需用户重复批准实现。单元仍活跃则接收其结果；确认已中断才对账并恢复同一单元工作，不盲目重做。测试静默或超时不算绿；重跑前核原进程状态，不并发启动重复写入或有副作用的测试。
 - **必须由人处理的边界**：补证后仍存在无法自行裁决的 `do-not/escalate-if`、未授权契约/设计变更、视觉缺口、必要权限/凭据或不可替代能力缺失 → 保留在制品，列明具体缺口、证据、命中的规范条款与需要的人类动作，暂停相关执行。前端设计、B 类契约升级与安全敏感合并裁决仍按各自规则处理，不用技术重试绕过。
 - **达到现有上限**：同一测试修 3 次仍红时先查 oracle/contract，再按下方失败协议允许的主线补证重派一次；仍失败走上下文重置。审查按每任务累计 3 个 code rounds 判定；仍需复审或全审时按根因发 `revise-doc` 或请求用户裁决，不借新根因或执行失败协议续轮。
 
@@ -328,7 +328,7 @@ git push origin {分支名}   # 从 status.yml tasks[*].branch 读取，认领�
 > - **对外不可撤销副作用**（扣款 / 发信 / 短信 / 第三方写入——发出去收不回）
 >
 > 预检**基于实际 diff 独立判定，不读任务包 `risk` 自报**（决策#29）——逐类对照 `git diff` 的路径与改动内容（鉴权/守卫/中间件文件、迁移/schema 文件、金额/计费字段计算、外发调用），存疑按触及处理。
-> **漏标闭环**：预检判定触及，但该任务阶段 B 曾按 standard 审查档执行 → 说明 risk 漏标——先按 sensitive **重派高能力审查档**（重审通过才进人工裁决），并改正任务包与 status.yml 的 `risk`。
+> **漏标闭环**：预检判定触及，但该任务阶段 B 曾按 standard 范围执行 → 说明 risk 漏标——先按 sensitive **补做 sensitive 边界独审**（重审通过才进人工裁决），并改正任务包与 status.yml 的 `risk`。
 > 这是合并前唯一保留的人工治理门（其余代码质量已由 per-task 独审兜，决策#24）。改动不触及上述任一类别 → 直接合并。
 
 **合并**：执行代码托管操作，把 PR 在服务端合并到 master（develop 自审自合并，无独立 pr-review）。合并失败（冲突等）→ 报告用户，不强合。
@@ -380,16 +380,16 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 准备结束回合前，主线核对实际证据，不以阶段汇报或单元 `done` 代替完成判据：
 
-1. 本轮任务集是否全部走完所需独审/整改、末端验证、PR 合并、状态提交及上述追踪/反馈分流？本轮产生的必要入库记录须提交到对应仓并核结果；项目已忽略的本地 progress 只需落盘。仅文件已写入不等于入库收尾完成。
+1. 已授权任务集是否全部走完所需独审/整改、末端验证、PR 合并、状态提交及上述追踪/反馈分流？本轮产生的必要入库记录须提交到对应仓并核结果；项目已忽略的本地 progress 只需落盘。仅文件已写入不等于入库收尾完成。
 2. 是否还有本轮正在运行或结果未接收的执行/审查单元、测试？有则接收结果并推进；不可只报告「等待审查」后结束回合。
 3. 若仍未完成，是否存在已授权且可执行的下一动作？有则继续。仅在用户明确要求停止、真实人类边界、失败协议耗尽或运行环境无法继续时暂停，写明证据、剩余工作与恢复动作。暂停前核本轮活跃单元，能安全中断的先中断，不能中断的记录其状态与影响，避免隐含后台写入。
 
 ```
-✅ develop 完成：{task-id-list}（{layer}）已实现、独立审查与末端验证通过，PR {#N[, #N2, ...]} 已合并到 master，状态与必要收尾记录已落定。
-本轮任务集完成。后续联调 / 复测 / 验收由对应上游会话触发。
+✅ develop 完成：已授权 {task-id-list}（{layers}）已实现、独立审查与末端验证通过，PR {#N[, #N2, ...]} 已合并到 master，状态与必要收尾记录已落定。
+当前交付批次完成后，若已授权任务集尚有可执行项，自动按依赖继续；整集完成才结束。后续联调/验收/部署是否继续取决于已有授权。
 ```
 
-**会话硬边界**：仅在本轮任务集满足上述结束判据后输出完成声明并停止；individual 中单个任务末端完成而本轮仍有任务时，回主循环继续。不自动拾取范围外任务或转入联调/验收；develop 内目标测试、回归和末端验证不属于禁止接续的下游任务。
+**会话硬边界**：仅在已授权任务集满足上述结束判据后输出完成声明并停止；individual 中单个任务末端完成而本轮仍有任务时，回主循环继续。不自动拾取范围外任务或进入未授权的联调/验收；develop 内目标测试、回归和末端验证不属于禁止接续的下游任务。
 
 ---
 
@@ -397,18 +397,17 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 | 角色 | 触发 | 任务 | 失败处理 |
 |------|------|------|---------|
-| **隔离执行单元** | 主循环每任务阶段 A | 自读上下文 → 读懂 → 计划+复用 → 写+自绿，返回结构化结果 | 见下方失败协议 |
+| **执行者** | 主循环阶段 A | 主线直接实现；独立且有收益时委派 | 见下方失败协议 |
 | **隔离审查单元** | 主循环每任务阶段 B | 读对应 brief、自读权威原文、按证据分类 finding | 失败则主线重派；连续失败按审查 loop 超界处置 |
-| 子模块隔离执行单元 | 阶段 A 内（>5 文件 / 跨模块） | 实现单个不重叠模块，返回代码 | 由上层执行单元处理 |
-| 只读调查单元 | 阶段 A 的跨目录复用盘点 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 小而明确的登记表由隔离执行单元直读；调查失败也由其直接读 |
+| 只读调查单元 | 阶段 A 的跨目录复用盘点 / reference 不足 | 读 reusables.md / 扫周边文件（≤20 行摘要） | 小而明确的登记表由执行者直读；调查失败也由其直接读 |
 
-**隔离执行单元失败协议**：
-1. 同一问题三次失败 → 隔离执行单元返回 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策 / 已尝试动作与次数）；发现真实人类边界时立即返回，不为凑次数继续尝试。
+**实现失败与恢复协议**：
+1. 同一问题三次失败 → 执行者记录 `status: blocked` + `blocked.detail`（含已完成文件 / 卡点 / 关键决策 / 已尝试动作与次数）；发现真实人类边界时立即返回，不为凑次数继续尝试。
 2. 主线按 escape-hatch 分类；可恢复时补充权威上下文重派一次。原有尝试记录随派发传入，不重新获得三次试错额度；这一次用于验证补证后的处置。没有新的证据或可行恢复动作时直接升级，不空转重派。
 3. 该次补证重派仍失败 → 触发**上下文重置协议**。中断恢复也保留已用额度；本协议不增加独立审查 code rounds 上限。
 
 **上下文重置协议**（出现以下任一情况触发）：
-- 隔离执行单元按失败协议补证重派一次后仍失败 / 审查 loop 超界且 escape-hatch 无解
+- 按失败协议补证恢复一次后仍失败 / 审查 loop 超界且 escape-hatch 无解
 - 实际改动文件超出 `files` 清单 3 个以上
 - 调试轮次 > 20 轮
 - 用户临时追加新需求
@@ -425,37 +424,40 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 | 维度 | dev-frontend | dev-backend |
 |------|-------------|-------------|
 | 开跑前人工门 | **前端设计到位确认**（design.md / prototype 覆盖本批次画面） | 无（backend-only 跳过） |
-| 隔离执行单元额外加载 | `design.md` 全局视觉基线 + 任务包点名页面规格（存量无稳定锚才全文）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
+| 执行者额外加载 | `design.md` 全局视觉基线 + 任务包点名页面规格（存量无稳定锚才全文）；`prototype.html` 对应交互路径（若存在）；`ux-flows.md` 对应功能段（若存在）| 无 |
 | 自绿 checklist | `templates/checklists/frontend-checklist.md`（**三段式**：机械归 lint / type-check / style lint（命令按项目栈）｜可测逻辑写测试｜视觉/交互留走查） | `templates/checklists/backend-checklist.md`（**测试品类清单**：鉴权/边界/错误/契约/并发/安全注入·穿越各写测试） |
-| 子模块隔离执行单元拆分粒度 | 按组件拆 | 按模块拆（controller / service 分开）|
 | 独立审查侧重 | AC 忠实 + 机械保真（变量非硬编码）；视觉到位归人工门 | AC 忠实 + 测试品类齐全 + 标准合规 |
 
 ---
 
-## 上下文管理
+## 长程执行与上下文恢复
+
+主线只保留授权范围、当前单元、关键决定与证据索引；日志/大文件按问题定向读取，不重复灌入全仓。单元完成时及时落任务与审查状态，重大决定发生时就记录原文与前提，不能等到压缩前才补写。
+
+压缩由 Codex 管理，不按固定步骤主动清空上下文。检测到压缩、恢复或上下文不足时，先按下方断点续做核原始契约、当前 diff、验证版本与未关闭问题，再自动继续。单元转换无需重跑已通过检查或重新授权；同一问题重复探索而无新证据时，先恢复原始依据，不换代理清零尝试次数。
 
 **进度记录**：复用 `_meta/sessions/develop-{task-id}-progress.md`。确定任务集后，在当前任务记录范围；派发/接收单元、阶段切换、暂停或恢复时更新，不逐工具调用记流水账。旧 context-state 字段保留，追加：
 
 ```yaml
 context-state:
   task-id: {task-id}
-  task-set: [...]             # 本轮已确定的任务集，按执行顺序
+  task-set: [...]             # 用户授权时的全部任务 id；当前批次之外仍在范围内的任务自动接续
   phase: review              # 当前实际阶段，如 implementation / review / validation / merge / closeout
   next-action: "接收当前独审结果并按 finding action 分流"
   units: []                  # 本轮待接收单元/进程的标识、职责、状态；无则 []
-  evidence: []               # preflight / 固定 tree / round report / 测试 / PR 的引用，不复制结论
+  evidence: []               # 原始契约、固定 tree、report、测试命令/环境/版本和 PR 指针；旧版本结果不可当当前通过
   attempts: []               # 同一问题/根因已尝试动作与次数；code rounds 以审查报告对账
   completed-files: [...]
   blocked-at: null           # 暂停时写具体原因、规范条款与所需人类动作
-  key-decisions: [...]       # 已授权范围与已确认门的出处、适用条件
+  key-decisions: [...]       # 原文出处、适用前提、重要否决理由；未知项保持未知
 ```
 
 此记录只描述执行意图与恢复线索，不替代任务包、`status.yml`、审查或测试证据。只保存无凭据的运行标识；运行时专属状态查询/等待方式按Codex实现，不写入任务或 Gate。wave 仍使用原 `wave-progress/v1` JSON 与校验器作为整组恢复依据，上述补充信息写当前任务 progress，不改变 wave JSON schema。
 
 **断点续做**（含主循环、末端及合并后收尾）：
-1. 读本轮任务集、任务包与进度记录，核已授权范围、当前阶段及下一动作。旧记录缺新字段时从任务/审查/PR 证据重建，不要求重做实现或重新授权。
+1. 读当前交付批次、任务包与进度记录，核已授权范围、当前阶段及下一动作。旧记录缺新字段时从任务/审查/PR 证据重建，不要求重做实现或重新授权。
 2. 先核实际工作区、分支和本轮单元/进程状态；仍活跃则接收结果，不重派并发写入。核 `status.yml` 的 branch 与 Git/PR 实际进度；安全切换前保护在制品，不因进度文件写了分支名就盲目 checkout。wave 先走原整组恢复校验，不仅凭当前任务记录恢复。
-3. 沿 progress 的旧分支/worktree 找到同 task-id 的完整审查链，原样携带 preflight、reports 和可解析的 Git 对象，接着下一个 round 编号；按全部实际代码轮次累计，不能换目录从 01 重开或重写起始时间。用固定 diff 与有效证据恢复阶段；基线变化只复验受影响部分。旧链缺失时记录已知轮次与证据缺口并找回，不当新任务重做；恢复、rebase、补前置依赖不重置 attempts/rounds。
+3. 摘要只作索引；重新读取当前任务原始契约与关键决定前提。沿 progress 的旧分支/worktree 找到同 task-id 的完整审查链，原样携带 preflight、reports 和可解析的 Git 对象，接着下一个 round 编号；按全部实际代码轮次累计，不能换目录从 01 重开或重写起始时间。用固定 diff 与有效证据恢复阶段；基线变化只复验受影响部分。旧链缺失时记录已知轮次与证据缺口并找回，不当新任务重做；恢复、rebase、补前置依赖不重置 attempts/rounds。
 4. 从首个未完成阶段接续：代码已在 PR 合并但状态未落定 → 核远端合并结果后补状态/收尾，不重复实现或创建 PR；已证实通过且快照未变 → 继续下一动作，不重复独审。新发现真正边界按 escape-hatch 处理。
 
 **阻塞于 revise-doc 结论**：本任务依赖的 `revise-doc` 结论尚未下达时，任务保持 `[taken-by]` 不变，在 progress.md 写明阻塞理由，等 `revise-doc` 完成后再继续——不强行推进，也不退回 `[可取]`。

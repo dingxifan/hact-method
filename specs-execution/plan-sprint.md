@@ -130,7 +130,7 @@
 
 **派发**：默认只派一个普通档隔离审查单元，令其读 `../hact-method-lab/templates/review-briefs/task-package-review.md` 按 brief 执行，告知本期迭代版本 vN + `review-scope: full`。审查员一次自读 PRD、TRD、全部任务包 normative core，以及本期涉及的 project.md 技术约束、Foundation 与共享契约，统一核 AC→task 覆盖、依赖和共享资产全局关系。任务包数量本身不触发分批；模型按项目 Codex 配置。
 
-只有“PRD + TRD + 全部 normative core + 本期涉及的项目约束”预计会超过当前模型的**无 compact 审查预算**时，才按业务模块切分，而不是按任意 2–3 包切：每批依赖闭合，派发 `review-scope: module:{任务包列表}`，只读这些包回链的 PRD 功能段/TRD 模块段。模块审查结束后派 `review-scope: global-summary`；该审查员自行运行 `node ../hact-method-lab/templates/scripts/build-task-review-index.js vN .`，只读其最小索引 + PRD AC 清单 + TRD 模块标题 + 各批 findings，不再读全部 frontmatter，专核跨批 AC 遗漏、共享资产 source-of-truth 与依赖断边。
+只有“PRD + TRD + 全部 normative core + 本期涉及的项目约束”预计会超过当前模型的**单次有效审查范围**时，才按业务模块切分，而不是按任意 2–3 包切：每批依赖闭合，派发 `review-scope: module:{任务包列表}`，只读这些包回链的 PRD 功能段/TRD 模块段。模块审查结束后派 `review-scope: global-summary`；该审查员自行运行 `node ../hact-method-lab/templates/scripts/build-task-review-index.js vN .`，只读其最小索引 + PRD AC 清单 + TRD 模块标题 + 各批 findings，不再读全部 frontmatter，专核跨批 AC 遗漏、共享资产 source-of-truth 与依赖断边。
 > brief 查 AC 忠实/完备、oracle/example 可复算、api-contract、视觉地基与 risk。审查维度原文固化在 brief 文件，此处不重述。
 
 **【loop 逻辑】**（主线拿到隔离审查 findings 后的处置）
@@ -201,17 +201,17 @@
 | 触发点 | 隔离单元任务 | 输入要点 | 失败处理 |
 |--------|-------------|------------|---------|
 | 会话启动 | 只读调查单元并行读 6 份输入文件（纯读取+带路径摘要） | — | 读取失败则主线单独读 |
-| Step 3（任务 >4 个） | 隔离执行单元各起草 2–3 个任务包 | 传入：task 标题 / layers / task_type / sprint_id / TRD 对应模块 / 项目技术约束 / reusables 相关条目；输出完整字段 YAML | 失败则主线接管该包 |
+| Step 3 独立模块 | 足够大的不重叠任务包子集 | 契约位置、任务边界和写入路径；返回文件与待决项 | 失败则主线接管 |
 | Step 3.5 独立审查 | 默认一个隔离审查单元联合审全部任务包，维度见 brief `../hact-method-lab/templates/review-briefs/task-package-review.md` | 只告知 vN；超过无 compact 预算才按业务模块切，随后加一次 frontmatter/AC/共享资产全局总核 | 同一阻断 3 次→上报；根因在 TRD 则创 `revise-doc(target=trd)` |
 
-**重要**：隔离执行单元只返回任务包内容，**由主线写入文件**，不让它直接操作文件系统。
+**共享写入**：子代理只写获准的不同任务包文件；sprint/status 和共享契约由主线串行维护，不在消息中返回整份 YAML 让主线重抄。
 
 ---
 
 ## 上下文管理
 
-- Step 2（骨架确认后）做一次 compact 再写任务包——骨架确认是探索讨论的天然终点，任务包写作需跨任务保持依赖与字段一致。
-- compact 前在 `_meta/sessions/plan-sprint-progress.md` 记：任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单各条答案摘要。
-- Step 3.5 独审 + 修包在 compact 后高密度区；修包若需回看 PRD 细节而上下文已瘦 → 重读 `prd.md` 对应功能段再改，不凭记忆。
+- 不按固定步骤 compact；任务拆分按用户任务闭环、共享资产和验证范围决定。
+- 决定发生时就在 `_meta/sessions/plan-sprint-progress.md` 记：任务骨架表（task-id / 标题 / layer / 依赖）+ 疑点清单各条答案摘要。
+- 修包若需回看 PRD 细节而上下文已瘦 → 重读 `prd.md` 对应功能段再改，不凭记忆。
 
 **断点续做**：读 `queue/` 统计已写任务包数 → 读 `_meta/sessions/plan-sprint-progress.md` 取骨架表，对照找未写任务 → 从未完成的任务包继续。

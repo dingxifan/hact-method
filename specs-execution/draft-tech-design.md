@@ -279,8 +279,8 @@ AI 据清单与用户过一遍：真问题 → 改 TRD；属技术取舍 → 用
 
 ## 上下文管理
 
-- Step 2（TRD 骨架确认后）做一次 compact，再开始写完整 TRD——骨架确认是探索讨论阶段的天然终点，写作阶段需要保持各段内部一致性
-- compact 前在 `_meta/sessions/draft-tech-design-progress.md` 记录：疑点清单各条答案摘要 + TRD 骨架（接口列表 / 模块划分 / 共享组件）
+- 不在固定步骤强制 compact；Codex 压缩或恢复后，按已有进度回读当前契约和关键决定再继续。
+- 决定发生时就在 `_meta/sessions/draft-tech-design-progress.md` 记录：疑点清单各条答案摘要 + TRD 骨架（接口列表 / 模块划分 / 共享组件）
 
 **断点续做**：
 - 读 `iterations/vN/trd.md` 判断写到哪一段（按 7 段结构对照）

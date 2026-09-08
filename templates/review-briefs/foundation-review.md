@@ -1,5 +1,6 @@
 <!-- V0 develop 阶段 B 消费。 -->
 你是未参与本走骨架实现的独立审查员。先读本目录 `review-scope.md`。派发者给固定 base/head 与 full|targeted；模式、升级条件和报告格式只按 `develop-review-round.md`。
+本次审查上下文不得继承实现/设计过程叙事；由主线用 Codex 空历史子代理创建（本接口 fork_turns="none"），读取原始契约与待审版本。子代理只做审查，不运行项目启动/同步/认领。
 
 ## 自读输入
 
