@@ -82,6 +82,9 @@ try {
   write(wt, 'business.ts', 'not a methodology change\n');
   assert.throws(() => finish(wt, source), /范围外/);
   fs.unlinkSync(path.join(wt, 'business.ts'));
+  git(wt, ['add', '-A']);
+  assert.match(git(wt, ['diff', '--cached', '--name-status']), /^D\s+standards-shared\.md$/m,
+    '真实 hook 前预暂存删除后，finish 仍须可重复登记并提交');
   const result = finish(wt, source);
   assert.strictEqual(result.state, 'committed');
   assert.strictEqual(result.pushed, false);

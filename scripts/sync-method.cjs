@@ -212,7 +212,10 @@ function finish(worktree, source, integrate = false) {
   if (changed.some(f => !allowed(f))) throw new Error('分发夹带范围外文件：' + changed.filter(f => !allowed(f)).join(', '));
   if (!(state.state === 'verified' && !git(worktree, ['status', '--porcelain=v1']) && git(worktree, ['rev-parse', 'HEAD']) !== state.projectBase)) {
     write(worktree, META, JSON.stringify({ ...state, state: 'verified' }, null, 2) + '\n');
-    git(worktree, ['add', '--', ...new Set([...changed, META])]);
+    // changed 已在上方完成允许写集校验；统一刷新整个隔离升级树的 index，既登记新增/修改，
+    // 也兼容调用方为跑真实 hook 而预先 stage 过的删除。对已从 index 移除的路径再次执行
+    // `git add -- <deleted-path>` 会报 pathspec 不存在，导致 verified 状态无法收尾。
+    git(worktree, ['add', '-A']);
     git(worktree, ['diff', '--cached', '--check']);
     git(worktree, ['commit', '-m', 'chore(method): sync ' + state.methodRef + '@' + state.source.slice(0, 12)]);
   }
