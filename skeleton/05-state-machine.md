@@ -2,7 +2,7 @@
 
 > **本文回答**：task 有哪些状态？怎么流转？软锁怎么工作？异常转移怎么处理？
 >
-> **不回答**：有哪些 task（→ `04-task-catalog.md`）；身份/拉取规则（→ `01-identity.md`）；Gate（→ `06-gates.md`）。
+> **不回答**：有哪些 task（→ `04-task-catalog.md`）；身份与授权规则（→ `01-identity.md`）；Gate（→ `06-gates.md`）。
 
 ---
 
@@ -136,5 +136,5 @@ v2 早期阶段——团队小，沟通成本低——所有"非主流"情况用
 | 有哪些 task type | `04-task-catalog.md` |
 | 任务前置依赖怎么判 | `04-task-catalog.md` §"任务前置检查" |
 | Gate 内涵与子状态聚合 | `06-gates.md` |
-| 拉取准入规则 | `01-identity.md` §3 |
+| 负责人、授权与协作边界 | `01-identity.md` |
 | 哪个工作区做哪类任务 | `02-workspaces.md` |

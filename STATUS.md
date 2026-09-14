@@ -57,7 +57,7 @@
 | **hact-method-lab**（本仓，独立） | `{工作区根}/hact-method-lab/` | `master` | 当前唯一在用的方法论主线，独立仓库、独立历史 |
 | hact-method（旧版基线，未受影响） | 工作区外的独立检出（本机在 `E:\group-code\hact-method\`） | `master` | **旧方法**对照基线，原样冻结保留，仓库本身未删除、未改动 |
 | 各项目仓 | `{工作区根}/{项目名}/` | `master` | 按本方法运行的真实项目（mail-ai / doc-extract / file-extract / JHH-Nortion / org-krm-v2 / awuchi），远端均在 `gitee.com/dingxifan/` |
-| hact-notes-{姓名} | `{工作区根}/hact-notes-{姓名}/` | `master` | 成员个人积累仓（私有，决策#21） |
+| hact-notes-{姓名}（可选） | `{工作区根}/hact-notes-{姓名}/`（已有的保留，不新建） | `master` | 个人积累（私有）。2026-09-08 起不要求建仓、不由 init-project 创建、不是任何 Gate 或开发的前置；决策#21 的强制口径仅为历史 |
 | human-ai-col | 本机已无本地检出（远端 `gitee.com/dingxifan/human-ai-col`） | — | v1 方法论（冻结，与上面两者是不同世代）。CLAUDE.md / BRIEF.md 里指向 `../human-ai-col/` 的设计依据链接因此是悬空指针，需要时重新 clone |
 
 > 迁移记录（2026-07-06）：把 `method-lab` 分支（含继承自旧 `hact-method` master 的全部历史 + 之后的全部独立演进，共 261 commit，tip `15971c3`）完整推送到新建的空仓 `gitee.com/dingxifan/hact-method-lab` 的 `master` 分支。随后把本地 `hact-method-lab` 目录从旧仓库的 linked worktree 转成该新仓库的独立 clone（原 worktree 目录整体重命名为 `hact-method-lab.oldworktree` 暂留几天做安全网，未提交的 `_meta/sessions/` 已手动搬入新目录），并清理了旧仓库 `.git/worktrees/` 里失效的 worktree 登记。旧仓库 `hact-method` 里的 `method-lab` 分支未删除（历史遗留，无害，不再更新）。

@@ -2,7 +2,7 @@
 
 > **本文回答**：v2 有哪些 task type？每个 task 的关键字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）？
 >
-> **不回答**：discipline 的概念（→ `03-disciplines.md`）；身份/拉取规则（→ `01-identity.md`）；状态枚举与流转（→ `05-state-machine.md`）；Gate 详情（→ `06-gates.md`）。
+> **不回答**：discipline 的概念（→ `03-disciplines.md`）；身份与授权规则（→ `01-identity.md`）；状态枚举与流转（→ `05-state-machine.md`）；Gate 详情（→ `06-gates.md`）。
 >
 > 04 给出**结构层契约的简表**——每个 task 的完整契约（含边界场景、错误处理、字段细节）由 `specs-structural/{task}.md` 在第二阶段补全；执行细节由 `specs-execution/{task}.md` 在第四阶段补全。
 
@@ -251,14 +251,14 @@
 
 ### 13. `harvest-notes`
 
-> 收割成员个人积累，把验证有效的规范 / checklist / 方法论建议上提到公共层。
+> 可选：整理**已获许可**来源中的经验，把有证据、可复用的发现提炼成候选建议。不是立项、develop 或 G5 的前置。
 
 - **discipline**: `management`
 - **完成判据**: 本次明确授权的来源已整理，采纳理由与未覆盖项已说明；不要求登记或游标
-- **主要产物**:
-  - 方法论待议中的约束建议（来自成员 `[规范]`）
-  - `templates/checklists/{backend|frontend}-checklist.md` 新增项（来自成员 `[checklist]`）
-  - `_meta/plans/方法论待议.md` 新增条目（来自成员 `[方法论]`）
+- **主要产物**（无有价值发现可零产出）:
+  - `_meta/plans/方法论待议.md` 的候选条目（附来源引用）
+  - 必要时 `templates/checklists/{backend|frontend}-checklist.md` 的新增项
+  - 不回写来源、不清空私人资料、不把整理等同于规则批准；项目具体缺口留原项目待办
 - **关联 Gate**: —
 - **前置条件**: 用户明确要求；仅使用获准来源
 - **执行约束**: 可选整理、不回写来源、不自动批准规则；不访问未授权私人资料

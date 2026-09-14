@@ -22,20 +22,18 @@
 - **复杂工作不预定义**——方法论调整等发散性工作不强行做 task type
 - **签字归属内容**——Gate 签字合并到最近前置任务，不另立 sign-gate task
 
-完整 28 条决策见 [`../BRIEF.md`](../BRIEF.md) "关键设计决策" 段。
+完整 32 条决策见 [`../BRIEF.md`](../BRIEF.md) "关键设计决策" 段。开头三段「当前口径」声明了哪些历史决策已不构成当前义务，先读它再读决策正文。
 
 ## 跟其他文档的关系
 
 ```
 hact-method/
-├── AGENTS.md             项目级 Codex 薄入口
-├── AGENTS.md             项目级 Codex 薄入口
-├── BRIEF.md              项目背景 / 目标 / 阶段 / 关键设计决策（28 条）
+├── AGENTS.md             方法论仓 Codex 薄入口
+├── BRIEF.md              项目背景 / 目标 / 阶段 / 关键设计决策（32 条）
 ├── STATUS.md             当前状态
 ├── skeleton/             ← 本目录（骨架，第一阶段产物）
 ├── specs-structural/     第二阶段：每个 task 的完整结构契约（继承 04）
 ├── specs-execution/      第四阶段：每个 task 的执行规范 + 隔离单元协议（继承 03 密度声明）
-├── projects/             具体项目的编排目录（含 iterations/）
 ├── templates/            模板（项目模板、审查 brief 等）
 └── _meta/                研发过程产物（plans / input）
 ```

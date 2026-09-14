@@ -2,7 +2,7 @@
 
 > **本文回答**：5 个 Gate 是什么？怎么由 task 状态聚合？A 类 vs B 类有什么差别？多迭代并行下怎么展示？
 >
-> **不回答**：每个 task 是什么（→ `04-task-catalog.md`）；任务状态枚举与流转（→ `05-state-machine.md`）；身份/拉取（→ `01-identity.md`）；工作区（→ `02-workspaces.md`）。
+> **不回答**：每个 task 是什么（→ `04-task-catalog.md`）；任务状态枚举与流转（→ `05-state-machine.md`）；身份与授权（→ `01-identity.md`）；工作区（→ `02-workspaces.md`）。
 
 ---
 

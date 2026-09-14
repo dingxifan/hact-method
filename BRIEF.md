@@ -111,7 +111,7 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 ## 工具依赖
 
-使用 hact-method 前需配置 Git、Node.js 与项目技术栈所需工具。隔离单元、浏览器场景、远端命令和代码托管操作的具体配置不在本 Brief 复制，分别以 `templates/runtime/cc.md`、`templates/runtime/codex.md` 为准；任务路由确定后由 `templates/runtime/preflight.md` 按需实测能力，不因配置文件存在就声称可用。
+使用 hact-method 前需配置 Git、Node.js 与项目技术栈所需工具。Codex 为唯一运行环境：隔离单元、浏览器场景、远端命令和代码托管操作的具体配置不在本 Brief 复制，以项目入口 `templates/AGENTS.md` 与 `templates/.codex/agents/` 为准（原 `templates/runtime/{cc,codex,preflight}.md` 映射层已随 CC 入口一并退役）；任务路由确定后只对当前任务实际命中的能力实测，不因配置文件存在就声称可用。
 
 项目共同要求：`connections.yml` 只保存坐标与 `${secret:NAME}` 引用，真凭据留机器本地；浏览器或远端能力缺失时必须记录未运行原因，不能伪造通过。
 
