@@ -32,6 +32,7 @@ try {
   write(project, '.codex/config.toml', 'model = "keep-user-choice"\n');
   write(project, 'connections.yml', 'keep: existing-config\n');
   write(project, 'iterations/v1/code-reviews/historical.md', 'historical report must stay byte-identical\n');
+  write(project, 'status-reviews/v1.yml', 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly\n');
   git(project, ['add', '.']); git(project, ['commit', '-m', 'base']);
   const originalHead = git(project, ['rev-parse', 'HEAD']);
   write(project, 'user-wip.txt', 'do not touch');
@@ -47,6 +48,8 @@ try {
   assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'prepare 不碰原树/暂存区');
   assert.strictEqual(fs.readFileSync(path.join(wt, 'scripts/check-example.js'), 'utf8'), 'console.log("new template");\n');
   assert.strictEqual(fs.readFileSync(path.join(wt, 'AGENTS.md'), 'utf8'), '# 项目\n不能操作生产数据。\n');
+  assert.strictEqual(fs.readFileSync(path.join(wt, 'status-reviews/v1.yml'), 'utf8'), 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly\n', 'status-reviews 项目数据逐字节保留');
+  assert.ok(!fs.existsSync(path.join(wt, '_meta/method-sync-pending/files/status-reviews')), 'status-reviews 不生成未知候选');
   assert.ok(!fs.existsSync(path.join(wt, 'user-wip.txt')));
   assert.ok(verify(wt, source).some(e => /约束|候选/.test(e)));
   const candidate = path.join(wt, '_meta/method-sync-pending/files/AGENTS.md');
@@ -78,6 +81,7 @@ try {
   write(wt, 'AGENTS.override.md', '# Old override\n');
   assert.ok(verify(wt, source).some(e => /遮蔽/.test(e)));
   fs.unlinkSync(path.join(wt, 'AGENTS.override.md'));
+  write(wt, 'status-reviews/v2.yml', 'code_reviews: []\n');
   assert.throws(() => finish(wt, source, true), /在制品|基线/);
   write(wt, 'business.ts', 'not a methodology change\n');
   assert.throws(() => finish(wt, source), /范围外/);
@@ -95,6 +99,8 @@ try {
   assert.strictEqual(git(project, ['show', result.branch + ':.codex/config.toml']), 'model = "keep-user-choice"');
   assert.strictEqual(git(project, ['show', result.branch + ':connections.yml']), 'keep: existing-config');
   assert.strictEqual(git(project, ['show', result.branch + ':iterations/v1/code-reviews/historical.md']), 'historical report must stay byte-identical');
+  assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v1.yml']), 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly');
+  assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v2.yml']), 'code_reviews: []', '迁移执行人新增的项目归档可随本地同步提交');
   assert.strictEqual(prepare(project, source).state, 'branch-exists');
   const project2 = path.join(temp, 'clean-project'); init(project2);
   write(project2, 'project.md', '# Clean project\n');

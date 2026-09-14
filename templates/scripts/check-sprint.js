@@ -6,7 +6,7 @@
  *      AC 正向 tag（含逐条 id 存在性）+ 逐条 AC 反向覆盖（按 PRD AC-nn id）/ depends_on / 共享写集冲突 / sprint↔queue↔status 三方一致 /
  *      视觉地基包（v1 含前端必有 `baseline: visual` 包；vN+1 的 design.md 变更触发退人工）/
  *      归属真空（任务包声明"这件事不在本包"时，须确有另一个包认领）/
- *      审计留痕完备性（已 [merged] 的任务须有 code_reviews[]；核固定 diff、逐轮 finding 闭合与墙钟）。
+ *      审计留痕完备性（已 [merged] 的任务须在 status 主文件或其索引归档中有 code_reviews[]；核固定 diff、逐轮 finding 闭合与墙钟）。
  *      语义残量（疑点确认 / TRD 模块覆盖 / Step3.5 独审结论 / 逐条 AC 忠实性——内容真覆盖、非仅 id 在场）机器判不了，
  *      留签字人确认（🧑 段），脚本只把可机械的挡在签字前。
  *
@@ -394,6 +394,142 @@ function parseCodeReviews(statusPath) {
   return out;
 }
 
+/* ---------- status.yml：抽 code_review_archives[] 索引 ----------
+ * 索引本身同样是受控的顶层对象列表；归档内容继续交给 parseCodeReviews()，
+ * 不为归档文件另造 code_reviews 解析器。存量 status.yml 无此段时返回空数组。 */
+function parseCodeReviewArchives(statusPath) {
+  if (!exists(statusPath)) return null;
+  const out = [];
+  let inBlk = false, baseIndent = null, cur = null;
+  const flush = () => { if (cur) { out.push(cur); cur = null; } };
+  const clean = v => (v || '').trim().replace(/^['"]|['"]$/g, '').trim();
+  for (const raw of readLines(statusPath)) {
+    const line = raw.replace(/\t/g, '  ');
+    const header = line.match(/^code_review_archives:\s*(.*?)\s*$/);
+    if (header) {
+      if (stripComment(header[1]) === '[]') return [];
+      inBlk = true;
+      continue;
+    }
+    if (!inBlk) continue;
+    if (/^\s*#/.test(line)) continue;
+    if (/^\S/.test(line) && !/^-/.test(line)) { flush(); break; }
+    if (line.trim() === '') continue;
+    const item = line.match(/^(\s*)-\s+(.*)$/);
+    if (item) {
+      const indent = item[1].length;
+      if (baseIndent === null) baseIndent = indent;
+      if (indent === baseIndent) {
+        flush(); cur = {};
+        const kv = item[2].match(/^([A-Za-z_-]+):\s*(.*)$/);
+        if (kv) cur[kv[1]] = clean(kv[2]);
+        continue;
+      }
+    }
+    const kv = line.match(/^\s+([A-Za-z_-]+):\s*(.*)$/);
+    if (kv && cur && !(kv[1] in cur)) cur[kv[1]] = clean(kv[2]);
+  }
+  flush();
+  return out;
+}
+
+const CODE_REVIEW_ARCHIVE_PATH = /^status-reviews\/[A-Za-z0-9][A-Za-z0-9-]*\.yml$/;
+
+function hasSymlinkSegment(root, target) {
+  const stop = path.resolve(root);
+  let probe = path.resolve(target);
+  while (probe !== stop) {
+    try { if (fs.lstatSync(probe).isSymbolicLink()) return true; }
+    catch { /* 不存在由调用方单独判 */ }
+    const parent = path.dirname(probe);
+    if (parent === probe) return true;
+    probe = parent;
+  }
+  return false;
+}
+
+function archiveTopLevelKeys(archivePath) {
+  return readLines(archivePath).flatMap(raw => {
+    if (!raw.trim() || /^\s*#/.test(raw) || /^\s/.test(raw)) return [];
+    const match = raw.match(/^([A-Za-z_][\w-]*):/);
+    return match ? [match[1]] : [];
+  });
+}
+
+/* 两个消费者的统一入口：主文件 + status.yml 索引到的归档文件。
+ * 校验失败写入 findings，但仍返回能安全读取的条目，让调用方继续给出完整诊断。 */
+function loadCodeReviews(root) {
+  const statusPath = path.join(root, 'status.yml');
+  const current = parseCodeReviews(statusPath);
+  if (current === null) return null;
+  const archives = parseCodeReviewArchives(statusPath) || [];
+  const out = [...current];
+  const liveIds = new Set(current.map(item => item.task_id).filter(Boolean));
+  const archivedIds = new Set();
+  const seenFiles = new Set();
+  const seenKeys = new Set();
+
+  for (const archive of archives) {
+    const rel = archive.file || '';
+    const key = archive.iteration;
+    if (!(key === 'null' || /^v\d+(?:\.\d+)*$/.test(key || ''))) {
+      fail('code_review_archives', 'status.yml', `归档 iteration 必须为 vN 或 null：${key || '<缺失>'}`);
+    } else if (seenKeys.has(key)) {
+      fail('code_review_archives', 'status.yml', `归档 key 重复：${key}`);
+    } else {
+      seenKeys.add(key);
+    }
+    if (seenFiles.has(rel)) {
+      fail('code_review_archives', 'status.yml', `归档 file 重复：${rel || '<缺失>'}`);
+      continue;
+    }
+    seenFiles.add(rel);
+    if (!CODE_REVIEW_ARCHIVE_PATH.test(rel)) {
+      fail('code_review_archives', 'status.yml', `归档 file 只允许 status-reviews/{key}.yml，拒绝绝对路径、.. 与非法字符：${rel || '<缺失>'}`);
+      continue;
+    }
+    if (key === 'null' || /^v\d+(?:\.\d+)*$/.test(key || '')) {
+      const fileKey = key === 'null' ? 'b' : key.replace(/\./g, '-');
+      const expected = `status-reviews/${fileKey}.yml`;
+      if (rel !== expected) {
+        fail('code_review_archives', 'status.yml', `归档 iteration=${key} 必须指向 ${expected}，当前为 ${rel}`);
+        continue;
+      }
+    }
+    const archivePath = path.join(root, ...rel.split('/'));
+    if (hasSymlinkSegment(root, archivePath)) {
+      fail('code_review_archives', rel, '拒绝通过符号链接/junction 读取归档');
+      continue;
+    }
+    if (!exists(archivePath)) {
+      fail('code_review_archives', rel, '索引指向的归档文件不存在');
+      continue;
+    }
+    const topKeys = archiveTopLevelKeys(archivePath);
+    if (topKeys.length !== 1 || topKeys[0] !== 'code_reviews') {
+      fail('code_review_archives', rel, '归档文件顶层必须且只能有 code_reviews:');
+      continue;
+    }
+    const entries = parseCodeReviews(archivePath) || [];
+    if (!/^(?:0|[1-9]\d*)$/.test(archive.count || '')) {
+      fail('code_review_archives', 'status.yml', `${rel} 的 count 必须为 int>=0`);
+    } else if (Number(archive.count) !== entries.length) {
+      fail('code_review_archives', rel, `count=${archive.count}，实际 code_reviews 条目数=${entries.length}`);
+    }
+    for (const entry of entries) {
+      if (entry.task_id && liveIds.has(entry.task_id)) {
+        fail('code_review_archives', rel, `${entry.task_id} 同时出现在 status.yml 与归档，code_reviews 条目必须唯一`);
+      }
+      if (entry.task_id && archivedIds.has(entry.task_id)) {
+        fail('code_review_archives', rel, `${entry.task_id} 在多个归档中重复，code_reviews 条目必须唯一`);
+      }
+      if (entry.task_id) archivedIds.add(entry.task_id);
+    }
+    out.push(...entries);
+  }
+  return out;
+}
+
 const REVIEW_AUDIT_FIELDS = [
   'review_report_dir',
 ];
@@ -610,7 +746,7 @@ function checkReviewAudit(taskId, root) {
     fail('review 审计', statusPath, 'task-id 只允许字母、数字和连字符，拒绝路径片段');
     return;
   }
-  const crs = parseCodeReviews(statusPath);
+  const crs = loadCodeReviews(root);
   if (crs === null) {
     fail('review 审计', statusPath, '缺 status.yml');
     return;
@@ -1196,7 +1332,7 @@ function checkSprint(iteration, root) {
   }
   if (puntHitCount === 0) pass('归属真空', '任务包 do-not/context 无"移交他包"措辞');
 
-  // 9. 审计留痕完备性：已 [merged] 的任务须有 code_reviews[] 条目（develop 末端义务，长期要求）
+  // 9. 审计留痕完备性：已 [merged] 的任务须在主文件或索引归档中有 code_reviews[] 条目（develop 末端义务，长期要求）
   //    并须记 rounds（2026-07-30 加的独审轮数仪器）。本项在「标记 [merged]」那次 commit 上触发——
   //    status-only merged 提交由 check-gate --staged 触发单任务审查核对。
   //    实证驱动：file-extract v2 十一个任务全部在仪器落地后合并，rounds 记录数 0、两个任务连条目都没有，
@@ -1204,7 +1340,7 @@ function checkSprint(iteration, root) {
   if (stTasks === null) {
     human('审计留痕', '无 status.yml（存量项目），code_reviews[] 完备性退回人工兜底');
   } else {
-    const crs = parseCodeReviews(path.join(root, 'status.yml')) || [];
+    const crs = loadCodeReviews(root) || [];
     // 按 task_id 建索引，`iteration` 只在条目自带时才用来排除——存量仓（mail-ai）的 code_reviews[]
     // 条目普遍不写 iteration，按 iteration 硬过滤会把它们全判成"无条目"（实测假阳性 8 条）。
     const crByTask = new Map(crs.filter(c => c.task_id && (!c.iteration || c.iteration === iteration))

@@ -44,6 +44,14 @@ integration_tests: []
 #  - { iteration: v1, index: 1, description: ..., status: 待执行, failure_reason: null }
 #    # status: 待执行 / 执行中 / 通过 / 失败
 
+code_review_archives: []
+# 每个 key 一个文件，不重复；归档文件顶层只能有 code_reviews:，条目形状与下方完全一致：
+#  - iteration: v1
+#    file: status-reviews/v1.yml
+#    count: 18
+# 点号迭代把文件 key 中的 . 换成 -，如 iteration: v1.1 对应 status-reviews/v1-1.yml。
+# B 类使用 iteration: null，文件固定写 status-reviews/b.yml。
+
 code_reviews: []
 # 每条（develop 自审末端追加，替代旧 pr-review）：
 #  - iteration: v1

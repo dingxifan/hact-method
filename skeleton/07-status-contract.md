@@ -1,7 +1,7 @@
 # 07 · status.yml 状态契约
 
 > 本文件定义**项目根** `status.yml` 的字段、类型、枚举与取值，是**人与检查器共同的单一事实**。
-> 机器侧消费者（`check-sprint.js` / `check-gate.js`，以及任何后续取数工具）直接 `YAML.parse(status.yml)`，不解析任何叙述性 markdown。
+> 机器侧消费者（`check-sprint.js` / `check-gate.js`，以及任何后续取数工具）都从 `status.yml` 进入，不解析任何叙述性 markdown；具体消费者只按本契约读取自己需要的字段。
 > 设计依据：`_meta/plans/2026-05-31-status-contract/design.md`。
 
 ---
@@ -20,7 +20,7 @@
 
 ## 二、为什么是项目级单文件（不是每迭代一份）
 
-`status.yml` 放在**项目根**，一个项目一份，覆盖全部迭代 + 全部 B 类任务。原因：
+`status.yml` 放在**项目根**，一个项目一份并永久保留，覆盖或索引全部迭代 + 全部 B 类任务。原因：
 
 - **B 类是项目级的**：B 类任务（bug / optimization）跨迭代、不归任何一期 Gate 流，其状态在项目根 status.yml。两个迭代之间（vN 已签 G5、vN+1 未起）没有「活跃迭代」，迭代级文件无处安放 B 类——项目级文件永远在。
 - **创建只一次**：随 `init-project` 建一次，此后永远存在，不必每期重建。
@@ -32,7 +32,7 @@
 
 ## 三、文件位置与生命周期
 
-- **位置**：项目根 `status.yml`，一个项目一份。机器侧**唯一**数据源。
+- **位置**：项目根 `status.yml`，一个项目一份。它仍是机器侧**唯一数据源与入口**；归档文件只是由其中 `code_review_archives[]` 定位的数据分片，消费者不得绕过 status 自行枚举。
 - **创建**：`init-project` 从模板创建一次，含 `iterations.v1.gates`（全未签）+ 空 `tasks[]`。
 - **更新**：此后每个状态转移由所属 exec spec「做一个填一个」（见第五节）。
 - **健壮性**：任何更新步骤写入前若文件不存在（历史项目、断点等），先从 `templates/status.yml` 补建再写，不报错中断。
@@ -97,6 +97,11 @@ integration_tests:               # 联调测试项；description 短，随行显
     status: 通过                 # enum，待执行 / 执行中 / 通过 / 失败
     failure_reason: null         # string，status=失败 时填，否则 null
 
+code_review_archives:            # 已搬出的 code_reviews[] 索引；为空时写 code_review_archives: []
+  - iteration: v1                # vN；B 类写 null
+    file: status-reviews/v1.yml  # 固定形状 status-reviews/{key}.yml
+    count: 18                    # 该文件内 code_reviews 条目数
+
 code_reviews:                    # 结论、报告索引与成本汇总；问题正文在逐轮报告
   - iteration: v2
     task_id: hact-v2-008         # string，被审 develop 任务 id
@@ -108,6 +113,13 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
     review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
     review_evidence_version: develop-review-round/v2   # 新任务 round 报告 schema；存量缺失按 legacy/unknown
 ```
+
+### 审查归档索引与文件约束
+
+- `code_review_archives[]` 每个 key 只对应一个文件，`file` 不重复且必须与 `iteration` 一一对应：A 类 key 取迭代号（如 `v1`）；点号迭代把 `.` 机械替换为 `-`（`v1.1` → `v1-1`）；B 类 `iteration: null` 固定用 `b`。对应路径分别为 `status-reviews/v1.yml`、`status-reviews/v1-1.yml`、`status-reviews/b.yml`。
+- `file` 是项目根相对路径，只允许 `status-reviews/[A-Za-z0-9][A-Za-z0-9-]*.yml`；消费者拒绝绝对路径、`..` 与符号链接。
+- 每个归档文件的顶层键必须且只能是 `code_reviews:`，其中条目 schema 与 `status.yml` 内 `code_reviews[]` 完全一致。归档文件不放 `tasks`、`gates` 或 `integration_tests`。
+- 归档是搬家：条目字段与内容原样保留，只把完整条目块移出主文件。`status.yml` 本身仍永久存在且保持机器侧唯一数据源地位——索引在其中，消费者仍从它进入。未归档不阻断任何 Gate 或交付。
 
 ### 枚举对齐
 
@@ -159,6 +171,7 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 | 签 G4 | `manual-test` | `gates.G4` |
 | B 类派发 | `dispatch-new` | 追加 task（`source=bug/optimization`, `iteration=null`） |
 | 签 G5 | `wrap-up-iteration` | `gates.G5` |
+| 签 G5 后归档本期 code_reviews | `wrap-up-iteration` | 移出本期 `code_reviews[]` 条目到 `status-reviews/{vN}.yml`（点号迭代使用连字符 key）+ 追加 `code_review_archives[]` 索引 |
 
 **写入纪律**：
 - 每次只改对应字段，保留其余内容不动。

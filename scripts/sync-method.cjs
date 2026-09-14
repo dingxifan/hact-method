@@ -208,7 +208,7 @@ function finish(worktree, source, integrate = false) {
   const changed = [...new Set([...git(worktree, ['-c', 'core.quotepath=false', 'diff', '--name-only', state.projectBase]).split('\n'),
     ...git(worktree, ['-c', 'core.quotepath=false', 'ls-files', '--others', '--exclude-standard']).split('\n')].filter(Boolean))];
   const allowed = f => /^(AGENTS(?:\.override)?\.md|CLAUDE\.md|gitee-ops\.md|project\.md|foundation\.md|design\.md|status\.yml|decisions\.md|standards-(shared|frontend|backend)\.md)$/.test(f)
-    || /^(_meta\/(?:method-sync\.json$|method-sync-review\.md$|method-sync-pending\/)|\.codex\/agents\/|\.husky\/|scripts\/|iterations\/[^/]+\/(?:queue\/|prd\.md$|trd\.md$)|b-queue\/)/.test(f);
+    || /^(_meta\/(?:method-sync\.json$|method-sync-review\.md$|method-sync-pending\/)|\.codex\/agents\/|\.husky\/|scripts\/|iterations\/[^/]+\/(?:queue\/|prd\.md$|trd\.md$)|b-queue\/|status-reviews\/)/.test(f);
   if (changed.some(f => !allowed(f))) throw new Error('分发夹带范围外文件：' + changed.filter(f => !allowed(f)).join(', '));
   if (!(state.state === 'verified' && !git(worktree, ['status', '--porcelain=v1']) && git(worktree, ['rev-parse', 'HEAD']) !== state.projectBase)) {
     write(worktree, META, JSON.stringify({ ...state, state: 'verified' }, null, 2) + '\n');

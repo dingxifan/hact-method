@@ -23,8 +23,10 @@ feedback 可以保留、注明去向或引用已处理结果；仅需经验积�
 
 确认 G4 已签、偏离与必要任务已闭合、退役/欠账有明确去向，给出本期最终状态与仍未完成事项，问用户是否签 G5。未获明确确认不签；已有同一范围明确签署指令可引用，不重复问。
 
-用户确认后只在 `status.yml iterations.vN.gates.G5` 写 `{ signed: true, date: YYYY-MM-DD }`，与本次确有变化的证据文件共同暂存，按已授权分支提交。status-only 签字仍触发 Gate 检查。旧 gates.md 只留历史，不双写。
+用户确认后在 `status.yml iterations.vN.gates.G5` 写 `{ signed: true, date: YYYY-MM-DD }`。签署后、提交前必须立即做一次机械归档：把 `status.yml code_reviews[]` 中 `iteration: vN` 的完整条目块原样搬到 `status-reviews/{key}.yml`（普通迭代 key 即 `vN`；点号迭代把 `.` 换成 `-`，如 `v1.1` → `v1-1`；文件顶层只写 `code_reviews:`），并在 `code_review_archives[]` 追加 `{ iteration: vN, file: status-reviews/{key}.yml, count: 实际条目数 }`。不得改字段、清洗历史 `comment/issues` 或改写内容；不归档 `tasks[]`、`integration_tests[]` 或 Gate。
+
+同次机械动作把主文件中 `iteration: null` 且对应任务已 `merged` 的 B 类审查条目原样搬到 `status-reviews/b.yml`；已有 B 类归档时追加条目并更新原索引的 `count`，不得重复建立 `b` 索引。无可搬 B 类条目时不改 B 类归档。运行 `node scripts/check-sprint.js vN`，只用它核索引路径、文件存在、count 与条目唯一性；检查器不判断“该归的是否都归了”，也不设条数或迭代数阈值。归档文件、索引、G5 状态与本次确有变化的证据文件共同暂存，按已授权分支提交。status-only 签字仍触发 Gate 检查。旧 gates.md 只留历史，不双写。
 
 ## 恢复与边界
 
-恢复读 status 的 G4/G5、未完成任务、backlog 关联处置和实际 Git/报告；不由 feedback 是否为空或 project 是否出现“开发中”推断完成。B 类无 G5，具体缺口在 develop 交付时移交；仅需整理经验时按需另做，不自动创建 cleanup 任务。
+恢复读 status 的 G4/G5、`code_review_archives[]`、未完成任务、backlog 关联处置和实际 Git/报告；若 G5 已签而本期归档尚未随提交完成，先按上一节机械补完再收尾。不由 feedback 是否为空或 project 是否出现“开发中”推断完成。B 类无 G5，具体缺口在 develop 交付时移交；仅需整理经验时按需另做，不自动创建 cleanup 任务。
