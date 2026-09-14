@@ -24,7 +24,7 @@ function validate(ver, root) {
   const ac = [...prd.matchAll(/^\s*-\s*(?:\*\*)?(AC-\d+)\b/gm)].map(m=>m[1]);
   if (!ac.length) errors.push('PRD 无可核对的 AC 定义');
   if(new Set(ac).size!==ac.length) errors.push('PRD AC 定义重复');
-  const sceneSection = section(ux,'场景列表'), flow=section(ux,'流程图');
+  const sceneSection = section(ux,'场景列表'), surfaceSection=section(ux,'动线—界面地图'), flow=section(ux,'流程图');
   if(!/\x60{3}mermaid\b/.test(flow)) errors.push('流程图无 mermaid 块');
   const tasks=[...sceneSection.matchAll(/^### 用户任务：(U\d+)\s+(.+)$/gm)];
   const sceneOwners=new Map(), taskIds=new Set();
@@ -44,6 +44,31 @@ function validate(ver, root) {
       sceneOwners.set(scene[1],m[1]);
     }
   });
+  const surfaceRows=surfaceSection.split(/\r?\n/).filter(l=>/^\|/.test(l))
+    .map(l=>l.split('|').slice(1,-1).map(v=>v.trim()));
+  const surfaceHeader=surfaceRows.find(r=>r[0]==='位置');
+  if(!surfaceHeader || surfaceHeader.join('|')!=='位置|形态与名称|承接任务/场景|打开来源|完成/返回位置')
+    errors.push('界面地图表头须包含位置/形态与名称/承接任务或场景/打开来源/完成或返回位置');
+  const surfaceIds=new Set(), surfaceRefs=new Set(), placedScenes=new Set();
+  for(const r of surfaceRows.filter(r=>r[0] && r[0]!=='位置' && !/^-+$/.test(r[0])))
+    if(!/^[PDAI]\d+$/.test(r[0])) errors.push('界面位置 ID 须为 P/D/A/I 加数字：'+r[0]);
+  for(const r of surfaceRows.filter(r=>/^[PDAI]\d+$/.test(r[0]))) {
+    if(surfaceIds.has(r[0])) errors.push('界面位置重复：'+r[0]);
+    surfaceIds.add(r[0]);
+    if(!r[1] || /待填|TODO/.test(r[1])) errors.push(r[0]+' 缺少有效形态与名称');
+    const users=ids(r[2],/\bU\d+\b/g), scenes=ids(r[2],/\bS\d+\b/g);
+    if(!users.length || !scenes.length) errors.push(r[0]+' 缺少承接任务/场景');
+    for(const u of users) if(!taskIds.has(u)) errors.push('界面地图引用未知用户任务：'+u);
+    for(const scene of scenes) {
+      placedScenes.add(scene);
+      if(!sceneOwners.has(scene) || !users.includes(sceneOwners.get(scene))) errors.push('界面地图场景与用户任务不匹配：'+scene);
+    }
+    for(const ref of ids((r[3]||'')+' '+(r[4]||''),/\b[PDAI]\d+\b/g)) surfaceRefs.add(ref);
+    if(!r[3] || !r[4] || /待填|TODO/.test((r[3]||'')+(r[4]||''))) errors.push(r[0]+' 缺少打开来源或完成/返回位置');
+  }
+  if(!surfaceIds.size && surfaceSection) errors.push('动线—界面地图无有效位置行');
+  for(const ref of surfaceRefs) if(!surfaceIds.has(ref)) errors.push('界面地图引用未知位置：'+ref);
+  for(const scene of sceneOwners.keys()) if(!placedScenes.has(scene)) errors.push('场景未落到界面位置：'+scene);
   const pageHeader=design.match(/^##\s+[^\r\n]*页面规格[^\r\n]*$/m);
   let pageText='';
   if(pageHeader) {
@@ -101,6 +126,6 @@ if(require.main===module) {
   if(!/^v\d+(\.\d+)*$/.test(ver||'')) { console.error('用法：node check-ux.js <vN|vN.M> [根目录]');process.exit(2); }
   const errors=validate(ver,root);
   if(errors.length) { console.error(errors.join('\n'));process.exit(1); }
-  console.log('✅ 用户任务/AC/页面/证据索引通过；浏览器行为与用户接受仍需实际走查');
+  console.log('✅ 用户任务/界面地图/AC/页面/证据索引通过；浏览器行为与用户接受仍需实际走查');
 }
 module.exports={validate};

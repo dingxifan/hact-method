@@ -5,7 +5,7 @@ const {validate}=require('./check-ux.js');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'hact-ux-journey-'));
 const write=(p,s)=>{const file=path.join(root,p);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,s);};
 const base='iterations/v3/';
-const ux='## 场景列表\n### 用户任务：U1 完成审批\n- 目标：决定并确认结果\n- 起点：收到待办\n- 完成：结果可见\n- 相关功能：浏览待办、提交审批\n- S1：主路径完成审批\n- S2：失败保留输入后重试\n- S3：取消后恢复输入\n## 流程图\n\x60\x60\x60mermaid\nflowchart TD\nA-->B\n\x60\x60\x60\n';
+const ux='## 场景列表\n### 用户任务：U1 完成审批\n- 目标：决定并确认结果\n- 起点：收到待办\n- 完成：结果可见\n- 相关功能：浏览待办、提交审批\n- S1：主路径完成审批\n- S2：失败保留输入后重试\n- S3：取消后恢复输入\n## 动线—界面地图\n| 位置 | 形态与名称 | 承接任务/场景 | 打开来源 | 完成/返回位置 |\n|---|---|---|---|---|\n| P1 | 页面·工作台 | U1/S1、S3 | 业务导航 | D1 |\n| D1 | 弹层·提交审批 | U1/S1、S2、S3 | P1 | P1（取消）、P2（完成） |\n| P2 | 页面·结果 | U1/S1、S2 | D1 | P1 |\n## 流程图\n\x60\x60\x60mermaid\nflowchart TD\nP1-->D1-->P2\n\x60\x60\x60\n';
 const map='## 前端 AC 覆盖\n| AC | 用户任务 | 场景 | HTML 锚点 | 页面规格 |\n|---|---|---|---|---|\n| AC-01 | U1 | S1、S2 | #start、#done | 工作台 |\n| AC-02 | U1 | S1、S3 | #cancel | 工作台 |\n## 排除 AC\n| AC | 排除原因 |\n|---|---|\n| AC-03 | 后端数据约束 |\n## 动线验证\n| 场景 | 结果 | 证据 |\n|---|---|---|\n| S1 | 通过 | iterations/v3/ux-evidence/S1.txt |\n| S2 | 通过 | iterations/v3/ux-evidence/S2.txt |\n| S3 | 通过 | iterations/v3/ux-evidence/S3.txt |\n';
 try {
   write(base+'prd.md','## 核心功能\n### 功能：浏览待办\n**draft-ux**：需要\n- AC-01：待办可见\n### 功能：提交审批\n**draft-ux**：需要\n- AC-02：审批结果可见\n- AC-03：数据库约束\n');
@@ -33,5 +33,11 @@ try {
   assert.ok(validate('v3',root).some(e=>/证据缺失/.test(e)));
   write(base+'ux-flows.md',ux.replace('- 完成：结果可见',''));
   assert.ok(validate('v3',root).some(e=>/缺少有效 完成/.test(e)));
+  write(base+'ux-flows.md',ux.replace('## 动线—界面地图','## 界面清单'));
+  assert.ok(validate('v3',root).some(e=>/缺少段落：动线—界面地图/.test(e)),'不能越过界面地图直接画原型');
+  write(base+'ux-flows.md',ux.replaceAll('、S3',''));
+  assert.ok(validate('v3',root).some(e=>/场景未落到界面位置：S3/.test(e)),'每个场景须有界面位置');
+  write(base+'ux-flows.md',ux.replace('P1（取消）、P2（完成）','P1（取消）、P9（完成）'));
+  assert.ok(validate('v3',root).some(e=>/引用未知位置：P9/.test(e)),'落点不得引用不存在的位置');
 } finally {fs.rmSync(root,{recursive:true,force:true});}
-console.log('✅ 用户任务/多对多页面/独立 AC 核对/证据索引正反例通过（不证明 UI 行为）');
+console.log('✅ 用户任务/界面地图/多对多页面/独立 AC 核对/证据索引正反例通过（不证明 UI 行为）');
