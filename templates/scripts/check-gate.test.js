@@ -61,6 +61,7 @@ try {
   assert.match(calls, /--prd iterations\/v2\/prd.md/);
   assert.match(calls, /iterations\/v2\/prd.md iterations\/v2\/trd.md/);
   assert.match(calls, /v2\n/);
+  assert.strictEqual((calls.match(/--staged/g) || []).length, 1, 'status event invokes scoped audit once');
   // 新 B merged 在没有 sprint/gates 文件变化时仍必须核真实审查入口。
   fs.copyFileSync(path.join(__dirname, 'check-sprint.js'), path.join(root, 'scripts', 'check-sprint.js'));
   write('status.yml', state(4, 'tasks:\n  - id: demo-b-001\n    source: bug\n    iteration: null\n    type: develop\n    status: merged\n'));

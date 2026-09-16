@@ -14,7 +14,8 @@
  *   node scripts/check-sprint.js vN          # 项目根 = cwd
  *   node scripts/check-sprint.js vN <项目根>
  *   node scripts/check-sprint.js --review <task-id> [项目根]  # A/B 通用 review 审计
- *   node scripts/check-sprint.js --review-chain <task-id> [项目根] # 合并前仅核固定审查链，不依赖终态 status 条目
+ *   node scripts/check-sprint.js --review-chain <task-id> [项目根] [--in-progress] # 逐轮记录校验或最终闭合
+ *   node scripts/check-sprint.js --staged [项目根] # 全局规划约束 + 本次改动涉及的审计
  *   node scripts/check-sprint.js --ready <task-id,...> [项目根] # develop 认领前依赖就绪检查
  *   node scripts/check-sprint.js --wave-ready <task-id,...> [项目根] # 单人 wave 的机械准入
  *   node scripts/check-sprint.js --wave-state <progress.json> [项目根] # wave 断点恢复可执行性
@@ -325,7 +326,10 @@ function sprintIds(sprintPath) {
 /* ---------- status.yml：抽 tasks[] 的 id/source/iteration（容错，同 check-gate） ---------- */
 function parseStatusTasks(statusPath) {
   if (!exists(statusPath)) return null;
-  const lines = readLines(statusPath);
+  return parseStatusTasksSource(readLines(statusPath).join('\n'));
+}
+function parseStatusTasksSource(source) {
+  const lines = source.split(/\r?\n/);
   const tasks = [];
   let inTasks = false, baseIndent = null, cur = null;
   const flush = () => { if (cur) { tasks.push(cur); cur = null; } };
@@ -362,11 +366,14 @@ const ITER_SOURCES = new Set(['sprint', 'integration', 'manual-test']);
  * 均靠「顶层条目缩进 === baseIndent」这一条挡住，不做完整 YAML AST。 */
 function parseCodeReviews(statusPath) {
   if (!exists(statusPath)) return null;
+  return parseCodeReviewsSource(readLines(statusPath).join('\n'));
+}
+function parseCodeReviewsSource(source) {
   const out = [];
   let inBlk = false, baseIndent = null, cur = null;
   const flush = () => { if (cur) { out.push(cur); cur = null; } };
   const clean = v => (v || '').trim().replace(/^["']|["']$/g, '').trim();
-  for (const raw of readLines(statusPath)) {
+  for (const raw of source.split(/\r?\n/)) {
     const line = raw.replace(/\t/g, '  ');
     if (/^code_reviews:\s*$/.test(line)) { inBlk = true; continue; }
     if (!inBlk) continue;
@@ -399,11 +406,14 @@ function parseCodeReviews(statusPath) {
  * 不为归档文件另造 code_reviews 解析器。存量 status.yml 无此段时返回空数组。 */
 function parseCodeReviewArchives(statusPath) {
   if (!exists(statusPath)) return null;
+  return parseCodeReviewArchivesSource(readLines(statusPath).join('\n'));
+}
+function parseCodeReviewArchivesSource(source) {
   const out = [];
   let inBlk = false, baseIndent = null, cur = null;
   const flush = () => { if (cur) { out.push(cur); cur = null; } };
   const clean = v => (v || '').trim().replace(/^['"]|['"]$/g, '').trim();
-  for (const raw of readLines(statusPath)) {
+  for (const raw of source.split(/\r?\n/)) {
     const line = raw.replace(/\t/g, '  ');
     const header = line.match(/^code_review_archives:\s*(.*?)\s*$/);
     if (header) {
@@ -642,6 +652,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
   }
 
   const reports = fs.readdirSync(absDir).filter(f => /^round-\d{2}\.md$/.test(f)).sort();
+  if (!reports.length) errors.push('审查链缺 round 报告');
   if (isUInt(cr.code_rounds) && reports.length !== Number(cr.code_rounds))
     errors.push(`round report 数 ${reports.length} != code_rounds ${cr.code_rounds}`);
   let previousEscalated = false, previousReviewedHead = '', lastConclusion = '';
@@ -784,9 +795,11 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     lastConclusion = r('conclusion');
     previousEscalated = r('escalate_to_full') === 'true';
   });
-  if (reports.length && lastConclusion !== 'pass') errors.push('末轮 report.conclusion 必须为 pass');
-  if (reports.length && previousEscalated) errors.push('末轮仍要求 escalate_to_full，审查尚未闭合');
-  if (openBlocking.size) errors.push(`审查链仍有 open blocking findings：${[...openBlocking].join(', ')}`);
+  if (!options.inProgress) {
+    if (reports.length && lastConclusion !== 'pass') errors.push('末轮 report.conclusion 必须为 pass');
+    if (reports.length && previousEscalated) errors.push('末轮仍要求 escalate_to_full，审查尚未闭合');
+    if (openBlocking.size) errors.push(`审查链仍有 open blocking findings：${[...openBlocking].join(', ')}`);
+  }
   return errors;
 }
 
@@ -825,7 +838,7 @@ function checkReviewAudit(taskId, root) {
   else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、逐轮报告与墙钟证据均合法`);
 }
 
-function checkReviewChain(taskId, root) {
+function checkReviewChain(taskId, root, inProgress = false) {
   if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
     fail('review chain', 'task-id', 'task-id 只允许字母、数字和连字符');
     return;
@@ -851,9 +864,9 @@ function checkReviewChain(taskId, root) {
     review_evidence_version: scalarText(packageFm && packageFm['package-schema']) === '2' ? 'develop-review-round/v2' : '',
     code_rounds: reports.length,
   };
-  const errors = reviewAuditErrors(root, taskId, cr, { preMerge: true });
+  const errors = reviewAuditErrors(root, taskId, cr, { inProgress });
   errors.forEach(message => fail('review chain', cr.review_report_dir, `${taskId}: ${message}`));
-  if (!errors.length) pass('review chain', `${taskId} 的 preflight/fixed diff/round/finding 链可在合并前复现`);
+  if (!errors.length) pass('review chain', `${taskId} 的 preflight/fixed diff/round/finding 链合法${inProgress ? '（仅本轮记录有效，不代表可合并）' : '且已闭合'}`);
 }
 
 function checkReady(subject, root) {
@@ -1131,7 +1144,7 @@ function checkWorktreeFromReports(subject, root, progressIds = '') {
 }
 
 /* ====================== 主校验 ====================== */
-function checkSprint(iteration, root) {
+function checkSprint(iteration, root, audit = true) {
   const iterDir = path.join(root, 'iterations', iteration);
   const queueDir = path.join(iterDir, 'queue');
   if (!fs.existsSync(queueDir)) {
@@ -1408,7 +1421,9 @@ function checkSprint(iteration, root) {
   //    status-only merged 提交由 check-gate --staged 触发单任务审查核对。
   //    实证驱动：file-extract v2 十一个任务全部在仪器落地后合并，rounds 记录数 0、两个任务连条目都没有，
   //    而无任何机械检查发现——仪器装了不响，与它要解的问题同一失效类。
-  if (stTasks === null) {
+  if (!audit) {
+    pass('审计范围', '提交检查仅核本次涉及任务；全局依赖和共享资产检查保留');
+  } else if (stTasks === null) {
     human('审计留痕', '无 status.yml（存量项目），code_reviews[] 完备性退回人工兜底');
   } else {
     const crs = loadCodeReviews(root) || [];
@@ -1480,18 +1495,85 @@ function checkSprint(iteration, root) {
   human('G3:人签','疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / 任务包 AC 逐条忠实于其回链的 PRD AC（内容真覆盖，非仅 id 在场）—— 语义判断，由签字人确认');
 }
 
+// Commit scope comes from Git, not from a waiver list. Global planning checks remain.
+function checkStagedReviews(root) {
+  const staged = gitOutput(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean);
+  const readAt = (ref, file) => { try { return gitOutput(root, ['show', `${ref}:${file}`]); } catch { return ''; } };
+  const iterations = new Set(), selected = new Map(), mustClose = new Set(), inputs = new Set(['status.yml']);
+  const tasks = parseStatusTasksSource(readAt('', 'status.yml'));
+  const beforeTasks = new Map(parseStatusTasksSource(readAt('HEAD', 'status.yml')).map(t => [t.id, t]));
+  const select = (id, required = false) => selected.set(id, required || selected.get(id) || false);
+  for (const file of staged) {
+    const queue = file.match(/^iterations\/(v\d+(?:\.\d+)*)\/(?:sprint\.md|queue\/([^/]+)\.md)$/);
+    if (queue) { iterations.add(queue[1]); if (queue[2]) select(queue[2]); }
+    const b = file.match(/^b-queue\/([^/]+)\.md$/);
+    if (b) select(b[1]);
+    const review = file.match(/^(?:iterations\/v\d+(?:\.\d+)*\/code-reviews|b-reviews)\/([^/]+)\/(.+)$/);
+    if (review) select(review[1], /^round-\d+\.md$/.test(review[2]));
+  }
+  if (staged.some(file => file === 'status.yml' || /^status-reviews\/[^/]+\.yml$/.test(file))) {
+    const records = ref => {
+      const status = readAt(ref, 'status.yml');
+      const archives = parseCodeReviewArchivesSource(status).map(a => a.file).filter(f => CODE_REVIEW_ARCHIVE_PATH.test(f || ''));
+      for (const file of archives) inputs.add(file);
+      return new Map([status, ...archives.map(file => readAt(ref, file))].flatMap(parseCodeReviewsSource).map(r => [r.task_id, r]));
+    };
+    const before = records('HEAD'), after = records('');
+    for (const id of new Set([...before.keys(), ...after.keys()])) {
+      if (JSON.stringify(before.get(id)) !== JSON.stringify(after.get(id))) { select(id, true); mustClose.add(id); }
+    }
+    const currentTasks = new Map(tasks.map(t => [t.id, t]));
+    for (const id of new Set([...beforeTasks.keys(), ...currentTasks.keys()])) {
+      const old = beforeTasks.get(id), next = currentTasks.get(id);
+      if (['depends_on', 'iteration', 'layer', 'source', 'delivery'].some(k => old?.[k] !== next?.[k])) {
+        for (const t of [old, next]) if (t && ITER_SOURCES.has(t.source) && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')) iterations.add(t.iteration);
+      }
+    }
+    for (const task of tasks) if (task.status === 'merged' && beforeTasks.get(task.id)?.status !== 'merged'
+        && (task.type === 'develop' || ITER_SOURCES.has(task.source) || ['bug', 'optimization', 'foundation'].includes(task.source))) { select(task.id, true); mustClose.add(task.id); }
+    for (const file of staged.filter(f => /^status-reviews\//.test(f))) inputs.add(file);
+  }
+  for (const version of iterations) for (const part of ['queue', 'sprint.md', 'prd.md', 'trd.md']) inputs.add(`iterations/${version}/${part}`);
+  for (const [id] of selected) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id || '')) throw new Error('审查 task-id 非法');
+    for (const file of findTaskPackages(root, id)) inputs.add(path.relative(root, file));
+    inputs.add(`b-reviews/${id}`);
+    for (const t of tasks.filter(t => t.id === id && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')))
+      inputs.add(`iterations/${t.iteration}/code-reviews/${id}`);
+    for (const file of staged.filter(f => f.includes(`/code-reviews/${id}/`))) inputs.add(file.slice(0, file.indexOf(`/code-reviews/${id}/`)) + `/code-reviews/${id}`);
+  }
+  const dirty = gitOutput(root, ['diff', '--name-only', '--', ...inputs]).trim();
+  if (dirty) throw new Error('提交审查相关产物有未暂存变化，不能用工作树替暂存版本背书：' + dirty);
+  const untracked = gitOutput(root, ['ls-files', '--others', '--exclude-standard', '--', ...inputs]).trim();
+  if (untracked) throw new Error('提交审查相关产物未加入暂存区：' + untracked);
+  if (staged.some(f => f === 'status.yml' || /^status-reviews\//.test(f))) loadCodeReviews(root); // index consistency only, not historical round re-audit
+  for (const version of iterations) checkSprint(version, root, false);
+  for (const [id, required] of selected) {
+    const task = tasks.find(t => t.id === id);
+    if (task?.status === 'merged' || mustClose.has(id)) { checkReviewAudit(id, root); continue; }
+    const dirs = [...inputs].filter(f => f.endsWith(`/code-reviews/${id}`) || f === `b-reviews/${id}`);
+    const hasRounds = dirs.some(dir => exists(path.join(root, dir)) && fs.readdirSync(path.join(root, dir)).some(n => /^round-\d{2}\.md$/.test(n)));
+    if (required || hasRounds) checkReviewChain(id, root, true);
+  }
+  if (!selected.size && !iterations.size) pass('提交审计', '没有本次新增或修改的任务审查，无须重扫历史');
+}
+
 /* ---------------- 主流程 ---------------- */
 function main() {
   const args = process.argv.slice(2);
+  const stagedMode = args[0] === '--staged';
   const reviewMode = args[0] === '--review';
   const reviewChainMode = args[0] === '--review-chain';
   const readyMode = args[0] === '--ready';
   const waveReadyMode = args[0] === '--wave-ready';
   const waveStateMode = args[0] === '--wave-state';
   const worktreeMode = args[0] === '--worktree-from-reports';
-  const specialMode = reviewMode || reviewChainMode || readyMode || waveReadyMode || waveStateMode || worktreeMode;
-  const subject = specialMode ? args[1] : args[0];
-  const root = (specialMode ? args[2] : args[1]) || process.cwd();
+  const specialMode = stagedMode || reviewMode || reviewChainMode || readyMode || waveReadyMode || waveStateMode || worktreeMode;
+  const subject = stagedMode ? 'staged' : specialMode ? args[1] : args[0];
+  const root = (stagedMode ? args[1] : specialMode ? args[2] : args[1]) || process.cwd();
+  if (reviewChainMode && args.length > 3 && (args.length !== 4 || args[3] !== '--in-progress')) {
+    console.error('用法: --review-chain <task-id> [项目根] [--in-progress]'); process.exit(2);
+  }
   if (worktreeMode && args.length > 3
       && (args.length !== 5 || args[3] !== '--progress' || !args[4])) {
     console.error('用法: --worktree-from-reports <report,...|none> [项目根] [--progress <task-id,...>]');
@@ -1500,7 +1582,8 @@ function main() {
   if (!subject || (!specialMode && !/^v\d+(\.\d+)*$/.test(subject))) {
     console.error('用法: node check-sprint.js <vN|vN.M> [项目根]\n'
       + '   或: node check-sprint.js --review <task-id> [项目根]\n'
-      + '   或: node check-sprint.js --review-chain <task-id> [项目根]\n'
+      + '   或: node check-sprint.js --review-chain <task-id> [项目根] [--in-progress]\n'
+      + '   或: node check-sprint.js --staged [项目根]\n'
       + '   或: node check-sprint.js --ready <task-id,...> [项目根]\n'
       + '   或: node check-sprint.js --wave-ready <task-id,...> [项目根]\n'
       + '   或: node check-sprint.js --wave-state <progress.json> [项目根]\n'
@@ -1508,8 +1591,9 @@ function main() {
     process.exit(2);
   }
   try {
-    if (reviewMode) checkReviewAudit(subject, root);
-    else if (reviewChainMode) checkReviewChain(subject, root);
+    if (stagedMode) checkStagedReviews(root);
+    else if (reviewMode) checkReviewAudit(subject, root);
+    else if (reviewChainMode) checkReviewChain(subject, root, args[3] === '--in-progress');
     else if (readyMode) checkReady(subject, root);
     else if (waveReadyMode) checkWaveReady(subject, root);
     else if (waveStateMode) checkWaveState(subject, root);

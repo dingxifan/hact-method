@@ -269,7 +269,41 @@ code_reviews: []
   assert.notStrictEqual(result.status, 0, '移除归档索引后检查 #9 应重新发现缺条目');
   assert.match(result.stdout, /code_reviews\[\] 无条目/);
 
-  console.log('✅ check-sprint review archive 正反夹具通过');
+  // A historical missing entry remains visible in full audits, but cannot block unrelated commits.
+  git(['add', '.']); git(['commit', '-m', 'fixture historical baseline']);
+  fs.appendFileSync(path.join(tempRoot, 'iterations/v1/sprint.md'), '\nplanning note\n');
+  git(['add', 'iterations/v1/sprint.md']);
+  const stagedAudit = () => childProcess.spawnSync(process.execPath, [checkSprint, '--staged', tempRoot], { encoding: 'utf8' });
+  result = stagedAudit();
+  assert.strictEqual(result.status, 0, `unmodified historical missing audit must not block: ${result.stdout}\n${result.stderr}`);
+  write('scripts/check-sprint.js', fs.readFileSync(checkSprint, 'utf8'));
+  const shell = process.platform === 'win32' ? path.join(process.env.ProgramFiles, 'Git', 'bin', 'sh.exe') : '/bin/sh';
+  const hooked = childProcess.spawnSync(shell, [path.join(__dirname, 'pre-commit-hook.sh')], { cwd: tempRoot, encoding: 'utf8' });
+  assert.strictEqual(hooked.status, 0, `real hook ignores unrelated historical reports: ${hooked.stdout}\n${hooked.stderr}`);
+  assert.strictEqual((hooked.stderr.match(/check-sprint.js --staged/g) || []).length, 1, 'one scoped audit per commit');
+  assert.notStrictEqual(run('v1').status, 0, 'explicit full audit still reports historical debt');
+  const baselineStatus = fs.readFileSync(path.join(tempRoot, 'status.yml'), 'utf8');
+  fs.appendFileSync(path.join(tempRoot, 'status.yml'), '\n# unrelated status note\n');
+  git(['add', 'status.yml']);
+  assert.strictEqual(stagedAudit().status, 0, 'status note must not trigger historical audit');
+  write('status.yml', baselineStatus.replace('iteration: v1', 'iteration: v2'));
+  git(['add', 'status.yml']);
+  assert.notStrictEqual(stagedAudit().status, 0, 'status-only task ownership changes still require global planning consistency');
+  write('status.yml', baselineStatus); git(['add', 'status.yml']);
+  const originalQueue = fs.readFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), 'utf8');
+  fs.appendFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), '\nunstaged planning change\n');
+  assert.match(stagedAudit().stderr, /未暂存变化/, 'global planning input must match index');
+  write(`iterations/v1/queue/${ITERATION_ID}.md`, originalQueue);
+  write('status.yml', baselineStatus.replace('code_reviews: []', `code_reviews:\n  - task_id: ${ITERATION_ID}\n    rounds: 1\n`));
+  git(['add', 'status.yml']);
+  assert.notStrictEqual(stagedAudit().status, 0, 'new or edited audit record must be checked even for an old merged task');
+  write('status.yml', baselineStatus); git(['add', 'status.yml']);
+  fs.appendFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), '\nchanged task\n');
+  git(['add', `iterations/v1/queue/${ITERATION_ID}.md`]);
+  result = stagedAudit();
+  assert.notStrictEqual(result.status, 0, 'touching the historical task makes its audit relevant again');
+  assert.match(result.stdout, /审计|code_reviews/);
+  console.log('✅ check-sprint review archive 与提交范围正反夹具通过');
 } finally {
   const resolvedTemp = path.resolve(tempRoot);
   const resolvedOsTemp = path.resolve(os.tmpdir());

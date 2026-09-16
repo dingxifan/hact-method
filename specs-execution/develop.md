@@ -144,6 +144,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 - 后续任务用此前每个已通过任务的最终 round report（逗号分隔）替换 `none`，保留 `--progress` 当前交付批次。检查器只允许这些报告声明的 accepted changed files、各自 review 目录中的审计产物，以及显式任务的未暂存 `_meta/sessions/develop-{task-id}-progress.md`；其他 dirty path 或任一 stash 均阻断。progress 不得暂存进实现 tree，最终作为收尾记录单独提交；已忽略的本地 progress 按项目现有策略保留，不强制入库。
 
 - `files` 是否仍是当前落点，`reference` 的符号/章节/行号锚是否仍存在；
+- 对本包承诺的行为找到实际控制位置：本包是调用已有能力，还是等待下游实现？不拥有的编排责任不能写成本包已完成。只记录发现的错位并修正归属，不新增 AC→写集→下游表；正常结果仍只记一行。
 - 上游是否已完成本包原计划新建的机制，或改变了接口、状态、阈值；
 - 每条 AC 的 intent/oracle 是否仍一致，example 能否按当前 oracle 复算；
 - `do-not/escalate-if` 的冲突是否已被上游裁决，承接方是否真实存在且未 merged；
@@ -243,6 +244,8 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 `findings: []` 或仅 advisory 即通过。只有 action 为 `fix-code/fix-mechanism` 的 blocking finding 进入代码整改 loop。每实际运行一次 full/targeted 独审计一个 `code_round`；按轮次模板的每任务累计上限收敛，同一证据未变化不重复上报。
 
 最终通过后保存报告与证据索引；计时不构成交付门。
+
+每轮完成立即用 `check-sprint.js --review-chain {task-id} . --in-progress` 核记录是否合法；合并前去掉 --in-progress 核最终闭合。末轮 round 承担最终结论，PR 引用即可，不再单独交 final-review.md。提交 hook 按暂存差异核本次新增/修改的审查及新 merged 任务，不重审未变化的历史报告；完整迭代检查仍可显式运行，不建立历史豁免账。全局依赖和共享资产冲突仍按原规则核。
 
 ### escape-hatch（执行 / 审查返回 blocked 时）
 

@@ -89,6 +89,8 @@ api-contract:
 
 ## 完成判据
 
+逐轮即时校验只证明报告结构与链合法，不能替代本节的最终闭合。最终独审以末轮 round 为准，不另交 final-review.md；历史文件保留。提交审计按实际暂存变化选任务，完整迭代依赖/共享资产检查保留，不要求为无关历史错误维护豁免账。
+
 - [ ] 所有 `acceptance-criteria` 均已满足
 - [ ] 不可视区 AC 的 `intent/oracle` 已落成测试且全绿；仅 `golden: true` 的 example 要求字面 1:1 物化
 - [ ] 写代码前 freshness preflight 已通过并落 `timing: before-code` 记录；命中的规格/示例漂移均在代码开发前按 action 关闭

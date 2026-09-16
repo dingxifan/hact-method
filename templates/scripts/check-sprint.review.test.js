@@ -358,6 +358,15 @@ result: pass
   assert.notStrictEqual(childProcess.spawnSync(process.execPath, [anchorScript, '--task', TASK_ID, '--head', reviewedHead1, '--root', tempRoot, '--write']).status, 0, 'cannot overwrite or skip a pending report');
   fs.writeFileSync(roundOnePath, evidenceFirst);
   const nextDraft = generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead2 });
+  const checkRound = flag => childProcess.spawnSync(process.execPath,
+    [checkSprint, '--review-chain', TASK_ID, tempRoot, ...(flag ? ['--in-progress'] : [])], { encoding: 'utf8' });
+  assert.strictEqual(checkRound(true).status, 0, 'evidence-needed is a legal completed intermediate report');
+  assert.notStrictEqual(checkRound(false).status, 0, 'intermediate report is not merge acceptance');
+  fs.writeFileSync(roundOnePath, evidenceFirst.replace(/diff_sha256: [a-f0-9]+/, 'diff_sha256: bad'));
+  assert.match(checkRound(true).stdout, /diff_sha256/, 'in-progress does not relax snapshot checks');
+  fs.writeFileSync(roundOnePath, firstDraft.text);
+  assert.match(checkRound(true).stdout, /conclusion 非法/, 'unreviewed pending draft remains invalid');
+  fs.writeFileSync(roundOnePath, evidenceFirst);
   assert.match(nextDraft.text, /mode: targeted/);
   assert.ok(nextDraft.text.includes(`prior_report: ${priorReport}`));
   assert.match(nextDraft.text, /status: open/, 'carry findings without closing them');

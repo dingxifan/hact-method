@@ -1,5 +1,20 @@
 # 独立审查范围与收敛调整
 
+## 011/012 反馈后的落实（方法论仓限定）
+
+用户澄清本轮只改 hact，file-extract 只读参考；不分发、不修改项目 hook，不开展 heartbeat 实验。保留无关 `_meta/plans/2026-09-16-develop-continuation-pilot/` 在制品。
+
+- [x] 原 preflight 核实际控制位置和下游职责，只写异常，不增映射表。
+- [x] 静态规则沿真实消费方式选正反例，复用 fixture 和现有报告，不增“三件证据”表。
+- [x] 同一 review-chain 入口增加中间轮校验：合法 revise/evidence-needed 可通过结构检查，pending/坏 SHA/断链不可通过；最终闭合不放松。
+- [x] hook 从暂存差异定位本次审计；全局规划/依赖/共享资产检查保留，未变化的历史 round 不重审，不新增豁免账。
+- [x] 末轮 round 即最终结论，停止要求单独 final-review.md，历史保留。
+- [x] 真实 Git 与 shell hook 正反例、审查链/状态门/接续回归及范围检查完成。
+
+代码调整复用已有 check-sprint、check-gate 和 hook；不新建检查器。完整迭代审计命令仍保留用于主动调查，不自动阻断每次无关提交。仅本仓落实，项目实际效果须以后另行采用。
+
+完成状态：本地修改和验证已完成，用户已授权本次提交推送到 codex/context-reduction；7 组相关测试、路径检查及 diff 检查通过。未另派独审，未操作项目仓；结果见 validation.md 的本轮段。
+
 ## 007 反馈后的减法修订（用户已确认方案）
 
 本轮仅在方法论仓修订，用户随后授权提交推送到 codex/context-reduction，不分发项目；不新增写集字段、轮次账或审查阶段。沿用下方第一版历史记录，不倒改其完成事实。

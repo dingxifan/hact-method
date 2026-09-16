@@ -9,7 +9,7 @@
 #   iterations/vN/prd.md            → check-docs.js（同迭代有 trd.md 则带上做交叉对账）
 #   iterations/vN/prd.md|as-built-ledger.md → check-as-built-ledger.js（走过 V0 时）
 #   iterations/vN/trd.md            → check-docs.js（PRD+TRD 交叉）
-#   iterations/vN/sprint.md|queue/*.md → check-sprint.js vN（只认 .md——.gitkeep 不触发，init 提交 queue 必然为空）
+#   sprint/queue/审查记录 → check-sprint.js --staged（全局依赖 + 本次任务审计，不重扫历史）
 #   status.yml 新签 Gate / merged → check-gate.js --staged
 #   b-queue/*.md                  → check-b-task.js（B 类不得夹带共享契约修订）
 #   integration-tests/result-*.md → check-integration-evidence.js（已执行有证据、未运行有原因）
@@ -79,11 +79,7 @@ for dir in $iter_dirs; do
     run scripts/check-as-built-ledger.js "$ver"
   fi
 
-  # --- sprint / 任务包（check-sprint.js）---
-  # 只认 .md：init 提交只 stage queue/**/.gitkeep（立项时 queue 必然为空），不触发本检查
-  if echo "$staged" | grep -qE "^${dir}(sprint\.md|queue/.*\.md)$"; then
-    run scripts/check-sprint.js "$ver"
-  fi
+  # sprint/任务包与审查记录在迭代循环外一次核本次提交；全局依赖仍由同一检查器核。
 
   # --- ux-flows / prototype（check-ux.js）---
   if echo "$staged" | grep -qE "^${dir}(ux-flows\.md|prototype\.html|prototype-map\.md)$"; then
@@ -94,6 +90,8 @@ done
 # --- 单源状态：新签 Gate 与新 merged 任务 ---
 if echo "$staged" | grep -qE '^status\.yml$'; then
   run scripts/check-gate.js --staged
+elif echo "$staged" | grep -qE '^(iterations/v[0-9]+(\.[0-9]+)*/(sprint\.md|queue/.*\.md|code-reviews/)|b-queue/.*\.md$|b-reviews/|status-reviews/)'; then
+  run scripts/check-sprint.js --staged
 fi
 
 # --- B 类任务包契约边界（check-b-task.js）---

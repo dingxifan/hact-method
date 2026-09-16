@@ -25,6 +25,10 @@ conclusion: pass | revise | evidence-needed
 
 首审写必要范围和证据；复审引用 prior_report，只补新证据、问题判断和结论，不重复任务背景、完整范围或已通过项。
 
+每轮由审查员完成后，立即运行 `node scripts/check-sprint.js --review-chain {task-id} . --in-progress`，核字段、固定快照和问题接续；revise/evidence-needed 是合法中间结论，pending 草稿仍不合法。该命令不证明可合并；交付前用不带 --in-progress 的同一命令核全部阻断闭合。
+
+末轮 round 报告就是最终独审结论，PR 直接引用它。不另交 final-review.md 或再次抄写验证摘要；历史文件保留。对新快照的实际复审接入原 round 链，不另开平行结论。
+
 - `full`：按对应 brief 核改动。只报发现、必要证据和未完成验证，不逐维度填“无发现”。
 - `targeted`：读前次独立报告，核目标 finding、修复增量及受影响调用链/回归；局部新发现沿用此模式并分配新 id，不重审未受影响部分。新增文件、模块、依赖本身不触发全审。
 - 同快照补证使用 `targeted` + `evidence_only: true`：reviewed_base/head 均等于上一轮 reviewed_head，changed_files 为空，diff_sha256 仍由空 diff 机械生成；evidence_files 列本次新增原始运行证据的项目内相对文件路径，不得引用本轮/旧 round 报告冒充运行证据。正文说明目标证据缺口、命令/配置/环境、结果与待审版本的对应。测试、实现、依赖或受版本控制配置有变化时必须普通增量复审。仍编号新 round 并如实计入历史 code_rounds，但不消耗实质代码审查额度；不改写旧报告、不新增补证阶段。

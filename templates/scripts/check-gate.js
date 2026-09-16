@@ -196,7 +196,8 @@ function checkStaged(root) {
       inputs.add('b-reviews/' + task.id);
     } else {
       if (!/^v\d+(?:\.\d+)*$/.test(task.iteration || '')) throw new Error('A 类任务缺合法 iteration');
-      inputs.add('iterations/' + task.iteration);
+      inputs.add('iterations/' + task.iteration + '/queue/' + task.id + '.md');
+      inputs.add('iterations/' + task.iteration + '/code-reviews/' + task.id);
     }
   }
   // 不能用工作树中未暂存的通过产物替已暂存的另一版本背书。
@@ -225,8 +226,8 @@ function checkStaged(root) {
     if (gate === 'G5') checkG5(version, root);
     human('Gate 确认', key + ' 必须对应用户明确确认；字段和脚本不代替人签');
   }
-  // status-only merged 仍核审查证据，不依赖顺手改 sprint/queue。
-  for (const task of merged) run('check-sprint.js', ['--review', task.id, root]);
+  // One staged audit covers new merged events and changed records without rescanning old rounds.
+  run('check-sprint.js', ['--staged', root]);
 }
 
 /* ---------------- 主流程 ---------------- */

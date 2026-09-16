@@ -1,5 +1,14 @@
 # 验证记录
 
+## 011/012 反馈后的方法论限定修订
+
+- 实际通过 `check-sprint.review.test.js`：中间 evidence-needed 链合法，但同一链在最终校验仍阻断；坏 SHA 和 pending 草稿不被 --in-progress 放行。
+- 实际通过 `check-sprint.review-archive.test.js`：历史缺报告条目时完整审计仍失败，无关 sprint/状态备注提交及真实 shell hook 可通过；本次修改旧任务、修改审计条目或改变任务归属仍检查。未暂存的相关产物不能替暂存版本背书，hook 只运行一次 scoped 审计。
+- 实际通过 `check-gate.test.js`：新 merged 必须核当前任务、Gate 顺序与真实未暂存状态不放松；状态提交统一调用一次 staged 审计。
+- 工作树接续、wave 拆分、共享资产正反例与 sync-method 真实临时 Git/hook/回收回归通过；运行时路径检查通过。
+
+范围：未修改 file-extract、未创建分发 worktree、未推送。保留方法论仓原有未跟踪的 continuation-pilot 目录。未开展 heartbeat 实验、未宣称真实节时或独立审查通过。历史 final-review 文件保留，新交付只引用末轮 round。
+
 ## 007 反馈后的减法修订
 
 本轮通过：`scripts/sync-method.test.cjs`、`templates/scripts/check-sprint.review.test.js`、`check-sprint.worktree.test.js`、`check-sprint.review-archive.test.js`、`wave-split.transaction.test.js`、`check-sprint.shared-assets.test.js`、`check-b-task.test.js`、`check-codex-project.test.js`；角色配置检查、运行时路径检查和 diff 检查通过。
