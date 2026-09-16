@@ -26,6 +26,7 @@ git(['config', 'user.email', 'test@example.com']);
 git(['config', 'user.name', 'Test']);
 write('src/a.ts', 'export const a = 1;\n');
 write('src/b.ts', 'export const b = 1;\n');
+write('iterations/v1/queue/demo-v1-001.md', '---\npackage-schema: 2\ntask-id: demo-v1-001\nfiles: [src/a.ts]\n---\n');
 write('status.yml', 'tasks:\n  - id: demo-v1-001\n    status: taken-by\n  - id: demo-v1-002\n    status: taken-by\n');
 git(['add', '.']);
 git(['commit', '-m', 'base']);
@@ -87,6 +88,55 @@ for (let restart = 0; restart < 3; restart += 1) {
   assert.strictEqual(fs.readFileSync(path.join(root, report),'utf8'),validReport,'恢复不重写已完成审查');
 }
 
+const evidenceDir = 'iterations/v1/code-reviews/demo-v1-001';
+const baseRef = git(['rev-parse', 'HEAD']);
+write(`${evidenceDir}/preflight.md`, `---\ntask_id: demo-v1-001\ntiming: before-code\nresult: pass\nbase_ref: ${baseRef}\nbase_tree: ${baseTree}\n---\n`);
+const boundedFirst = validReport.replace('task_id:', `schema: develop-review-round/v2\nreview_policy: bounded-v1\nrisk: standard\nbase_ref: ${baseRef}\ntask_id:`)
+  .replace('conclusion: pass', 'conclusion: evidence-needed')
+  .replace('findings: []', 'findings:\n  - id: demo-v1-001-F001\n    severity: blocking\n    status: open\n    action: request-evidence');
+write(report, boundedFirst);
+write(`${evidenceDir}/run.log`, 'target passed, exit 0\n');
+const evidenceFinal = `${evidenceDir}/round-02.md`;
+write(evidenceFinal, `---
+schema: develop-review-round/v2
+review_policy: bounded-v1
+task_id: demo-v1-001
+round: 2
+mode: targeted
+risk: standard
+base_ref: ${baseRef}
+reviewed_base: ${reviewedHead}
+reviewed_head: ${reviewedHead}
+diff_sha256: ${crypto.createHash('sha256').update('').digest('hex')}
+changed_files: []
+prior_report: ${report}
+target_finding_ids: [demo-v1-001-F001]
+evidence_only: true
+evidence_files: [${evidenceDir}/run.log]
+escalate_to_full: false
+conclusion: pass
+---
+## Findings
+\`\`\`yaml
+findings:
+  - id: demo-v1-001-F001
+    severity: blocking
+    status: verified-closed
+    action: request-evidence
+\`\`\`
+`);
+const evidenceRestore = check(evidenceFinal, 'demo-v1-001');
+assert.strictEqual(evidenceRestore.status, 0, `空增量末轮仍恢复全部 accepted 实现：${evidenceRestore.stdout}`);
+write('src/a.ts', 'export const a = 999;\n');
+assert.match(check(evidenceFinal, 'demo-v1-001').stdout, /二次未审修改/, '空增量报告不能隐藏未审实现变化');
+write('src/a.ts', 'export const a = 2;\n');
+write(report, boundedFirst.replace('action: request-evidence', 'action: fix-code'));
+assert.match(check(evidenceFinal, 'demo-v1-001').stdout, /审查链无效/, '恢复也校验补证前提');
+fs.unlinkSync(path.join(root, evidenceFinal));
+fs.unlinkSync(path.join(root, `${evidenceDir}/run.log`));
+write(`${evidenceDir}/preflight.md`, 'accepted audit\n');
+write(report, validReport);
+
 fs.writeFileSync(path.join(root, report), validReport.replace('conclusion: pass', 'conclusion: revise'));
 assert.strictEqual(check(report, 'demo-v1-001').status, 1, '未通过的 final report 不得成为 accepted 白名单');
 fs.writeFileSync(path.join(root, report), validReport);
@@ -98,5 +148,7 @@ write('src/b.ts', 'export const b = 2;\n');
 assert.strictEqual(check(report, 'demo-v1-001').status, 1, '白名单外源码改动必须阻断下一任务');
 git(['stash', 'push', '-m', 'fixture stash remains blocked']);
 assert.strictEqual(check('none', 'demo-v1-001').status, 1, 'progress 参数不得绕过 stash 阻断');
+if (!path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep)
+    || !path.basename(root).startsWith('hact-worktree-')) throw new Error('Invalid temporary fixture root');
 fs.rmSync(root, { recursive: true, force: true });
 console.log('✅ check-sprint worktree 正反夹具通过');

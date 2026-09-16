@@ -92,8 +92,8 @@ api-contract:
 - [ ] 所有 `acceptance-criteria` 均已满足
 - [ ] 不可视区 AC 的 `intent/oracle` 已落成测试且全绿；仅 `golden: true` 的 example 要求字面 1:1 物化
 - [ ] 写代码前 freshness preflight 已通过并落 `timing: before-code` 记录；命中的规格/示例漂移均在代码开发前按 action 关闭
-- [ ] layer 对应 checklist 自检通过（backend = `backend-checklist.md` 测试品类清单：鉴权/边界/错误路径/契约/数据并发/安全注入·穿越各有测试，留人判项有结论；frontend = `frontend-checklist.md` 三段式：机械归 lint/vue-tsc/stylelint + 可测逻辑写测试 + 视觉/交互留人走查）
-- [ ] 集合内每个任务已通过独立证据审查；首次按 brief 核权威契约、实际改动与证据；整改 targeted 复用前次报告，Foundation 使用专用 brief
+- [ ] layer 对应 checklist 的适用项已验证（backend 按实际改动选择契约、鉴权/边界、并发/副作用等验证，不逐类造测试；frontend 机械检查、可测逻辑与受影响视觉/交互分别验证）；不新增逐项空报告
+- [ ] 集合内每个任务已通过独立证据审查；开发首审核本包兑现、受影响行为、有效证据，审查员独立触发相关专项；整改默认原审查员 targeted 接续，Foundation 使用专用 brief。新报告 bounded-v1 的结论与阻断一致；同快照 evidence_only 补证仍计 code_rounds 并遵守三轮上限，历史报告不回写
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] 已发现的组合缺口及证据已在 PR 遗留问题或补缝任务中移交；不打回独立合规的原包
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）

@@ -220,7 +220,9 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 
 **首次 full review**：主线以 `fork_turns="none"` 派不继承实现历史的 Codex 审查子代理（实际接口不支持空历史时报告缺口），读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 task-id、layer、迭代、有效 risk、固定 base/head 和权威输入位置。审查员自读权威输入，按 brief 与实际改动确定检查范围；模式、报告和升级条件按轮次模板。
 
-**整改 targeted review**：传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；全新审查员可读前次**独立报告**，但仍不得接收开发者自评。核目标 finding、修复增量与受影响调用链；局部新发现可在 targeted 处理。升级全审条件与任务轮次上限统一按 `templates/review-briefs/develop-review-round.md`，新增文件/模块本身不触发 full。
+**整改 targeted review**：默认接续未参与实现的原独立审查员，传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；不可用时用空历史新审查员按前次独立报告接续，不为等待原单元阻塞。可核执行者提供的原始日志，不采信自评替代验证，不传实现辩解。核目标 finding、修复增量与受影响调用链；局部新发现可处理，扩审须指出哪些结论因何变化失效。升级条件与轮次上限统一按 round 模板，新增文件/模块本身不触发 full。
+
+**送审与补证**：首次送审前完成本包已有 AC 的必要目标验证；共享契约检查实际消费者，事务等真实边界不能以 mock 替代。无需新增检查表。环境未启动须先按既有恢复规则补齐必要验证，不把开发欠账交独审。审查发现必要证据缺口后，代码未变时按 round 模板的 evidence_only 入口补原始运行证据并由独立审查员核验；仍计 code_rounds，仍受三轮上限。实现或测试改变则审实际增量。新报告启用 bounded-v1，旧报告不重写；字段和指纹用 build-review-anchor.js 生成。
 
 逐轮计时可选，不要求补齐或对齐；round report 本身不计入被审实现 tree，最终随状态提交。
 
@@ -236,7 +238,7 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 | `revise-doc` / `downgrade-claim` | 修任务包或发 `revise-doc`；代码文件数必须为 0 | 只复核 contract/claim 一致性，不重跑完整代码审查；计 `spec_rounds` |
 | `global-gap-review` | 核承接方并创建补缝任务；A 类把组合证据移交联调，B 类/V0 按自身契约与授权边界处理 | 原包可独立合规时不打回；不可用待联调替代本包必要验证 |
 | `backlog` | 记入遗留/waiver | 不重审 |
-| `request-evidence` | 让审查员补反例或发规格澄清 | 证据面未变化前不改代码；补齐后重新分类 |
+| `request-evidence` | 缺运行证据由主线补齐、审查员独立核验；缺判断依据由审查员补反例或发规格澄清 | 无代码变化用 evidence_only targeted；有实现/测试增量用普通 targeted；不清零轮次 |
 
 `findings: []` 或仅 advisory 即通过。只有 action 为 `fix-code/fix-mechanism` 的 blocking finding 进入代码整改 loop。每实际运行一次 full/targeted 独审计一个 `code_round`；按轮次模板的每任务累计上限收敛，同一证据未变化不重复上报。
 

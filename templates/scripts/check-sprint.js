@@ -575,7 +575,7 @@ function parseReportFindings(reportPath) {
     if (/^\s*#/.test(line)) continue;
     const item = line.match(/^\s*-\s+id:\s*['"]?([^'"\s]+)['"]?\s*$/);
     if (item) { flush(); current = { id: item[1] }; continue; }
-    const field = line.match(/^\s+(severity|status):\s*['"]?([^'"\s]+)['"]?\s*$/);
+    const field = line.match(/^\s+(severity|status|action):\s*['"]?([^'"\s]+)['"]?\s*$/);
     if (field && current) current[field[1]] = field[2];
   }
   flush();
@@ -646,6 +646,8 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     errors.push(`round report 数 ${reports.length} != code_rounds ${cr.code_rounds}`);
   let previousEscalated = false, previousReviewedHead = '', lastConclusion = '';
   const openBlocking = new Set();
+  const openActions = new Map();
+  let boundedPolicy = false;
   let declaredTaskFiles = [];
   let taskPackageSchema = '';
   if (!foundationReview) {
@@ -687,7 +689,38 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       errors.push(`${file}: targeted reviewed_base 必须等于上一轮 reviewed_head`);
     if (!isSha256(r('diff_sha256'))) errors.push(`${file}: diff_sha256 非 64 位小写 hex`);
     const reportedChangedFiles = listItems(rp && rp.changed_files).map(name => name.replace(/\\/g, '/')).sort();
-    if (!reportedChangedFiles.length) errors.push(`${file}: changed_files 为空`);
+    const policy = r('review_policy');
+    if (policy && policy !== 'bounded-v1') errors.push(`${file}: 未知 review_policy=${policy}`);
+    if (boundedPolicy && policy !== 'bounded-v1') errors.push(`${file}: bounded-v1 启用后不得退回旧策略`);
+    if (policy === 'bounded-v1') boundedPolicy = true;
+    const evidenceOnly = r('evidence_only') === 'true';
+    if (r('evidence_only') && !['true', 'false'].includes(r('evidence_only')))
+      errors.push(`${file}: evidence_only 非布尔`);
+    if (evidenceOnly) {
+      if (!boundedPolicy || mode !== 'targeted' || !previousReviewedHead
+          || r('reviewed_base') !== previousReviewedHead || r('reviewed_head') !== previousReviewedHead
+          || reportedChangedFiles.length || r('escalate_to_full') !== 'false')
+        errors.push(`${file}: evidence_only 必须是 bounded-v1 targeted 同快照空增量且不扩审`);
+      const targets = listItems(rp && rp.target_finding_ids);
+      if (!targets.length || targets.some(target => openActions.get(target) !== 'request-evidence'))
+        errors.push(`${file}: evidence_only 只能核此前开放的 request-evidence 问题`);
+      const evidenceFiles = listItems(rp && rp.evidence_files);
+      if (!evidenceFiles.length) errors.push(`${file}: evidence_only 缺 evidence_files`);
+      for (const rel of evidenceFiles) {
+        const abs = resolveProjectFile(root, rel);
+        try {
+          const real = abs && fs.realpathSync(abs);
+          const realRoot = fs.realpathSync(root);
+          const inside = real && path.relative(realRoot, real);
+          if (!abs || !inside || inside === '..' || inside.startsWith(`..${path.sep}`)
+              || path.isAbsolute(inside) || /(?:^|[\\/])round-\d+\.md$/.test(rel)
+              || !fs.statSync(real).isFile() || fs.statSync(real).size === 0)
+            throw new Error('invalid evidence');
+        } catch {
+          errors.push(`${file}: evidence_files 必须为项目内非空原始证据文件，不能是 round 报告：${rel}`);
+        }
+      }
+    } else if (!reportedChangedFiles.length) errors.push(`${file}: changed_files 为空`);
     if (isSha40(r('reviewed_base')) && isSha40(r('reviewed_head'))) {
       const fixed = fixedDiffEvidence(root, r('reviewed_base'), r('reviewed_head'));
       if (fixed.error) errors.push(`${file}: 固定 diff 不可复现：${fixed.error}`);
@@ -723,11 +756,28 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       if (!findingId.test(finding.id || '')) errors.push(`${file}: finding id 不符合 ${id}-FNNN`);
       if (!['blocking', 'advisory'].includes(finding.severity || '')) errors.push(`${file}: ${finding.id} severity 非法或缺失`);
       if (!['open', 'verified-closed', 'advisory'].includes(finding.status || '')) errors.push(`${file}: ${finding.id} status 非法或缺失`);
+      if (boundedPolicy && finding.severity === 'blocking' && finding.status === 'open'
+          && !['fix-code', 'fix-mechanism', 'revise-doc', 'downgrade-claim', 'global-gap-review', 'request-evidence'].includes(finding.action))
+        errors.push(`${file}: 开放阻断 ${finding.id} 必须有可执行 action，不能以 backlog 挂起后阻断`);
       if (finding.severity === 'blocking' && finding.status === 'open') openBlocking.add(finding.id);
       if (finding.status === 'verified-closed' || finding.status === 'advisory') openBlocking.delete(finding.id);
+      if (finding.severity === 'blocking' && finding.status === 'open') openActions.set(finding.id, finding.action);
+      if (finding.status === 'verified-closed' || finding.status === 'advisory') openActions.delete(finding.id);
     }
     if (r('conclusion') === 'pass' && openBlocking.size)
       errors.push(`${file}: conclusion=pass 但仍有 open blocking finding：${[...openBlocking].join(', ')}`);
+    if (boundedPolicy) {
+      const awaitingEvidence = [...openActions.values()].some(action => action === 'request-evidence');
+      const awaitingFix = [...openActions.values()].some(action => action !== 'request-evidence');
+      if (r('conclusion') === 'evidence-needed' && !awaitingEvidence)
+        errors.push(`${file}: evidence-needed 必须有开放的阻断 request-evidence 问题`);
+      if (r('conclusion') === 'revise' && !awaitingFix && r('escalate_to_full') !== 'true')
+        errors.push(`${file}: revise 必须有待整改阻断，建议不阻断`);
+      if (r('conclusion') !== 'pass' && !openBlocking.size && r('escalate_to_full') !== 'true')
+        errors.push(`${file}: 无开放阻断且不扩审时必须 pass`);
+      if (r('conclusion') === 'pass' && r('escalate_to_full') === 'true')
+        errors.push(`${file}: pass 不得同时要求扩审`);
+    }
     previousReviewedHead = r('reviewed_head');
     lastConclusion = r('conclusion');
     previousEscalated = r('escalate_to_full') === 'true';
@@ -1018,7 +1068,26 @@ function checkWorktreeFromReports(subject, root, progressIds = '') {
       fail('工作树白名单', relative, `prior final report 固定 diff 不可复现或证据不一致${fixed.error ? `：${fixed.error}` : ''}`);
       continue;
     }
-    for (const file of changedFiles) {
+    let acceptedFiles = changedFiles;
+    if (value('review_policy') === 'bounded-v1') {
+      // A final targeted/evidence-only delta is not the complete accepted implementation.
+      const audit = reviewAuditErrors(root, value('task_id'), {
+        freshness: 'pass', review_report_dir: path.relative(root, reportDir),
+        review_evidence_version: 'develop-review-round/v2', code_rounds: String(roundFiles.length),
+      }, { preMerge: true });
+      if (audit.length) {
+        fail('工作树白名单', relative, `bounded 审查链无效：${audit.join('；')}`);
+        continue;
+      }
+      const pf = parseFrontmatter(path.join(reportDir, 'preflight.md'));
+      const accepted = fixedDiffEvidence(root, scalarText(pf && pf.base_tree), value('reviewed_head'));
+      if (accepted.error) {
+        fail('工作树白名单', relative, `accepted 累计实现不可复现：${accepted.error}`);
+        continue;
+      }
+      acceptedFiles = accepted.names;
+    }
+    for (const file of acceptedFiles) {
       allowedFiles.add(file);
       let reviewedBlob = null;
       try { reviewedBlob = String(gitOutput(root, ['rev-parse', `${value('reviewed_head')}:${file}`])).trim(); }

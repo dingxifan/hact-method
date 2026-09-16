@@ -271,6 +271,80 @@ result: pass
   assert.match(runAudit().stdout, /conclusion=pass 但仍有 open blocking/, 'local findings cannot be skipped to pass');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
 
+  // New policy is prospective: historical bytes remain untouched, including old verdicts.
+  const bounded = text => text.replace('schema: develop-review-round/v2',
+    'schema: develop-review-round/v2\nreview_policy: bounded-v1');
+  const evidenceFirst = bounded(priorRound)
+    .replace('conclusion: revise', 'conclusion: evidence-needed')
+    .replace('status: open', 'status: open\n    action: request-evidence');
+  const evidencePath = `b-reviews/${TASK_ID}/runtime.log`;
+  write(evidencePath, 'fixed snapshot target run: PASS, exit 0\n');
+  const evidenceSecond = bounded(reportText({
+    taskId: TASK_ID, round: 2, mode: 'targeted', prior: priorReport,
+    targets: [`${TASK_ID}-F001`], baseRef, base: reviewedHead1, head: reviewedHead1,
+    changedFiles: [], conclusion: 'pass',
+    body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    action: request-evidence\n    status: verified-closed`,
+  })).replace('conclusion: pass', `evidence_only: true\nevidence_files: [${evidencePath}]\nconclusion: pass`);
+  fs.writeFileSync(roundOnePath, evidenceFirst);
+  fs.writeFileSync(roundTwoPath, evidenceSecond);
+  let result = runAudit();
+  assert.strictEqual(result.status, 0, `same-tree evidence closure: ${result.stdout}\n${result.stderr}`);
+  const chain = childProcess.spawnSync(process.execPath, [checkSprint, '--review-chain', TASK_ID, tempRoot], { encoding: 'utf8' });
+  assert.strictEqual(chain.status, 0, `pre-merge evidence chain: ${chain.stdout}\n${chain.stderr}`);
+  const rejectedSecond = (text, pattern) => {
+    fs.writeFileSync(roundTwoPath, text);
+    assert.match(runAudit().stdout, pattern);
+    fs.writeFileSync(roundTwoPath, evidenceSecond);
+  };
+  rejectedSecond(evidenceSecond.replace('evidence_only: true', 'evidence_only: false'), /changed_files 为空/);
+  rejectedSecond(evidenceSecond.replace('evidence_only: true', 'evidence_only: maybe'), /evidence_only 非布尔/);
+  rejectedSecond(evidenceSecond.replace(`reviewed_head: ${reviewedHead1}`, `reviewed_head: ${reviewedHead2}`), /同快照空增量/);
+  rejectedSecond(evidenceSecond.replace(evidencePath, 'missing.log'), /非空原始证据/);
+  write('empty.log', '');
+  rejectedSecond(evidenceSecond.replace(evidencePath, 'empty.log'), /非空原始证据/);
+  rejectedSecond(evidenceSecond.replace(evidencePath, priorReport), /非空原始证据/);
+  rejectedSecond(evidenceSecond.replace(evidencePath, '../outside.log'), /非空原始证据/);
+  rejectedSecond(evidenceSecond.replace(`evidence_files: [${evidencePath}]`, 'evidence_files: []'), /缺 evidence_files/);
+  rejectedSecond(evidenceSecond.replace('review_policy: bounded-v1\n', ''), /不得退回旧策略/);
+  rejectedSecond(evidenceSecond.replace('review_policy: bounded-v1', 'review_policy: unknown'), /未知 review_policy/);
+  rejectedSecond(evidenceSecond.replace('status: verified-closed', 'status: open'), /open blocking/);
+  rejectedSecond(evidenceSecond.replace(`target_finding_ids: [${TASK_ID}-F001]`, `target_finding_ids: [${TASK_ID}-F002]`), /此前开放|全部 open blocking/);
+  fs.writeFileSync(roundOnePath, bounded(priorRound).replace('status: open', 'status: open\n    action: fix-code'));
+  assert.match(runAudit().stdout, /此前开放的 request-evidence/, 'code repair cannot masquerade as evidence only');
+
+  const advisoryFirst = evidenceFirst.replace('severity: blocking', 'severity: advisory').replace('status: open', 'status: advisory');
+  fs.writeFileSync(roundOnePath, advisoryFirst);
+  assert.match(runAudit().stdout, /evidence-needed 必须有开放/, 'advisory cannot force evidence-needed');
+  fs.writeFileSync(roundOnePath, advisoryFirst.replace('conclusion: evidence-needed', 'conclusion: revise'));
+  assert.match(runAudit().stdout, /建议不阻断/, 'advisory cannot force revise');
+  fs.writeFileSync(roundOnePath, evidenceFirst.replace('action: request-evidence', 'action: fix-code'));
+  assert.match(runAudit().stdout, /evidence-needed 必须有开放/, 'a bug is not an evidence gap');
+  fs.writeFileSync(roundOnePath, evidenceFirst.replace('action: request-evidence', 'action: backlog'));
+  assert.match(runAudit().stdout, /必须有可执行 action/, 'backlog is not an unresolved blocking action');
+  fs.writeFileSync(roundOnePath, bounded(priorRound).replace('status: open', 'status: open\n    action: fix-code'));
+  fs.writeFileSync(roundTwoPath, bounded(canonicalRoundTwo));
+  assert.strictEqual(runAudit().status, 0, 'real blocking repair with code diff still passes');
+
+  // Opt in during an existing chain without rewriting its historical first round.
+  fs.writeFileSync(roundOnePath, priorRound);
+  assert.strictEqual(runAudit().status, 0, 'bounded targeted can continue an unchanged legacy round');
+  assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), priorRound);
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo);
+  fs.writeFileSync(roundTwoPath, bounded(canonicalRoundTwo).replace('status: verified-closed', 'status: verified-closed\n  - id: demo-b-101-F002\n    severity: advisory\n    status: advisory\n    action: backlog'));
+  assert.strictEqual(runAudit().status, 0, 'advisory alongside closed blocker permits pass');
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo);
+
+  const anchorScript = path.join(__dirname, 'build-review-anchor.js');
+  const anchor = childProcess.spawnSync(process.execPath, [anchorScript, baseTree, reviewedHead1, tempRoot], { encoding: 'utf8' });
+  assert.strictEqual(anchor.status, 0, anchor.stderr);
+  assert.ok(anchor.stdout.includes(`diff_sha256: ${diffEvidence(baseTree, reviewedHead1).hash}`));
+  assert.ok(anchor.stdout.includes('"scripts/check-guard.js"'));
+  const emptyAnchor = childProcess.spawnSync(process.execPath, [anchorScript, reviewedHead1, reviewedHead1, tempRoot], { encoding: 'utf8' });
+  assert.strictEqual(emptyAnchor.status, 0, emptyAnchor.stderr);
+  assert.match(emptyAnchor.stdout, /changed_files: \[\]/);
+  assert.ok(emptyAnchor.stdout.includes(crypto.createHash('sha256').update('').digest('hex')));
+  assert.notStrictEqual(childProcess.spawnSync(process.execPath, [anchorScript, 'no-such-ref', reviewedHead1, tempRoot]).status, 0);
+
   git(['read-tree', baseTree]);
   write('src/main.ts', 'export const main = true;\n');
   git(['add', 'src/main.ts']);
