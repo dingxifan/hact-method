@@ -65,6 +65,8 @@ echo "" > "../{name}/b-queue/.gitkeep"
 
 **复制自 `templates\{产物名}.md`**，把文件内 `{项目名}` 替换为实际项目名，写完确认非空（templates/ 是格式单一真相源，structural §主要产物 只列指针）：
 
+本次初始化先固定用户所选方法论 ref 的提交 SHA，后续模板均取该 SHA；脚本实际复制该版本 `templates/scripts/*.js` 的全部非 `.test.js` 文件（下列清单用于解释用途，不作为另一个文件清单）。不混入方法论工作树的未提交版本。
+
 - 项目根 `project.md` / 项目根 `reusables.md` / 项目根 `decisions.md` / 项目根 `backlog.md` / 项目根 `feedback.md`
 - 项目根 `design.md`：复制自 `templates\design.md`（空模板——色值 / 字号 / 间距等槽位留空，`draft-ux` Step 1.3 首次 UX 时填变量；是非空模板文件，非空文件）
 - 项目根 `foundation.md`：复制自 `templates\foundation.md`（**地基蓝图**空模板——领域地图 / 关注点登记槽位留空，本 spec **Step 5 共识讨论**时填；技术内生清单与安全项「应有档=构造级」已预置。下游 V0 走骨架据此建骨架）
@@ -112,6 +114,8 @@ git commit -m "feat: 初始化项目 {name}"
 > **门卫模板修订后，存量仓要重装两跳**：`.git/hooks/pre-commit` 是安装时的**快照**，两跳都不会自己动——① hact-method 的模板改了，项目仓 tracked 的 `scripts/pre-commit-hook.sh` 不会自动跟（须按上面「合并而非覆盖」手工并入）；② 就算 ① 做了、`git pull` 把 `scripts/` 拉新了，`.git/hooks/` 里那份仍是旧的，须重跑一次上面的 cp。漏掉任一跳，仓里看着是新门卫、实际跑的是旧的，且**不报错**。重装后**真触发一次**确认。
 
 **4.2 强制获取 Gitee 远端地址：**
+
+首次 hook 接通后，在已有 `_meta/method-sync.json` 格式记录 `schema: 1`、`state: verified`、`methodRoot`（项目到方法论仓相对路径）和本次固定的 `source` SHA；运行 `sync-method.cjs --runtime-check --root .` 通过后随初始化提交。只适用于新仓，存量仓仍走既有隔离同步流程，不能只改 source 声称升级。后续规范用该工具 `--read`，脚本使用项目副本。
 
 ```
 请提供项目的 Gitee 远端仓库地址（格式：https://gitee.com/{user}/{repo}.git）。

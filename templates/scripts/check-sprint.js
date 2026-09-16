@@ -649,6 +649,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
   const openActions = new Map();
   let boundedPolicy = false;
   let declaredTaskFiles = [];
+  let taskPackagePath = '';
   let taskPackageSchema = '';
   if (!foundationReview) {
     const taskPackages = findTaskPackages(root, id);
@@ -656,6 +657,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       ? `找到 ${taskPackages.length} 个同 id 任务包，审查输入必须唯一`
       : '找不到 A/B 权威任务包，无法核对固定 diff 范围');
     else {
+      taskPackagePath = path.relative(root, taskPackages[0]).replace(/\\/g, '/');
       const packageFm = parseFrontmatter(taskPackages[0]);
       taskPackageSchema = scalarText(packageFm && packageFm['package-schema']);
       declaredTaskFiles = listItems(packageFm && packageFm.files).map(normalizeFileAsset).sort();
@@ -729,7 +731,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
         if (JSON.stringify(reportedChangedFiles) !== JSON.stringify(fixed.names))
           errors.push(`${file}: changed_files 与固定 diff 实际文件集不一致`);
         if (declaredTaskFiles.length) {
-          const undeclared = fixed.names.filter(name => !declaredTaskFiles.includes(name.toLowerCase()));
+          const undeclared = fixed.names.filter(name => name !== taskPackagePath && !declaredTaskFiles.includes(name.toLowerCase()));
           if (undeclared.length) errors.push(`${file}: 固定 diff 超出任务包 files：${undeclared.join(', ')}`);
         }
       }
@@ -1539,4 +1541,5 @@ function main() {
 
 if (require.main === module) main();
 module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED, REVIEW_AUDIT_FIELDS,
-  sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText };
+  sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText,
+  parseReportFindings, fixedDiffEvidence, findTaskPackages };

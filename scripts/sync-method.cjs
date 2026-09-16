@@ -238,13 +238,46 @@ function finish(worktree, source, integrate = false) {
   return { state: integrationError ? 'integration-failed' : integrate ? 'integrated' : 'committed',
     branch: state.syncBranch, commit, worktreeRemoved: true, pushed: false, integrationError };
 }
+// Daily use reuses the installed SHA; it never follows the method checkout's HEAD.
+function adoptedSource(root) {
+  root = rootOf(root);
+  const state = JSON.parse(read(root, META) || '{}');
+  if (state.state !== 'verified' || !/^[a-f0-9]{40}$/.test(state.source || '') || !state.methodRoot)
+    throw new Error('方法论版本漂移：缺已完成的 method-sync 固定来源；沿用获准旧版或先完成同步，不能混用当前分支。');
+  const method = path.resolve(root, state.methodRoot);
+  git(method, ['cat-file', '-e', state.source + '^{commit}']);
+  return { root, method, sha: state.source };
+}
+function runtimeCheck(root) {
+  const source = adoptedSource(root), errors = [];
+  const files = git(source.method, ['ls-tree', '-r', '--name-only', source.sha, '--', 'templates/scripts']).split('\n')
+    .filter(f => /\.js$/.test(f) && !f.endsWith('.test.js'));
+  for (const from of files) {
+    const local = read(source.root, from.slice('templates/'.length));
+    const pinned = git(source.method, ['show', source.sha + ':' + from]);
+    if (local === null || normalize(local).trimEnd() !== normalize(pinned).trimEnd())
+      errors.push('方法论版本漂移：' + from.slice(10) + ' 不匹配已采用 SHA；先同步，不按任务证据失败处理');
+  }
+  if (!errors.length) {
+    const hook = require(path.join(source.root, 'scripts/check-hook-state.js')).inspect(source.root, null);
+    if (hook.state !== 'available') errors.push('方法论 hook 未接通：' + hook.signals.join(', '));
+  }
+  return { source: source.sha, methodRoot: path.relative(source.root, source.method).replace(/\\/g, '/'), errors };
+}
+function readAdopted(root, file) {
+  const source = adoptedSource(root);
+  if (!/^(specs-execution|specs-structural|skeleton|guide|templates)\/[A-Za-z0-9_./\-\u0080-\uffff]+\.md$/.test(file || '')
+      || file.split('/').includes('..')) throw new Error('只允许读取固定方法版本内的规范 Markdown 路径');
+  return git(source.method, ['show', source.sha + ':' + file]) + '\n';
+}
 function main(argv) {
   if (argv.includes('--help')) {
-    console.log('默认 --check 只读；--prepare 创建隔离升级树，按 TASK.md 完成迁移；--verify 核对；--finish 本地提交并回收，--integrate 可选快进。详见 guide/07-同步方法论.md'); return;
+    console.log('默认 --check 只读；--prepare/--verify/--finish 完成既有隔离同步，--integrate 可选快进；日常 --runtime-check 核已采用版本，--read <规范路径> 读取该 SHA 原文。详见 guide/07-同步方法论.md'); return;
   }
-  let action = 'check', root = process.cwd(), method = path.resolve(__dirname, '..'), ref = 'codex/context-reduction', integrate = false;
+  let action = 'check', root = process.cwd(), method = path.resolve(__dirname, '..'), ref = 'codex/context-reduction', integrate = false, file;
   for (let i = 0; i < argv.length; i++) {
-    if (['--check', '--prepare', '--verify', '--finish'].includes(argv[i])) action = argv[i].slice(2);
+    if (['--check', '--prepare', '--verify', '--finish', '--runtime-check'].includes(argv[i])) action = argv[i].slice(2);
+    else if (argv[i] === '--read') { action = 'read'; file = argv[++i]; }
     else if (argv[i] === '--root') root = path.resolve(argv[++i] || '');
     else if (argv[i] === '--method-root') method = path.resolve(argv[++i] || '');
     else if (argv[i] === '--ref') ref = argv[++i] || '';
@@ -252,6 +285,13 @@ function main(argv) {
     else throw new Error('用法：node sync-method.cjs [--check|--prepare|--verify|--finish] [--root 仓库] [--ref 方法分支或SHA] [--integrate]');
   }
   if (integrate && action !== 'finish') throw new Error('--integrate 只能与 --finish 一起使用');
+  if (action === 'read') { process.stdout.write(readAdopted(root, file)); return; }
+  if (action === 'runtime-check') {
+    const result = runtimeCheck(root);
+    console.log(JSON.stringify(result, null, 2));
+    if (result.errors.length) process.exitCode = 1;
+    return;
+  }
   const source = loadSource(method, ref);
   const result = action === 'prepare' ? prepare(root, source) : action === 'verify' ? { errors: verify(root, source) }
     : action === 'finish' ? finish(root, source, integrate) : inspectProject(root, source);
@@ -262,4 +302,4 @@ if (require.main === module) {
   try { main(process.argv.slice(2)); }
   catch (e) { console.error(String(e.stderr || e.stdout || e.message).trim()); process.exitCode = 1; }
 }
-module.exports = { loadSource, inspectProject, prepare, verify, finish, safePath, main };
+module.exports = { loadSource, inspectProject, prepare, verify, finish, safePath, main, runtimeCheck, readAdopted };

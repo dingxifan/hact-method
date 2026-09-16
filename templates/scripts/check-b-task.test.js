@@ -110,6 +110,17 @@ const ddlHead = runGit(['write-tree']);
 fs.writeFileSync(diffTask, shortPackage('src/models/user.ts'));
 assert.ok(validateDiff(diffTask, base, ddlHead, repo).some(e => /数据库 DDL/.test(e)),
   'governed 不能从普通源码夹带迁移 DDL');
+runGit(['read-tree', base + '^{tree}']);
+const ownTask = path.join(repo, 'b-queue', 'demo-b-001.md');
+fs.mkdirSync(path.dirname(ownTask), { recursive: true });
+fs.writeFileSync(ownTask, shortPackage('src/models/profile.ts'));
+runGit(['add', 'b-queue/demo-b-001.md']);
+const ownHead = runGit(['write-tree']);
+assert.deepStrictEqual(validateDiff(ownTask, base, ownHead, repo), [], '本任务包维护无需自登记');
+fs.writeFileSync(path.join(repo, 'b-queue', 'another-task.md'), 'another task\n');
+runGit(['add', 'b-queue/another-task.md']);
+assert.ok(validateDiff(ownTask, base, runGit(['write-tree']), repo).some(e => /未声明 files/.test(e)), '自登记豁免不覆盖其它任务');
+if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('临时路径越界');
 fs.rmSync(temp, { recursive: true, force: true });
 
 console.log('✅ check-b-task 正反夹具通过');

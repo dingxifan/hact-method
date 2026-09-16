@@ -44,7 +44,7 @@ B 类使用 `specs-execution/dispatch-new.md` 的短包子集，不要求 A 类 
 | `risk` | enum | ✅ | `standard`（默认）/ `sensitive`。触及 develop 合并前安全敏感预检四类之一时填 `sensitive`：权限 / 认证 / 数据隔离、不可逆数据操作、金额 / 计费计算、对外不可撤销副作用；否则填 `standard`，**存疑即 `sensitive`**。缺省按 `standard` 处理。develop 侧按**有效 risk** 消费（自报 `sensitive` 或主线四类语义扫命中即升档并回改本字段），末端安全敏感预检基于 diff 独立判定、不唯此字段（决策#29，见 `specs-execution/develop.md`） |
 | `title` | string | ✅ | 简短描述，15字以内 |
 | `description` | string | ✅ | 格式：「当前状态 → 期望状态」，不写"实现XXX" |
-| `files` | string[] | ✅ | 本任务必须修改的文件路径，精确到已知行号范围；不预防性列入"可能"文件 |
+| `files` | string[] | ✅ | 当前实施落点；规划原貌留 Git，实际改动由固定 diff 生成。授权内必要落点由主线及时修正，理由写已有进度/报告一句话，不另建 planned/actual/approval 清单。当前任务包自身无需登记；不因此授权改变业务契约。共享写集仍核依赖和冲突 |
 | `asset-writes` | string[] | ✅（新包） | 本任务会写的跨文件共享资产；无则 `[]`。使用稳定键，如 `db:users`、`enum:OrderStatus`、`type:UserDTO`、`api:GET /users`、`event:order.created`、`config:auth-policy`。`files` 相同或资产键相同的任务必须以 `depends_on` 排出先后；旧包缺字段时兼容，但不能据此获得并行资格 |
 | `supersedes` | string[] | ✅ | 本包取代的既有实体，无则 `[]`。一行一条并写清是什么：代码路径（旧实现 / 旧分支 / 将无调用方的模块）、lint 规则 id、spec 文件、`decisions #N`。非空即欠一笔**退役账**：develop 在 PR description 逐条给「已下线 / 保留 + 解除条件」，`wrap-up-iteration` 于签 G5 前核对。**不进 `check-sprint.js` 必填校验**（存量项目任务包无此字段，机械必填会全线红） |
 | `ac-format` | enum | ✅ | 新任务固定 `intent-oracle-v1`；存量缺省按旧格式兼容，不要求批量回填 |
@@ -93,7 +93,7 @@ api-contract:
 - [ ] 不可视区 AC 的 `intent/oracle` 已落成测试且全绿；仅 `golden: true` 的 example 要求字面 1:1 物化
 - [ ] 写代码前 freshness preflight 已通过并落 `timing: before-code` 记录；命中的规格/示例漂移均在代码开发前按 action 关闭
 - [ ] layer 对应 checklist 的适用项已验证（backend 按实际改动选择契约、鉴权/边界、并发/副作用等验证，不逐类造测试；frontend 机械检查、可测逻辑与受影响视觉/交互分别验证）；不新增逐项空报告
-- [ ] 集合内每个任务已通过独立证据审查；开发首审核本包兑现、受影响行为、有效证据，审查员独立触发相关专项；整改默认原审查员 targeted 接续，Foundation 使用专用 brief。新报告 bounded-v1 的结论与阻断一致；同快照 evidence_only 补证仍计 code_rounds 并遵守三轮上限，历史报告不回写
+- [ ] 集合内每个任务已通过独立证据审查；开发首审核本包兑现、受影响行为、有效证据，审查员独立触发相关专项；整改默认原审查员 targeted 接续，Foundation 使用专用 brief。新报告 bounded-v1 的结论与阻断一致；历史 code_rounds 仍统计报告，整改额度按 Git 增量推导三个实质代码审查快照；同快照同问题集中补证一次，历史报告不回写
 - [ ] 全量检测全绿（整合后 build/type/lint/test 覆盖集合全部改动）
 - [ ] 已发现的组合缺口及证据已在 PR 遗留问题或补缝任务中移交；不打回独立合规的原包
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）

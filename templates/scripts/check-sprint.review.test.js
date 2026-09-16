@@ -345,6 +345,71 @@ result: pass
   assert.ok(emptyAnchor.stdout.includes(crypto.createHash('sha256').update('').digest('hex')));
   assert.notStrictEqual(childProcess.spawnSync(process.execPath, [anchorScript, 'no-such-ref', reviewedHead1, tempRoot]).status, 0);
 
+  const generator = require('./build-review-anchor.js');
+  const reportDir = `b-reviews/${TASK_ID}`;
+  fs.unlinkSync(roundTwoPath);
+  fs.unlinkSync(roundOnePath);
+  const firstDraft = generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead1 });
+  assert.match(firstDraft.text, /mode: full/);
+  assert.match(firstDraft.text, /conclusion: pending/, 'draft never grants pass');
+  const writeDraft = childProcess.spawnSync(process.execPath, [anchorScript, '--task', TASK_ID, '--head', reviewedHead1, '--root', tempRoot, '--write'], { encoding: 'utf8' });
+  assert.strictEqual(writeDraft.status, 0, writeDraft.stderr);
+  assert.match(fs.readFileSync(roundOnePath, 'utf8'), /conclusion: pending/);
+  assert.notStrictEqual(childProcess.spawnSync(process.execPath, [anchorScript, '--task', TASK_ID, '--head', reviewedHead1, '--root', tempRoot, '--write']).status, 0, 'cannot overwrite or skip a pending report');
+  fs.writeFileSync(roundOnePath, evidenceFirst);
+  const nextDraft = generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead2 });
+  assert.match(nextDraft.text, /mode: targeted/);
+  assert.ok(nextDraft.text.includes(`prior_report: ${priorReport}`));
+  assert.match(nextDraft.text, /status: open/, 'carry findings without closing them');
+  assert.match(nextDraft.text, /action: request-evidence/);
+  const sameDraft = generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead1 });
+  assert.match(sameDraft.text, /evidence_only: true/);
+  fs.writeFileSync(roundTwoPath, sameDraft.text);
+  assert.match(runAudit().stdout, /conclusion 非法|open blocking/, 'generated pending skeleton cannot pass audit');
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead1 }), /仍为草稿/);
+  fs.writeFileSync(roundTwoPath, evidenceSecond.replace('conclusion: pass', 'conclusion: evidence-needed').replace('status: verified-closed', 'status: open'));
+  assert.strictEqual(generator.progress(tempRoot, reportDir, `b-queue/${TASK_ID}.md`).codeReviews, 1, 'same-tree evidence does not use a code snapshot');
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead1 }), /已集中补证一次/);
+  const afterEvidence = generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead2 });
+  assert.match(afterEvidence.text, /round: 3/, 'evidence did not consume the next implementation attempt');
+  assert.match(afterEvidence.text, /evidence_only: false/);
+  fs.writeFileSync(path.join(tempRoot, reportDir, 'round-03.md'), afterEvidence.text.replace('conclusion: pending', 'conclusion: evidence-needed'));
+  git(['read-tree', reviewedHead2]);
+  write('tests/enforcement/guard.spec.ts', 'const third = true;\n');
+  git(['add', 'tests/enforcement/guard.spec.ts']);
+  const head3 = git(['write-tree']).trim();
+  const thirdCode = generator.draft(tempRoot, { task: TASK_ID, head: head3 });
+  fs.writeFileSync(path.join(tempRoot, reportDir, 'round-04.md'), thirdCode.text.replace('conclusion: pending', 'conclusion: evidence-needed'));
+  assert.strictEqual(generator.progress(tempRoot, reportDir, `b-queue/${TASK_ID}.md`).codeReviews, 3);
+  assert.match(generator.draft(tempRoot, { task: TASK_ID, head: head3 }).text, /evidence_only: true/, 'third code snapshot may still close by evidence');
+  write('tests/enforcement/guard.spec.ts', 'const fourth = true;\n');
+  git(['add', 'tests/enforcement/guard.spec.ts']);
+  const head4 = git(['write-tree']).trim();
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: head4 }), /三个实质代码审查/, 'evidence exception does not grant a fourth implementation attempt');
+  fs.unlinkSync(path.join(tempRoot, reportDir, 'round-03.md'));
+  fs.unlinkSync(path.join(tempRoot, reportDir, 'round-04.md'));
+  fs.writeFileSync(roundTwoPath, evidenceSecond);
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: reviewedHead1 }), /无开放阻断/);
+
+  // The task package may maintain its own registration without listing itself.
+  git(['read-tree', reviewedHead1]);
+  write(`b-queue/${TASK_ID}.md`, currentTask + '\nRegistration rationale.\n');
+  git(['add', `b-queue/${TASK_ID}.md`]);
+  const packageHead = git(['write-tree']).trim();
+  const specDraft = generator.draft(tempRoot, { task: TASK_ID, spec: true, base: reviewedHead1, head: packageHead });
+  assert.match(specDraft.text, /review_type: spec-only/);
+  assert.match(specDraft.text, /conclusion: pending/);
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, spec: true, base: baseTree, head: reviewedHead1 }), /含实现/);
+  fs.writeFileSync(roundOnePath, evidenceFirst);
+  fs.writeFileSync(roundTwoPath, bounded(reportText({ taskId: TASK_ID, round: 2, mode: 'targeted', prior: priorReport,
+    targets: [`${TASK_ID}-F001`], baseRef, base: reviewedHead1, head: packageHead, changedFiles: [`b-queue/${TASK_ID}.md`],
+    conclusion: 'pass', body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: verified-closed` })));
+  assert.strictEqual(runAudit().status, 0, 'task package does not need self registration');
+  assert.strictEqual(generator.progress(tempRoot, reportDir, `b-queue/${TASK_ID}.md`).codeReviews, 1, 'registration does not use a code snapshot');
+  write(`b-queue/${TASK_ID}.md`, currentTask);
+  fs.writeFileSync(roundOnePath, priorRound);
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo);
+
   git(['read-tree', baseTree]);
   write('src/main.ts', 'export const main = true;\n');
   git(['add', 'src/main.ts']);

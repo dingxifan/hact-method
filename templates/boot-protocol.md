@@ -4,6 +4,10 @@
 
 ## 规范加载
 
+项目已采用版本以 `_meta/method-sync.json` 的 `source` SHA 为唯一来源。首次启动或升级后运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，只核一次；不在每轮复审重跑。输出版本漂移时先同步，不能把它当任务失败或绕过 hook。没有已完成同步记录的旧项目沿用获准旧版，不静默采用当前分支。
+
+下表及规范内部的方法论路径是定位符：用 `node ../hact-method-lab/scripts/sync-method.cjs --read specs-execution/develop.md --root .` 读取同一 SHA 内容（按所需文件替换路径）；后续 brief、结构契约和 guide 同样按该 SHA 读取，不直接读移动中的方法论工作树。检查器和报告生成命令使用项目 `scripts/` 副本，规范中旧 `../hact-method-lab/templates/scripts/` 命令前缀统一解释为 `scripts/`。首次核对通过后复用这个来源，给审查员传同一读取方式。方法论分支更新不会自动升级项目；项目升级仍走既有 sync-method 与 hook 委托。
+
 存量项目若仍有 `standards-{shared,frontend,backend}.md`，升级须先按 `../hact-method-lab/guide/02-一期完整流程.md` 的迁移说明在独立 worktree 完成约束归位与活跃任务接线；不得因方法论同步而静默忽略尚未迁移的项目规则。迁移完成前，沿用项目上次确认的方法论版本处理进行中任务。
 
 本仓使用 hact-method 的执行规范。Step 1 推断出 `task.type` 后，只加载对应路径的单份规范，不得预加载多份：

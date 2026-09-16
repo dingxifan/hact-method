@@ -151,7 +151,7 @@ git commit -m "chore(sprint): 认领 {task-id-list} [taken-by: {user}]"
 
 **先建审计锚**：固定 Git 基线必需，事件计时可选且不事后估算。A 类记录写 `iterations/vN/code-reviews/{task-id}/preflight.md`，B 类写 `b-reviews/{task-id}/preflight.md`，格式用 `templates/review-briefs/develop-preflight-record.md`。确认工作树不含本任务外改动后，记录固定 `base_ref=$(git rev-parse HEAD)` 与当前 `base_tree=$(git write-tree)`。
 
-未命中则记 `freshness: pass`、`timing: before-code` 和一行正常摘要后继续，不逐面填表。命中时才展开漂移面、证据与路由，并在改代码前按根因处理：`example-error / contract-drift` 修任务包或发 `revise-doc`，`scope-gap` 补承接任务；只复核变化的契约，不跑代码审查。修订闭合后重新 preflight；需用户裁决时返回 blocked。结束时写 `result`；时间戳可选，不补估或强制对齐。此处产生的轮次计入 `spec_rounds`，不计 `code_rounds`。
+未命中则记 `freshness: pass`、`timing: before-code` 和一行正常摘要后继续，不逐面填表。命中时才展开漂移面、证据与路由，并在改代码前按根因处理：`example-error / contract-drift` 修任务包或发 `revise-doc`，`scope-gap` 补承接任务；只复核变化的契约，不跑代码审查。修订闭合后重新 preflight；需用户裁决时返回 blocked。结束时写 `result`；时间戳可选，不补估或强制对齐。真正的独立规格复核才计 spec_rounds。普通授权内 files 落点修正和审计登记由主线维护，不单独派 spec-round；共享写集变化同步核依赖与并发，AC/权限/公共契约变化仍按原决策边界处理。
 
 preflight `result` 非 `pass/revised`、存在未关闭 finding 或记录缺失时，**禁止写代码**。断点接管已有 diff 却无记录时只能补 `timing: retroactive` 并先纠偏，不得倒填成 before-code。
 
@@ -222,7 +222,7 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 
 **整改 targeted review**：默认接续未参与实现的原独立审查员，传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；不可用时用空历史新审查员按前次独立报告接续，不为等待原单元阻塞。可核执行者提供的原始日志，不采信自评替代验证，不传实现辩解。核目标 finding、修复增量与受影响调用链；局部新发现可处理，扩审须指出哪些结论因何变化失效。升级条件与轮次上限统一按 round 模板，新增文件/模块本身不触发 full。
 
-**送审与补证**：首次送审前完成本包已有 AC 的必要目标验证；共享契约检查实际消费者，事务等真实边界不能以 mock 替代。无需新增检查表。环境未启动须先按既有恢复规则补齐必要验证，不把开发欠账交独审。审查发现必要证据缺口后，代码未变时按 round 模板的 evidence_only 入口补原始运行证据并由独立审查员核验；仍计 code_rounds，仍受三轮上限。实现或测试改变则审实际增量。新报告启用 bounded-v1，旧报告不重写；字段和指纹用 build-review-anchor.js 生成。
+**送审与补证**：首次送审前完成本包已有 AC 的必要目标验证；共享契约检查实际消费者，事务等真实边界不能以 mock 替代。无需新增检查表。环境未启动须先按既有恢复规则补齐必要验证，不把开发欠账交独审。审查发现必要证据缺口后，代码未变时按 round 模板的 evidence_only 入口补原始运行证据并由独立审查员核验；报告仍计 code_rounds；同快照补证不消耗实质代码审查额度，同问题集中补证一次仍不清楚就暂停，见 round 模板。实现或测试改变则审实际增量。新报告启用 bounded-v1，旧报告不重写；用项目 build-review-anchor.js --task {task-id} --head {tree} --write 直接生成草稿，不手工搬字段。
 
 逐轮计时可选，不要求补齐或对齐；round report 本身不计入被审实现 tree，最终随状态提交。
 
@@ -250,7 +250,7 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 
 - **可恢复的执行问题**：仓内可查的信息未读、工具中断或执行单元上下文不足 → 主线补齐证据，按「实现失败与恢复协议」恢复/重派，无需用户重复批准实现。单元仍活跃则接收其结果；确认已中断才对账并恢复同一单元工作，不盲目重做。测试静默或超时不算绿；重跑前核原进程状态，不并发启动重复写入或有副作用的测试。
 - **必须由人处理的边界**：补证后仍存在无法自行裁决的 `do-not/escalate-if`、未授权契约/设计变更、视觉缺口、必要权限/凭据或不可替代能力缺失 → 保留在制品，列明具体缺口、证据、命中的规范条款与需要的人类动作，暂停相关执行。前端设计、B 类契约升级与安全敏感合并裁决仍按各自规则处理，不用技术重试绕过。
-- **达到现有上限**：同一测试修 3 次仍红时先查 oracle/contract，再按下方失败协议允许的主线补证重派一次；仍失败走上下文重置。审查按每任务累计 3 个 code rounds 判定；仍需复审或全审时按根因发 `revise-doc` 或请求用户裁决，不借新根因或执行失败协议续轮。
+- **达到现有上限**：同一测试修 3 次仍红时先查 oracle/contract，再按下方失败协议允许的主线补证重派一次；仍失败走上下文重置。审查按 Git 增量推导的三个实质代码审查快照判定，不直接用历史 code_rounds 总报告数。仍需代码整改时按根因升级；同快照同问题集中补证后仍不清楚就暂停，不借新 finding 或恢复无限往返。
 
 只有未触及该边界、写集与依赖不冲突且当前执行形态允许的已授权工作可以继续；不得跳过 batch/wave 原子恢复规则或自行拆组。重派、更换单元和上下文恢复不清零测试修复次数、code rounds 或同一 finding 记录。用户给出裁决后核其覆盖范围，恢复记录中的下一动作；用户判定无解、失败协议耗尽或命中下方其他上下文重置条件时按该规则交接，不能仅因一次 `blocked` 就退回任务。
 
@@ -407,7 +407,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 
 **上下文重置协议**（出现以下任一情况触发）：
 - 按失败协议补证恢复一次后仍失败 / 审查 loop 超界且 escape-hatch 无解
-- 实际改动文件超出 `files` 清单 3 个以上
+- 实际改动超出已授权业务/权限/契约边界，或共享写集冲突无法在本任务内解决；普通必要落点先修正现有 files，不按文件数量升级
 - 调试轮次 > 20 轮
 - 用户临时追加新需求
 

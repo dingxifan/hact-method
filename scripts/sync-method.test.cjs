@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('assert'), fs = require('fs'), os = require('os'), path = require('path'), cp = require('child_process');
-const { loadSource, inspectProject, prepare, verify, finish, safePath } = require('./sync-method.cjs');
+const { loadSource, inspectProject, prepare, verify, finish, safePath, runtimeCheck, readAdopted } = require('./sync-method.cjs');
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-distribution-'));
 const method = path.join(temp, 'method'), project = path.join(temp, 'project with space');
 const realTemplates = path.resolve(__dirname, '../templates');
@@ -17,6 +17,7 @@ try {
   // 此夹具不读取本机真实凭据；测试的是分发与实际 hook 执行，凭据扫描本体不在此替身中测。
   write(method, 'templates/scripts/check-secrets.js', 'process.exit(0);\n');
   write(method, 'templates/scripts/check-example.js', 'console.log("old template");\n');
+  write(method, 'specs-execution/develop.md', '# adopted behavior\n');
   git(method, ['add', '.']); git(method, ['commit', '-m', 'old']);
   const oldExample = fs.readFileSync(path.join(method, 'templates/scripts/check-example.js'));
   write(method, 'templates/scripts/check-example.js', 'console.log("new template");\n');
@@ -125,6 +126,18 @@ try {
   assert.strictEqual(git(project2, ['rev-parse', 'HEAD']), integrated.commit);
   assert.ok(!fs.existsSync(wt2));
   assert.strictEqual(prepare(project2, source).state, 'already-integrated');
+  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'adopted scripts and real hook match');
+  assert.strictEqual(runtimeCheck(project2).source, source.sha);
+  write(method, 'specs-execution/develop.md', '# moving branch behavior\n');
+  git(method, ['add', '.']); git(method, ['commit', '-m', 'method evolves']);
+  assert.strictEqual(readAdopted(project2, 'specs-execution/develop.md'), '# adopted behavior\n', 'moving method HEAD must not change project rules');
+  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'new branch does not force an upgrade');
+  const copiedScript = fs.readFileSync(path.join(project2, 'scripts/check-example.js'));
+  write(project2, 'scripts/check-example.js', 'outdated or mismatched script\n');
+  assert.match(runtimeCheck(project2).errors.join('\n'), /方法论版本漂移/, 'report source drift before task evidence errors');
+  write(project2, 'scripts/check-example.js', copiedScript);
+  assert.throws(() => readAdopted(project2, '../outside.md'), /只允许/);
+  assert.throws(() => runtimeCheck(project), /方法论版本漂移/, 'no recorded version is not implicit latest');
   assert.throws(() => safePath(project, '../outside'), /非法/);
   const linked = path.join(project, 'linked');
   fs.symlinkSync(method, linked, process.platform === 'win32' ? 'junction' : 'dir');

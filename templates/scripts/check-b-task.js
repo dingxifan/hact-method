@@ -124,7 +124,8 @@ function validateDiff(file, base, head, root = process.cwd()) {
   }
   const fm = parseFrontmatter(fs.readFileSync(file, 'utf8'));
   const declared = new Set((Array.isArray(fm && fm.files) ? fm.files : []).map(normalizeDeclaredFile));
-  const undeclared = changedFiles.filter(changed => !declared.has(changed.replace(/\\/g, '/')));
+  const taskPath = path.relative(root, path.resolve(file)).replace(/\\/g, '/');
+  const undeclared = changedFiles.filter(changed => changed !== taskPath && !declared.has(changed.replace(/\\/g, '/')));
   if (undeclared.length) errors.push(`固定 diff 含未声明 files：${undeclared.join('、')}`);
   const governed = fm && fm['contract-impact'] === 'governed';
   const pathHits = governed ? prohibitedPathHits(changedFiles) : contractPathHits(changedFiles);

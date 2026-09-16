@@ -31,7 +31,7 @@ title: <待填>              # 简短描述，≤15 字
 description: <待填>        # 格式「当前状态 → 期望状态」，不写"实现XXX"
 depends_on: []            # 前置 task-id 列表，无依赖填 []；与 sprint.md 依赖列、status.yml depends_on 三处一致
 files:
-  - <待填>                # 必改文件路径，精确到已知行号范围；不预防性列"可能"文件
+  - <待填>                # 当前实施落点；必要落点及时修正，初始规划留 Git；本任务包自身无需自登记
 asset-writes: []          # 共享写集，无则 []。命名 `db:users` / `enum:OrderStatus` / `type:UserDTO` / `api:GET /users` / `config:auth-policy`
                           # 两包命中同一 asset 或同一 files 路径时必须用 depends_on 排出先后；不得标可并行
 supersedes: []            # 本包取代的既有实体，无则 []（不是 <待填>）。一行一条，写清是什么：

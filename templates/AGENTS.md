@@ -4,7 +4,7 @@
 
 ## 工作入口
 
-使用 Codex。主线首次处理任务时读取 `../hact-method-lab/templates/boot-protocol.md`，按任务类型加载对应执行规范。已进入任务后按其进度接续；用户补充条件或询问进度不重跑启动、不清空已有授权。
+使用 Codex。主线首次处理任务先运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，再用该工具 `--read templates/boot-protocol.md --root .` 读取项目已采用 SHA 的入口；后续规范/brief 同源读取，检查器用项目 scripts 副本。旧项目无同步记录时沿用获准旧版，不自行混用最新分支。已进入任务后按其进度接续；用户补充条件或询问进度不重跑启动、不清空已有授权。
 
 委派单元直接执行收到的具体任务与 brief，不重复项目同步、任务路由或认领，不修改 Gate/status。下列边界对主线与委派单元都适用。
 
