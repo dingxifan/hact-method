@@ -1,0 +1,14 @@
+{
+  "poll_interval_ms": 5000,
+  "dropbox_root": "C:/Users/<USER>/Dropbox/HACT",
+  "repos_root": "C:/Users/<USER>/.hact/repos",
+  "repos": {
+    "hact-method": {
+      "git_url": "https://github.com/dingxifan/hact-method.git",
+      "base_branch": "main",
+      "allowed_branch_prefix": "hact/chat/",
+      "allowed_paths": ["reports/_poc/**"],
+      "checks": []
+    }
+  }
+}
