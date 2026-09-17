@@ -29,6 +29,11 @@ two paths. `dropbox_root` is the local path for `HACT` itself, for example
 such as `C:/Users/Alice/.hact/repos`. The Watcher creates a marker there and
 clones repositories below it. Do not point it to any Codex development checkout.
 
+The example uses `"allowed_paths": ["**"]`, permitting any ordinary repository
+path. Absolute paths, parent traversal, `.git/**`, and `.github/**` remain
+hard-rejected. Narrow the list again when a repository needs a smaller write
+surface.
+
 Run in a foreground terminal while testing:
 
 ```powershell

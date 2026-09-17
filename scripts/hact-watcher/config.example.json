@@ -7,7 +7,7 @@
       "git_url": "https://github.com/dingxifan/hact-method.git",
       "base_branch": "main",
       "allowed_branch_prefix": "hact/chat/",
-      "allowed_paths": ["reports/_poc/**"],
+      "allowed_paths": ["**"],
       "checks": []
     }
   }
