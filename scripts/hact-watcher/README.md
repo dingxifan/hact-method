@@ -138,5 +138,49 @@ a new request with a new `job_id`.
 - A processing-job lock has a unique owner token; an invocation that did not
   acquire the lock never removes another Watcher's lock. A dead local process
   lock is recovered on restart; a lock from another host is left untouched.
-- v0.1 has no webhook, MCP, database, Web service, PR creation, Windows
-  Service integration, or HACT Gate automation.
+- The Watcher has no MCP, database, PR creation, Windows Service integration,
+  or HACT Gate automation. Its optional adapter is local-only and is not a
+  public Web service or webhook.
+
+## Local-only adapter
+
+`adapter.mjs` is a deliberately thin, **local-only adapter** for a program on
+the same Windows computer. It listens only on `127.0.0.1` and offers only
+`POST /publish`. It authenticates a local bearer token, checks the basic
+`hact.publish.v1` shape, and atomically places the original request bytes in
+the Watcher inbox. It does not call Git, calculate `request_sha256`, replace
+Watcher validation, or participate in crash recovery.
+
+It does **not** make cloud ChatGPT Automations able to reach this PC: cloud
+services cannot directly access Windows `127.0.0.1`.
+
+Copy `adapter.config.example.json` to ignored `adapter.config.json`, set a
+random token (at least 16 characters), then run:
+
+```powershell
+node adapter.mjs --config adapter.config.json
+```
+
+Example with curl:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8787/publish `
+  -H "Authorization: Bearer YOUR_LOCAL_TOKEN" `
+  -H "Content-Type: application/json" `
+  --data-binary "@publish.json"
+```
+
+PowerShell example:
+
+```powershell
+$headers = @{ Authorization = 'Bearer YOUR_LOCAL_TOKEN' }
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8787/publish `
+  -Headers $headers -ContentType 'application/json' -InFile .\publish.json
+```
+
+The adapter writes a uniquely named temporary file in `inbox/`, then creates
+the final `<job_id>.publish.json` with an atomic same-volume hard-link and
+removes the temporary file. It never overwrites a queued package. The exact
+same bytes and job ID return `202 already_queued`; different bytes for that job
+ID return `409 job_id collision`. If the Watcher has already produced the
+canonical result, it returns `409` and requires a new `job_id`.
