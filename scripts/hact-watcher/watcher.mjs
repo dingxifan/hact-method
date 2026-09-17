@@ -265,7 +265,7 @@ function main() {
   const paths = Object.fromEntries(['inbox', 'processing', 'results', 'done', 'failed'].map(name => [name, path.join(config.dropbox_root, name)])); Object.values(paths).forEach(directory => fs.mkdirSync(directory, { recursive: true }));
   const jobs = directory => fs.readdirSync(directory, { withFileTypes: true }).filter(entry => entry.isFile() && entry.name.endsWith('.publish.json')).map(entry => path.join(directory, entry.name)).sort();
   const scan = () => { jobs(paths.inbox).forEach(file => processFile(file, config, paths)); jobs(paths.processing).forEach(file => processFile(file, config, paths, true)); };
-  log('INFO', `HACT Watcher v0.1.1 started; polling ${paths.inbox}`); scan(); setInterval(scan, config.poll_interval_ms);
+  log('INFO', `HACT Watcher v0.1.2-experimental started; polling ${paths.inbox}`); scan(); setInterval(scan, config.poll_interval_ms);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   try { main(); } catch (error) { console.error(`${now()} ERROR startup failed at ${error.stage || 'unknown'}: ${error.message}`); process.exit(1); }
