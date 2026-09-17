@@ -1,4 +1,4 @@
-# HACT Watcher v0.1
+# HACT Watcher v0.1.1
 
 HACT Watcher is a small, deterministic local publisher:
 
@@ -39,6 +39,10 @@ It creates `inbox`, `processing`, `results`, `done`, and `failed` below the
 configured Dropbox root, then scans `inbox/*.publish.json` every five seconds.
 Do not configure it as a Windows Service yet.
 
+Only one Watcher may run for a given local `dropbox_root`. A second startup
+fails clearly while the first process is alive. Its local runtime lock records
+the host and PID; a lock left by a dead process is recovered automatically.
+
 ## Publish package
 
 Save this as `HACT/inbox/20260917-001.publish.json`:
@@ -49,6 +53,7 @@ Save this as `HACT/inbox/20260917-001.publish.json`:
   "job_id": "20260917-001",
   "repo": "hact-method",
   "base_branch": "main",
+  "base_sha": "aebdb22e7d0b979cf488879d8c53d1946269bf62",
   "target_branch": "hact/chat/20260917-001",
   "task": "poc",
   "commit_message": "hact: Dropbox watcher PoC",
@@ -63,6 +68,11 @@ Validation happens before an atomic move from `inbox` to `processing`, which is
 the simple claim mechanism. Successful packages move to `done`; failures move
 to `failed`.
 
+`base_sha` is required and must be the exact 40-character SHA that ChatGPT saw
+for `origin/<base_branch>`. After `git fetch origin`, the Watcher compares it
+before checkout, writing files, committing, or pushing. A mismatch fails at
+`precondition` without publishing an artifact.
+
 ## Result package
 
 The successful result at `HACT/results/<job_id>.result.json` is:
@@ -74,14 +84,18 @@ The successful result at `HACT/results/<job_id>.result.json` is:
   "status": "success",
   "repo": "hact-method",
   "branch": "hact/chat/20260917-001",
+  "request_sha256": "9a3a...",
   "commit_sha": "abc123...",
   "changed_files": ["reports/_poc/dropbox-watcher.md"]
 }
 ```
 
-Failures include `status: "failed"`, a stage, and a concise error. An existing
-result for the same `job_id` is never executed again. No changed content yields
-`status: "no_changes"` without an empty commit.
+Every result records `request_sha256`, calculated from the original publish
+file bytes. The same `job_id` plus the same hash is skipped safely. The same
+`job_id` plus a different hash is a `job_id collision`: it is archived in
+`failed` and a separate collision result is written without replacing the
+original result. No changed content yields `status: "no_changes"` without an
+empty commit.
 
 ## v0.1 safety limits
 
@@ -95,5 +109,7 @@ result for the same `job_id` is never executed again. No changed content yields
   deletion, or direct push to `main`/`master`.
 - Before a job, only the dedicated clone is reset to `origin/<base_branch>`.
   The current Codex workspace is never read or changed.
+- A processing-job lock has a unique owner token; an invocation that did not
+  acquire the lock never removes another Watcher's lock.
 - v0.1 has no webhook, MCP, database, Web service, PR creation, Windows
   Service integration, or HACT Gate automation.
