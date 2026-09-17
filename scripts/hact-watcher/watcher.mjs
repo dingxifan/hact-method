@@ -120,6 +120,10 @@ function git(cwd, args) {
   try { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(); }
   catch (error) { abort(`git ${args[0]} failed: ${String(error.stderr || error.message).trim().replace(/\s+/g, ' ')}`, 'git'); }
 }
+function gitMaybe(cwd, args) {
+  try { return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(); }
+  catch { return null; }
+}
 function dedicatedClone(config, name, repo) {
   fs.mkdirSync(config.repos_root, { recursive: true });
   const marker = path.join(config.repos_root, ROOT_MARKER);
@@ -177,6 +181,38 @@ function acquireSingleton(dropboxRoot) {
   }
   abort('could not acquire Watcher singleton lock after stale-lock recovery', 'singleton');
 }
+function acquireJobLock(lockPath) {
+  const owner = randomUUID();
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try { fs.writeFileSync(lockPath, `${JSON.stringify(lockPayload('job', owner))}\n`, { flag: 'wx' }); return { lockPath, owner }; }
+    catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      const existing = readJson(lockPath, 'lock');
+      if (existing.host === hostname() && Number.isInteger(existing.pid) && !pidAlive(existing.pid)) { fs.rmSync(lockPath); continue; }
+      return null;
+    }
+  }
+  return null;
+}
+function commitTrailers(commitMessage) {
+  const values = new Map();
+  for (const line of commitMessage.split(/\r?\n/)) {
+    const match = /^(HACT-Job-ID|HACT-Request-SHA256):\s*(\S+)\s*$/.exec(line);
+    if (match) values.set(match[1], values.has(match[1]) ? null : match[2]);
+  }
+  return values;
+}
+function recoverPushedJob(clone, job, requestSha256, expectedBaseSha) {
+  const remoteRef = `origin/${job.target_branch}`;
+  const commitSha = gitMaybe(clone, ['rev-parse', '--verify', remoteRef]);
+  if (!commitSha) return null;
+  const parentSha = gitMaybe(clone, ['rev-parse', '--verify', `${remoteRef}^`]);
+  const trailers = commitTrailers(git(clone, ['log', '-1', '--format=%B', remoteRef]));
+  if (parentSha !== expectedBaseSha || trailers.get('HACT-Job-ID') !== job.job_id || trailers.get('HACT-Request-SHA256') !== requestSha256) {
+    abort(`existing target branch does not match publish request: ${job.target_branch}`, 'recovery');
+  }
+  return { commitSha, changedFiles: git(clone, ['diff', '--name-only', `${expectedBaseSha}..${commitSha}`]).split('\n').filter(Boolean) };
+}
 function processFile(source, config, paths, alreadyClaimed = false) {
   let claimed = source; let job; let jobId = path.basename(source).replace(/\.publish\.json$/i, 'unknown'); let lock; let jobLockOwner; let requestSha256;
   try {
@@ -191,21 +227,28 @@ function processFile(source, config, paths, alreadyClaimed = false) {
     if (!alreadyClaimed) {
       try { claimed = move(source, paths.processing); } catch (error) { if (error.code === 'ENOENT') return; throw error; }
     }
-    lock = path.join(paths.processing, `.${jobId}.lock`); const candidateJobLockOwner = randomUUID();
-    try { fs.writeFileSync(lock, `${JSON.stringify(lockPayload('job', candidateJobLockOwner))}\n`, { flag: 'wx' }); jobLockOwner = candidateJobLockOwner; } catch (error) { if (error.code === 'EEXIST') { log('INFO', `job ${jobId} is already being processed`); if (!alreadyClaimed) move(claimed, paths.inbox); return; } throw error; }
+    lock = path.join(paths.processing, `.${jobId}.lock`); const acquiredJobLock = acquireJobLock(lock);
+    if (!acquiredJobLock) { log('INFO', `job ${jobId} is already being processed`); if (!alreadyClaimed) move(claimed, paths.inbox); return; }
+    jobLockOwner = acquiredJobLock.owner;
     const afterClaim = existingResultAction(paths, jobId, requestSha256);
     if (afterClaim?.type === 'same') { move(claimed, paths.done); return; }
     if (afterClaim?.type === 'collision') abort(`job_id collision: existing request_sha256 ${afterClaim.existingHash} differs from ${requestSha256}`, 'idempotency');
     const clone = dedicatedClone(config, job.repo, repo);
     git(clone, ['fetch', 'origin']);
     const actualBaseSha = git(clone, ['rev-parse', `origin/${job.base_branch}`]);
-    must(actualBaseSha === job.base_sha.toLowerCase(), `base_sha precondition failed: expected ${job.base_sha.toLowerCase()}, actual ${actualBaseSha}`, 'precondition');
+    const expectedBaseSha = job.base_sha.toLowerCase();
+    const recovered = recoverPushedJob(clone, job, requestSha256, expectedBaseSha);
+    if (recovered) {
+      writeJson(result, { schema: RESULT_SCHEMA, job_id: jobId, status: 'success', repo: job.repo, branch: job.target_branch, request_sha256: requestSha256, commit_sha: recovered.commitSha, changed_files: recovered.changedFiles, recovered: true });
+      move(claimed, paths.done); log('INFO', `job ${jobId} recovered already-pushed commit ${recovered.commitSha}`); return;
+    }
+    must(actualBaseSha === expectedBaseSha, `base_sha precondition failed: expected ${expectedBaseSha}, actual ${actualBaseSha}`, 'precondition');
     git(clone, ['checkout', '--detach', `origin/${job.base_branch}`]); git(clone, ['reset', '--hard', `origin/${job.base_branch}`]); git(clone, ['clean', '-fd']); git(clone, ['checkout', '-B', job.target_branch, `origin/${job.base_branch}`]);
     for (const file of files) { const destination = path.resolve(clone, ...file.path.split('/')); ensureInside(clone, destination, 'published file'); fs.mkdirSync(path.dirname(destination), { recursive: true }); fs.writeFileSync(destination, file.content, 'utf8'); }
     git(clone, ['add', '--', ...files.map(file => file.path)]);
     const changed = git(clone, ['diff', '--cached', '--name-only']).split('\n').filter(Boolean);
     if (!changed.length) { writeJson(result, { schema: RESULT_SCHEMA, job_id: jobId, status: 'no_changes', repo: job.repo, branch: job.target_branch, request_sha256: requestSha256, changed_files: [] }); move(claimed, paths.done); log('INFO', `job ${jobId} had no changes`); return; }
-    git(clone, ['commit', '-m', job.commit_message]); const commitSha = git(clone, ['rev-parse', 'HEAD']); git(clone, ['push', '-u', 'origin', job.target_branch]);
+    git(clone, ['commit', '-m', job.commit_message, '-m', `HACT-Job-ID: ${job.job_id}\nHACT-Request-SHA256: ${requestSha256}`]); const commitSha = git(clone, ['rev-parse', 'HEAD']); git(clone, ['push', '-u', 'origin', job.target_branch]);
     writeJson(result, { schema: RESULT_SCHEMA, job_id: jobId, status: 'success', repo: job.repo, branch: job.target_branch, request_sha256: requestSha256, commit_sha: commitSha, changed_files: changed }); move(claimed, paths.done); log('INFO', `job ${jobId} published ${commitSha}`);
   } catch (error) {
     const result = { schema: RESULT_SCHEMA, job_id: jobId, status: 'failed', stage: error.stage || 'unknown', error: error.message };
@@ -228,4 +271,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   try { main(); } catch (error) { console.error(`${now()} ERROR startup failed at ${error.stage || 'unknown'}: ${error.message}`); process.exit(1); }
 }
 
-export { acquireSingleton, existingResultAction, processFile, releaseOwnedLock, singletonLockPath };
+export { acquireJobLock, acquireSingleton, commitTrailers, existingResultAction, processFile, recoverPushedJob, releaseOwnedLock, singletonLockPath };

@@ -1,4 +1,4 @@
-# HACT Watcher v0.1.1
+# HACT Watcher v0.1.2-experimental
 
 HACT Watcher is a small, deterministic local publisher:
 
@@ -97,6 +97,27 @@ file bytes. The same `job_id` plus the same hash is skipped safely. The same
 original result. No changed content yields `status: "no_changes"` without an
 empty commit.
 
+## Crash recovery
+
+Each publish commit includes two fixed Git trailers:
+
+```text
+HACT-Job-ID: <job_id>
+HACT-Request-SHA256: <request_sha256>
+```
+
+On restart, after fetching, the Watcher first checks whether the target branch
+already exists on `origin`. It recreates a success result only when that branch
+tip has exactly packet `base_sha` as its parent and both trailers match this
+request. This recovers the narrow case where Git push succeeded but the process
+died before the local result was written—even if `main` advanced meanwhile. If
+there is no recoverable branch, the normal current-`base_sha` precondition is
+enforced before any checkout or write. Any pre-existing target branch that does
+not meet all three recovery conditions fails safely at `recovery`.
+
+A failed result remains terminal in v0.1.2: to retry a failed publication, send
+a new request with a new `job_id`.
+
 ## v0.1 safety limits
 
 - Repository URL, base branch, branch prefix, allowed paths, and checks are all
@@ -110,6 +131,7 @@ empty commit.
 - Before a job, only the dedicated clone is reset to `origin/<base_branch>`.
   The current Codex workspace is never read or changed.
 - A processing-job lock has a unique owner token; an invocation that did not
-  acquire the lock never removes another Watcher's lock.
+  acquire the lock never removes another Watcher's lock. A dead local process
+  lock is recovered on restart; a lock from another host is left untouched.
 - v0.1 has no webhook, MCP, database, Web service, PR creation, Windows
   Service integration, or HACT Gate automation.
