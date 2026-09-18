@@ -49,6 +49,10 @@ Codex 不因为拥有 shell、Git 或更强执行能力而拥有更高 Authority
 8. 核实际 Git branch、HEAD、worktree、index、stash 与远端状态。
 9. 再开始修改。
 
+`init-project` 是 bootstrap 例外：它负责创建目标项目的 `status.yml`，因此开始时按 `tasks/init-project.md` 的 bootstrap rule 恢复，不要求目标项目预先存在 status。
+
+B 类 bug / optimization 不再加载 `dispatch-new` Task；先按 `protocols/b-intake.md` 完成只读调查与 Development Intake，满足 `tasks/develop.md` 的硬前置后再进入 `develop(source=bug|optimization)`。
+
 用户已经明确指定 Task 时，不重新根据 Gate 猜另一个 Task。
 
 不要用先前 Codex summary、聊天压缩摘要或 agent 回报替代上述 bootstrap。
@@ -301,6 +305,30 @@ Codex 根据项目当前 Git policy 实现 Shared Candidate → Accepted Project
 
 不得用 force、历史改写或跳过保护来“完成流程”，除非用户对该具体高影响操作另有明确授权。
 
+### 11.1 Discussion Persistence
+
+Discussion Persistence 是 repo-local 显式 workflow skill，不替代正常代码实现或普通 Git delivery。
+
+只有用户明确要求把**已冻结的讨论 / 设计 / 规范 artifact** 持久化时，且 fixed Method SHA 中存在：
+
+`.agents/skills/discussion-persistence/SKILL.md`
+
+才按该 Skill 及其 `references/protocol.md` / `references/recovery.md` 执行。
+
+继续既有 Shared Candidate 时使用其 `INCREMENTAL_CANDIDATE` 规则：
+
+- 提交前重新验证 remote candidate HEAD；
+- `base_branch == target_branch`；
+- `base_sha` 等于该 remote HEAD；
+- 只写本轮冻结文件；
+- ordinary fast-forward append；
+- Watcher success 后继续核 GitHub exact SHA；
+- incremental commit 的 direct parent 必须等于 submitted `base_sha`。
+
+若上传 acknowledgement 为 `FETCH_FAILED` 或 timeout，按 Skill 进入 `INDETERMINATE`，不得自动重传、换 job id、换 branch 或重建 artifact。
+
+Codex 原生 Git 能力可用于普通代码 delivery；不要因为 Skill 存在就把所有 repo write 绕到 Dropbox。
+
 ## 12. Recovery and Context Compaction
 
 Codex context 可能压缩、session 可能中断。恢复时不尝试重建完整聊天。
@@ -346,6 +374,8 @@ Recovery pointer 只保留当前 phase、next action、stable snapshot、open bl
 `Codex summary → next Runtime`
 
 下一个 Runtime 必须自己重新读取 Git truth。
+
+用户明确要求外部 UX 设计会话时，使用 `runtime/external-ux.md` 形成最小 design brief；产物返回后仍回到 `tasks/draft-ux.md` 的 browser evidence、Independent Review 与用户真实体验接受链，不新增 UX Task 或 Gate。
 
 ## 14. Deploy Adapter
 
@@ -430,7 +460,10 @@ vNext migration 不删除旧 `skeleton/`、`specs-structural/`、`specs-executio
 
 在对应上游 / 下游 Task Contract 迁移完成前：
 
-- 旧 develop structural / execution spec 继续作为迁移参考，不自动成为 vNext 的第二套规范
+- 旧 structural / execution spec 继续作为迁移参考，不自动成为 vNext 的第二套规范
+- `dispatch-new` 的 legacy 规则由 `protocols/b-intake.md` 承接，不再恢复为 Core Task
+- `harvest-notes` 的 legacy 规则由 `utilities/harvest-notes.md` 承接，不进入 Task state / Gate
+- `draft-ux-external` 的 legacy 规则由 `runtime/external-ux.md` 承接，不新增 UX Task / Gate
 - 项目已部署 checker / hook / review evidence schema 保持工作
 - Codex Adapter 负责把 vNext Task Contract 映射到项目当前可执行接口
 - 发生冲突时，以当前固定 Method SHA 下的 vNext Task Contract + Shared Protocol 为方法论真相，并把真实兼容缺口显式记录，不静默猜测

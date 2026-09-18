@@ -35,6 +35,10 @@ ChatGPT Project / Chat 是 Working Context，不是 Shared Project Truth。
 7. 读取 Authoritative Inputs
 8. 再开始工作
 
+`init-project` 是 bootstrap 例外：它负责创建目标项目的 `status.yml`，因此开始时按 `tasks/init-project.md` 的 bootstrap rule 恢复，不要求目标项目已有 status。
+
+B 类 bug / optimization 不再加载 `dispatch-new` Task；先按 `protocols/b-intake.md` 形成 Development Intake，满足 `tasks/develop.md` 硬前置后再进入 `develop(source=bug|optimization)`。
+
 不要预加载全部 Task Contract。用户已经明确指定 Task 时，不重新根据 Gate 猜测另一个 Task。
 
 ## 4. Repository reading
@@ -53,46 +57,62 @@ ChatGPT Project / Chat 是 Working Context，不是 Shared Project Truth。
 Git 写能力是 capability profile，不是方法论假设。
 
 ### Native write available
+
 直接按 Git Truth Protocol 形成 candidate。
 
 ### Native write unavailable
+
 使用受控 Persistence Adapter。
 
 Adapter 只负责：
-- 把已确定 artifact 写到指定 path
-- 形成 candidate branch / commit
+- 把已冻结 artifact 写到指定 path
+- 形成 / 追加 candidate commit
 - 返回 immutable snapshot
 
-Adapter 不得重新解释 PRD/TRD、扩大 Scope 或修改语义。
+Adapter 不得重新解释 PRD / TRD、扩大 Scope 或修改语义。
 
+### Discussion Persistence V1
 
-### Current Dropbox + Watcher adapter caveat
+当前 ChatGPT 部署的受控写入路径为：
 
-当前部署使用：
+`ChatGPT → Dropbox /HACT/inbox → local Watcher → Git → GitHub verification`
 
-`ChatGPT → Dropbox /HACT/inbox → local Watcher → Git → GitHub`
+当 fixed Method SHA 中存在 repo-local `Discussion Persistence` Skill 时，显式持久化优先按：
 
-这是 Runtime / Persistence Adapter 的当前实现，不是 HACT 方法论前提。
+`.agents/skills/discussion-persistence/SKILL.md`
 
-当前 ChatGPT Dropbox connector 已实证存在一种状态不一致：`upload_file` 已把 publish package 送入 Dropbox、Watcher 甚至已经完成处理时，`check_upload_file_status` 仍可能返回 `FETCH_FAILED`。
+及其 `references/protocol.md` / `references/recovery.md` 执行。
+
+它支持两种模式：
+
+- `NEW_CANDIDATE`
+- `INCREMENTAL_CANDIDATE`
+
+继续既有 Shared Candidate 时优先 `INCREMENTAL_CANDIDATE`：
+
+- `base_branch == target_branch`
+- `base_sha` 必须等于提交前重新验证的 remote candidate HEAD
+- branch 必须命中 Watcher `allowed_incremental_base_prefixes`
+- 只提交本轮冻结文件
+- 只允许普通 fast-forward append
+- 不重放旧 candidate 文件集
+- 不 force push
+
+### Transport acknowledgement caveat
+
+当前 ChatGPT Dropbox connector 已实证：publish package 实际已经进入 Dropbox、Watcher 甚至已完成处理时，`check_upload_file_status` 仍可能返回 `FETCH_FAILED`。
 
 因此：
 
-- `FETCH_FAILED` 不能单独作为 publish 失败结论，只能视为传输状态 **indeterminate**。
-- 必须继续检查 `/HACT/results/<job_id>.result.json` 以及 `/HACT/done` / `/HACT/failed`。
-- end-to-end completion 以 Watcher result 为第一机械事实，并继续验证 result 中的 `commit_sha` 确实存在于 GitHub。
-- 只有 Watcher result / Git verification 明确失败，才把本次 persistence 判为失败。
+- `FETCH_FAILED` = acknowledgement **indeterminate**，不是 persistence failure；
+- 一个 semantic publish 只提交一次；
+- indeterminate 时不得换 job id、重传、换 branch、改内容或换 transport；
+- 按 recovery rule 检查 `/HACT/results`、`done`、`failed`、必要时 `processing` / `inbox`；
+- Watcher `success` 只表示 `EXECUTED`；
+- 只有 GitHub 确认 exact `commit_sha`、branch、changed files 后才是 `VERIFIED`；
+- incremental mode 还必须验证 `new_commit.parent == submitted base_sha`。
 
-当前 Watcher v0.1.2 的另一个部署约束是：publish package 的 `base_branch` 必须等于本机配置的 base branch（当前为 `main`），且 `base_sha` 必须等于 Watcher fetch 后的当前 `origin/main`。
-
-因此当前 vNext candidate 尚未进入 main 时，不能把上一 candidate branch 直接填成 Watcher `base_branch`。要形成新的累计 candidate，应：
-
-1. 以当前稳定 main SHA 作为 `base_sha`；
-2. 在新的 target branch 中重放此前 candidate 的完整目标文件集；
-3. 再加入本轮新增 / 修改文件；
-4. 用 Watcher result + Git SHA 验证累计 candidate 内容。
-
-这是当前 Persistence Adapter / Watcher 的实现限制，不改变 `protocols/git-truth.md` 对 Shared Candidate Truth 的定义。
+GitHub SHA 是最终 persistence truth。
 
 ## 6. Stay Local
 
@@ -142,6 +162,15 @@ Conversation 丢失后重新执行 Bootstrap，从 Method SHA、`status.yml`、�
 
 聊天摘要只能作为辅助线索，不能覆盖 Git truth。
 
+如果中断发生在 persistence 中，优先按 Discussion Persistence recovery 从：
+
+- job id
+- Dropbox terminal state
+- Watcher result
+- GitHub target branch / commit
+
+恢复，不凭记忆重新提交。
+
 ## 11. Cross-runtime handoff
 
 正常 ChatGPT → Codex handoff 应发生在稳定边界：
@@ -153,6 +182,8 @@ Conversation 丢失后重新执行 Bootstrap，从 Method SHA、`status.yml`、�
 `聊天总结 → Codex`
 
 Independent review、specialist check、Decision escalation 可以读取固定 Shared Candidate snapshot。
+
+用户明确要求外部 UX 设计会话时，使用 `runtime/external-ux.md`，最终仍回到 `tasks/draft-ux.md` 的同一 completion chain。
 
 ## 12. Deployment note
 
