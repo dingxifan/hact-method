@@ -86,6 +86,7 @@ function validateConfig(value, source) {
     must(typeof repo.git_url === 'string' && /^(https:\/\/|ssh:\/\/|git@)/.test(repo.git_url), `invalid git_url: ${name}`, 'configuration');
     must(isBranch(repo.base_branch), `invalid base_branch: ${name}`, 'configuration');
     must(typeof repo.allowed_branch_prefix === 'string' && repo.allowed_branch_prefix.endsWith('/') && isBranch(repo.allowed_branch_prefix.slice(0, -1)), `invalid allowed_branch_prefix: ${name}`, 'configuration');
+    must(Array.isArray(repo.allowed_incremental_base_prefixes) && repo.allowed_incremental_base_prefixes.every(prefix => typeof prefix === 'string' && prefix.endsWith('/') && isBranch(prefix.slice(0, -1))), `invalid allowed_incremental_base_prefixes: ${name}`, 'configuration');
     must(Array.isArray(repo.allowed_paths) && repo.allowed_paths.every(x => typeof x === 'string' && x), `invalid allowed_paths: ${name}`, 'configuration');
     must(Array.isArray(repo.checks) && repo.checks.length === 0, `v0.1 only supports an empty checks array: ${name}`, 'configuration');
   }
@@ -98,10 +99,13 @@ function validateJob(job, config) {
   must(typeof job.base_sha === 'string' && /^[0-9a-f]{40}$/i.test(job.base_sha), 'base_sha must be a 40-character Git commit SHA');
   must(typeof job.repo === 'string' && Object.hasOwn(config.repos, job.repo), `repo not allowed: ${job.repo}`);
   const repo = config.repos[job.repo];
-  must(job.base_branch === repo.base_branch && isBranch(job.base_branch), `base_branch must be ${repo.base_branch}`);
+  must(isBranch(job.base_branch), 'invalid base_branch');
   must(isBranch(job.target_branch), 'invalid target_branch');
   must(job.target_branch.startsWith(repo.allowed_branch_prefix), `target_branch must start with ${repo.allowed_branch_prefix}`);
   must(job.target_branch !== 'main' && job.target_branch !== 'master', 'target_branch may not be main or master');
+  const isPrimaryBase = job.base_branch === repo.base_branch;
+  const isIncrementalCandidate = job.base_branch === job.target_branch && repo.allowed_incremental_base_prefixes.some(prefix => job.base_branch.startsWith(prefix));
+  must(isPrimaryBase || isIncrementalCandidate, `base_branch must be ${repo.base_branch} or the same allowed candidate target branch`);
   must(typeof job.task === 'string' && job.task, 'task must be a non-empty string');
   must(typeof job.commit_message === 'string' && job.commit_message.trim() && !/[\r\n\0]/.test(job.commit_message), 'invalid commit_message');
   must(Array.isArray(job.files) && job.files.length, 'files must be a non-empty array');
@@ -206,6 +210,9 @@ function recoverPushedJob(clone, job, requestSha256, expectedBaseSha) {
   const remoteRef = `origin/${job.target_branch}`;
   const commitSha = gitMaybe(clone, ['rev-parse', '--verify', remoteRef]);
   if (!commitSha) return null;
+  // An existing candidate exactly at base_sha is an authorized incremental
+  // append point, not a crash-recovery collision.
+  if (job.base_branch === job.target_branch && commitSha === expectedBaseSha) return null;
   const parentSha = gitMaybe(clone, ['rev-parse', '--verify', `${remoteRef}^`]);
   const trailers = commitTrailers(git(clone, ['log', '-1', '--format=%B', remoteRef]));
   if (parentSha !== expectedBaseSha || trailers.get('HACT-Job-ID') !== job.job_id || trailers.get('HACT-Request-SHA256') !== requestSha256) {

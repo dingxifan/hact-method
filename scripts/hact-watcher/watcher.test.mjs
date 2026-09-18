@@ -18,7 +18,7 @@ function packet(jobId) {
   };
 }
 function config(root) {
-  return { repos_root: path.join(root, 'repos'), repos: { 'hact-method': { git_url: 'https://github.com/dingxifan/hact-method.git', base_branch: 'main', allowed_branch_prefix: 'hact/chat/', allowed_paths: ['reports/_poc/**'], checks: [] } } };
+  return { repos_root: path.join(root, 'repos'), repos: { 'hact-method': { git_url: 'https://github.com/dingxifan/hact-method.git', base_branch: 'main', allowed_branch_prefix: 'hact/chat/', allowed_incremental_base_prefixes: ['hact/chat/'], allowed_paths: ['**'], checks: [] } } };
 }
 function git(cwd, args) { return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim(); }
 
@@ -97,4 +97,19 @@ test('a remote branch with matching trailers reconstructs a missing success resu
   const result = JSON.parse(fs.readFileSync(path.join(paths.results, `${jobId}.result.json`), 'utf8'));
   assert.equal(result.status, 'success'); assert.equal(result.recovered, true); assert.equal(result.commit_sha, pushedSha); assert.deepEqual(result.changed_files, ['reports/_poc/recovered.md']);
   assert.ok(fs.existsSync(path.join(paths.done, `${jobId}.publish.json`)));
+});
+
+test('appends only new files to an existing candidate branch at base_sha', () => {
+  const root = temporaryRoot(); const remote = path.join(root, 'remote.git'); const writer = path.join(root, 'writer');
+  execFileSync('git', ['init', '--bare', remote]); execFileSync('git', ['init', '-b', 'main', writer]);
+  git(writer, ['config', 'user.name', 'HACT test']); git(writer, ['config', 'user.email', 'hact-test@example.invalid']);
+  fs.writeFileSync(path.join(writer, 'README.md'), 'main\n'); git(writer, ['add', 'README.md']); git(writer, ['commit', '-m', 'main']); git(writer, ['remote', 'add', 'origin', remote]); git(writer, ['push', '-u', 'origin', 'main']);
+  const candidate = 'hact/chat/incremental-test'; git(writer, ['checkout', '-b', candidate]); fs.mkdirSync(path.join(writer, 'tasks'), { recursive: true }); fs.writeFileSync(path.join(writer, 'tasks', 'p4.md'), 'existing candidate artifact\n'); git(writer, ['add', 'tasks/p4.md']); git(writer, ['commit', '-m', 'candidate base']); git(writer, ['push', '-u', 'origin', candidate]);
+  const baseSha = git(writer, ['rev-parse', 'HEAD']); const jobId = `incremental-${randomUUID()}`; const job = { ...packet(jobId), base_branch: candidate, base_sha: baseSha, target_branch: candidate, files: [{ path: 'tasks/p5.md', content: 'only new P5 artifact\n' }] };
+  const raw = Buffer.from(`${JSON.stringify(job)}\n`); const paths = Object.fromEntries(['inbox', 'processing', 'results', 'done', 'failed'].map(name => [name, path.join(root, 'HACT', name)])); Object.values(paths).forEach(directory => fs.mkdirSync(directory, { recursive: true }));
+  const jobFile = path.join(paths.processing, `${jobId}.publish.json`); fs.writeFileSync(jobFile, raw); const watcherConfig = config(root); watcherConfig.repos['hact-method'].git_url = remote;
+  processFile(jobFile, watcherConfig, paths, true);
+  const result = JSON.parse(fs.readFileSync(path.join(paths.results, `${jobId}.result.json`), 'utf8')); git(writer, ['fetch', 'origin', candidate]); const newHead = git(writer, ['rev-parse', `origin/${candidate}`]);
+  assert.equal(result.status, 'success'); assert.equal(result.changed_files.length, 1); assert.equal(result.changed_files[0], 'tasks/p5.md'); assert.equal(git(writer, ['rev-parse', `${newHead}^`]), baseSha);
+  assert.equal(git(writer, ['show', `${newHead}:tasks/p4.md`]), 'existing candidate artifact'); assert.equal(git(writer, ['show', `${newHead}:tasks/p5.md`]), 'only new P5 artifact');
 });

@@ -34,6 +34,12 @@ path. Absolute paths, parent traversal, `.git/**`, and `.github/**` remain
 hard-rejected. Narrow the list again when a repository needs a smaller write
 surface.
 
+`base_branch` normally names the configured stable branch (`main`). For an
+incremental Shared Candidate update, it may instead equal `target_branch` only
+when that candidate matches `allowed_incremental_base_prefixes`. The remote
+candidate HEAD must exactly equal packet `base_sha`; the Watcher then appends
+only the submitted files with an ordinary fast-forward push.
+
 Run in a foreground terminal while testing:
 
 ```powershell
