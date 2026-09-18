@@ -53,7 +53,7 @@ Task Contract 只定义 `develop` 独有规则。共同状态、Git truth、revi
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前 HACT Method fixed SHA 已知。
 - `status.yml` 中存在可识别的 develop work item，且依赖关系可判断。
@@ -80,11 +80,7 @@ Task Contract 只定义 `develop` 独有规则。共同状态、Git truth、revi
 - `status.yml`
 - 当前 develop work item / Development Intake / Task Package
 - 当前 Accepted Project Truth 中的相关 code、tests、project constraints 与 shared contract
-- 本 Task 引用的 `protocols/state.md`
-- `protocols/git-truth.md`
-- `protocols/review.md`
-- `protocols/authority.md`
-- `protocols/recovery.md`
+- 当前动作实际触发的 Shared Protocol projection；按 `templates/boot-protocol.md` 与 `protocols/review.md` 的最小加载规则读取，不预加载全部 `protocols/`
 
 Development Intake / Task Package 无论采用何种序列化，至少要能表达下列语义：
 
@@ -309,7 +305,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 默认采用 `protocols/review.md`：
 
-`Same Runtime + Fresh Isolated Context + Same Task Contract`
+`Same Runtime + Fresh Isolated Context + Same Source of Truth`
 
 首次 review 对一个 fixed candidate 做 full review。Reviewer 至少回答三个核心问题：
 
@@ -325,7 +321,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - query performance / resources
 - logging / privacy / sensitive boundaries
 
-Reviewer 必须自己读取 Task Contract、Development Intake、权威上游和 fixed diff，不继承 Owner 的完整生成历史，不采信 Owner 自评替代验证。
+Reviewer 必须按 `protocols/review.md` 的 same-source projection，自行读取当前审查所需的 Task sections、Development Intake、权威上游和 fixed diff；不继承 Owner 的完整生成历史，也不采信 Owner 自评替代验证。
 
 ### Finding routing
 

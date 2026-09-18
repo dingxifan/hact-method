@@ -26,7 +26,7 @@ Task Contract 只定义本 Task 独有规则。共性规则引用 `protocols/`�
 
 ## 2. Preconditions
 
-定义 Task 进入 `可取` 前必须成立的硬前置：
+定义 Task 从 `可取` 进入 `taken-by`、或执行下一关键动作前必须成立的硬前置：
 - Required Gate
 - Required artifacts
 - Required task state
@@ -44,7 +44,7 @@ Task Contract 只定义本 Task 独有规则。共性规则引用 `protocols/`�
 ### User input
 - …
 
-上一 Runtime 的聊天总结不是权威输入。
+上一 Runtime 的聊天总结不是权威输入。Shared Protocol 是规则来源，但按当前动作的触发条件加载；不要因为出现在 Authoritative Inputs 中就预加载全部 `protocols/`。
 
 ## 4. Outputs
 

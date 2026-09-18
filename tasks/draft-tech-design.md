@@ -285,7 +285,7 @@ Required。
 
 默认使用：
 
-`Same Runtime + Fresh Isolated Context + Same Task Contract`
+`Same Runtime + Fresh Isolated Context + Same Source of Truth`
 
 特殊 review focus 继承旧 `trd-review` 的实质要求：
 
@@ -296,7 +296,7 @@ Required。
 5. PRD → TRD 覆盖完整
 6. 新 Foundation 关注点没有越权或空口升档
 
-Reviewer 不继承 Owner 的疑点处理叙事，也不替用户完成产品 / 业务取舍。
+Reviewer 按 `protocols/review.md` 的 same-source projection 读取本 Task 必要 sections；不继承 Owner 的疑点处理叙事，也不替用户完成产品 / 业务取舍。
 
 ### Human Authority
 
@@ -341,7 +341,7 @@ deterministic check 或 Independent Review 出现 blocking finding 时回 `taken
 
 Task `merged` 后 G2 进入 ready。
 
-用户批准明确 Accepted snapshot 后，单独记录 G2 authority event 与 approved snapshot。
+用户批准明确 Accepted snapshot 后，按现有 `status.yml` Gate serialization 记录 G2 authority event；Git history 与 fixed candidate 提供 snapshot binding。
 
 ### Downstream
 

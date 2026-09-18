@@ -222,9 +222,9 @@ Evidence 至少包含：
 
 Owner 自绿和浏览器 evidence 完成后，使用：
 
-`Same Runtime + Fresh Isolated Context + Same Task Contract`
+`Same Runtime + Fresh Isolated Context + Same Source of Truth`
 
-Reviewer 自己读取 PRD、ux-flows、prototype、prototype-map、design 和 evidence，不能继承设计叙事。
+Reviewer 按 `protocols/review.md` 的 same-source projection 读取本 Task 必要 sections，并自行读取 PRD、ux-flows、prototype、prototype-map、design 和 evidence；不能继承设计叙事。
 
 Review 先解决技术死路、任务遗漏和契约回写问题，再把已过 AI 质量关的版本交用户体验。
 

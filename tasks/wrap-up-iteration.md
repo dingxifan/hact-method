@@ -98,7 +98,7 @@ review: none
 
 - `status.yml`：wrap-up-iteration Task lifecycle
 - Task `merged` 后，G5 readiness 可计算为 ready
-- 用户 G5 approval 后记录 approved_by / approved_at / approved_snapshot
+- 用户 G5 approval 后按现有 `status.yml` Gate serialization 记录 authority event；Git history 与 fixed closeout snapshot 提供 snapshot binding
 
 ### Conditional outputs
 

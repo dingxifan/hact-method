@@ -81,7 +81,7 @@ Owner 必须自己读取 Git 中的 Accepted Project Truth。不得用上一期�
 
 ### State
 - `status.yml` 中对应 `draft-prd` Task lifecycle
-- G1 approval 后记录 Gate authority event 与 approved snapshot
+- G1 approval 后按现有 `status.yml` Gate serialization 记录 authority event；Git history 与 fixed candidate 提供 snapshot binding
 
 PRD 必含语义结构：
 - 产品目标
@@ -227,7 +227,7 @@ Independent Review 或 verification 出现 blocking finding 时回 `taken-by`，
 
 ### G1
 
-Task `merged` 后 G1 进入 ready。用户对明确 Accepted snapshot 最终批准时，形成单一 G1 Authority Event，并记录 approved_by / approved_at / approved_snapshot。
+Task `merged` 后 G1 进入 ready。用户对明确 Accepted snapshot 最终批准时，形成单一 G1 Authority Event；按现有 `status.yml` Gate serialization 记录批准，Git history 与 fixed candidate 提供 snapshot binding。
 
 ### Downstream
 
