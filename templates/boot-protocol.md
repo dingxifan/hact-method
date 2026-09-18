@@ -1,69 +1,165 @@
 # Codex 项目启动
 
-> 主线按本协议定位任务；委派单元不执行本协议。工作中恢复只核当前任务、原始契约与实际 Git/进程状态。
+> 主线按本协议定位任务；委派单元不执行本协议。工作中恢复只核当前 Task、权威输入与实际 Git / process state。
 
-## 规范加载
+## 1. 规范来源
 
-项目已采用版本以 `_meta/method-sync.json` 的 `source` SHA 为唯一来源。首次启动或升级后运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，只核一次；不在每轮复审重跑。输出版本漂移时先同步，不能把它当任务失败或绕过 hook。没有已完成同步记录的旧项目沿用获准旧版，不静默采用当前分支。
+项目已采用版本以 `_meta/method-sync.json` 的 `source` SHA 为唯一方法论来源。首次启动或升级后运行：
 
-下表及规范内部的方法论路径是定位符：用 `node ../hact-method-lab/scripts/sync-method.cjs --read specs-execution/develop.md --root .` 读取同一 SHA 内容（按所需文件替换路径）；后续 brief、结构契约和 guide 同样按该 SHA 读取，不直接读移动中的方法论工作树。检查器和报告生成命令使用项目 `scripts/` 副本，规范中旧 `../hact-method-lab/templates/scripts/` 命令前缀统一解释为 `scripts/`。首次核对通过后复用这个来源，给审查员传同一读取方式。方法论分支更新不会自动升级项目；项目升级仍走既有 sync-method 与 hook 委托。
+```bash
+node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .
+```
 
-存量项目若仍有 `standards-{shared,frontend,backend}.md`，升级须先按 `../hact-method-lab/guide/02-一期完整流程.md` 的迁移说明在独立 worktree 完成约束归位与活跃任务接线；不得因方法论同步而静默忽略尚未迁移的项目规则。迁移完成前，沿用项目上次确认的方法论版本处理进行中任务。
+只核一次；不在每轮复审重跑。输出版本漂移时先按项目既有升级流程处理，不能把方法论工作树的最新内容静默混进当前 adopted SHA。
 
-本仓使用 hact-method 的执行规范。Step 1 推断出 `task.type` 后，只加载对应路径的单份规范，不得预加载多份：
+方法论文件通过同一 SHA 读取。例如：
 
-| task.type | 规范路径 | 备注 |
+```bash
+node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
+```
+
+检查器和报告生成命令使用项目 `scripts/` 副本。旧规范中出现的 `../hact-method-lab/templates/scripts/` 命令前缀，在存量项目继续解释为项目自己的 `scripts/`，除非另有迁移决定。
+
+### Legacy compatibility
+
+- adopted SHA 已提供 vNext `tasks/` 时，正常执行只走 vNext Task Contract；`specs-execution/` 只作 migration / legacy reference。
+- 没有完成 vNext 升级的旧项目继续沿用其已获准版本，不自行拼接新旧入口。
+- 存量项目若仍有 `standards-{shared,frontend,backend}.md` 或其他历史结构契约，按项目既有升级说明处理；普通开发任务不顺手做方法论迁移。
+
+## 2. 最小加载规则
+
+### 2.1 先加载一个 Task Contract
+
+用户已经明确 Task 时，直接加载对应 `tasks/{task}.md`，由 Task 自身检查 Preconditions；不要先根据 Gate 猜另一个 Task。
+
+用户未指定 Task 时，先按 Step 1 从 `status.yml` 与项目事实推断一个 canonical Task，再只加载该 Task Contract。
+
+不要预加载全部 `tasks/`。
+
+### 2.2 Shared Protocol 按触发条件加载
+
+只在当前动作实际需要时读取：
+
+| 触发 | Protocol |
+|---|---|
+| 状态读取、认领、流转 | `protocols/state.md` |
+| Gate readiness / approval | `protocols/gates.md` |
+| candidate、merge、Accepted Truth、handoff | `protocols/git-truth.md` |
+| Independent Review | `protocols/review.md` |
+| Human Authority 判断 | `protocols/authority.md` |
+| 中断、恢复、重入 | `protocols/recovery.md` |
+| B 类 bug / optimization intake | `protocols/b-intake.md` |
+
+Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“可能会用到”而把全部 Protocol 当启动上下文。
+
+### 2.3 Runtime Adapter 按实现需要加载
+
+`runtime/codex.md` 只在需要 Codex-specific realization 时加载，例如：
+
+- Git/worktree/index 操作
+- command / test execution
+- fixed Git snapshot
+- isolated review context
+- Git delivery
+- Discussion Persistence
+- context compaction 后的 Runtime 恢复
+
+纯 reasoning / document work 若 Task Contract 已足够，不必预加载整份 Runtime Adapter。
+
+用户明确要求外部 UX 设计会话时才加载 `runtime/external-ux.md`。
+
+## 3. Canonical Task routing
+
+vNext Core Task Catalog：
+
+| canonical task | Task Contract | legacy alias / note |
 |---|---|---|
-| `init-project` | `../hact-method-lab/specs-execution/init-project.md` | |
-| `draft-foundation` | `../hact-method-lab/specs-execution/draft-foundation.md` | V0 地基设计；骨架代码归 `develop(source=foundation)` |
-| `draft-prd-vN` | `../hact-method-lab/specs-execution/draft-prd-vN.md` | |
-| `draft-ux` | `../hact-method-lab/specs-execution/draft-ux.md` | PRD 标明需要时触发 |
-| `draft-tech-design` | `../hact-method-lab/specs-execution/draft-tech-design.md` | |
-| `plan-sprint` | `../hact-method-lab/specs-execution/plan-sprint.md` | |
-| `develop` | `../hact-method-lab/specs-execution/develop.md` | 含 per-task 独立审查与自合并 |
-| `generate-integration-tests` | `../hact-method-lab/specs-execution/generate-integration-tests.md` | |
-| `manual-test` | `../hact-method-lab/specs-execution/manual-test.md` | |
-| `deploy` | `../hact-method-lab/specs-execution/deploy.md` | |
-| `wrap-up-iteration` | `../hact-method-lab/specs-execution/wrap-up-iteration.md` | |
-| `dispatch-new` | `../hact-method-lab/specs-execution/dispatch-new.md` | B 类 |
-| `revise-doc` | `../hact-method-lab/specs-execution/revise-doc.md` | B 类 |
+| `init-project` | `tasks/init-project.md` | |
+| `draft-foundation` | `tasks/draft-foundation.md` | |
+| `draft-prd` | `tasks/draft-prd.md` | `draft-prd-vN` |
+| `draft-ux` | `tasks/draft-ux.md` | 外部设计路径仍归同一 Task |
+| `draft-tech-design` | `tasks/draft-tech-design.md` | |
+| `plan-sprint` | `tasks/plan-sprint.md` | |
+| `revise-doc` | `tasks/revise-doc.md` | |
+| `develop` | `tasks/develop.md` | 承接 A/B/repair source |
+| `integration-verify` | `tasks/integration-verify.md` | `generate-integration-tests` |
+| `manual-test` | `tasks/manual-test.md` | |
+| `deploy` | `tasks/deploy.md` | |
+| `wrap-up-iteration` | `tasks/wrap-up-iteration.md` | |
 
-B 类任务包创建后统一由 `develop(source=bug/optimization)` 拾取，复用 freshness preflight、隔离证据审查和有界复审。仅用户明确要求接管既有手动 diff 时，按 develop 的独立审查规则处理既有 diff；缺失写代码前的 preflight 证据时，先补做并如实标 `retroactive`。
+非 Core Task：
+
+- `dispatch-new` → `protocols/b-intake.md` → `develop(source=bug|optimization)`
+- `draft-ux-external` → `runtime/external-ux.md`，最终仍回 `draft-ux`
+- `harvest-notes` → `utilities/harvest-notes.md`，仅用户明确要求时运行
 
 ## Step 0：确认工作基线
 
-先读当前分支、工作树与上游状态。使用用户指定的方法论分支/版本，不自动切 master。新任务建立基线前可 fetch 并在工作树干净、无活跃写入且当前分支有上游时快进同步；进行中任务先恢复已有基线，不因一次提问或压缩重复 pull。无关在制品保留，远端不可用只阻断必须依赖远端的动作。个人 notes 仅实际收割/写入时访问。
+先核：
 
-采用本版单源状态前，存量项目须逐仓核对 status 与旧 Gate/任务记录、已获用户确认的签署和实际 Git；同步更新项目 check-gate/check-sprint/check-b-task 与既有 hook 的委托路由（不覆盖原 hook）。未核对或旧 hook 仍只盯 gates.md 时沿用获准旧版，不只删文件、不在一次普通开发中自动迁移。历史 Markdown 可保留，但升级后不再双写或作为进度真相。
+- 当前 repository / branch / HEAD / upstream
+- working tree / index / stash
+- adopted Method SHA
+- 项目 `status.yml`
 
-## Step 1：状态推断与规范加载
+新任务建立基线前可 fetch 并在工作树干净、无活跃写入且当前分支有上游时快进同步；进行中任务先恢复已有基线，不因一次提问或 context compaction 重复 pull。
+
+不明来源的 local changes 保留并隔离，不擅自 restore / stash / force clean。
+
+## Step 1：状态推断与 Task 选择
 
 1. 读取 `project.md`。
-2. 读取 `status.yml iterations.*.gates`。存在 `iterations/v0/` 时先判断 V0，避免被预建的空 `v1/` 误导。
-3. 读取 `status.yml tasks[]` 判断状态、负责人和 PR；sprint 仅在规划问题时读，旧 Markdown 状态不参与推断。
-4. 用户已明确指定任一 `task.type` 时优先加载该规范并由规范自身核前置；用户只给 task-id 时，先在 iteration queue / `b-queue/` 查契约，并在 `status.yml` 解析其 source 与状态：B 类 task-id 无论当前 A 类处于哪个 Gate，均优先路由 `develop(source=bug/optimization)`。没有显式任务时再按下表推断。
+2. 读取 `status.yml iterations.*.gates`；存在 `iterations/v0/` 时先判断 V0。
+3. 读取 `status.yml tasks[]` 判断当前 work item、Owner、source、依赖与状态。动态状态不从旧 Markdown 复选框推断。
+4. 用户已明确 canonical Task 时优先该 Task；用户给 legacy alias 时先 canonicalize。
+5. 用户只给 task-id 时，先在 `status.yml` 与对应 queue 找到该 Task Contract/source，再继续。
+6. B 类 task-id / bug / optimization 请求先做 B Intake；已有合法 Development Intake 且用户已授权实现时直接衔接 `develop`。
+7. 没有显式 Task 时，按下表推断。
 
-| 状态信号 | 人类说明 | 推断任务类型 |
-|---|---|---|
-| `phase=v0;G2=0` | status 中 V0 G2 未签 | `draft-foundation` |
-| `phase=v0;G2=1;foundation=unmerged` | V0 G2 已签，但 `status.yml` 无已合并的 `foundation` task | `develop(source=foundation)` |
-| `phase=v0;foundation=merged` | V0 `foundation` task 已合并 | `continue-v1`，继续按下列 V1 信号判断 |
-| `class=B;status=available` | `status.yml` 有 source=bug/optimization 的 `[可取]` 任务 | `develop(source=bug/optimization)`，列出或拾取指定任务 |
-| `class=B;status=active` | B 类任务为 `[taken-by]` 或 `[done]` | `develop(source=bug/optimization)`，按 task-id 续做 |
-| `phase=v1;G1=0` | G1 未签 | `draft-prd-vN` |
-| `phase=v1;G1=1;G2=0;ux=required;outputs=incomplete` | PRD 任一功能需 UX，`prototype.html` / `prototype-map.md` / `ux-flows.md` 任一未齐 | `draft-ux` |
-| `phase=v1;G1=1;G2=0;ux=ready` | 无需原型，或三份 UX 产物均已存在 | `draft-tech-design` |
-| `phase=v1;G2=1;G3=0` | G2 已签、G3 未签 | `plan-sprint` |
-| `phase=v1;G3=1;G4=0;tasks=available` | 存在 `[可取]` | `develop`，列出可认领任务 |
-| `phase=v1;G3=1;G4=0;tasks=active` | 存在 `[taken-by]` 或 `[done]` | `develop`，续做 |
-| `phase=v1;G3=1;G4=0;tasks=merged;integration=missing` | 全部开发任务 `[merged]`，联调报告不存在 | `generate-integration-tests` |
-| `phase=v1;G3=1;G4=0;tasks=merged;integration=present` | 联调报告存在 | `manual-test` |
-| `phase=v1;G4=1;G5=0` | G4 已签、G5 未签 | `wrap-up-iteration`；同时提示可按用户指令并行执行 `deploy` |
-| `phase=v1;G5=1` | G5 已签 | `wait`，本迭代完结等待指令 |
+| 状态信号 | 推断 Task |
+|---|---|
+| `phase=v0; G2=0` | `draft-foundation` |
+| `phase=v0; G2=1; foundation not merged` | `develop(source=foundation)` |
+| `phase=v0; foundation merged` | 继续按 V1 信号判断 |
+| B 类已有未闭合 intake/work item | `develop(source=bug|optimization)` |
+| `phase=v1; G1=0` | `draft-prd` |
+| `phase=v1; G1=1; G2=0; ux required; outputs incomplete` | `draft-ux` |
+| `phase=v1; G1=1; G2=0; ux ready/not-required` | `draft-tech-design` |
+| `phase=v1; G2=1; G3=0` | `plan-sprint`；若 planning 已 merged，则进入 G3 approval boundary |
+| `phase=v1; G3=1; G4=0; sprint task claimable/active` | `develop` |
+| `phase=v1; G3=1; G4=0; sprint tasks merged; integration missing` | `integration-verify` |
+| `phase=v1; G3=1; G4=0; integration passed/present` | `manual-test` |
+| `phase=v1; G4=1; G5=0` | `wrap-up-iteration`；`deploy` 仅按用户授权/项目策略进入 |
+| `phase=v1; G5=1` | `wait` / 下一明确 Task |
 
-推断 `manual-test` 时只检查联调报告是否存在；进入相应规范后再读全文。不得按人贴角色标签；实现层由 `develop` 在会话内确认。
+### `可取` 不是单独的认领充分条件
 
-5. 加载单份执行规范，按其中的完成条件继续；只有实际使用浏览器、远端、托管或独审时核相应能力。缺必需能力时不宣称该验证完成。
-6. 正常启动只输出任务范围和下一动作；异常给可查依据。任务途中不重复声明运行时。
+对任何 Task，从 `可取` 进入 `taken-by` 前必须再核该 Task 的 Preconditions。
 
-检查器应实际执行。项目 hook 漂移时使用已有 `scripts/check-hook-state.js` 诊断并手动运行当前任务必要检查；不覆盖自定义 hook。配置诊断 `node scripts/check-codex-project.js --root .` 只核入口/角色文件形状，不证明模型、浏览器或远端可用。
+尤其：
+
+- `source=sprint` 必须 G3 approved；
+- `depends_on` 必须满足；
+- required artifact / authorization 必须存在。
+
+因此 G3 未签时，即使 planning 已把 sprint Task 登记为 `status: 可取`，也不得认领。不要为了表达 dependency wait / Gate wait 增加第五状态。
+
+## Step 2：加载最小执行上下文
+
+Task 确定后：
+
+1. 加载 `tasks/{task}.md`；
+2. 读取其 Authoritative Inputs；
+3. 按 §2 的触发规则加载实际需要的 Shared Protocol；
+4. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
+5. 再开始正式修改 / review / verification。
+
+正常启动只输出当前 Task 范围和下一动作；异常时给出可查依据。任务途中不重复声明整套运行时。
+
+## Step 3：执行与恢复
+
+进入 Task 后以 Task Contract 的 Completion & Handoff 为准。
+
+Context compaction、session interruption 或跨 Runtime 恢复时，不重新执行整套任务路由；读取 fixed Method SHA、当前 Task、Accepted Truth、candidate/evidence 与实际 Git state，从第一个未满足 completion condition 继续。
+
+需要浏览器、远端、托管、部署或独审时才核对应 capability。缺必需 capability 时形成明确 gap，不把未执行的验证写成已完成。
