@@ -46,7 +46,7 @@ Task Contract 只定义本 Task 独有规则。状态、Gate、Git Truth、Autho
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 项目初始化已经完成。
 - 项目根 `foundation.md` 已播种，至少存在可识别的领域地图 / 核心实体与关注点登记。

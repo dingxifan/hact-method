@@ -46,7 +46,7 @@ review: none
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前 HACT Method fixed SHA 已知。
 - `integration-verify` 已 `merged`。
@@ -68,10 +68,7 @@ review: none
 - 当前 Accepted integration result
 - 当前被验收的 Accepted implementation snapshot
 - 本期 backlog 中明确标记的 `[欠账]` / 已知未闭合事项
-- `protocols/gates.md`
-- `protocols/authority.md`
-- `protocols/git-truth.md`
-- `protocols/recovery.md`
+- 当前动作实际触发的 Shared Protocol projection；按 `templates/boot-protocol.md` 与对应 Protocol 的最小加载规则读取，不预加载全部 `protocols/`
 
 ### Conditional
 

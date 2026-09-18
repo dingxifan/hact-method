@@ -53,7 +53,7 @@ review: required
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前 HACT Method fixed SHA 已知。
 - 当前迭代 PRD / TRD 已进入 Accepted Project Truth。

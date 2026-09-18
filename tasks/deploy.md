@@ -51,7 +51,7 @@ Task Contract 只定义 deployment 语义。SSH、平台 CLI、进程管理器�
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前 HACT Method fixed SHA 已知。
 - `status.yml` 可读取。
@@ -94,9 +94,7 @@ Task Contract 只定义 deployment 语义。SSH、平台 CLI、进程管理器�
 - 当前 Accepted Project Truth 中的代码与配置
 - 项目当前 deployment configuration
 - 项目当前 connection / credential reference
-- `protocols/authority.md`
-- `protocols/git-truth.md`
-- `protocols/recovery.md`
+- 当前动作实际触发的 Shared Protocol projection；按 `templates/boot-protocol.md` 与对应 Protocol 的最小加载规则读取，不预加载全部 `protocols/`
 
 ### Conditional
 

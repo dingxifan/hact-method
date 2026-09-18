@@ -50,7 +50,7 @@ Task Contract 只定义整合验证的任务语义；具体脚本、浏览器工
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前 HACT Method fixed SHA 已知。
 - `status.yml` 可读取。
@@ -73,9 +73,7 @@ Task Contract 只定义整合验证的任务语义；具体脚本、浏览器工
 - 本期 sprint / develop Task Package 中与组合、依赖、共享资产、`supersedes` 相关的 Contract
 - 当前 Accepted Project Truth 中的实现
 - 当前有效的 develop review / test evidence 指针
-- `protocols/git-truth.md`
-- `protocols/authority.md`
-- `protocols/recovery.md`
+- 当前动作实际触发的 Shared Protocol projection；按 `templates/boot-protocol.md` 与对应 Protocol 的最小加载规则读取，不预加载全部 `protocols/`
 
 ### Conditional
 

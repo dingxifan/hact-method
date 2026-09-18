@@ -47,7 +47,7 @@ Task Contract 只定义 `revise-doc` 独有规则。共同状态、Authority、G
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前 HACT Method fixed SHA 已知。
 - 有明确 `target`：`prd | trd | foundation | project`。

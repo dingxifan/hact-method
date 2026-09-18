@@ -47,7 +47,7 @@ Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2
 
 ## 2. Preconditions
 
-进入 `可取` 前必须满足：
+从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前迭代 PRD 已进入 Accepted Project Truth。
 - G1 已 approved，并绑定明确 PRD snapshot。
