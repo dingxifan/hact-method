@@ -63,5 +63,5 @@ code_reviews: []
 #    spec_rounds: 1          # freshness/contract/claim 独立复核数，int >= 0
 #    freshness: revised      # pass / revised；写代码前是否命中过期并完成修订
 #    review_report_dir: iterations/v1/code-reviews/{task-id}  # B 类为 b-reviews/{task-id}
-#    review_evidence_version: develop-review-round/v2          # 新任务必填；存量缺失按 legacy/unknown
+#    review_evidence_version: develop-review-round/v2          # post-adoption 完成任务必填；缺失只表示 unknown，legacy 身份只看 adoption boundary
 #    # 问题与处置只在 review_report_dir 下逐轮报告维护；不另填 issues/comment。
