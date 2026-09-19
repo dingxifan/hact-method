@@ -261,8 +261,9 @@ code_review_archives:
 code_reviews: []
 `);
   result = run('v1');
-  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
-  assert.doesNotMatch(result.stdout, /code_reviews\[\] 无条目/, '检查 #9 必须读取本期归档');
+  assert.notStrictEqual(result.status, 0, '无 adoption boundary 时旧 schema 不再获得隐式豁免');
+  assert.doesNotMatch(result.stdout, /code_reviews\[\] 无条目/, '即使严格审计失败，检查 #9 仍须从本期归档定位历史条目');
+  assert.match(result.stdout, /rounds|code_rounds|review_report_dir|审计/, '失败原因必须是证据不完整而不是归档不可见');
   write('status.yml', fs.readFileSync(path.join(tempRoot, 'status.yml'), 'utf8')
     .replace(/code_review_archives:[\s\S]*?code_reviews: \[\]\n/, 'code_reviews: []\n'));
   result = run('v1');
