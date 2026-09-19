@@ -380,8 +380,9 @@ function runtimeCheck(root) {
 }
 function readAdopted(root, file) {
   const source = adoptedSource(root);
-  if (!/^(specs-execution|specs-structural|skeleton|guide|templates)\/[A-Za-z0-9_./\-\u0080-\uffff]+\.md$/.test(file || '')
-      || file.split('/').includes('..')) throw new Error('只允许读取固定方法版本内的规范 Markdown 路径');
+  if (!/^(tasks|protocols|runtime|utilities|specs-execution|specs-structural|skeleton|guide|templates)\/[A-Za-z0-9_./\-\u0080-\uffff]+\.md$/.test(file || '')
+      || file.split('/').includes('..') || file.includes('\\\\') || path.isAbsolute(file || ''))
+    throw new Error('只允许读取固定方法版本内的规范 Markdown 路径');
   return git(source.method, ['show', source.sha + ':' + file]) + '\n';
 }
 function main(argv) {
