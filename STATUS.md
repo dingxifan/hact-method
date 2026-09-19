@@ -17,7 +17,7 @@
 
 ## 本阶段进展
 
-- **R2.4 — Native Repository Write First & External Adapter Dormant（2026-09-19）**：仓库能力拆分为 repository-read / repository-write / repository-execution。当前 remote/provider 有已授权 native repository-write 时，远端 branch/commit/PR 优先直接持久化；测试、hook、worktree、build 等仍必须由真实本地执行环境给证据。Dropbox/Watcher 已从 active execution options 退出并标为 dormant experimental asset；不自动回退，重新启用须显式方法决策。本批不改变 task/Gate/review lifecycle，当前候选位于 `hact/r2.4-native-repository-write`。
+- **R2.4 — Native Repository Write First & External Adapter Dormant（2026-09-19）**：仓库能力拆分为 repository-read / repository-write / repository-execution。当前 remote/provider 有已授权 native repository-write 时，远端 branch/commit/PR 优先直接持久化；测试、hook、worktree、build 等仍必须由真实本地执行环境给证据。native write 不得绕过既有 branch/PR/protected-branch 治理；已有本地实现/测试/审查 worktree 时从该 worktree commit/push，不远端重构第二份 diff。Dropbox/Watcher 已从 active execution options 退出并标为 dormant experimental asset；不自动回退，重新启用须显式方法决策。本批不改变 task/Gate/review lifecycle，通过 PR #2 管理，最终状态以 Git/PR 事实为准。
 
 - **R2.3 — Explicit Adoption Boundary & Legacy Accepted Truth Compatibility（2026-09-19）**：既有项目方法同步以 `source_base → reconciled adoption truth → adoption commit` 冻结显式 boundary，并记录对账后 status snapshot hash；后续升级不得重写或扩张该对象。checker 仅据此承认 Legacy Accepted Truth，不要求伪造旧 preflight/round/tree/report 证据，也不再用旧 schema/缺字段推断豁免；staged 审计只读取 HEAD boundary。legacy task 一旦被修改或 reopen 后再次 merged，新 delta 恢复完整 vNext 审计。定向 Node 回归与独立审查通过，已通过 PR #1 合并到 `main@9519bdf5d2e7b1f2ceb2d959a2a04878c006f567`。
 
