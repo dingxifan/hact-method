@@ -454,6 +454,8 @@ function parseAdoptionBoundary(root) {
   catch { return { kind: 'invalid', error: ADOPTION_META + ' 不是合法 JSON' }; }
   const adoption = meta && meta.adoption;
   if (!adoption) return { kind: 'absent' };
+  if (meta.schema !== 2 || meta.state !== 'verified' || !/^[0-9a-f]{40}$/.test(meta.source || ''))
+    return { kind: 'invalid', error: 'adoption boundary 只能来自 verified schema=2 method-sync 记录' };
   const ids = adoption.legacy_accepted_tasks;
   if (adoption.schema !== 1 || !['legacy-project', 'new-project'].includes(adoption.kind)
       || !/^[0-9a-f]{40}$/.test(adoption.method_source || '')
@@ -470,9 +472,10 @@ function parseAdoptionBoundary(root) {
   let baseStatus = '';
   try {
     gitOutput(root, ['cat-file', '-e', adoption.accepted_truth_base + '^{commit}']);
+    gitOutput(root, ['merge-base', '--is-ancestor', adoption.accepted_truth_base, 'HEAD']);
     baseStatus = gitOutput(root, ['show', adoption.accepted_truth_base + ':status.yml']);
   } catch {
-    return { kind: 'invalid', error: 'accepted_truth_base 或其 status.yml 在当前仓不可验证' };
+    return { kind: 'invalid', error: 'accepted_truth_base 必须是当前 HEAD 的可验证祖先且包含 status.yml' };
   }
   const mergedAtBoundary = new Set(parseStatusTasksSource(baseStatus).filter(task => task.status === 'merged').map(task => task.id));
   const invalidIds = ids.filter(id => !mergedAtBoundary.has(id));
@@ -848,7 +851,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
 }
 
 /* A/B 共用的单任务 review 审计。显式调用代表当前任务正在走新流程，
- * 因此缺字段是 FAIL；迭代扫描仍对没有任何新字段的存量条目只留人签。 */
+ * 因此缺字段是 FAIL。历史兼容只由显式 adoption boundary 处理，不再按缺字段或 package schema 猜 legacy。 */
 function checkReviewAudit(taskId, root) {
   const statusPath = path.join(root, 'status.yml');
   if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
@@ -1478,8 +1481,8 @@ function checkSprint(iteration, root, audit = true) {
     const mergedIds = stTasks
       .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
       .map(t => t.id);
-    const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
-    const noAudit = [], partialAudit = [], badAudit = [], legacyPackages = [], grandfathered = [];
+    const noEntry = [], badRounds = [], noSplit = [], badSplit = [];
+    const noAudit = [], partialAudit = [], badAudit = [], grandfathered = [];
     const boundary = parseAdoptionBoundary(root);
     if (boundary.kind === 'invalid') fail('adoption boundary', ADOPTION_META, boundary.error);
     for (const id of mergedIds) {
@@ -1493,14 +1496,6 @@ function checkSprint(iteration, root, audit = true) {
       }
       const cr = crByTask.get(id);
       if (!cr) { noEntry.push(id); continue; }
-      const taskPackage = packages.find(p => p.id === id);
-      if (!taskPackage || !taskPackage.strictSchema) {
-        // 已合并的旧包只做“是否有历史审查条目”的可追溯性检查；不要把新 schema 的
-        // 固定 diff 约束反向施加到它的原始审计物上。
-        if (!('rounds' in cr)) noRounds.push(id);
-        legacyPackages.push(id);
-        continue;
-      }
       if (!('rounds' in cr)) { badRounds.push(id + '(缺 rounds)'); continue; }
       if (!/^\d+$/.test(cr.rounds) || Number(cr.rounds) < 1) badRounds.push(`${id}(rounds=${cr.rounds})`);
       if (!('code_rounds' in cr) || !('spec_rounds' in cr)) {
@@ -1524,8 +1519,6 @@ function checkSprint(iteration, root, audit = true) {
       fail('审计留痕', 'status.yml', `已 [merged] 但 code_reviews[] 无条目：${noEntry.join(', ')} —— develop 末端漏写审计留痕`);
     if (badRounds.length)
       fail('审计留痕', 'status.yml', `rounds 非 int≥1（见 skeleton/07 值域）：${badRounds.join(', ')}`);
-    if (noRounds.length)
-      human('审计留痕', `有 code_reviews 条目但缺 rounds：${noRounds.join(', ')} —— rounds 是 2026-07-30 新增字段，存量条目普遍无；本期新合并的应补（轮数事后不可复原，只能当场记）`);
     if (badSplit.length)
       fail('审计留痕', 'status.yml', `rounds 拆分非法或总数不相等：${badSplit.join(', ')}`);
     if (noSplit.length)
@@ -1536,14 +1529,12 @@ function checkSprint(iteration, root, audit = true) {
       fail('审计留痕', 'status.yml', `report 审计非法：${badAudit.join('；')}`);
     if (noAudit.length)
       fail('审计留痕', 'status.yml', `schema 2 缺必需 report 审计字段：${noAudit.join(', ')}`);
-    if (legacyPackages.length)
-      human('审计留痕', `未声明 adoption boundary 的旧 schema 包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 这不是 grandfathering；迁移项目应补显式 boundary`);
     if (grandfathered.length)
       pass('legacy accepted truth', `${grandfathered.length} 个任务由显式 adoption boundary 承认既有 Project Truth，不追补不存在的 vNext 历史证据：${grandfathered.join(', ')}`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
-    else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
-             && !partialAudit.length && !badAudit.length && !noAudit.length && !legacyPackages.length)
+    else if (!noEntry.length && !badRounds.length && !badSplit.length && !noSplit.length
+             && !partialAudit.length && !badAudit.length && !noAudit.length)
       pass('审计留痕', `${mergedIds.length - grandfathered.length} 个 post-adoption [merged] 任务均有合法 rounds 与逐轮 reports；${grandfathered.length} 个 legacy accepted truth 已按 boundary 验证`);
   }
 
