@@ -105,9 +105,8 @@ const mergedStatus = 'tasks:\n  - id: demo-v2-001\n    source: sprint\n    itera
 write('iterations/v2/sprint.md', '| task-id | title | layers | 依赖 | 状态 | PR | 交付 |\n| demo-v2-001 | 退款审批页 | frontend | — | [merged] | — | 可并行 |\n');
 write('iterations/v2/queue/demo-v2-001.md', legacyTask);
 write('status.yml', mergedStatus + 'code_reviews:\n  - task_id: demo-v2-001\n    rounds: 1\n    implementation_started_at: 2026-08-01T00:00:00Z\n');
-assert.strictEqual(run().status, 0, '历史包不因部分新审计字段倒填不全而失败');
-assert.match(run().stdout, /存量任务包仅核历史审查条目存在/, '兼容放行须明确审计边界');
-assert.doesNotMatch(run().stdout, /均有合法 rounds、墙钟/, '旧包不得被宣称已通过新版完整审计');
+assert.notStrictEqual(run().status, 0, '无 adoption boundary 时，历史包不得因旧 schema 自动免除不完整审计');
+assert.match(run().stdout, /缺 code_rounds\/spec_rounds|缺必需 report 审计字段/, '失败必须指向缺失的审计证据，而不是把旧 schema 当作豁免理由');
 write('iterations/v2/queue/demo-v2-001.md', task('legacy-full', ['design.md 全文（存量）']));
 assert.match(run().stdout, /schema 2 缺必需 report 审计字段/, 'schema 2 仍校验审计完整性');
 write('iterations/v2/queue/demo-v2-001.md', legacyTask);

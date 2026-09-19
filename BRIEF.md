@@ -5,6 +5,8 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 ## 核心目标
 
+R2.3 方法边界修正（2026-09-19）：既有项目采用当前方法必须显式冻结 adoption boundary（`accepted_truth_base + legacy_accepted_tasks`）。adoption 前已成立的 Project Truth 可以按真实历史形态继续被接受，但不得补造当时不存在的 preflight/round/tree/report 证据；adoption 后的新任务、修改与 reopen→remerge delta 完整执行当前 lifecycle。legacy 身份只来自固定 boundary，不再按 package schema、缺字段或文件年代猜测。
+
 011/012 反馈补充（2026-09-16）：提交只审本次涉及的任务证据，未变化的历史 round 不反复阻断；全局依赖和共享资产检查保留。逐轮记录合法与最终可合并分开校验，末轮 round 即最终独审结论，不另交重复 final-review。不增前置映射表、证据表或历史豁免账；具体项目采用另行处理。
 
 审查收敛补充（2026-09-16，007 反馈后修订）：保留各阶段职责与逐包独审，开发核本包兑现、受影响行为与有效证据，专项按真实改动触发。复用固定方法 SHA 读取规范和项目脚本；files 只维护当前落点，取消任务自登记；现有工具直接生成审查草稿。原审查员接续，三次实质代码审查额度从 Git 增量推导，同快照同问题集中补证一次；历史报告和计数保留。优化以减少人工步骤为准，不新增写集字段、轮次账或审查阶段；真实节时尚待项目试行。

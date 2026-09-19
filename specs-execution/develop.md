@@ -245,7 +245,7 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 
 最终通过后保存报告与证据索引；计时不构成交付门。
 
-每轮完成立即用 `check-sprint.js --review-chain {task-id} . --in-progress` 核记录是否合法；合并前去掉 --in-progress 核最终闭合。末轮 round 承担最终结论，PR 引用即可，不再单独交 final-review.md。提交 hook 按暂存差异核本次新增/修改的审查及新 merged 任务，不重审未变化的历史报告；完整迭代检查仍可显式运行，不建立历史豁免账。全局依赖和共享资产冲突仍按原规则核。
+每轮完成立即用 `check-sprint.js --review-chain {task-id} . --in-progress` 核记录是否合法；合并前去掉 --in-progress 核最终闭合。末轮 round 承担最终结论，PR 引用即可，不再单独交 final-review.md。提交 hook 按暂存差异核本次新增/修改的审查及新 merged 任务，不重审未变化的历史报告；完整迭代检查仍可显式运行。R2.3 只承认 `_meta/method-sync.json.adoption` 中由固定 `accepted_truth_base` 证明的 Legacy Accepted Truth；不按缺字段或旧 schema 建隐式豁免。legacy task 被修改或 reopen 后再次 merged 时，新 delta 必须完整走本节 vNext 证据链。全局依赖和共享资产冲突仍按原规则核。
 
 ### escape-hatch（执行 / 审查返回 blocked 时）
 

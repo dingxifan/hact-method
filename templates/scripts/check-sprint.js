@@ -444,6 +444,75 @@ function parseCodeReviewArchivesSource(source) {
 }
 
 const CODE_REVIEW_ARCHIVE_PATH = /^status-reviews\/[A-Za-z0-9][A-Za-z0-9-]*\.yml$/;
+const ADOPTION_META = '_meta/method-sync.json';
+
+function parseAdoptionBoundary(root, options = {}) {
+  const metaPath = path.join(root, ADOPTION_META);
+  const metaSource = options.metaSource === undefined ? (exists(metaPath) ? fs.readFileSync(metaPath, 'utf8') : null) : options.metaSource;
+  if (metaSource === null) return { kind: 'absent' };
+  let meta;
+  try { meta = JSON.parse(metaSource); }
+  catch { return { kind: 'invalid', error: ADOPTION_META + ' 不是合法 JSON' }; }
+  const adoption = meta && meta.adoption;
+  if (!adoption) return { kind: 'absent' };
+  // 仅 method-sync 的首次 reconciliation commit 可在 final boundary 前表达既有事实。
+  // 它不能离开隔离分支，也不能成为日常/后续提交的 grandfathering 入口。
+  if (meta.schema === 2 && meta.state === 'prepared' && adoption.schema === 2
+      && adoption.kind === 'legacy-project' && /^[0-9a-f]{40}$/.test(adoption.source_base || '')
+      && adoption.accepted_truth_base === null && adoption.accepted_truth_status_sha256 === null
+      && Array.isArray(adoption.legacy_accepted_tasks) && !adoption.legacy_accepted_tasks.length
+      && /^codex\/method-sync-/.test(gitOutput(root, ['branch', '--show-current'])))
+    return { kind: 'reconciliation', ids: new Set((parseStatusTasks(path.join(root, 'status.yml')) || [])
+      .filter(task => task.status === 'merged').map(task => task.id)), adoption };
+  if (meta.schema !== 2 || meta.state !== 'verified' || !/^[0-9a-f]{40}$/.test(meta.source || ''))
+    return { kind: 'invalid', error: 'adoption boundary 只能来自 verified schema=2 method-sync 记录' };
+  const ids = adoption.legacy_accepted_tasks;
+  if (adoption.schema !== 2 || !['legacy-project', 'new-project'].includes(adoption.kind)
+      || !/^[0-9a-f]{40}$/.test(adoption.method_source || '')
+      || !Array.isArray(ids)
+      || ids.some(id => !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id))
+      || new Set(ids).size !== ids.length) return { kind: 'invalid', error: 'adoption boundary 字段非法' };
+  if (adoption.kind === 'new-project') {
+    if (adoption.source_base !== null || adoption.accepted_truth_base !== null || adoption.accepted_truth_status_sha256 !== null || ids.length)
+      return { kind: 'invalid', error: 'new-project adoption 不得声明 legacy accepted truth' };
+    return { kind: 'new-project', ids: new Set(), adoption };
+  }
+  if (!/^[0-9a-f]{40}$/.test(adoption.source_base || '') || !/^[0-9a-f]{40}$/.test(adoption.accepted_truth_base || '')
+      || !/^[0-9a-f]{64}$/.test(adoption.accepted_truth_status_sha256 || ''))
+    return { kind: 'invalid', error: 'legacy-project adoption snapshot 字段非法' };
+  let baseStatus = '';
+  try {
+    gitOutput(root, ['cat-file', '-e', adoption.accepted_truth_base + '^{commit}']);
+    gitOutput(root, ['merge-base', '--is-ancestor', adoption.accepted_truth_base, options.headRef || 'HEAD']);
+    baseStatus = gitRaw(root, ['show', adoption.accepted_truth_base + ':status.yml']);
+  } catch {
+    return { kind: 'invalid', error: 'accepted_truth_base 必须是当前 HEAD 的可验证祖先且包含 status.yml' };
+  }
+  if (crypto.createHash('sha256').update(baseStatus).digest('hex') !== adoption.accepted_truth_status_sha256)
+    return { kind: 'invalid', error: 'accepted_truth_base status.yml 与 adoption snapshot hash 不一致' };
+  try { gitOutput(root, ['merge-base', '--is-ancestor', adoption.source_base, adoption.accepted_truth_base]); }
+  catch { return { kind: 'invalid', error: 'source_base 必须是 accepted_truth_base 的祖先' }; }
+  const mergedAtBoundary = new Set(parseStatusTasksSource(baseStatus).filter(task => task.status === 'merged').map(task => task.id));
+  const invalidIds = ids.filter(id => !mergedAtBoundary.has(id));
+  if (invalidIds.length)
+    return { kind: 'invalid', error: 'legacy_accepted_tasks 含 boundary 当时未 merged 的任务：' + invalidIds.join(', ') };
+  if (!options.allowPending) {
+    const origins = gitOutput(root, ['log', '--format=%H', '--reverse', options.headRef || 'HEAD', '--', ADOPTION_META]).split('\n').filter(Boolean);
+    const origin = origins.map(commit => { try { return JSON.parse(gitOutput(root, ['show', `${commit}:${ADOPTION_META}`])); } catch { return null; } })
+      .find(value => value?.adoption?.accepted_truth_base);
+    if (!origin || JSON.stringify(origin.adoption) !== JSON.stringify(adoption))
+      return { kind: 'invalid', error: 'adoption boundary 一经创建不得重写或扩张' };
+  }
+  return { kind: 'legacy-project', ids: new Set(ids), adoption };
+}
+
+function grandfatheredAcceptedTask(root, task) {
+  const boundary = parseAdoptionBoundary(root);
+  if (boundary.kind === 'invalid') return { grandfathered: false, error: boundary.error };
+  if (!['legacy-project', 'reconciliation'].includes(boundary.kind) || !task || task.status !== 'merged' || !boundary.ids.has(task.id))
+    return { grandfathered: false };
+  return { grandfathered: true, base: boundary.adoption.accepted_truth_base };
+}
 
 function hasSymlinkSegment(root, target) {
   const stop = path.resolve(root);
@@ -553,6 +622,9 @@ function gitOutput(root, args, encoding = 'utf8') {
     encoding,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+}
+function gitRaw(root, args) {
+  return childProcess.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
 function gitObjectType(root, object) {
@@ -804,7 +876,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
 }
 
 /* A/B 共用的单任务 review 审计。显式调用代表当前任务正在走新流程，
- * 因此缺字段是 FAIL；迭代扫描仍对没有任何新字段的存量条目只留人签。 */
+ * 因此缺字段是 FAIL。历史兼容只由显式 adoption boundary 处理，不再按缺字段或 package schema 猜 legacy。 */
 function checkReviewAudit(taskId, root) {
   const statusPath = path.join(root, 'status.yml');
   if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
@@ -1434,19 +1506,21 @@ function checkSprint(iteration, root, audit = true) {
     const mergedIds = stTasks
       .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
       .map(t => t.id);
-    const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
-    const noAudit = [], partialAudit = [], badAudit = [], legacyPackages = [];
+    const noEntry = [], badRounds = [], noSplit = [], badSplit = [];
+    const noAudit = [], partialAudit = [], badAudit = [], grandfathered = [];
+    const boundary = parseAdoptionBoundary(root);
+    if (boundary.kind === 'invalid') fail('adoption boundary', ADOPTION_META, boundary.error);
     for (const id of mergedIds) {
-      const cr = crByTask.get(id);
-      if (!cr) { noEntry.push(id); continue; }
-      const taskPackage = packages.find(p => p.id === id);
-      if (!taskPackage || !taskPackage.strictSchema) {
-        // 已合并的旧包只做“是否有历史审查条目”的可追溯性检查；不要把新 schema 的
-        // 固定 diff 约束反向施加到它的原始审计物上。
-        if (!('rounds' in cr)) noRounds.push(id);
-        legacyPackages.push(id);
+      const statusTask = stTasks.find(t => t.id === id);
+      const legacyTruth = grandfatheredAcceptedTask(root, statusTask);
+      if (legacyTruth.error) {
+        fail('adoption boundary', ADOPTION_META, legacyTruth.error);
+      } else if (legacyTruth.grandfathered) {
+        grandfathered.push(id);
         continue;
       }
+      const cr = crByTask.get(id);
+      if (!cr) { noEntry.push(id); continue; }
       if (!('rounds' in cr)) { badRounds.push(id + '(缺 rounds)'); continue; }
       if (!/^\d+$/.test(cr.rounds) || Number(cr.rounds) < 1) badRounds.push(`${id}(rounds=${cr.rounds})`);
       if (!('code_rounds' in cr) || !('spec_rounds' in cr)) {
@@ -1470,8 +1544,6 @@ function checkSprint(iteration, root, audit = true) {
       fail('审计留痕', 'status.yml', `已 [merged] 但 code_reviews[] 无条目：${noEntry.join(', ')} —— develop 末端漏写审计留痕`);
     if (badRounds.length)
       fail('审计留痕', 'status.yml', `rounds 非 int≥1（见 skeleton/07 值域）：${badRounds.join(', ')}`);
-    if (noRounds.length)
-      human('审计留痕', `有 code_reviews 条目但缺 rounds：${noRounds.join(', ')} —— rounds 是 2026-07-30 新增字段，存量条目普遍无；本期新合并的应补（轮数事后不可复原，只能当场记）`);
     if (badSplit.length)
       fail('审计留痕', 'status.yml', `rounds 拆分非法或总数不相等：${badSplit.join(', ')}`);
     if (noSplit.length)
@@ -1482,13 +1554,13 @@ function checkSprint(iteration, root, audit = true) {
       fail('审计留痕', 'status.yml', `report 审计非法：${badAudit.join('；')}`);
     if (noAudit.length)
       fail('审计留痕', 'status.yml', `schema 2 缺必需 report 审计字段：${noAudit.join(', ')}`);
-    if (legacyPackages.length)
-      human('审计留痕', `存量任务包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 未验证固定 diff 契约`);
+    if (grandfathered.length)
+      pass('legacy accepted truth', `${grandfathered.length} 个任务由显式 adoption boundary 承认既有 Project Truth，不追补不存在的 vNext 历史证据：${grandfathered.join(', ')}`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
-    else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
-             && !partialAudit.length && !badAudit.length && !noAudit.length && !legacyPackages.length)
-      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds 与逐轮 reports`);
+    else if (!noEntry.length && !badRounds.length && !badSplit.length && !noSplit.length
+             && !partialAudit.length && !badAudit.length && !noAudit.length)
+      pass('审计留痕', `${mergedIds.length - grandfathered.length} 个 post-adoption [merged] 任务均有合法 rounds 与逐轮 reports；${grandfathered.length} 个 legacy accepted truth 已按 boundary 验证`);
   }
 
   // 语义残量（留人签）
@@ -1499,7 +1571,7 @@ function checkSprint(iteration, root, audit = true) {
 function checkStagedReviews(root) {
   const staged = gitOutput(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean);
   const readAt = (ref, file) => { try { return gitOutput(root, ['show', `${ref}:${file}`]); } catch { return ''; } };
-  const iterations = new Set(), selected = new Map(), mustClose = new Set(), inputs = new Set(['status.yml']);
+  const iterations = new Set(), selected = new Map(), mustClose = new Set(), reconciliationIds = new Set(), inputs = new Set(['status.yml', ADOPTION_META]);
   const tasks = parseStatusTasksSource(readAt('', 'status.yml'));
   const beforeTasks = new Map(parseStatusTasksSource(readAt('HEAD', 'status.yml')).map(t => [t.id, t]));
   const select = (id, required = false) => selected.set(id, required || selected.get(id) || false);
@@ -1528,12 +1600,41 @@ function checkStagedReviews(root) {
       if (['depends_on', 'iteration', 'layer', 'source', 'delivery'].some(k => old?.[k] !== next?.[k])) {
         for (const t of [old, next]) if (t && ITER_SOURCES.has(t.source) && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')) iterations.add(t.iteration);
       }
+      // grandfathering 只保护 adoption 前已经成立且未触碰的事实。
+      // 已 merged legacy task 的状态记录一旦在 adoption 后被修改，提交必须进入严格审计；
+      // reopen 本身允许先变为 active，但再次 merged 时由下方 transition 规则强制完整闭环。
+      if (old?.status === 'merged' && next?.status === 'merged' && JSON.stringify(old) !== JSON.stringify(next)) {
+        select(id, true); mustClose.add(id);
+      }
     }
     for (const task of tasks) if (task.status === 'merged' && beforeTasks.get(task.id)?.status !== 'merged'
         && (task.type === 'develop' || ITER_SOURCES.has(task.source) || ['bug', 'optimization', 'foundation'].includes(task.source))) { select(task.id, true); mustClose.add(task.id); }
     for (const file of staged.filter(f => /^status-reviews\//.test(f))) inputs.add(file);
   }
   for (const version of iterations) for (const part of ['queue', 'sprint.md', 'prd.md', 'trd.md']) inputs.add(`iterations/${version}/${part}`);
+  // 普通提交永远以 HEAD 的 boundary 判定；工作树或 index 中的临时元数据不能给 staged task 背书。
+  const headMeta = readAt('HEAD', ADOPTION_META) || null;
+  const boundary = parseAdoptionBoundary(root, { metaSource: headMeta, headRef: 'HEAD' });
+  if (boundary.kind === 'invalid') fail('adoption boundary', ADOPTION_META, boundary.error);
+  if (staged.includes(ADOPTION_META)) {
+    const indexMeta = gitOutput(root, ['show', `:${ADOPTION_META}`]);
+    let next, prior;
+    try { next = JSON.parse(indexMeta); prior = headMeta ? JSON.parse(headMeta) : null; }
+    catch { fail('adoption boundary', ADOPTION_META, '暂存的 method-sync.json 不是合法 JSON'); }
+    const reconciliation = !prior?.adoption && parseAdoptionBoundary(root, { metaSource: indexMeta });
+    if (reconciliation?.kind === 'reconciliation')
+      for (const id of reconciliation.ids) reconciliationIds.add(id);
+    if (next?.adoption?.accepted_truth_base) {
+      if (prior?.adoption && prior.state !== 'prepared' && JSON.stringify(prior.adoption) !== JSON.stringify(next.adoption))
+        fail('adoption boundary', ADOPTION_META, 'adoption boundary 一经创建不得重写或扩张');
+      else if (!prior?.adoption || prior.state === 'prepared') {
+        const candidate = parseAdoptionBoundary(root, { metaSource: indexMeta, headRef: 'HEAD', allowPending: true });
+        const reconciledHead = gitOutput(root, ['rev-parse', 'HEAD']).trim();
+        if (candidate.kind === 'invalid' || next.adoption.accepted_truth_base !== reconciledHead)
+          fail('adoption boundary', ADOPTION_META, candidate.error || '首次 adoption 必须绑定紧邻的 reconciled truth HEAD');
+      }
+    }
+  }
   for (const [id] of selected) {
     if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id || '')) throw new Error('审查 task-id 非法');
     for (const file of findTaskPackages(root, id)) inputs.add(path.relative(root, file));
@@ -1550,6 +1651,7 @@ function checkStagedReviews(root) {
   for (const version of iterations) checkSprint(version, root, false);
   for (const [id, required] of selected) {
     const task = tasks.find(t => t.id === id);
+    if (reconciliationIds.has(id)) continue; // 唯一的首次 reconciliation transition，冻结前不要求未来审计物。
     if (task?.status === 'merged' || mustClose.has(id)) { checkReviewAudit(id, root); continue; }
     const dirs = [...inputs].filter(f => f.endsWith(`/code-reviews/${id}`) || f === `b-reviews/${id}`);
     const hasRounds = dirs.some(dir => exists(path.join(root, dir)) && fs.readdirSync(path.join(root, dir)).some(n => /^round-\d{2}\.md$/.test(n)));
@@ -1615,6 +1717,8 @@ function main() {
     console.log('');
   } else {
     console.log('✅ 确定性判据全部通过（语义判据仍需人核）\n');
+    for (const p of passes.filter(f => f.rule === 'legacy accepted truth'))
+      console.log(`ℹ️ [${p.rule}] ${p.msg}`);
   }
   if (humans.length) {
     console.log('🧑 留签字人确认（脚本不判，非 FAIL）:');
@@ -1626,4 +1730,4 @@ function main() {
 if (require.main === module) main();
 module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED, REVIEW_AUDIT_FIELDS,
   sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText,
-  parseReportFindings, fixedDiffEvidence, findTaskPackages };
+  parseReportFindings, fixedDiffEvidence, findTaskPackages, parseAdoptionBoundary, grandfatheredAcceptedTask };
