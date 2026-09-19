@@ -141,7 +141,7 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 >
 > **R2.3 adoption compatibility**：上述字段约束适用于 post-adoption work。既有项目迁移时，`_meta/method-sync.json.adoption` 显式冻结 `accepted_truth_base` 与该提交中已经 `merged` 的 `legacy_accepted_tasks`。这些任务可作为 Legacy Accepted Truth 保留其真实历史形态，不追补当时不存在的 vNext review evidence。legacy 身份只来自这个显式 boundary；缺字段、旧 package schema 或文件年代都不能自动获得豁免。legacy task 一旦在 adoption 后被修改或 reopen 后再次 merged，其新 delta 按当前 lifecycle 严格校验。
 >
-> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验核固定 diff、targeted 继承链与问题闭合，并对缺必要字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
+> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验核固定 diff、targeted 继承链与问题闭合，并对缺必要字段硬失败。完整迭代扫描也不再按“旧 schema / 缺字段”推断 legacy；只有显式 adoption boundary 中已证明的 Legacy Accepted Truth 才跳过不存在的历史 vNext 证据。
 
 > 问题、证据、严重程度与处置状态按 `templates/review-briefs/develop-review-round.md` 写入逐轮报告。`status.yml` 通过 `review_report_dir` 引用，读取问题时沿报告链按稳定 finding id 取最新处置，不另维护 issues/comment 副本。历史内联内容原样保留。
 
