@@ -17,6 +17,8 @@
 
 ## 本阶段进展
 
+- **R2.3 — Explicit Adoption Boundary & Legacy Accepted Truth Compatibility（2026-09-19）**：既有项目方法同步新增显式 adoption boundary，冻结采用前 `accepted_truth_base` 与该提交中已 `merged` 的 `legacy_accepted_tasks`；checker 仅据此承认 Legacy Accepted Truth，不要求伪造旧 preflight/round/tree/report 证据，也不再用旧 schema/缺字段推断豁免。legacy task 一旦被修改或 reopen 后再次 merged，新 delta 恢复完整 vNext 审计。新项目显式记录 `kind: new-project`、空 legacy 集。当前实现位于 R2.3 分支，代码/夹具已落；本会话执行环境无法拉取 GitHub，尚未完成本地 Node 回归，因此未宣称验证通过或合并。
+
 - **011/012 反馈后的提交审计减法（2026-09-16）**：仅方法论仓修订。提交按 Git 暂存差异核本次任务审计，保留全局依赖/共享资产检查；状态事件与普通审计在 hook 中只路由一次。review-chain 增加中间轮校验，合法 revise/evidence-needed 不再被当成格式失败，最终合并仍要求闭合。末轮 round 取代重复 final-review 要求，preflight 核实际控制位置，静态规则复用真实消费样本；不加映射表或豁免账。file-extract 未改动、未分发，自动接续实验不在本轮范围。
 
 - **007 反馈后的审查减法修订（2026-09-16）**：复用 method-sync 记录固定规范读取和项目脚本来源；取消本任务包自登记，files 仅维护当前落点；现有 anchor 工具直接生成 pending 草稿并带入开放问题。历史计数保留，三个实质代码审查额度按 Git 增量推导，同快照同问题集中补证一次；定向复审核完整相关调用链。相关真实 Git 正反例和接续回归通过。用户已授权提交推送到 codex/context-reduction，不分发项目；项目须整体采用对应版本，实际节时未验证。
