@@ -45,6 +45,12 @@ try {
   assert.strictEqual(inventory.operations.find(x => x.to === 'AGENTS.md').action, 'merge');
   assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'check 零写入');
   const prepared = prepare(project, source); wt = prepared.worktree;
+  const adoptionMeta = JSON.parse(fs.readFileSync(path.join(wt, '_meta/method-sync.json'), 'utf8'));
+  assert.strictEqual(adoptionMeta.schema, 2, 'R2.3 method-sync record uses adoption-aware schema');
+  assert.strictEqual(adoptionMeta.adoption.kind, 'legacy-project');
+  assert.strictEqual(adoptionMeta.adoption.accepted_truth_base, originalHead, 'adoption boundary pins the pre-upgrade project HEAD');
+  assert.deepStrictEqual(adoptionMeta.adoption.legacy_accepted_tasks, [], 'empty historical status creates no synthetic legacy truth');
+  assert.strictEqual(adoptionMeta.adoption.method_source, source.sha);
   assert.strictEqual(git(project, ['rev-parse', 'HEAD']), originalHead);
   assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'prepare 不碰原树/暂存区');
   assert.strictEqual(fs.readFileSync(path.join(wt, 'scripts/check-example.js'), 'utf8'), 'console.log("new template");\n');
@@ -126,8 +132,10 @@ try {
   assert.strictEqual(git(project2, ['rev-parse', 'HEAD']), integrated.commit);
   assert.ok(!fs.existsSync(wt2));
   assert.strictEqual(prepare(project2, source).state, 'already-integrated');
-  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'adopted scripts and real hook match');
+  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'adopted scripts, adoption boundary and real hook match');
   assert.strictEqual(runtimeCheck(project2).source, source.sha);
+  const integratedMeta = JSON.parse(fs.readFileSync(path.join(project2, '_meta/method-sync.json'), 'utf8'));
+  assert.strictEqual(integratedMeta.adoption.accepted_truth_base, git(project2, ['rev-parse', integratedMeta.adoption.accepted_truth_base]), 'accepted_truth_base remains a real commit after integration');
   write(method, 'specs-execution/develop.md', '# moving branch behavior\n');
   git(method, ['add', '.']); git(method, ['commit', '-m', 'method evolves']);
   assert.strictEqual(readAdopted(project2, 'specs-execution/develop.md'), '# adopted behavior\n', 'moving method HEAD must not change project rules');
