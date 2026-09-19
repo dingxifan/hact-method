@@ -20,11 +20,11 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 
 检查器和报告生成命令使用项目 `scripts/` 副本。旧规范中出现的 `../hact-method-lab/templates/scripts/` 命令前缀，在存量项目继续解释为项目自己的 `scripts/`，除非另有迁移决定。
 
-### Legacy compatibility
+### Migration boundary
 
-- adopted SHA 已提供 vNext `tasks/` 时，正常执行只走 vNext Task Contract；`specs-execution/` 只作 migration / legacy reference。
-- 没有完成 vNext 升级的旧项目继续沿用其已获准版本，不自行拼接新旧入口。
-- 存量项目若仍有 `standards-{shared,frontend,backend}.md` 或其他历史结构契约，按项目既有升级说明处理；普通开发任务不顺手做方法论迁移。
+- vNext Core 只接受已完成 normalization 的项目；日常运行只走 vNext Task / Protocol / Runtime Contract。
+- 旧项目先由 `legacy-migration/normalize-legacy-project.cjs` 核对真实 Git 与历史状态、形成固定 baseline；它不补造 review/preflight 证据。
+- normalizer 未通过时不得把旧任务带入 vNext lifecycle；后续工作以新的 vNext task 引用历史事实，不 reopen 旧任务。
 
 ## 2. 最小加载规则
 
@@ -101,6 +101,26 @@ vNext Core Task Catalog：
 - working tree / index / stash
 - adopted Method SHA
 - 项目 `status.yml`
+
+### R2.4 · Repository capability routing
+
+仓库能力分三类，不能互相冒充：
+
+- **repository-read**：读取远端 ref、文件、commit、PR/issue 等仓库事实。
+- **repository-write**：通过当前运行时已授权的原生仓库连接器/API 直接创建或更新 branch、文件、commit、PR 等远端对象。
+- **repository-execution**：在真实 checkout 中执行 Git/Node/测试/build/hook/worktree 等命令并取得运行结果。
+
+选择最短可信路径：
+
+1. 当前远端存在已授权的 **native repository-write**，且本动作不依赖本地命令结果时，优先直接写远端 branch/commit/PR，并以返回的 Git SHA/PR 状态作为持久化事实。
+2. 任何结论依赖测试、hook、worktree、build、脚本或真实工作树时，必须使用 **repository-execution**；native write 不能替代执行证据。
+3. native repository-write 不可用时，使用已有本地 Git 执行环境完成 fetch/commit/push/PR 所需动作；不得因为过去某次会话缺能力，就假定当前仍缺，也不得因为当前能写远端，就假定拥有本地执行能力。
+4. native repository-write 必须保留当前仓既有的 branch/PR/protected-branch 与授权边界；不能因为 connector 能写就直接改稳定分支、force-push、删分支或绕过既有 review/merge 规则。
+5. 若变更已经在本地 execution worktree 中实现、测试或审查，则该 worktree 是本次 diff 的持久化来源：从它 commit/push，native connector 可继续处理远端 PR/metadata，但不得重新拼装同一批文件形成第二份未经同一证据链确认的远端 diff。
+6. `scripts/hact-watcher/` 的 Dropbox/Watcher 路径自 R2.4 起为 **dormant experimental asset**，不在日常执行选项中，不自动启动、配置或回退到它。重新启用须有新的显式方法决策。
+7. provider-specific 操作仍服从项目当前 remote 与项目规则；例如 Gitee 项目需要 Gitee API 时继续读 `gitee-ops.md`。native connector 只有在它确实对应当前 remote/provider 且已授权时才可使用。
+
+迁移项目的历史核对只在 normalizer 中进行；它通过后，日常 Core 不再对旧 Gate、旧任务或旧 schema 设置 runtime 特判。历史 Markdown 可保留，但不再作为当前进度真相。
 
 新任务建立基线前可 fetch 并在工作树干净、无活跃写入且当前分支有上游时快进同步；进行中任务先恢复已有基线，不因一次提问或 context compaction 重复 pull。
 
