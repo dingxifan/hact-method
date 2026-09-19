@@ -444,6 +444,50 @@ function parseCodeReviewArchivesSource(source) {
 }
 
 const CODE_REVIEW_ARCHIVE_PATH = /^status-reviews\/[A-Za-z0-9][A-Za-z0-9-]*\.yml$/;
+const ADOPTION_META = '_meta/method-sync.json';
+
+function parseAdoptionBoundary(root) {
+  const metaPath = path.join(root, ADOPTION_META);
+  if (!exists(metaPath)) return { kind: 'absent' };
+  let meta;
+  try { meta = JSON.parse(fs.readFileSync(metaPath, 'utf8')); }
+  catch { return { kind: 'invalid', error: ADOPTION_META + ' 不是合法 JSON' }; }
+  const adoption = meta && meta.adoption;
+  if (!adoption) return { kind: 'absent' };
+  const ids = adoption.legacy_accepted_tasks;
+  if (adoption.schema !== 1 || !['legacy-project', 'new-project'].includes(adoption.kind)
+      || !/^[0-9a-f]{40}$/.test(adoption.method_source || '')
+      || !Array.isArray(ids)
+      || ids.some(id => !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id))
+      || new Set(ids).size !== ids.length) return { kind: 'invalid', error: 'adoption boundary 字段非法' };
+  if (adoption.kind === 'new-project') {
+    if (adoption.accepted_truth_base !== null || ids.length)
+      return { kind: 'invalid', error: 'new-project adoption 不得声明 legacy accepted truth' };
+    return { kind: 'new-project', ids: new Set(), adoption };
+  }
+  if (!/^[0-9a-f]{40}$/.test(adoption.accepted_truth_base || ''))
+    return { kind: 'invalid', error: 'legacy-project accepted_truth_base 非 40 位 commit SHA' };
+  let baseStatus = '';
+  try {
+    gitOutput(root, ['cat-file', '-e', adoption.accepted_truth_base + '^{commit}']);
+    baseStatus = gitOutput(root, ['show', adoption.accepted_truth_base + ':status.yml']);
+  } catch {
+    return { kind: 'invalid', error: 'accepted_truth_base 或其 status.yml 在当前仓不可验证' };
+  }
+  const mergedAtBoundary = new Set(parseStatusTasksSource(baseStatus).filter(task => task.status === 'merged').map(task => task.id));
+  const invalidIds = ids.filter(id => !mergedAtBoundary.has(id));
+  if (invalidIds.length)
+    return { kind: 'invalid', error: 'legacy_accepted_tasks 含 boundary 当时未 merged 的任务：' + invalidIds.join(', ') };
+  return { kind: 'legacy-project', ids: new Set(ids), adoption };
+}
+
+function grandfatheredAcceptedTask(root, task) {
+  const boundary = parseAdoptionBoundary(root);
+  if (boundary.kind === 'invalid') return { grandfathered: false, error: boundary.error };
+  if (boundary.kind !== 'legacy-project' || !task || task.status !== 'merged' || !boundary.ids.has(task.id))
+    return { grandfathered: false };
+  return { grandfathered: true, base: boundary.adoption.accepted_truth_base };
+}
 
 function hasSymlinkSegment(root, target) {
   const stop = path.resolve(root);
@@ -1435,8 +1479,18 @@ function checkSprint(iteration, root, audit = true) {
       .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
       .map(t => t.id);
     const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
-    const noAudit = [], partialAudit = [], badAudit = [], legacyPackages = [];
+    const noAudit = [], partialAudit = [], badAudit = [], legacyPackages = [], grandfathered = [];
+    const boundary = parseAdoptionBoundary(root);
+    if (boundary.kind === 'invalid') fail('adoption boundary', ADOPTION_META, boundary.error);
     for (const id of mergedIds) {
+      const statusTask = stTasks.find(t => t.id === id);
+      const legacyTruth = grandfatheredAcceptedTask(root, statusTask);
+      if (legacyTruth.error) {
+        fail('adoption boundary', ADOPTION_META, legacyTruth.error);
+      } else if (legacyTruth.grandfathered) {
+        grandfathered.push(id);
+        continue;
+      }
       const cr = crByTask.get(id);
       if (!cr) { noEntry.push(id); continue; }
       const taskPackage = packages.find(p => p.id === id);
@@ -1483,12 +1537,14 @@ function checkSprint(iteration, root, audit = true) {
     if (noAudit.length)
       fail('审计留痕', 'status.yml', `schema 2 缺必需 report 审计字段：${noAudit.join(', ')}`);
     if (legacyPackages.length)
-      human('审计留痕', `存量任务包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 未验证固定 diff 契约`);
+      human('审计留痕', `未声明 adoption boundary 的旧 schema 包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 这不是 grandfathering；迁移项目应补显式 boundary`);
+    if (grandfathered.length)
+      pass('legacy accepted truth', `${grandfathered.length} 个任务由显式 adoption boundary 承认既有 Project Truth，不追补不存在的 vNext 历史证据：${grandfathered.join(', ')}`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
     else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
              && !partialAudit.length && !badAudit.length && !noAudit.length && !legacyPackages.length)
-      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds 与逐轮 reports`);
+      pass('审计留痕', `${mergedIds.length - grandfathered.length} 个 post-adoption [merged] 任务均有合法 rounds 与逐轮 reports；${grandfathered.length} 个 legacy accepted truth 已按 boundary 验证`);
   }
 
   // 语义残量（留人签）
@@ -1528,12 +1584,20 @@ function checkStagedReviews(root) {
       if (['depends_on', 'iteration', 'layer', 'source', 'delivery'].some(k => old?.[k] !== next?.[k])) {
         for (const t of [old, next]) if (t && ITER_SOURCES.has(t.source) && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')) iterations.add(t.iteration);
       }
+      // grandfathering 只保护 adoption 前已经成立且未触碰的事实。
+      // 已 merged legacy task 的状态记录一旦在 adoption 后被修改，提交必须进入严格审计；
+      // reopen 本身允许先变为 active，但再次 merged 时由下方 transition 规则强制完整闭环。
+      if (old?.status === 'merged' && next?.status === 'merged' && JSON.stringify(old) !== JSON.stringify(next)) {
+        select(id, true); mustClose.add(id);
+      }
     }
     for (const task of tasks) if (task.status === 'merged' && beforeTasks.get(task.id)?.status !== 'merged'
         && (task.type === 'develop' || ITER_SOURCES.has(task.source) || ['bug', 'optimization', 'foundation'].includes(task.source))) { select(task.id, true); mustClose.add(task.id); }
     for (const file of staged.filter(f => /^status-reviews\//.test(f))) inputs.add(file);
   }
   for (const version of iterations) for (const part of ['queue', 'sprint.md', 'prd.md', 'trd.md']) inputs.add(`iterations/${version}/${part}`);
+  const boundary = parseAdoptionBoundary(root);
+  if (boundary.kind === 'invalid') fail('adoption boundary', ADOPTION_META, boundary.error);
   for (const [id] of selected) {
     if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id || '')) throw new Error('审查 task-id 非法');
     for (const file of findTaskPackages(root, id)) inputs.add(path.relative(root, file));
@@ -1626,4 +1690,4 @@ function main() {
 if (require.main === module) main();
 module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED, REVIEW_AUDIT_FIELDS,
   sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText,
-  parseReportFindings, fixedDiffEvidence, findTaskPackages };
+  parseReportFindings, fixedDiffEvidence, findTaskPackages, parseAdoptionBoundary, grandfatheredAcceptedTask };
