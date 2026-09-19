@@ -4,6 +4,18 @@
 
 ## 历史里程碑
 
+### 2026-09-19 R2.4 — Native Repository Write First & External Adapter Dormant
+
+- **触发**：ChatGPT 当前会话获得对 GitHub 仓库的原生读写能力后，原先为“ChatGPT 无法直接写远端 Git”这一能力缺口设计的 Dropbox/Watcher 路径不再应处于日常执行面。若仍把它作为常规 fallback，会在已有更短可信路径时制造额外队列、Watcher、专用 clone 与状态同步复杂度。
+- **能力模型**：仓库能力拆成三类：repository-read（读远端事实）、repository-write（通过已授权 native connector/API 直接写 branch/commit/PR）、repository-execution（真实 checkout 中运行 Git/Node/test/build/hook/worktree）。三者不能互相冒充。
+- **选择规则**：当前 remote/provider 有已授权 native repository-write 且动作不依赖本地执行结果时，优先直接持久化到受控 branch/commit/PR；只要结论依赖测试、hook、worktree、build 或真实工作树，就必须回 repository-execution。native write 不得绕过既有 protected branch / PR / review 边界；若 diff 已在本地 execution worktree 中实现、测试或审查，则从同一 worktree commit/push，不能用 connector 重新拼装第二份远端 diff。native write 不可用时使用本地 Git；不根据过去某次会话的能力缺口永久推断当前能力。
+- **Dropbox/Watcher**：`scripts/hact-watcher/` 保留为 dormant experimental asset 和历史工程证据，但从 active execution options 退出；不自动配置、启动或回退到它。重新启用须有新的显式方法决策。
+- **provider 边界**：本修正不把方法论改成 GitHub-only。Gitee 项目仍使用其项目规则与 `gitee-ops.md`；native connector 只有在确实匹配当前 remote/provider 且已授权时才可使用。
+- **运行时边界**：Codex 继续承担本地 repository-execution；ChatGPT/GitHub connector 的 native remote write 不构成第二套本地执行 runtime，也不为未运行的测试或 hook 背书。
+- **流程影响**：不新增 task type、Gate、审查层或状态字段，不改变 R2.3 adoption lifecycle；这是能力路由减法。
+
+---
+
 ### 2026-09-19 R2.3 — Explicit Adoption Boundary & Legacy Accepted Truth Compatibility
 
 - **触发**：真实旧项目进入 vNext lifecycle 验证时，既有 `merged` 任务被新 checker 要求提供历史上从未存在的 `rounds/code_rounds/spec_rounds/review_report_dir/preflight/round report/fixed tree`。事后补这些字段会伪造审计历史；直接降 checker 又会削弱 adoption 后的约束。
@@ -13,7 +25,7 @@
 - **checker**：完整审计只接受 verified schema=2 method-sync 中的显式 boundary，验证 base 是当前 HEAD 的祖先、base 中对应 task 确实 merged。删除“旧 package schema / 缺字段 ⇒ legacy”的启发式兼容；无 boundary 的旧任务仍暴露为历史债务。提交审计继续只核本次触碰对象，未变化历史不因普通提交反复阻断。
 - **迁移脚本**：`sync-method.cjs` 在隔离升级树生成并校验 boundary；已有合法 boundary 后续原样继承。不会重写历史报告或已完成包。
 - **夹具**：增加“无 boundary 不得 grandfather / 显式 boundary 可接受真实旧历史 / 触碰 legacy task 恢复严格 / reopen 可进入 active / remerge 无当前证据必须失败”的正反场景；同步脚本夹具断言 boundary 固定在升级前 HEAD。
-- **验证边界更新**：已在可执行本地仓运行相关 `node --check`、sync-method 与 check-sprint 定向回归；未触发 GitHub workflow，且未合并。
+- **验证边界更新**：已在可执行本地仓运行相关 `node --check`、sync-method 与 check-sprint 定向回归，并完成独立审查；最终通过 PR #1 合并到 `main@9519bdf5d2e7b1f2ceb2d959a2a04878c006f567`。
 
 ---
 

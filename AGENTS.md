@@ -6,7 +6,7 @@
 
 1. 读取 `BRIEF.md`、`STATUS.md` 与 `_meta/.current_plan` 指向的计划文件。
 2. 读取 `_meta/plans/方法论待议.md`，只把与当前改造直接相关的条目纳入范围。
-3. 以 Codex 为唯一运行环境；项目入口在 `templates/AGENTS.md`，任务执行约定在 `specs-execution/`。修改职责时同步结构契约、模板与检查器，不维护 CC 兼容层。
+3. Codex 仍是需要真实 checkout、命令、测试、hook、worktree 的唯一 repository-execution 环境；已授权且匹配当前 remote/provider 的 native repository connector 可承担远端 repository-read/write，但不构成第二套本地执行 runtime。项目入口在 `templates/AGENTS.md`，任务执行约定在 `specs-execution/`。修改职责时同步结构契约、模板与检查器，不维护 CC 兼容层。
 
 保持相对路径；不覆盖项目仓的 hook 或存量配置。涉及多个项目仓的分发，需要逐仓确认并使用独立 worktree。
 

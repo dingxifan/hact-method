@@ -27,4 +27,4 @@
 
 只运行改动所需的目标回归与必要集成验证；相同版本上有效的结果可复用。有新改动、失败或具体疑点才扩大验证。未运行、未通过、已通过必须区分。独审、真实用户路径与必要安全验证不以声明代替。
 
-Gitee 操作读取项目根 `gitee-ops.md`；连接读取 `connections.yml` 与 `scripts/check-conn.js`。不依赖 slash command。开始需浏览器/SSH/托管/审查的动作时才核对应能力；工具失败先判断可恢复原因，达到既有恢复上限或确需用户取舍才暂停。
+仓库操作先按 `boot-protocol.md` 的 repository capability routing 选择路径：当前 remote/provider 有已授权 native repository-write 时可直接使用；需要测试、hook、worktree、build 等证据时必须回真实本地执行环境。Gitee 项目的 provider-specific 操作仍读取项目根 `gitee-ops.md`；连接读取 `connections.yml` 与 `scripts/check-conn.js`。Dropbox/Watcher 不在当前执行选项中。开始需浏览器/SSH/托管/审查的动作时才核对应能力；工具失败先判断可恢复原因，达到既有恢复上限或确需用户取舍才暂停。

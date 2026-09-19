@@ -5,6 +5,8 @@ human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1
 
 ## 核心目标
 
+R2.4 仓库持久化能力修正（2026-09-19）：把 repository-read / repository-write / repository-execution 明确拆开。当前 remote/provider 存在已授权 native repository-write 时优先直接完成 branch/commit/PR；任何测试、hook、worktree、build 等结论仍必须由真实本地执行环境给证据。Dropbox/Watcher 从 active execution options 退出，保留为 dormant experimental asset，重新启用须另行显式决策。该修正不改变 task/Gate/review lifecycle，也不把 ChatGPT remote write 定义成第二个本地执行 runtime。
+
 R2.3 方法边界修正（2026-09-19）：既有项目采用当前方法必须显式冻结 adoption boundary（`accepted_truth_base + legacy_accepted_tasks`）。adoption 前已成立的 Project Truth 可以按真实历史形态继续被接受，但不得补造当时不存在的 preflight/round/tree/report 证据；adoption 后的新任务、修改与 reopen→remerge delta 完整执行当前 lifecycle。legacy 身份只来自固定 boundary，不再按 package schema、缺字段或文件年代猜测。
 
 011/012 反馈补充（2026-09-16）：提交只审本次涉及的任务证据，未变化的历史 round 不反复阻断；全局依赖和共享资产检查保留。逐轮记录合法与最终可合并分开校验，末轮 round 即最终独审结论，不另交重复 final-review。不增前置映射表、证据表或历史豁免账；具体项目采用另行处理。
@@ -13,7 +15,7 @@ R2.3 方法边界修正（2026-09-19）：既有项目采用当前方法必须�
 
 管理与 B 类口径（2026-09-08）：A 类 PRD→TRD→任务规划及 G1–G5 不变，整体滚动规格重构暂缓。B 类允许先查代码、写问题/预期/验证短包；局部兼容且有已确认依据的共享契约实现可 governed，不夹带已签规格修订、业务/权限重定义、破坏兼容或迁移。动态任务/Gate 状态只写 status.yml；个人积累、学科授权表、重复总账、成本计时和强制清空/按数量归档退出必经链。实际授权、独立审查、固定 Git 证据、缺口闭合与人签保留。下方 #4/#18–22/#26 等相冲突部分仅为历史，不构成当前义务。存量项目须逐仓确认升级，旧记录与私人仓不自动删除。
 
-当前执行环境（2026-09-08）：Codex 为唯一目标，项目入口为 AGENTS.md；原 CC 入口、中立能力映射及 CC↔Codex 兼容测试退役。历史决策中的双运行时和固定模型档位不再构成当前义务。质量以原始契约、固定改动、独立审查和实际验证为准，具体执行按当前 Codex 工具能力与用户授权。
+当前执行环境（2026-09-19，R2.4 修订）：Codex 仍是需要真实 checkout/命令/测试/hook/worktree 的 repository-execution 目标，项目入口为 AGENTS.md。远端仓库读写可由当前会话已授权且匹配 remote/provider 的 native repository connector 直接完成；这只是 repository-read/write 能力，不构成第二套本地执行 runtime，也不能替代运行证据。原 CC 入口、中立能力映射及 CC↔Codex 兼容测试继续退役。
 
 当前约束载体（2026-09-08）：三个项目 Standards 及公共/栈候选库、生成/匹配/回填/收缩审计机制退役。PRD/TRD 承接业务与接口契约，Foundation 承接跨切面不变量，project.md 技术层承接项目特有选择与验证入口，任务 do-not 承接本任务禁区，check/test/config 承接可执行限制。模型自主选择等价实现，不再生成通用编码说明。下文决策 #17/#23/#25/#27 及相关 Standards 表述仅保留历史背景，执行以现行规范为准。
 
