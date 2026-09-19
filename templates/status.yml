@@ -3,6 +3,7 @@
 # 序列化：沿用下方缩进与块式 tasks；Gate 用 signed/date 内联或分行对象，不随意改紧凑 YAML 形态。
 # 写入纪律：每次只改对应字段，其余不动；显式写 null，不省略键。
 # 总规则：凡往 iterations/vN/queue/ 写任务包处，同步往 tasks[] 追加一条；状态流转按 task-id 改。
+# R2.3：历史兼容身份不写在 status；只认 _meta/method-sync.json.adoption 的显式 accepted_truth_base + legacy_accepted_tasks。
 
 project: {项目名}
 schema: 1
