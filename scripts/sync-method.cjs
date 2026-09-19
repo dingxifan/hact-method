@@ -33,6 +33,64 @@ function write(root, file, content) {
   fs.mkdirSync(path.dirname(full), { recursive: true });
   fs.writeFileSync(full, content);
 }
+function parseTaskSnapshot(source) {
+  const tasks = [];
+  let inTasks = false, baseIndent = null, cur = null;
+  const clean = value => (value || '').trim().replace(/^["']|["']$/g, '').replace(/^\[|\]$/g, '').trim();
+  const flush = () => { if (cur) tasks.push(cur); cur = null; };
+  for (const raw of String(source || '').split(/\r?\n/)) {
+    const line = raw.replace(/\t/g, '  ');
+    if (/^tasks:\s*(?:\[\])?\s*$/.test(line)) { inTasks = true; continue; }
+    if (!inTasks) continue;
+    if (/^\S/.test(line) && !/^-/.test(line)) { flush(); break; }
+    if (!line.trim() || /^\s*#/.test(line)) continue;
+    const item = line.match(/^(\s*)-\s+(.*)$/);
+    if (item) {
+      const indent = item[1].length;
+      if (baseIndent === null) baseIndent = indent;
+      if (indent === baseIndent) {
+        flush(); cur = {};
+        const kv = item[2].match(/^([A-Za-z_-]+):\s*(.*)$/);
+        if (kv) cur[kv[1]] = clean(kv[2]);
+        continue;
+      }
+    }
+    const kv = line.match(/^\s+([A-Za-z_-]+):\s*(.*)$/);
+    if (kv && cur) cur[kv[1]] = clean(kv[2]);
+  }
+  flush();
+  return tasks;
+}
+function mergedTaskIds(source) {
+  return [...new Set(parseTaskSnapshot(source).filter(task => task.id && task.status === 'merged').map(task => task.id))].sort();
+}
+function validAdoptionRecord(value) {
+  if (!value || value.schema !== 1 || !['legacy-project', 'new-project'].includes(value.kind)
+      || !/^[a-f0-9]{40}$/.test(value.method_source || '')
+      || !Array.isArray(value.legacy_accepted_tasks)
+      || value.legacy_accepted_tasks.some(id => !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id))
+      || new Set(value.legacy_accepted_tasks).size !== value.legacy_accepted_tasks.length) return false;
+  if (value.kind === 'new-project')
+    return value.accepted_truth_base === null && value.legacy_accepted_tasks.length === 0;
+  return /^[a-f0-9]{40}$/.test(value.accepted_truth_base || '');
+}
+function adoptionErrors(root, adoption, projectBase) {
+  if (!validAdoptionRecord(adoption)) return ['adoption boundary 缺失或格式非法'];
+  if (adoption.kind === 'new-project') return [];
+  const errors = [];
+  try { git(root, ['cat-file', '-e', adoption.accepted_truth_base + '^{commit}']); }
+  catch { errors.push('accepted_truth_base 不是当前项目仓可解析的 commit'); return errors; }
+  try { git(root, ['merge-base', '--is-ancestor', adoption.accepted_truth_base, projectBase]); }
+  catch { errors.push('accepted_truth_base 不是当前项目基线祖先'); }
+  let status = '';
+  try { status = git(root, ['show', adoption.accepted_truth_base + ':status.yml']); }
+  catch { status = ''; }
+  const merged = new Set(mergedTaskIds(status));
+  const notAccepted = adoption.legacy_accepted_tasks.filter(id => !merged.has(id));
+  if (notAccepted.length)
+    errors.push('legacy_accepted_tasks 含 adoption boundary 当时并未 merged 的任务：' + notAccepted.join(', '));
+  return errors;
+}
 function tracked(root) { return git(root, ['-c', 'core.quotepath=false', 'ls-files', '-z']).split('\0').filter(Boolean); }
 function loadSource(methodRoot, ref) {
   methodRoot = rootOf(methodRoot);
@@ -58,6 +116,23 @@ function inspectProject(root, source) {
   const base = git(root, ['rev-parse', 'HEAD']);
   const files = git(root, ['-c', 'core.quotepath=false', 'ls-tree', '-r', '--name-only', base]).split('\n').filter(Boolean);
   const atBase = file => files.includes(file) ? cp.execFileSync('git', ['-C', root, 'show', base + ':' + file], { encoding: 'utf8' }) : null;
+  let adoption = null;
+  const priorMeta = atBase(META);
+  if (priorMeta) {
+    let parsed;
+    try { parsed = JSON.parse(priorMeta); } catch { throw new Error('已有 method-sync.json 不是合法 JSON，拒绝重建 adoption boundary'); }
+    if (parsed.adoption) {
+      if (!validAdoptionRecord(parsed.adoption)) throw new Error('已有 adoption boundary 非法，拒绝静默重建');
+      adoption = parsed.adoption;
+    }
+  }
+  if (!adoption) adoption = {
+    schema: 1,
+    kind: 'legacy-project',
+    method_source: source.sha,
+    accepted_truth_base: base,
+    legacy_accepted_tasks: mergedTaskIds(atBase('status.yml')),
+  };
   const operations = source.files.map(from => {
     const to = from.slice('templates/'.length), existing = atBase(to), incoming = source.get(from);
     const known = existing !== null && (source.known.get(from).has(blobHash(existing)) || source.known.get(from).has(blobHash(normalize(existing))));
@@ -67,7 +142,7 @@ function inspectProject(root, source) {
     root, source: source.sha, branch: git(root, ['branch', '--show-current']), base,
     dirty: git(root, ['status', '--porcelain=v1']),
     standards: files.filter(f => /^standards-(shared|frontend|backend)\.md$/.test(f)),
-    entries: files.filter(f => /(^|\/)AGENTS(?:\.override)?\.md$/.test(f)), operations,
+    entries: files.filter(f => /(^|\/)AGENTS(?:\.override)?\.md$/.test(f)), operations, adoption,
     retired: files.filter(f => /^scripts\/(?:review-profile|check-runtime-project|check-runtime-neutral|check-runtime-handoff|audit-standards-retention)(?:\..+)?\.js$/.test(f)),
   };
 }
@@ -114,9 +189,9 @@ function prepare(root, source) {
   git(inv.root, ['worktree', 'add', '-b', branch, worktree, inv.base]);
   try {
     const installed = {}, relative = path.relative(inv.root, source.root).replace(/\\/g, '/');
-    const initial = { schema: 1, state: 'preparing', methodRoot: relative, methodRef: source.ref, source: source.sha,
+    const initial = { schema: 2, state: 'preparing', methodRoot: relative, methodRef: source.ref, source: source.sha,
       projectRoot: path.relative(worktree, inv.root).replace(/\\/g, '/'), projectBase: inv.base,
-      projectBranch: inv.branch, syncBranch: branch, files: installed };
+      projectBranch: inv.branch, syncBranch: branch, adoption: inv.adoption, files: installed };
     write(worktree, META, JSON.stringify(initial, null, 2) + '\n');
     write(worktree, PENDING + '/TASK.md', instructions(source, inv));
     for (const op of inv.operations) {
@@ -129,9 +204,9 @@ function prepare(root, source) {
     }
     write(worktree, PENDING + '/TASK.md', instructions(source, inv));
     write(worktree, META, JSON.stringify({
-      schema: 1, state: 'prepared', methodRoot: relative, methodRef: source.ref, source: source.sha,
+      schema: 2, state: 'prepared', methodRoot: relative, methodRef: source.ref, source: source.sha,
       projectRoot: path.relative(worktree, inv.root).replace(/\\/g, '/'), projectBase: inv.base,
-      projectBranch: inv.branch, syncBranch: branch, files: installed,
+      projectBranch: inv.branch, syncBranch: branch, adoption: inv.adoption, files: installed,
     }, null, 2) + '\n');
     return { state: 'prepared', worktree, branch, source: source.sha, next: PENDING + '/TASK.md' };
   } catch (error) {
@@ -146,8 +221,9 @@ function prepare(root, source) {
 function verify(worktree, source) {
   worktree = rootOf(worktree);
   const state = JSON.parse(read(worktree, META) || '{}'), errors = [];
-  if (state.schema !== 1 || state.source !== source.sha) return ['分发记录缺失或方法版本不一致'];
+  if (state.schema !== 2 || state.source !== source.sha) return ['分发记录缺失或方法版本不一致'];
   if (git(worktree, ['branch', '--show-current']) !== state.syncBranch) errors.push('不在记录的分发分支');
+  errors.push(...adoptionErrors(worktree, state.adoption, state.projectBase));
   const pending = safePath(worktree, PENDING + '/files');
   if (fs.existsSync(pending) && fs.readdirSync(pending, { recursive: true }).some(f => fs.statSync(safePath(worktree, PENDING + '/files/' + f)).isFile()))
     errors.push('仍有待合并候选文件：' + PENDING + '/files');
@@ -250,6 +326,8 @@ function adoptedSource(root) {
 }
 function runtimeCheck(root) {
   const source = adoptedSource(root), errors = [];
+  const state = JSON.parse(read(source.root, META) || '{}');
+  if (state.schema === 2) errors.push(...adoptionErrors(source.root, state.adoption, git(source.root, ['rev-parse', 'HEAD'])));
   const files = git(source.method, ['ls-tree', '-r', '--name-only', source.sha, '--', 'templates/scripts']).split('\n')
     .filter(f => /\.js$/.test(f) && !f.endsWith('.test.js'));
   for (const from of files) {
