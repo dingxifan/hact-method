@@ -34,6 +34,22 @@ B 类任务包创建后统一由 `develop(source=bug/optimization)` 拾取，复
 
 先读当前分支、工作树与上游状态。使用用户指定的方法论分支/版本，不自动切 master。新任务建立基线前可 fetch 并在工作树干净、无活跃写入且当前分支有上游时快进同步；进行中任务先恢复已有基线，不因一次提问或压缩重复 pull。无关在制品保留，远端不可用只阻断必须依赖远端的动作。个人 notes 仅实际收割/写入时访问。
 
+### R2.4 · Repository capability routing
+
+仓库能力分三类，不能互相冒充：
+
+- **repository-read**：读取远端 ref、文件、commit、PR/issue 等仓库事实。
+- **repository-write**：通过当前运行时已授权的原生仓库连接器/API 直接创建或更新 branch、文件、commit、PR 等远端对象。
+- **repository-execution**：在真实 checkout 中执行 Git/Node/测试/build/hook/worktree 等命令并取得运行结果。
+
+选择最短可信路径：
+
+1. 当前远端存在已授权的 **native repository-write**，且本动作不依赖本地命令结果时，优先直接写远端 branch/commit/PR，并以返回的 Git SHA/PR 状态作为持久化事实。
+2. 任何结论依赖测试、hook、worktree、build、脚本或真实工作树时，必须使用 **repository-execution**；native write 不能替代执行证据。
+3. native repository-write 不可用时，使用已有本地 Git 执行环境完成 fetch/commit/push/PR 所需动作；不得因为过去某次会话缺能力，就假定当前仍缺，也不得因为当前能写远端，就假定拥有本地执行能力。
+4. `scripts/hact-watcher/` 的 Dropbox/Watcher 路径自 R2.4 起为 **dormant experimental asset**，不在日常执行选项中，不自动启动、配置或回退到它。重新启用须有新的显式方法决策。
+5. provider-specific 操作仍服从项目当前 remote 与项目规则；例如 Gitee 项目需要 Gitee API 时继续读 `gitee-ops.md`。native connector 只有在它确实对应当前 remote/provider 且已授权时才可使用。
+
 采用本版单源状态前，存量项目须逐仓核对 status 与旧 Gate/任务记录、已获用户确认的签署和实际 Git；同步更新项目 check-gate/check-sprint/check-b-task 与既有 hook 的委托路由（不覆盖原 hook）。未核对或旧 hook 仍只盯 gates.md 时沿用获准旧版，不只删文件、不在一次普通开发中自动迁移。历史 Markdown 可保留，但升级后不再双写或作为进度真相。
 
 ## Step 1：状态推断与规范加载
