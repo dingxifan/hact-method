@@ -13,7 +13,7 @@
 - **checker**：完整审计只接受 verified schema=2 method-sync 中的显式 boundary，验证 base 是当前 HEAD 的祖先、base 中对应 task 确实 merged。删除“旧 package schema / 缺字段 ⇒ legacy”的启发式兼容；无 boundary 的旧任务仍暴露为历史债务。提交审计继续只核本次触碰对象，未变化历史不因普通提交反复阻断。
 - **迁移脚本**：`sync-method.cjs` 在隔离升级树生成并校验 boundary；已有合法 boundary 后续原样继承。不会重写历史报告或已完成包。
 - **夹具**：增加“无 boundary 不得 grandfather / 显式 boundary 可接受真实旧历史 / 触碰 legacy task 恢复严格 / reopen 可进入 active / remerge 无当前证据必须失败”的正反场景；同步脚本夹具断言 boundary 固定在升级前 HEAD。
-- **验证边界**：本轮仓库分支代码与测试夹具已落地，但当前 ChatGPT 容器无 GitHub DNS，且该提交未触发现有 GitHub workflow；因此本条只记录实现状态，不宣称 Node 回归已运行通过。合并前仍须在可执行仓环境运行相关 `node --check`、sync-method 与 check-sprint 回归。
+- **验证边界更新**：已在可执行本地仓运行相关 `node --check`、sync-method 与 check-sprint 定向回归；未触发 GitHub workflow，且未合并。
 
 ---
 

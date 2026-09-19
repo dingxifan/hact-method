@@ -281,10 +281,12 @@ code_reviews: []
     state: 'verified',
     source: 'a'.repeat(40),
     adoption: {
-      schema: 1,
+      schema: 2,
       kind: 'legacy-project',
       method_source: 'a'.repeat(40),
+      source_base: acceptedTruthBase,
       accepted_truth_base: acceptedTruthBase,
+      accepted_truth_status_sha256: crypto.createHash('sha256').update(git(['show', `${acceptedTruthBase}:status.yml`])).digest('hex'),
       legacy_accepted_tasks: [ITERATION_ID],
     },
   }, null, 2) + '\n');
@@ -312,7 +314,8 @@ code_reviews: []
   write('status.yml', baselineStatus.replace('iteration: v1', 'iteration: v2'));
   git(['add', 'status.yml']);
   assert.notStrictEqual(stagedAudit().status, 0, 'status-only task ownership changes still require global planning consistency');
-  write('status.yml', baselineStatus); git(['add', 'status.yml']);
+  // 暂存真实规划字段变更，才会把本期 queue 纳入提交输入闭合检查。
+  write('status.yml', baselineStatus.replace('delivery: 可并行', 'delivery: 串行')); git(['add', 'status.yml']);
   const originalQueue = fs.readFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), 'utf8');
   fs.appendFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), '\nunstaged planning change\n');
   assert.match(stagedAudit().stderr, /未暂存变化/, 'global planning input must match index');

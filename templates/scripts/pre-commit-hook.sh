@@ -88,7 +88,7 @@ for dir in $iter_dirs; do
 done
 
 # --- 单源状态：新签 Gate 与新 merged 任务 ---
-if echo "$staged" | grep -qE '^status\.yml$'; then
+if echo "$staged" | grep -qE '^(_meta/method-sync\.json|status\.yml)$'; then
   run scripts/check-gate.js --staged
 elif echo "$staged" | grep -qE '^(iterations/v[0-9]+(\.[0-9]+)*/(sprint\.md|queue/.*\.md|code-reviews/)|b-queue/.*\.md$|b-reviews/|status-reviews/)'; then
   run scripts/check-sprint.js --staged

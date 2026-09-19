@@ -65,30 +65,49 @@ function mergedTaskIds(source) {
   return [...new Set(parseTaskSnapshot(source).filter(task => task.id && task.status === 'merged').map(task => task.id))].sort();
 }
 function validAdoptionRecord(value) {
-  if (!value || value.schema !== 1 || !['legacy-project', 'new-project'].includes(value.kind)
+  if (!value || value.schema !== 2 || !['legacy-project', 'new-project'].includes(value.kind)
       || !/^[a-f0-9]{40}$/.test(value.method_source || '')
       || !Array.isArray(value.legacy_accepted_tasks)
       || value.legacy_accepted_tasks.some(id => !/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id))
       || new Set(value.legacy_accepted_tasks).size !== value.legacy_accepted_tasks.length) return false;
-  if (value.kind === 'new-project')
-    return value.accepted_truth_base === null && value.legacy_accepted_tasks.length === 0;
-  return /^[a-f0-9]{40}$/.test(value.accepted_truth_base || '');
+  if (value.kind === 'new-project') return value.source_base === null
+    && value.accepted_truth_base === null && value.accepted_truth_status_sha256 === null && value.legacy_accepted_tasks.length === 0;
+  return /^[a-f0-9]{40}$/.test(value.source_base || '')
+    && (/^[a-f0-9]{40}$/.test(value.accepted_truth_base || '')
+      || (value.accepted_truth_base === null && value.accepted_truth_status_sha256 === null && value.legacy_accepted_tasks.length === 0))
+    && (value.accepted_truth_base === null || /^[a-f0-9]{64}$/.test(value.accepted_truth_status_sha256 || ''));
 }
-function adoptionErrors(root, adoption, projectBase) {
+function adoptionErrors(root, adoption, projectBase, options = {}) {
   if (!validAdoptionRecord(adoption)) return ['adoption boundary 缺失或格式非法'];
   if (adoption.kind === 'new-project') return [];
   const errors = [];
+  if (adoption.accepted_truth_base === null) {
+    if (adoption.source_base !== projectBase) errors.push('adoption source_base 必须固定为迁移前项目 HEAD');
+    return errors;
+  }
   try { git(root, ['cat-file', '-e', adoption.accepted_truth_base + '^{commit}']); }
   catch { errors.push('accepted_truth_base 不是当前项目仓可解析的 commit'); return errors; }
-  try { git(root, ['merge-base', '--is-ancestor', adoption.accepted_truth_base, projectBase]); }
-  catch { errors.push('accepted_truth_base 不是当前项目基线祖先'); }
+  try { git(root, options.runtime ? ['merge-base', '--is-ancestor', adoption.accepted_truth_base, projectBase]
+    : ['merge-base', '--is-ancestor', projectBase, adoption.accepted_truth_base]); }
+  catch { errors.push(options.runtime ? 'accepted_truth_base 不是当前 HEAD 祖先' : 'accepted_truth_base 未建立在本次迁移基线之后'); }
   let status = '';
   try { status = git(root, ['show', adoption.accepted_truth_base + ':status.yml']); }
   catch { status = ''; }
+  try { git(root, ['merge-base', '--is-ancestor', adoption.source_base, adoption.accepted_truth_base]); }
+  catch { errors.push('source_base 不是 accepted_truth_base 的祖先'); }
+  if (digest(status) !== adoption.accepted_truth_status_sha256) errors.push('accepted_truth_base 的 status.yml 与冻结快照 hash 不一致');
   const merged = new Set(mergedTaskIds(status));
   const notAccepted = adoption.legacy_accepted_tasks.filter(id => !merged.has(id));
   if (notAccepted.length)
     errors.push('legacy_accepted_tasks 含 adoption boundary 当时并未 merged 的任务：' + notAccepted.join(', '));
+  if (!options.allowPending) {
+    const commits = git(root, ['log', '--format=%H', '--reverse', 'HEAD', '--', META]).split('\n').filter(Boolean);
+    const origin = commits.map(commit => {
+      try { return JSON.parse(git(root, ['show', commit + ':' + META])); } catch { return null; }
+    }).find(meta => meta?.adoption?.accepted_truth_base);
+    if (!origin) errors.push('找不到已提交的 adoption boundary origin');
+    else if (JSON.stringify(origin.adoption) !== JSON.stringify(adoption)) errors.push('adoption boundary 一经创建不得重写或扩张');
+  }
   return errors;
 }
 function tracked(root) { return git(root, ['-c', 'core.quotepath=false', 'ls-files', '-z']).split('\0').filter(Boolean); }
@@ -127,11 +146,13 @@ function inspectProject(root, source) {
     }
   }
   if (!adoption) adoption = {
-    schema: 1,
+    schema: 2,
     kind: 'legacy-project',
     method_source: source.sha,
-    accepted_truth_base: base,
-    legacy_accepted_tasks: mergedTaskIds(atBase('status.yml')),
+    source_base: base,
+    accepted_truth_base: null,
+    accepted_truth_status_sha256: null,
+    legacy_accepted_tasks: [],
   };
   const operations = source.files.map(from => {
     const to = from.slice('templates/'.length), existing = atBase(to), incoming = source.get(from);
@@ -223,7 +244,7 @@ function verify(worktree, source) {
   const state = JSON.parse(read(worktree, META) || '{}'), errors = [];
   if (state.schema !== 2 || state.source !== source.sha) return ['分发记录缺失或方法版本不一致'];
   if (git(worktree, ['branch', '--show-current']) !== state.syncBranch) errors.push('不在记录的分发分支');
-  errors.push(...adoptionErrors(worktree, state.adoption, state.projectBase));
+  errors.push(...adoptionErrors(worktree, state.adoption, state.projectBase, { allowPending: true }));
   const pending = safePath(worktree, PENDING + '/files');
   if (fs.existsSync(pending) && fs.readdirSync(pending, { recursive: true }).some(f => fs.statSync(safePath(worktree, PENDING + '/files/' + f)).isFile()))
     errors.push('仍有待合并候选文件：' + PENDING + '/files');
@@ -276,7 +297,7 @@ function finish(worktree, source, integrate = false) {
   worktree = rootOf(worktree);
   const errors = verify(worktree, source);
   if (errors.length) throw new Error(errors.join('\n'));
-  const state = JSON.parse(read(worktree, META));
+  let state = JSON.parse(read(worktree, META));
   const project = rootOf(path.resolve(worktree, state.projectRoot));
   if (project === worktree || commonOf(project) !== commonOf(worktree)) throw new Error('目标不是同仓独立原工作树');
   if (integrate && (git(project, ['status', '--porcelain=v1']) || git(project, ['rev-parse', 'HEAD']) !== state.projectBase ||
@@ -286,6 +307,18 @@ function finish(worktree, source, integrate = false) {
   const allowed = f => /^(AGENTS(?:\.override)?\.md|CLAUDE\.md|gitee-ops\.md|project\.md|foundation\.md|design\.md|status\.yml|decisions\.md|standards-(shared|frontend|backend)\.md)$/.test(f)
     || /^(_meta\/(?:method-sync\.json$|method-sync-review\.md$|method-sync-pending\/)|\.codex\/agents\/|\.husky\/|scripts\/|iterations\/[^/]+\/(?:queue\/|prd\.md$|trd\.md$)|b-queue\/|status-reviews\/)/.test(f);
   if (changed.some(f => !allowed(f))) throw new Error('分发夹带范围外文件：' + changed.filter(f => !allowed(f)).join(', '));
+  // 先把迁移对账后的 status 作为独立 Git truth 落盘，再写 adoption record。
+  // 这使 source base、reconciled truth 与 adoption commit 成为三个不可混淆的阶段。
+  if (state.adoption?.kind === 'legacy-project' && state.adoption.accepted_truth_base === null) {
+    git(worktree, ['add', '-A']);
+    git(worktree, ['diff', '--cached', '--check']);
+    git(worktree, ['commit', '-m', 'chore(method): reconcile adoption truth']);
+    const truthBase = git(worktree, ['rev-parse', 'HEAD']);
+    const truthStatus = git(worktree, ['show', truthBase + ':status.yml']);
+    state = { ...state, adoption: { ...state.adoption, accepted_truth_base: truthBase,
+      accepted_truth_status_sha256: digest(truthStatus), legacy_accepted_tasks: mergedTaskIds(truthStatus) } };
+    write(worktree, META, JSON.stringify(state, null, 2) + '\n');
+  }
   if (!(state.state === 'verified' && !git(worktree, ['status', '--porcelain=v1']) && git(worktree, ['rev-parse', 'HEAD']) !== state.projectBase)) {
     write(worktree, META, JSON.stringify({ ...state, state: 'verified' }, null, 2) + '\n');
     // changed 已在上方完成允许写集校验；统一刷新整个隔离升级树的 index，既登记新增/修改，
@@ -327,7 +360,7 @@ function adoptedSource(root) {
 function runtimeCheck(root) {
   const source = adoptedSource(root), errors = [];
   const state = JSON.parse(read(source.root, META) || '{}');
-  if (state.schema === 2) errors.push(...adoptionErrors(source.root, state.adoption, git(source.root, ['rev-parse', 'HEAD'])));
+  if (state.schema === 2) errors.push(...adoptionErrors(source.root, state.adoption, git(source.root, ['rev-parse', 'HEAD']), { runtime: true }));
   const files = git(source.method, ['ls-tree', '-r', '--name-only', source.sha, '--', 'templates/scripts']).split('\n')
     .filter(f => /\.js$/.test(f) && !f.endsWith('.test.js'));
   for (const from of files) {

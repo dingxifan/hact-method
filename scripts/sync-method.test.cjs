@@ -48,8 +48,10 @@ try {
   const adoptionMeta = JSON.parse(fs.readFileSync(path.join(wt, '_meta/method-sync.json'), 'utf8'));
   assert.strictEqual(adoptionMeta.schema, 2, 'R2.3 method-sync record uses adoption-aware schema');
   assert.strictEqual(adoptionMeta.adoption.kind, 'legacy-project');
-  assert.strictEqual(adoptionMeta.adoption.accepted_truth_base, originalHead, 'adoption boundary pins the pre-upgrade project HEAD');
-  assert.deepStrictEqual(adoptionMeta.adoption.legacy_accepted_tasks, [], 'empty historical status creates no synthetic legacy truth');
+  assert.strictEqual(adoptionMeta.adoption.schema, 2, 'adoption record uses reconciled-truth schema');
+  assert.strictEqual(adoptionMeta.adoption.source_base, originalHead, 'source base pins the pre-upgrade project HEAD');
+  assert.strictEqual(adoptionMeta.adoption.accepted_truth_base, null, 'accepted truth is not frozen before reconciliation completes');
+  assert.deepStrictEqual(adoptionMeta.adoption.legacy_accepted_tasks, [], 'pre-freeze record creates no synthetic legacy truth');
   assert.strictEqual(adoptionMeta.adoption.method_source, source.sha);
   assert.strictEqual(git(project, ['rev-parse', 'HEAD']), originalHead);
   assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'prepare 不碰原树/暂存区');
@@ -93,6 +95,8 @@ try {
   write(wt, 'business.ts', 'not a methodology change\n');
   assert.throws(() => finish(wt, source), /范围外/);
   fs.unlinkSync(path.join(wt, 'business.ts'));
+  // 对账在 prepare 后才恢复的历史 merged 事实，必须进入 adoption snapshot。
+  write(wt, 'status.yml', originalState.replace('tasks: []', 'tasks:\n  - id: historic-v1-001\n    status: merged'));
   git(wt, ['add', '-A']);
   assert.match(git(wt, ['diff', '--cached', '--name-status']), /^D\s+standards-shared\.md$/m,
     '真实 hook 前预暂存删除后，finish 仍须可重复登记并提交');
@@ -108,6 +112,10 @@ try {
   assert.strictEqual(git(project, ['show', result.branch + ':iterations/v1/code-reviews/historical.md']), 'historical report must stay byte-identical');
   assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v1.yml']), 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly');
   assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v2.yml']), 'code_reviews: []', '迁移执行人新增的项目归档可随本地同步提交');
+  const finalizedMeta = JSON.parse(git(project, ['show', result.branch + ':_meta/method-sync.json']));
+  assert.strictEqual(finalizedMeta.adoption.source_base, originalHead);
+  assert.notStrictEqual(finalizedMeta.adoption.accepted_truth_base, originalHead, 'accepted truth freezes after reconciliation, not at source base');
+  assert.deepStrictEqual(finalizedMeta.adoption.legacy_accepted_tasks, ['historic-v1-001']);
   assert.strictEqual(prepare(project, source).state, 'branch-exists');
   const project2 = path.join(temp, 'clean-project'); init(project2);
   write(project2, 'project.md', '# Clean project\n');
