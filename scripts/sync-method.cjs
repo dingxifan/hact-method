@@ -77,6 +77,9 @@ function validAdoptionRecord(value) {
       || (value.accepted_truth_base === null && value.accepted_truth_status_sha256 === null && value.legacy_accepted_tasks.length === 0))
     && (value.accepted_truth_base === null || /^[a-f0-9]{64}$/.test(value.accepted_truth_status_sha256 || ''));
 }
+function gitRaw(root, args) {
+  return cp.execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+}
 function adoptionErrors(root, adoption, projectBase, options = {}) {
   if (!validAdoptionRecord(adoption)) return ['adoption boundary 缺失或格式非法'];
   if (adoption.kind === 'new-project') return [];
@@ -91,7 +94,7 @@ function adoptionErrors(root, adoption, projectBase, options = {}) {
     : ['merge-base', '--is-ancestor', projectBase, adoption.accepted_truth_base]); }
   catch { errors.push(options.runtime ? 'accepted_truth_base 不是当前 HEAD 祖先' : 'accepted_truth_base 未建立在本次迁移基线之后'); }
   let status = '';
-  try { status = git(root, ['show', adoption.accepted_truth_base + ':status.yml']); }
+  try { status = gitRaw(root, ['show', adoption.accepted_truth_base + ':status.yml']); }
   catch { status = ''; }
   try { git(root, ['merge-base', '--is-ancestor', adoption.source_base, adoption.accepted_truth_base]); }
   catch { errors.push('source_base 不是 accepted_truth_base 的祖先'); }
@@ -314,7 +317,7 @@ function finish(worktree, source, integrate = false) {
     git(worktree, ['diff', '--cached', '--check']);
     git(worktree, ['commit', '-m', 'chore(method): reconcile adoption truth']);
     const truthBase = git(worktree, ['rev-parse', 'HEAD']);
-    const truthStatus = git(worktree, ['show', truthBase + ':status.yml']);
+    const truthStatus = gitRaw(worktree, ['show', truthBase + ':status.yml']);
     state = { ...state, adoption: { ...state.adoption, accepted_truth_base: truthBase,
       accepted_truth_status_sha256: digest(truthStatus), legacy_accepted_tasks: mergedTaskIds(truthStatus) } };
     write(worktree, META, JSON.stringify(state, null, 2) + '\n');

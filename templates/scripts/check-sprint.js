@@ -455,6 +455,15 @@ function parseAdoptionBoundary(root, options = {}) {
   catch { return { kind: 'invalid', error: ADOPTION_META + ' 不是合法 JSON' }; }
   const adoption = meta && meta.adoption;
   if (!adoption) return { kind: 'absent' };
+  // 仅 method-sync 的首次 reconciliation commit 可在 final boundary 前表达既有事实。
+  // 它不能离开隔离分支，也不能成为日常/后续提交的 grandfathering 入口。
+  if (meta.schema === 2 && meta.state === 'prepared' && adoption.schema === 2
+      && adoption.kind === 'legacy-project' && /^[0-9a-f]{40}$/.test(adoption.source_base || '')
+      && adoption.accepted_truth_base === null && adoption.accepted_truth_status_sha256 === null
+      && Array.isArray(adoption.legacy_accepted_tasks) && !adoption.legacy_accepted_tasks.length
+      && /^codex\/method-sync-/.test(gitOutput(root, ['branch', '--show-current'])))
+    return { kind: 'reconciliation', ids: new Set((parseStatusTasks(path.join(root, 'status.yml')) || [])
+      .filter(task => task.status === 'merged').map(task => task.id)), adoption };
   if (meta.schema !== 2 || meta.state !== 'verified' || !/^[0-9a-f]{40}$/.test(meta.source || ''))
     return { kind: 'invalid', error: 'adoption boundary 只能来自 verified schema=2 method-sync 记录' };
   const ids = adoption.legacy_accepted_tasks;
@@ -475,7 +484,7 @@ function parseAdoptionBoundary(root, options = {}) {
   try {
     gitOutput(root, ['cat-file', '-e', adoption.accepted_truth_base + '^{commit}']);
     gitOutput(root, ['merge-base', '--is-ancestor', adoption.accepted_truth_base, options.headRef || 'HEAD']);
-    baseStatus = gitOutput(root, ['show', adoption.accepted_truth_base + ':status.yml']);
+    baseStatus = gitRaw(root, ['show', adoption.accepted_truth_base + ':status.yml']);
   } catch {
     return { kind: 'invalid', error: 'accepted_truth_base 必须是当前 HEAD 的可验证祖先且包含 status.yml' };
   }
@@ -500,7 +509,7 @@ function parseAdoptionBoundary(root, options = {}) {
 function grandfatheredAcceptedTask(root, task) {
   const boundary = parseAdoptionBoundary(root);
   if (boundary.kind === 'invalid') return { grandfathered: false, error: boundary.error };
-  if (boundary.kind !== 'legacy-project' || !task || task.status !== 'merged' || !boundary.ids.has(task.id))
+  if (!['legacy-project', 'reconciliation'].includes(boundary.kind) || !task || task.status !== 'merged' || !boundary.ids.has(task.id))
     return { grandfathered: false };
   return { grandfathered: true, base: boundary.adoption.accepted_truth_base };
 }
@@ -613,6 +622,9 @@ function gitOutput(root, args, encoding = 'utf8') {
     encoding,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+}
+function gitRaw(root, args) {
+  return childProcess.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
 function gitObjectType(root, object) {
@@ -1610,11 +1622,12 @@ function checkStagedReviews(root) {
     try { next = JSON.parse(indexMeta); prior = headMeta ? JSON.parse(headMeta) : null; }
     catch { fail('adoption boundary', ADOPTION_META, '暂存的 method-sync.json 不是合法 JSON'); }
     if (next?.adoption?.accepted_truth_base) {
-      if (prior?.adoption && JSON.stringify(prior.adoption) !== JSON.stringify(next.adoption))
+      if (prior?.adoption && prior.state !== 'prepared' && JSON.stringify(prior.adoption) !== JSON.stringify(next.adoption))
         fail('adoption boundary', ADOPTION_META, 'adoption boundary 一经创建不得重写或扩张');
-      else if (!prior?.adoption) {
+      else if (!prior?.adoption || prior.state === 'prepared') {
         const candidate = parseAdoptionBoundary(root, { metaSource: indexMeta, headRef: 'HEAD', allowPending: true });
-        if (candidate.kind === 'invalid' || next.adoption.accepted_truth_base !== gitOutput(root, ['rev-parse', 'HEAD']))
+        const reconciledHead = gitOutput(root, ['rev-parse', 'HEAD']).trim();
+        if (candidate.kind === 'invalid' || next.adoption.accepted_truth_base !== reconciledHead)
           fail('adoption boundary', ADOPTION_META, candidate.error || '首次 adoption 必须绑定紧邻的 reconciled truth HEAD');
       }
     }

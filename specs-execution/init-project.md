@@ -119,10 +119,12 @@ git commit -m "feat: 初始化项目 {name}"
 ```json
 {
   "adoption": {
-    "schema": 1,
+    "schema": 2,
     "kind": "new-project",
     "method_source": "{与 source 相同的 40 位方法 SHA}",
+    "source_base": null,
     "accepted_truth_base": null,
+    "accepted_truth_status_sha256": null,
     "legacy_accepted_tasks": []
   }
 }

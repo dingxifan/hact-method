@@ -11,7 +11,7 @@ let wt;
 try {
   init(method);
   for (const file of ['AGENTS.md', 'gitee-ops.md', '.codex/agents/researcher.toml', '.codex/agents/worker.toml',
-    '.codex/agents/reviewer.toml', '.codex/agents/sensitive_reviewer.toml', 'scripts/check-gate.js',
+    '.codex/agents/reviewer.toml', '.codex/agents/sensitive_reviewer.toml', 'scripts/check-gate.js', 'scripts/check-sprint.js',
     'scripts/check-hook-state.js', 'scripts/check-codex-project.js', 'scripts/pre-commit-hook.sh'])
     write(method, 'templates/' + file, fs.readFileSync(path.join(realTemplates, file), 'utf8').replace(/\r\n/g, '\n'));
   // 此夹具不读取本机真实凭据；测试的是分发与实际 hook 执行，凭据扫描本体不在此替身中测。
@@ -144,6 +144,12 @@ try {
   assert.strictEqual(runtimeCheck(project2).source, source.sha);
   const integratedMeta = JSON.parse(fs.readFileSync(path.join(project2, '_meta/method-sync.json'), 'utf8'));
   assert.strictEqual(integratedMeta.adoption.accepted_truth_base, git(project2, ['rev-parse', integratedMeta.adoption.accepted_truth_base]), 'accepted_truth_base remains a real commit after integration');
+  // init-project 的新仓 metadata：没有 source/history，也必须与 schema=2 runtime-check 相容。
+  const newProjectMeta = { ...integratedMeta, adoption: { schema: 2, kind: 'new-project', method_source: source.sha,
+    source_base: null, accepted_truth_base: null, accepted_truth_status_sha256: null, legacy_accepted_tasks: [] } };
+  write(project2, '_meta/method-sync.json', JSON.stringify(newProjectMeta, null, 2) + '\n');
+  git(project2, ['add', '_meta/method-sync.json']); git(project2, ['commit', '-m', 'fixture: init-project metadata']);
+  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'init-project new-project schema 2 metadata passes runtime-check');
   write(method, 'specs-execution/develop.md', '# moving branch behavior\n');
   git(method, ['add', '.']); git(method, ['commit', '-m', 'method evolves']);
   assert.strictEqual(readAdopted(project2, 'specs-execution/develop.md'), '# adopted behavior\n', 'moving method HEAD must not change project rules');
