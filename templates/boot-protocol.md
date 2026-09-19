@@ -47,8 +47,10 @@ B 类任务包创建后统一由 `develop(source=bug/optimization)` 拾取，复
 1. 当前远端存在已授权的 **native repository-write**，且本动作不依赖本地命令结果时，优先直接写远端 branch/commit/PR，并以返回的 Git SHA/PR 状态作为持久化事实。
 2. 任何结论依赖测试、hook、worktree、build、脚本或真实工作树时，必须使用 **repository-execution**；native write 不能替代执行证据。
 3. native repository-write 不可用时，使用已有本地 Git 执行环境完成 fetch/commit/push/PR 所需动作；不得因为过去某次会话缺能力，就假定当前仍缺，也不得因为当前能写远端，就假定拥有本地执行能力。
-4. `scripts/hact-watcher/` 的 Dropbox/Watcher 路径自 R2.4 起为 **dormant experimental asset**，不在日常执行选项中，不自动启动、配置或回退到它。重新启用须有新的显式方法决策。
-5. provider-specific 操作仍服从项目当前 remote 与项目规则；例如 Gitee 项目需要 Gitee API 时继续读 `gitee-ops.md`。native connector 只有在它确实对应当前 remote/provider 且已授权时才可使用。
+4. native repository-write 必须保留当前仓既有的 branch/PR/protected-branch 与授权边界；不能因为 connector 能写就直接改稳定分支、force-push、删分支或绕过既有 review/merge 规则。
+5. 若变更已经在本地 execution worktree 中实现、测试或审查，则该 worktree 是本次 diff 的持久化来源：从它 commit/push，native connector 可继续处理远端 PR/metadata，但不得重新拼装同一批文件形成第二份未经同一证据链确认的远端 diff。
+6. `scripts/hact-watcher/` 的 Dropbox/Watcher 路径自 R2.4 起为 **dormant experimental asset**，不在日常执行选项中，不自动启动、配置或回退到它。重新启用须有新的显式方法决策。
+7. provider-specific 操作仍服从项目当前 remote 与项目规则；例如 Gitee 项目需要 Gitee API 时继续读 `gitee-ops.md`。native connector 只有在它确实对应当前 remote/provider 且已授权时才可使用。
 
 采用本版单源状态前，存量项目须逐仓核对 status 与旧 Gate/任务记录、已获用户确认的签署和实际 Git；同步更新项目 check-gate/check-sprint/check-b-task 与既有 hook 的委托路由（不覆盖原 hook）。未核对或旧 hook 仍只盯 gates.md 时沿用获准旧版，不只删文件、不在一次普通开发中自动迁移。历史 Markdown 可保留，但升级后不再双写或作为进度真相。
 
