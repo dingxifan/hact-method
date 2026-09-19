@@ -1,5 +1,14 @@
 # HACT Watcher v0.1.2-experimental
 
+> **Status: dormant experimental asset (R2.4).**
+>
+> This Watcher is **not part of the active HACT execution path**. Do not configure,
+> start, or select Dropbox/Watcher as a normal fallback. It is retained as a
+> historical/tested prototype from the period when the active ChatGPT runtime had
+> no native repository-write capability. R2.4 prefers an authorized native
+> repository connector for remote writes, and a real local Git environment for
+> repository execution. Reactivation requires a new explicit methodology decision.
+
 HACT Watcher is a small, deterministic local publisher:
 
 ```text
