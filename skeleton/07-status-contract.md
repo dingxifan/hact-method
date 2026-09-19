@@ -111,7 +111,7 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
     spec_rounds: 1               # int ≥0，freshness/contract/claim 独立复核数
     freshness: revised           # enum，pass / revised
     review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
-    review_evidence_version: develop-review-round/v2   # 新任务 round 报告 schema；存量缺失按 legacy/unknown
+    review_evidence_version: develop-review-round/v2   # post-adoption 完成任务必填；缺失只表示 unknown，legacy 身份只看 adoption boundary
 ```
 
 ### 审查归档索引与文件约束
