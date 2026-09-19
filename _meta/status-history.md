@@ -8,7 +8,7 @@
 
 - **触发**：ChatGPT 当前会话获得对 GitHub 仓库的原生读写能力后，原先为“ChatGPT 无法直接写远端 Git”这一能力缺口设计的 Dropbox/Watcher 路径不再应处于日常执行面。若仍把它作为常规 fallback，会在已有更短可信路径时制造额外队列、Watcher、专用 clone 与状态同步复杂度。
 - **能力模型**：仓库能力拆成三类：repository-read（读远端事实）、repository-write（通过已授权 native connector/API 直接写 branch/commit/PR）、repository-execution（真实 checkout 中运行 Git/Node/test/build/hook/worktree）。三者不能互相冒充。
-- **选择规则**：当前 remote/provider 有已授权 native repository-write 且动作不依赖本地执行结果时，优先直接持久化到受控 branch/commit/PR；只要结论依赖测试、hook、worktree、build 或真实工作树，就必须回 repository-execution。native write 不可用时使用本地 Git；不根据过去某次会话的能力缺口永久推断当前能力。
+- **选择规则**：当前 remote/provider 有已授权 native repository-write 且动作不依赖本地执行结果时，优先直接持久化到受控 branch/commit/PR；只要结论依赖测试、hook、worktree、build 或真实工作树，就必须回 repository-execution。native write 不得绕过既有 protected branch / PR / review 边界；若 diff 已在本地 execution worktree 中实现、测试或审查，则从同一 worktree commit/push，不能用 connector 重新拼装第二份远端 diff。native write 不可用时使用本地 Git；不根据过去某次会话的能力缺口永久推断当前能力。
 - **Dropbox/Watcher**：`scripts/hact-watcher/` 保留为 dormant experimental asset 和历史工程证据，但从 active execution options 退出；不自动配置、启动或回退到它。重新启用须有新的显式方法决策。
 - **provider 边界**：本修正不把方法论改成 GitHub-only。Gitee 项目仍使用其项目规则与 `gitee-ops.md`；native connector 只有在确实匹配当前 remote/provider 且已授权时才可使用。
 - **运行时边界**：Codex 继续承担本地 repository-execution；ChatGPT/GitHub connector 的 native remote write 不构成第二套本地执行 runtime，也不为未运行的测试或 hook 背书。
