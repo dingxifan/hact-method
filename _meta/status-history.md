@@ -4,6 +4,19 @@
 
 ## 历史里程碑
 
+### 2026-09-19 R2.3 — Explicit Adoption Boundary & Legacy Accepted Truth Compatibility
+
+- **触发**：真实旧项目进入 vNext lifecycle 验证时，既有 `merged` 任务被新 checker 要求提供历史上从未存在的 `rounds/code_rounds/spec_rounds/review_report_dir/preflight/round report/fixed tree`。事后补这些字段会伪造审计历史；直接降 checker 又会削弱 adoption 后的约束。
+- **边界模型**：`_meta/method-sync.json` 升级为 adoption-aware schema。既有项目首次采用 R2.3 时，以升级前已提交 HEAD 作为 `accepted_truth_base`，机械读取该提交的 `status.yml`，把当时已经 `merged` 的 task-id 冻结为 `legacy_accepted_tasks`；后续方法升级保留原 boundary，不把新的 HEAD 重写成历史。新项目显式写 `kind: new-project`、null base 与空 legacy 集。
+- **兼容语义**：Legacy Accepted Truth 是“承认 adoption 前已经成立的 Project Truth”，不是“声称它过去执行过今天的流程”。因此不要求、也禁止为了过 checker 补造 preflight、round reports、固定 tree SHA、round split 或 task write-set。
+- **前向严格性**：grandfathering 只保护 history。新任务、legacy task/task record/review evidence 的 post-adoption 实质修改，以及 reopen 后再次 merged 的 delta 都必须走当前 vNext 审计链。reopen 本身可先进入 active 状态，不能为了“先变 active”伪造尚未完成的 review；再次交付时严格闭环。
+- **checker**：完整审计只接受 verified schema=2 method-sync 中的显式 boundary，验证 base 是当前 HEAD 的祖先、base 中对应 task 确实 merged。删除“旧 package schema / 缺字段 ⇒ legacy”的启发式兼容；无 boundary 的旧任务仍暴露为历史债务。提交审计继续只核本次触碰对象，未变化历史不因普通提交反复阻断。
+- **迁移脚本**：`sync-method.cjs` 在隔离升级树生成并校验 boundary；已有合法 boundary 后续原样继承。不会重写历史报告或已完成包。
+- **夹具**：增加“无 boundary 不得 grandfather / 显式 boundary 可接受真实旧历史 / 触碰 legacy task 恢复严格 / reopen 可进入 active / remerge 无当前证据必须失败”的正反场景；同步脚本夹具断言 boundary 固定在升级前 HEAD。
+- **验证边界**：本轮仓库分支代码与测试夹具已落地，但当前 ChatGPT 容器无 GitHub DNS，且该提交未触发现有 GitHub workflow；因此本条只记录实现状态，不宣称 Node 回归已运行通过。合并前仍须在可执行仓环境运行相关 `node --check`、sync-method 与 check-sprint 回归。
+
+---
+
 ### 2026-09-04 双运行时全面独审与内部闭合
 
 - **审查起点**：在双运行时改造完成后派全新上下文独审员，以 `master@7c28db4` 到最终工作树为对象，不读取实施者结论。首轮判 `block`：1×S0、7×S1、4×S2；自动检查虽全绿，但暴露多项同源自证和假 SHA 覆盖。
