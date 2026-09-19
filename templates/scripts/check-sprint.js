@@ -1571,7 +1571,7 @@ function checkSprint(iteration, root, audit = true) {
 function checkStagedReviews(root) {
   const staged = gitOutput(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean);
   const readAt = (ref, file) => { try { return gitOutput(root, ['show', `${ref}:${file}`]); } catch { return ''; } };
-  const iterations = new Set(), selected = new Map(), mustClose = new Set(), inputs = new Set(['status.yml', ADOPTION_META]);
+  const iterations = new Set(), selected = new Map(), mustClose = new Set(), reconciliationIds = new Set(), inputs = new Set(['status.yml', ADOPTION_META]);
   const tasks = parseStatusTasksSource(readAt('', 'status.yml'));
   const beforeTasks = new Map(parseStatusTasksSource(readAt('HEAD', 'status.yml')).map(t => [t.id, t]));
   const select = (id, required = false) => selected.set(id, required || selected.get(id) || false);
@@ -1621,6 +1621,9 @@ function checkStagedReviews(root) {
     let next, prior;
     try { next = JSON.parse(indexMeta); prior = headMeta ? JSON.parse(headMeta) : null; }
     catch { fail('adoption boundary', ADOPTION_META, '暂存的 method-sync.json 不是合法 JSON'); }
+    const reconciliation = !prior?.adoption && parseAdoptionBoundary(root, { metaSource: indexMeta });
+    if (reconciliation?.kind === 'reconciliation')
+      for (const id of reconciliation.ids) reconciliationIds.add(id);
     if (next?.adoption?.accepted_truth_base) {
       if (prior?.adoption && prior.state !== 'prepared' && JSON.stringify(prior.adoption) !== JSON.stringify(next.adoption))
         fail('adoption boundary', ADOPTION_META, 'adoption boundary 一经创建不得重写或扩张');
@@ -1648,6 +1651,7 @@ function checkStagedReviews(root) {
   for (const version of iterations) checkSprint(version, root, false);
   for (const [id, required] of selected) {
     const task = tasks.find(t => t.id === id);
+    if (reconciliationIds.has(id)) continue; // 唯一的首次 reconciliation transition，冻结前不要求未来审计物。
     if (task?.status === 'merged' || mustClose.has(id)) { checkReviewAudit(id, root); continue; }
     const dirs = [...inputs].filter(f => f.endsWith(`/code-reviews/${id}`) || f === `b-reviews/${id}`);
     const hasRounds = dirs.some(dir => exists(path.join(root, dir)) && fs.readdirSync(path.join(root, dir)).some(n => /^round-\d{2}\.md$/.test(n)));

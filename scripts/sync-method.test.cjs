@@ -96,7 +96,15 @@ try {
   assert.throws(() => finish(wt, source), /范围外/);
   fs.unlinkSync(path.join(wt, 'business.ts'));
   // 对账在 prepare 后才恢复的历史 merged 事实，必须进入 adoption snapshot。
-  write(wt, 'status.yml', originalState.replace('tasks: []', 'tasks:\n  - id: historic-v1-001\n    status: merged'));
+  write(wt, 'status.yml', originalState.replace('tasks: []', `tasks:
+  - id: historic-v1-001
+    source: bug
+    type: develop
+    iteration: null
+    layer: backend
+    status: merged
+    depends_on: []
+    delivery: 可并行`));
   git(wt, ['add', '-A']);
   assert.match(git(wt, ['diff', '--cached', '--name-status']), /^D\s+standards-shared\.md$/m,
     '真实 hook 前预暂存删除后，finish 仍须可重复登记并提交');

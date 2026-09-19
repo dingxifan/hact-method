@@ -7,7 +7,7 @@
 ### 2026-09-19 R2.3 — Explicit Adoption Boundary & Legacy Accepted Truth Compatibility
 
 - **触发**：真实旧项目进入 vNext lifecycle 验证时，既有 `merged` 任务被新 checker 要求提供历史上从未存在的 `rounds/code_rounds/spec_rounds/review_report_dir/preflight/round report/fixed tree`。事后补这些字段会伪造审计历史；直接降 checker 又会削弱 adoption 后的约束。
-- **边界模型**：`_meta/method-sync.json` 升级为 adoption-aware schema。既有项目首次采用 R2.3 时，以升级前已提交 HEAD 作为 `accepted_truth_base`，机械读取该提交的 `status.yml`，把当时已经 `merged` 的 task-id 冻结为 `legacy_accepted_tasks`；后续方法升级保留原 boundary，不把新的 HEAD 重写成历史。新项目显式写 `kind: new-project`、null base 与空 legacy 集。
+- **边界模型**：`_meta/method-sync.json` 升级为 adoption-aware schema。既有项目首次采用 R2.3 时固定迁移前 `source_base`；完成 status/Gate/任务/PR/Git 对账后，先提交 `accepted_truth_base`，机械读取该提交的 `status.yml` 与其 hash，把其中已经 `merged` 的 task-id 冻结为 `legacy_accepted_tasks`，再提交 adoption object。后续方法升级保留原 boundary，不把新的 HEAD 重写成历史。新项目显式写 `kind: new-project`、null bases 与空 legacy 集。
 - **兼容语义**：Legacy Accepted Truth 是“承认 adoption 前已经成立的 Project Truth”，不是“声称它过去执行过今天的流程”。因此不要求、也禁止为了过 checker 补造 preflight、round reports、固定 tree SHA、round split 或 task write-set。
 - **前向严格性**：grandfathering 只保护 history。新任务、legacy task/task record/review evidence 的 post-adoption 实质修改，以及 reopen 后再次 merged 的 delta 都必须走当前 vNext 审计链。reopen 本身可先进入 active 状态，不能为了“先变 active”伪造尚未完成的 review；再次交付时严格闭环。
 - **checker**：完整审计只接受 verified schema=2 method-sync 中的显式 boundary，验证 base 是当前 HEAD 的祖先、base 中对应 task 确实 merged。删除“旧 package schema / 缺字段 ⇒ legacy”的启发式兼容；无 boundary 的旧任务仍暴露为历史债务。提交审计继续只核本次触碰对象，未变化历史不因普通提交反复阻断。

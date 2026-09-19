@@ -89,7 +89,7 @@
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
-- 2026-09-19 R2.3 显式 Adoption Boundary 与 Legacy Accepted Truth 兼容 — 迁移时固定 pre-adoption Project Truth；历史不补造 vNext 证据，未来 delta 全量受当前 lifecycle 约束；schema 启发式豁免退出
+- 2026-09-19 R2.3 显式 Adoption Boundary 与 Legacy Accepted Truth 兼容 — 迁移按 source base、对账 truth、adoption commit 三阶段冻结；历史不补造 vNext 证据，未来 delta 全量受当前 lifecycle 约束；schema 启发式豁免退出
 - 2026-09-04 Claude Code + Codex 双运行时适配 — 共同能力接口/预检/启动协议 + 双薄入口 + Codex 5.6 四角色模板；执行规范全面中立化；同步补齐 B 类契约升级、V0 证据账本、共享写集冲突与门卫漂移信号；A/B/C/D 四场景协议演练哈希一致，真实跨运行时项目试点待做
 - 2026-09-04 强模型时代编排纯减法 — 能力预检改为任务路由后按需检查；freshness 无漂移只留紧凑摘要；删除可由事件时间戳计算的 implementation/review/round 派生分钟，保留累计 spec 墙钟；V0/Gate/独审/最终验证不动
 - 2026-09-04 双运行时全面独审与内部闭合 — 首轮 `block`（12 findings）→ 五轮独立复核后 `pass`；补齐中立命令、全状态路由、真实 Git diff/finding 闭合、任务依赖/工作树白名单、B 契约、V0 ledger、联调证据、hook、初始化诊断及 schema-complete handoff 变异测试；外部实机试点仍待做
