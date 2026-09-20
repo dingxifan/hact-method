@@ -656,6 +656,8 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     else {
       if (gitObjectType(root, p('base_ref')) !== 'commit') errors.push('preflight base_ref 不是当前仓可解析的 commit');
       if (gitObjectType(root, p('base_tree')) !== 'tree') errors.push('preflight base_tree 不是当前仓可解析的 tree');
+      else if (String(gitOutput(root, ['rev-parse', `${p('base_ref')}^{tree}`])).trim() !== p('base_tree'))
+        errors.push('preflight base_tree 必须等于 base_ref^{tree} 的真实 Git tree');
     }
   }
 
@@ -1444,16 +1446,16 @@ function checkSprint(iteration, root, audit = true) {
       .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
       .map(t => t.id);
     const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
-    const noAudit = [], partialAudit = [], badAudit = [], legacyPackages = [];
+    const noAudit = [], partialAudit = [], badAudit = [], nonCorePackages = [];
     for (const id of mergedIds) {
       const cr = crByTask.get(id);
       if (!cr) { noEntry.push(id); continue; }
       const taskPackage = packages.find(p => p.id === id);
       if (!taskPackage || !taskPackage.strictSchema) {
-        // 已合并的旧包只做“是否有历史审查条目”的可追溯性检查；不要把新 schema 的
-        // 固定 diff 约束反向施加到它的原始审计物上。
-        if (!('rounds' in cr)) noRounds.push(id);
-        legacyPackages.push(id);
+        // Core never silently downgrades because a package is old or missing.
+        // A normalizer keeps historical facts outside the active lifecycle;
+        // any item presented here as a merged Core task must satisfy Core.
+        nonCorePackages.push(id);
         continue;
       }
       if (!('rounds' in cr)) { badRounds.push(id + '(缺 rounds)'); continue; }
@@ -1491,12 +1493,12 @@ function checkSprint(iteration, root, audit = true) {
       fail('审计留痕', 'status.yml', `report 审计非法：${badAudit.join('；')}`);
     if (noAudit.length)
       fail('审计留痕', 'status.yml', `schema 2 缺必需 report 审计字段：${noAudit.join(', ')}`);
-    if (legacyPackages.length)
-      human('审计留痕', `存量任务包仅核历史审查条目存在：${legacyPackages.join(', ')} —— 未验证固定 diff 契约`);
+    if (nonCorePackages.length)
+      fail('审计留痕', 'status.yml', `merged task 缺 Core package/schema，不能按历史年代降低审计：${nonCorePackages.join(', ')}`);
     if (!mergedIds.length)
       pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
     else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
-             && !partialAudit.length && !badAudit.length && !noAudit.length && !legacyPackages.length)
+             && !partialAudit.length && !badAudit.length && !noAudit.length && !nonCorePackages.length)
       pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds 与逐轮 reports`);
   }
 
@@ -1559,7 +1561,31 @@ function checkStagedReviews(root) {
   for (const version of iterations) checkSprint(version, root, false);
   for (const [id, required] of selected) {
     const task = tasks.find(t => t.id === id);
-    if (task?.status === 'merged' || mustClose.has(id)) { checkReviewAudit(id, root); continue; }
+    if (task?.status === 'merged' || mustClose.has(id)) {
+      checkReviewAudit(id, root);
+      // Candidate -> Accepted Project Truth is a blob binding, not merely a
+      // self-consistent report. Governance tail files may be appended, but
+      // every staged implementation byte must still be the final reviewed
+      // implementation world.
+      const record = (loadCodeReviews(root) || []).find(value => value.task_id === id);
+      const reportDir = record && record.review_report_dir && path.resolve(root, record.review_report_dir);
+      if (reportDir && fs.existsSync(reportDir)) {
+        const rounds = fs.readdirSync(reportDir).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
+        const last = rounds.at(-1) && parseFrontmatter(path.join(reportDir, rounds.at(-1)));
+        const reviewedHead = scalarText(last && last.reviewed_head);
+        const preflight = parseFrontmatter(path.join(reportDir, 'preflight.md'));
+        const baseTree = scalarText(preflight && preflight.base_tree);
+        const accepted = isSha40(baseTree) && isSha40(reviewedHead) ? fixedDiffEvidence(root, baseTree, reviewedHead) : { error: '缺可解析 accepted tree' };
+        const taskPath = findTaskPackages(root, id).map(file => path.relative(root, file).replace(/\\/g, '/'))[0] || '';
+        for (const file of staged.filter(name => !governanceWritePath(name, taskPath, path.relative(root, reportDir).replace(/\\/g, '/')))) {
+          if (accepted.error || !accepted.names.includes(file)) { fail('Accepted implementation binding', file, `${id}: staged implementation 不在 final reviewed implementation world`); continue; }
+          let stagedBlob = '', reviewedBlob = '';
+          try { stagedBlob = String(gitOutput(root, ['rev-parse', `:${file}`])).trim(); reviewedBlob = String(gitOutput(root, ['rev-parse', `${reviewedHead}:${file}`])).trim(); } catch {}
+          if (!stagedBlob || stagedBlob !== reviewedBlob) fail('Accepted implementation binding', file, `${id}: staged blob 与 final reviewed_head 不一致；须取得新审查证据`);
+        }
+      }
+      continue;
+    }
     const dirs = [...inputs].filter(f => f.endsWith(`/code-reviews/${id}`) || f === `b-reviews/${id}`);
     const hasRounds = dirs.some(dir => exists(path.join(root, dir)) && fs.readdirSync(path.join(root, dir)).some(n => /^round-\d{2}\.md$/.test(n)));
     if (required || hasRounds) checkReviewChain(id, root, true);

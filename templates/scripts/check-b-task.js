@@ -72,8 +72,20 @@ function contractDiffSignals(diff) {
     { label: 'OpenAPI/Swagger 根声明', re: /^\s*(?:openapi|swagger)\s*:/i },
   ];
   const hits = [];
+  // Unit callers may provide an isolated changed line; a real Git binary diff
+  // always supplies +++ b/<path> before content.
+  let implementationFile = true;
   for (const line of String(diff || '').split(/\r?\n/)) {
+    if (/^\+\+\+ b\//.test(line)) {
+      const file = line.slice(6).trim();
+      // Markdown governance may quote a DTO/route/type verbatim. Contract
+      // signals are about implementation/schema changes, never prose.
+      implementationFile = /\.(?:[cm]?[jt]sx?|java|kt|cs|go|py|rb|php|sql|proto|avsc|ya?ml|json)$/i.test(file)
+        && !/\.md$/i.test(file);
+      continue;
+    }
     if (!/^[+-]/.test(line) || /^(?:\+\+\+|---)/.test(line)) continue;
+    if (!implementationFile) continue;
     const code = line.slice(1);
     for (const { label, re } of patterns) if (re.test(code)) hits.push(`${label}: ${code.trim().slice(0, 120)}`);
   }

@@ -1,6 +1,6 @@
 ---
 name: discussion-persistence
-description: Persist finalized discussion, design, specification, or document artifacts into a registered Git repository through the configured Dropbox-to-Git persistence adapter. Use only when the user explicitly asks to save, persist, land, commit, or write back finalized work. Do not use for brainstorming, unfinished drafts, or normal code implementation.
+description: Persist finalized discussion, design, specification, or document artifacts using the active repository's native Git write path. Use only when the user explicitly asks to save, persist, land, commit, or write back finalized work. Do not use for brainstorming, unfinished drafts, or normal code implementation.
 ---
 
 # Discussion Persistence
@@ -9,27 +9,21 @@ Use this skill to turn finalized discussion outputs into verified Git truth with
 
 ## Scope
 
-V1 is a workflow skill. It does not add a new MCP server and does not redesign the local Watcher.
-
-The current adapter is:
-
-`ChatGPT/Codex -> Dropbox -> local Watcher -> Git -> GitHub verification`
-
-The Watcher may serve multiple repositories through its configured `repos` map.
+Use the repository's native write capability when it is available. When proof
+depends on tests, hooks, worktrees or a local diff, use local repository
+execution and commit/push that same worktree. Dropbox/Watcher is a dormant
+experimental asset, never a fallback; a new explicit Method decision is needed
+to reactivate it.
 
 ## Non-negotiable principles
 
 1. GitHub commit SHA is the final persistence truth.
 2. An uncertain transport acknowledgement is not a persistence failure.
-3. Never resubmit while submission outcome is indeterminate.
-4. Watcher success is not completion until GitHub is verified.
-5. Every submission has one unique `job_id`.
-6. Never guess project, repository, base branch, base SHA, target branch, or allowed path.
-7. Once the artifact set is finalized, persistence is mechanical. Do not redesign artifact content during transport or recovery.
+3. Never guess project, repository, base branch, base SHA, target branch, or allowed path.
+4. Once the artifact set is finalized, persistence is mechanical. Do not redesign artifact content during transport or recovery.
 
-Read `references/protocol.md` before executing persistence.
-Read `references/recovery.md` whenever a tool call, upload acknowledgement, Watcher result, or verification step is abnormal.
-Read `references/conformance.md` when changing this skill.
+Read `references/protocol.md` before executing persistence. Recovery must inspect
+the native Git/remote state; it must not switch transport mechanism.
 
 ## Required inputs
 

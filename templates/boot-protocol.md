@@ -72,20 +72,24 @@ Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“�
 
 vNext Core Task Catalog：
 
-| canonical task | Task Contract | legacy alias / note |
-|---|---|---|
-| `init-project` | `tasks/init-project.md` | |
-| `draft-foundation` | `tasks/draft-foundation.md` | |
-| `draft-prd` | `tasks/draft-prd.md` | `draft-prd-vN` |
-| `draft-ux` | `tasks/draft-ux.md` | 外部设计路径仍归同一 Task |
-| `draft-tech-design` | `tasks/draft-tech-design.md` | |
-| `plan-sprint` | `tasks/plan-sprint.md` | |
-| `revise-doc` | `tasks/revise-doc.md` | |
-| `develop` | `tasks/develop.md` | 承接 A/B/repair source |
-| `integration-verify` | `tasks/integration-verify.md` | `generate-integration-tests` |
-| `manual-test` | `tasks/manual-test.md` | |
-| `deploy` | `tasks/deploy.md` | |
-| `wrap-up-iteration` | `tasks/wrap-up-iteration.md` | |
+| canonical Task | Task Contract |
+|---|---|
+| `init-project` | `tasks/init-project.md` |
+| `draft-foundation` | `tasks/draft-foundation.md` |
+| `draft-prd` | `tasks/draft-prd.md` |
+| `draft-ux` | `tasks/draft-ux.md` |
+| `draft-tech-design` | `tasks/draft-tech-design.md` |
+| `plan-sprint` | `tasks/plan-sprint.md` |
+| `revise-doc` | `tasks/revise-doc.md` |
+| `develop` | `tasks/develop.md` |
+| `integration-verify` | `tasks/integration-verify.md` |
+| `manual-test` | `tasks/manual-test.md` |
+| `deploy` | `tasks/deploy.md` |
+| `wrap-up-iteration` | `tasks/wrap-up-iteration.md` |
+
+Aliases: `draft-prd-vN` → `draft-prd`; `generate-integration-tests` →
+`integration-verify`. `draft-ux-external` is a runtime route that returns to
+canonical `draft-ux`; it is not a Task name.
 
 非 Core Task：
 
