@@ -368,6 +368,13 @@ code_reviews: []
   git(['add', `iterations/v1/queue/${ITERATION_ID}.md`]);
   result = stagedAudit();
   assert.strictEqual(result.status, 0, `touching a valid Core task keeps its archived audit valid: ${result.stdout}\n${result.stderr}`);
+  // T1 was reviewed and passed; substituting implementation T2 in the merged
+  // index must fail even though the report remains internally self-consistent.
+  write('src/iteration.js', 'module.exports = "unreviewed T2";\n');
+  git(['add', 'src/iteration.js']);
+  result = stagedAudit();
+  assert.notStrictEqual(result.status, 0, 'T1 reviewed PASS then T2 staged for merged must fail');
+  assert.match(result.stdout, /Accepted implementation binding/);
   console.log('✅ check-sprint review archive 与提交范围正反夹具通过');
 } finally {
   const resolvedTemp = path.resolve(tempRoot);
