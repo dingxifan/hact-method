@@ -17,6 +17,10 @@ try {
   // 此夹具不读取本机真实凭据；测试的是分发与实际 hook 执行，凭据扫描本体不在此替身中测。
   write(method, 'templates/scripts/check-secrets.js', 'process.exit(0);\n');
   write(method, 'templates/scripts/check-example.js', 'console.log("old template");\n');
+  write(method, 'tasks/develop.md', '# adopted task\n');
+  write(method, 'protocols/review.md', '# adopted review protocol\n');
+  write(method, 'runtime/codex.md', '# adopted runtime\n');
+  write(method, 'utilities/harvest-notes.md', '# adopted utility\n');
   write(method, 'specs-execution/develop.md', '# adopted behavior\n');
   git(method, ['add', '.']); git(method, ['commit', '-m', 'old']);
   const oldExample = fs.readFileSync(path.join(method, 'templates/scripts/check-example.js'));
@@ -130,7 +134,14 @@ try {
   assert.strictEqual(runtimeCheck(project2).source, source.sha);
   write(method, 'specs-execution/develop.md', '# moving branch behavior\n');
   git(method, ['add', '.']); git(method, ['commit', '-m', 'method evolves']);
+  assert.strictEqual(readAdopted(project2, 'tasks/develop.md'), '# adopted task\n');
+  assert.strictEqual(readAdopted(project2, 'protocols/review.md'), '# adopted review protocol\n');
+  assert.strictEqual(readAdopted(project2, 'runtime/codex.md'), '# adopted runtime\n');
+  assert.strictEqual(readAdopted(project2, 'utilities/harvest-notes.md'), '# adopted utility\n');
   assert.strictEqual(readAdopted(project2, 'specs-execution/develop.md'), '# adopted behavior\n', 'moving method HEAD must not change project rules');
+  assert.throws(() => readAdopted(project2, '../outside.md'), /只允许/);
+  assert.throws(() => readAdopted(project2, '/absolute.md'), /只允许/);
+  assert.throws(() => readAdopted(project2, 'tasks\\develop.md'), /只允许/);
   assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'new branch does not force an upgrade');
   const copiedScript = fs.readFileSync(path.join(project2, 'scripts/check-example.js'));
   write(project2, 'scripts/check-example.js', 'outdated or mismatched script\n');

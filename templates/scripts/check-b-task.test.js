@@ -117,6 +117,16 @@ fs.writeFileSync(ownTask, shortPackage('src/models/profile.ts'));
 runGit(['add', 'b-queue/demo-b-001.md']);
 const ownHead = runGit(['write-tree']);
 assert.deepStrictEqual(validateDiff(ownTask, base, ownHead, repo), [], '本任务包维护无需自登记');
+runGit(['read-tree', base + '^{tree}']);
+fs.writeFileSync(path.join(repo, 'src', 'service.ts'), 'export const service = true;\n');
+fs.writeFileSync(path.join(repo, 'status.yml'), 'tasks:\n  - id: demo-b-001\n    status: merged\n');
+fs.mkdirSync(path.join(repo, 'b-reviews', 'demo-b-001'), { recursive: true });
+fs.writeFileSync(path.join(repo, 'b-reviews', 'demo-b-001', 'preflight.md'), 'historical governance evidence\n');
+runGit(['add', 'src/service.ts', 'status.yml', 'b-reviews/demo-b-001/preflight.md']);
+const governedEvidenceHead = runGit(['write-tree']);
+fs.writeFileSync(ownTask, shortPackage('src/service.ts', 'none'));
+assert.deepStrictEqual(validateDiff(ownTask, base, governedEvidenceHead, repo), [],
+  'implementation files remain scoped while status and task-owned evidence stay independently auditable');
 fs.writeFileSync(path.join(repo, 'b-queue', 'another-task.md'), 'another task\n');
 runGit(['add', 'b-queue/another-task.md']);
 assert.ok(validateDiff(ownTask, base, runGit(['write-tree']), repo).some(e => /未声明 files/.test(e)), '自登记豁免不覆盖其它任务');

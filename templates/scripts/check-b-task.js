@@ -52,6 +52,17 @@ function normalizeDeclaredFile(file) {
   return (match ? match[1] : text).replace(/^\.\//, '');
 }
 
+// Governance artifacts are auditable, but they are not business implementation
+// files. They remain visible to the review-chain audit; this classifier only
+// keeps them out of the task package's implementation write-set.
+function governancePath(file, taskId, taskPath = '') {
+  const name = String(file || '').replace(/\\/g, '/').replace(/^\.\//, '');
+  const normalizedTask = String(taskPath || '').replace(/\\/g, '/');
+  return name === 'status.yml' || name === normalizedTask || /^status-reviews\/[^/]+\.yml$/.test(name)
+    || new RegExp(`^b-reviews/${String(taskId || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/`).test(name)
+    || new RegExp(`^iterations/[^/]+/code-reviews/${String(taskId || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/`).test(name);
+}
+
 function contractDiffSignals(diff) {
   const patterns = [
     { label: '导出共享 type/interface/enum', re: /\bexport\s+(?:interface|type|enum)\b/ },
@@ -125,10 +136,12 @@ function validateDiff(file, base, head, root = process.cwd()) {
   const fm = parseFrontmatter(fs.readFileSync(file, 'utf8'));
   const declared = new Set((Array.isArray(fm && fm.files) ? fm.files : []).map(normalizeDeclaredFile));
   const taskPath = path.relative(root, path.resolve(file)).replace(/\\/g, '/');
-  const undeclared = changedFiles.filter(changed => changed !== taskPath && !declared.has(changed.replace(/\\/g, '/')));
+  const taskId = String(fm && fm['task-id'] || path.basename(taskPath, '.md'));
+  const implementationFiles = changedFiles.filter(changed => !governancePath(changed, taskId, taskPath));
+  const undeclared = implementationFiles.filter(changed => !declared.has(changed.replace(/\\/g, '/')));
   if (undeclared.length) errors.push(`固定 diff 含未声明 files：${undeclared.join('、')}`);
   const governed = fm && fm['contract-impact'] === 'governed';
-  const pathHits = governed ? prohibitedPathHits(changedFiles) : contractPathHits(changedFiles);
+  const pathHits = governed ? prohibitedPathHits(implementationFiles) : contractPathHits(implementationFiles);
   if (pathHits.length) errors.push(`固定 diff 命中共享契约/迁移路径：${pathHits.join('、')}`);
   const signals = contractDiffSignals(diff);
   if (governed ? signals.some(signal => signal.startsWith('数据库 DDL:')) : signals.length) errors.push(`固定 diff 出现共享契约变更信号：${signals.join('；')}`);
@@ -214,4 +227,4 @@ function main() {
 
 if (require.main === module) main();
 module.exports = { parseFrontmatter, contractPathHits, contractDiffSignals, extractPublicContracts,
-  publicContractSignals, validate, validateDiff };
+  publicContractSignals, governancePath, validate, validateDiff };

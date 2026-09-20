@@ -613,6 +613,14 @@ function findTaskPackages(root, id) {
   return matches;
 }
 
+function governanceWritePath(name, taskPackagePath, reviewReportDir) {
+  const file = String(name || '').replace(/\\/g, '/').replace(/^\.\//, '');
+  const task = String(taskPackagePath || '').replace(/\\/g, '/');
+  const report = String(reviewReportDir || '').replace(/\\/g, '/').replace(/\/$/, '');
+  return file === 'status.yml' || file === task || /^status-reviews\/[^/]+\.yml$/.test(file)
+    || Boolean(report && (file === report || file.startsWith(report + '/')));
+}
+
 function reviewAuditErrors(root, id, cr, options = {}) {
   const errors = [];
   const evidenceVersion = cr.review_evidence_version || '';
@@ -742,7 +750,8 @@ function reviewAuditErrors(root, id, cr, options = {}) {
         if (JSON.stringify(reportedChangedFiles) !== JSON.stringify(fixed.names))
           errors.push(`${file}: changed_files 与固定 diff 实际文件集不一致`);
         if (declaredTaskFiles.length) {
-          const undeclared = fixed.names.filter(name => name !== taskPackagePath && !declaredTaskFiles.includes(name.toLowerCase()));
+          const implementationFiles = fixed.names.filter(name => !governanceWritePath(name, taskPackagePath, relDir));
+          const undeclared = implementationFiles.filter(name => !declaredTaskFiles.includes(name.toLowerCase()));
           if (undeclared.length) errors.push(`${file}: 固定 diff 超出任务包 files：${undeclared.join(', ')}`);
         }
       }
@@ -1626,4 +1635,4 @@ function main() {
 if (require.main === module) main();
 module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED, REVIEW_AUDIT_FIELDS,
   sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText,
-  parseReportFindings, fixedDiffEvidence, findTaskPackages };
+  parseReportFindings, fixedDiffEvidence, findTaskPackages, governanceWritePath };
