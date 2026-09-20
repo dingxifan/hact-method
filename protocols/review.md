@@ -123,9 +123,99 @@ Reviewer 输出至少包含：
 
 Finding 应指向具体承诺、路径或 evidence gap，不以“还能更完善”阻断。
 
-System Verification 内的 blocking findings 使用同一 system Finding Contract；origin 只说明 finding 从 semantic review 或 runtime verification 首次建立，不决定 closure authority。具体 `local-close | system-rereview` routing、route escalation 与 snapshot invalidation 由 Review Architecture Phase 3 contract 落实；在该 contract 可执行前，不得用临时枚举或聊天决定替代持久化 routing truth。
+System Verification 内的 blocking findings 使用同一 system Finding Contract；origin 只说明 finding 从 semantic review 或 runtime verification 首次建立，不决定 closure authority。
 
-## 9. Bounded convergence
+每个 system blocking finding 至少持久化：
+
+- stable finding id
+- origin：`semantic-review | runtime-verification`
+- severity 与 category
+- summary 与 evidence pointers
+- required action
+- effective closure route
+- required semantic revalidation scope
+- required runtime revalidation scope / not-required reason
+- `full_snapshot_invalidated` 与必要 reason
+- durable state：`open | closed | escalated`
+
+`advisory` 不是 blocking finding state；它可以留在 review judgement，但不进入 blocking closure lineage。历史 package finding 的 `verified-closed/advisory` 枚举保持原样，不为 system schema 回写。
+
+## 9. Closure Authority Routing
+
+每个 blocking system finding 在任一时点必须恰有一个 effective route：
+
+- `local-close`：closure authority 属于满足本 finding 合同的 Fresh Isolated Local Review 与声明 revalidation evidence。
+- `system-rereview`：closure authority 属于新的 System Reviewer event。
+
+Route 决定谁有权关闭 finding，不决定 review depth。Origin、category、diff size、文件数或修复提交数都不能单独决定 route。
+
+Route 判断以失效的 assurance conclusion 为核心：
+
+- 根因和影响可局部界定，Product/Technical/shared contract 与 major architecture 未实质改变，且 revalidation scope 可完整声明 → `local-close`。
+- 修复可能使 system-level semantic conclusion 失效，或 locality 无法可靠界定 → `system-rereview`。
+
+## 10. Local-close contract
+
+`local-close` 至少需要：
+
+1. fixed repair candidate；
+2. 未参与修复的 Fresh Isolated Local Review pass；
+3. declared semantic revalidation 全部满足；
+4. declared runtime revalidation 在 required 时全部满足；
+5. required target/regression tests 对 repair candidate 实际运行；
+6. additive closure event 进入 Git Truth。
+
+Runtime revalidation 在 finding 已声明 runtime scope，或修复改变需要真实证明的 runtime-observable behavior 时 required。Local finding 不因此自动重跑整个 system runtime suite。
+
+若修复触及 shared contract、core state machine、authorization model、broad data model、unexpected multi-package redesign，或超出原 declared revalidation scope，local closure authority 立即撤销：
+
+`local-close → escalated → system-rereview`
+
+Escalation event 必须记录具体越界事实和新的 revalidation/invalidation 判断。不得用旧 local review 关闭已经越界的 repair。
+
+## 11. System-rereview and review depth
+
+`system-rereview` finding 可以由 Codex 实现修复、跑 local prerequisites 并形成 fixed candidate，但只能由新的 System Reviewer event 关闭。
+
+Review depth 单独决定：
+
+- `full_snapshot_invalidated=false` → 默认 targeted System Re-review；
+- `full_snapshot_invalidated=true` → Full System Re-review。
+
+Targeted event 必须声明 predecessor、revalidation findings 和完整 scope。它只对该 lineage/scope 建立新 assurance，不得声称全系统重新 full reviewed。
+
+Local closure 不创建 System Reviewer event。每次真实 System Reviewer invocation 都必须创建新 event；不得改写 predecessor report 或把多次 invocation 合并成一个历史 judgement。
+
+## 12. Full snapshot invalidation
+
+`full_snapshot_invalidated=true` 只表示：旧 Full System Review 不再能作为新 candidate 的 system-level assurance baseline。
+
+典型依据：
+
+- shared API/schema/event redesign；
+- authorization model redesign；
+- core state-machine redesign；
+- broad data-model redesign；
+- major architecture-path replacement；
+- multi-package redesign；
+- material Product / Technical Contract revision。
+
+以下事实本身不足以判 invalidated：文件多、diff 大、commit 多、修复耗时长、finding 来自 semantic review。Invalidation 必须指明哪些旧 system conclusions 因何失效；`true` 且 reason 为空是非法状态。
+
+## 13. Durable lineage and additive evidence
+
+Published System Review event 是 immutable historical judgement。Repair、route escalation、local closure 与 system-rereview closure 都以新 artifact 追加，不改写 source review。
+
+System finding 的当前 state 由 source finding 加后续 closure/escalation event chain 推导：
+
+- source finding 创建时为 `open`；
+- local authority 被撤销时追加 `escalated` event；
+- 满足有效 closure authority 时追加 `closed` event；
+- `escalated` 不是成功终态，仍须后续合法 closure。
+
+Runtime finding 若在初次 review 发布前建立，可进入同一 review event 并保留 `origin=runtime-verification`；若在发布后建立，使用独立 immutable finding artifact，再走同一 routing/closure contract。
+
+## 14. Bounded convergence
 
 Review 不无限循环：
 
@@ -135,7 +225,7 @@ Review 不无限循环：
 
 换 Runtime、session 或 reviewer 不自动清零 finding、snapshot count、attempts 或有效 evidence。
 
-## 10. Proportionality
+## 15. Proportionality
 
 低风险 reasoning artifact 可采用 Lightweight Review；高风险 execution artifact 可保留完整 evidence chain。复杂度与风险、可逆性和实际影响成比例。
 
@@ -143,6 +233,6 @@ Projection 只能减少无关加载，不能删掉当前 finding 所需的规范
 
 Standard Package 的 Lightweight Review 仍必须核 package intent/oracle、授权 scope、受影响兼容性、必要证据/测试和 escalation signal。Sensitive Package 的 Full Local Review 在此基础上深入实际触及的高影响边界。最终 cross-package consistency、整体 architecture 与 system-level evidence sufficiency 属于 System Review。
 
-## 11. Human Authority
+## 16. Human Authority
 
 Reviewer 可以给出 pass、blocking finding、evidence insufficient，但不能替用户完成 Gate、真实体验验收或业务取舍。

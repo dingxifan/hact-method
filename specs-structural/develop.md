@@ -18,7 +18,7 @@
 - **文件**：任务 reference 中的项目技术约束、Foundation、TRD/共享契约及测试入口可查
 - **source=sprint**：G3 已签（`plan-sprint` 完成）
 - **source=foundation**：G2(v0) 已签（`draft-foundation` 完成）；建造单元 = `iterations/v0/foundation-design.md`（获准的最小地基件 + 一根标杆切片），执行层按真实切片决定、无任务包队列
-- **source=integration**：上游 System Verification finding / runtime 失败场景已记录，修复任务包由 `integration-verify` 派出
+- **source=integration**：上游 System Verification finding / runtime 失败场景已记录，修复任务包由 `integration-verify` 派出；system finding id、effective route、locality 与 revalidation scope 使用现有任务包字段引用，不复制第二套 finding ledger
 - **source=manual-test**：验收问题已记录，修复任务包由 `manual-test` 派出
 - **source=bug / optimization**：任务包由 `dispatch-new` 派出，无 Gate 前置
 
@@ -101,6 +101,7 @@ api-contract:
 - [ ] PR 已推，description 5 段完整（含偏离说明和遗留问题）
 - [ ] **安全敏感改动**（权限/认证/数据隔离等四类）已有用户或其明确指定审批人的具体风险裁决（合并前唯一人工门；触及与否基于 diff 独立判定、不唯任务包 `risk` 自报，曾按 standard 范围审查的先补 sensitive 边界独审）
 - [ ] **PR 已合并到 master**（task 状态 `[merged]`；`code_reviews[]` 已记录轮次、report 目录与证据版本；finding 路由在报告中可追溯）
+- [ ] `source=integration` 若来自 system finding，本包只交付 fixed repair candidate 与 local evidence；`local-close` 回 System Verification 补 closure，`system-rereview` 等 System Reviewer event，不越权把 system finding 标 closed
 - [ ] 已授权任务集全部收尾完成：状态与按 source 必需的追踪/反馈记录已提交，执行/审查/测试结果均已接收；不存在未完成的本轮必要动作。单元 `done` 或单个任务独审通过不等于 develop 完成
 
 ---

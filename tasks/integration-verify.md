@@ -105,8 +105,9 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 | Frontend verification scenarios | `integration-tests/frontend/` 或项目等价位置 | 仅在完整档适用 |
 | Integration result | `integration-tests/result-{date}.md` 或项目等价位置 | 当前验证基线、场景、证据与结论 |
 | Integration evidence | `integration-tests/evidence/` 或项目等价位置 | 真实运行证据，按项目当前 schema |
-| System Review events | `iterations/vN/system-review/review-NNN.md` 或项目等价受控位置 | 对 fixed candidate 的 immutable full/targeted historical judgement；具体 schema 在 Phase 4 落实 |
-| System finding closure evidence | `iterations/vN/system-review/` 下的 additive artifact 或项目等价受控位置 | 不改写 source review；具体物理形态在 Phase 3–4 落实 |
+| System Review events | `iterations/vN/system-review/review-NNN.md` | `system-review/v1`；对 fixed candidate 的 immutable full/targeted historical judgement |
+| Post-publication runtime finding | `iterations/vN/system-review/findings/{finding-id}.md` | `system-finding/v1`；仅用于 review 发布后新建立的 runtime-origin finding |
+| System finding closure events | `iterations/vN/system-review/closures/{finding-id}/closure-NNN.md` | `system-finding-closure/v1` additive event；不改写 source judgement |
 
 ### State updates
 
@@ -145,9 +146,24 @@ System Verification 包含：
 
 首次 System Reviewer event 对 final candidate 做 `full` review。后续事件按前序 judgement 的失效范围为 `targeted` 或 `full`；每次 invocation 形成新的 immutable event，targeted event 声明 predecessor 与 revalidation scope。
 
-Review result 与 evidence state 是两条轴：evidence insufficient 不能建立 pass。具体 report/finding/closure schema、routing 与 full snapshot invalidation 在 Review Architecture Phase 3–4 落实；在此之前不得以临时文档改写本节语义。
+Review result 与 evidence state 是两条轴：evidence insufficient 不能建立 pass。事件与 closure contract 分别按 `templates/review-briefs/system-review.md`、`templates/review-briefs/system-finding-closure.md`；Phase 4 才实现 deterministic checker、hook 与 runtime wiring，不得先用临时枚举改写语义。
 
-### 5.4 Only current impact, but include seams
+### 5.4 System finding routing and closure
+
+System Review 与 Runtime Verification 建立的 blocking finding 共用 `protocols/review.md` 的 Finding Contract。
+
+Owner 必须为每个 finding 选择恰一个 effective route：
+
+- `local-close`：局部根因、局部影响、Contract/major architecture 不实质变化，且 semantic/runtime revalidation scope 可完整声明；
+- `system-rereview`：修复可能使 system-level semantic conclusion 失效，或 locality 不能可靠界定。
+
+`local-close` repair 通过 `develop(source=integration)` 形成 fixed candidate 和 Fresh Isolated Local Review evidence；返回本 Task 后完成仍 required 的 semantic/runtime revalidation，再追加 closure event。Local repair 超出授权 locality 时，追加 escalation event，把 effective route 改为 `system-rereview`，旧 local authority 失效。
+
+`system-rereview` repair 可以先完成 local prerequisites，但只有新的 System Reviewer event 有 closure authority。`full_snapshot_invalidated=false` 默认 targeted；`true` 必须有具体 invalidation reason 并进入 Full System Re-review。
+
+Finding origin/category 不决定 route，diff size 不决定 review depth。Local closure 不创建 system review event；System Reviewer 每次 invocation 都创建新 immutable event。
+
+### 5.5 Only current impact, but include seams
 
 验证范围以本期影响面为边界，同时必须覆盖本期改动触及的旧能力接缝。
 
@@ -155,7 +171,7 @@ Review result 与 evidence state 是两条轴：evidence insufficient 不能建�
 
 “全绿”只证明已执行测试的结果，不能替代 Contract reconciliation。
 
-### 5.5 Composition reconciliation
+### 5.6 Composition reconciliation
 
 执行场景前先核至少三类组合事实：
 
@@ -167,7 +183,7 @@ Review result 与 evidence state 是两条轴：evidence insufficient 不能建�
 
 准备核对不能代替实际运行；实际运行也不能代替上述静态组合核对。
 
-### 5.6 Backend penetration flows
+### 5.7 Backend penetration flows
 
 后端穿透流按**不同业务终态 / 分支决策**设计，而不是按输入种类或接口数量凑场景。
 
@@ -181,7 +197,7 @@ Review result 与 evidence state 是两条轴：evidence insufficient 不能建�
 
 场景数量由真实终态数量决定，没有固定上限或下限。
 
-### 5.7 External boundary gate
+### 5.8 External boundary gate
 
 Owner 必须识别本期新增或变化的真实外部边界，例如：
 
@@ -204,7 +220,7 @@ Owner 必须识别本期新增或变化的真实外部边界，例如：
 
 未运行边界是否阻断本 Task，取决于它是否是当前 Product / Technical Contract 的必要承诺，而不是取决于“有没有测试脚本”。
 
-### 5.8 Runtime verification depth
+### 5.9 Runtime verification depth
 
 默认采用**轻量档**：
 
@@ -229,7 +245,7 @@ Owner 必须识别本期新增或变化的真实外部边界，例如：
 
 没有用户任务、视觉基线变化或相关 evidence gap 时，不为了形式强制完整档；用户仍可明确要求扩大验证范围。
 
-### 5.9 Failure routing
+### 5.10 Failure routing
 
 发现问题后按根因分流：
 
@@ -238,11 +254,11 @@ Owner 必须识别本期新增或变化的真实外部边界，例如：
 - **必要 Evidence 不足** → 补真实 Evidence
 - **与本期承诺无关的未来改进** → backlog
 
-integration-verify 自身不直接修改业务逻辑。System finding 的 closure authority 不由 origin 决定；`local-close | system-rereview` 的持久化 routing 与 escalation 规则在 Phase 3 落实。未有合法 route/closure evidence 前，不得仅因修复代码已 merged 就宣布 system finding 关闭。
+integration-verify 自身不直接修改业务逻辑。System finding 的 closure authority 不由 origin 决定；未有合法 route、required revalidation 与 additive closure event 前，不得仅因修复代码已 merged 就宣布 system finding 关闭。
 
 不得通过修改文档来取消已确认承诺，也不得让代码迁就错误 Contract。
 
-### 5.10 Re-test and evidence reuse
+### 5.11 Re-test and evidence reuse
 
 修复进入 Accepted Project Truth 后，必须重验证受影响的组合路径。
 
@@ -250,7 +266,7 @@ integration-verify 自身不直接修改业务逻辑。System finding 的 closur
 
 Task 完成时，每个 required scenario 都必须有**对当前 Accepted implementation 仍有效**的明确结论。
 
-### 5.11 Blocking vs non-blocking
+### 5.12 Blocking vs non-blocking
 
 只有不影响本期必要承诺、主流程和真实可接受性的事项才能标 non-blocking。
 
@@ -275,6 +291,8 @@ Task 完成时，每个 required scenario 都必须有**对当前 Accepted imple
 - result 中每个已执行场景都有 evidence pointer
 - 每个未运行场景 / boundary 都有明确原因和承接点
 - blocking finding 均已关闭
+- 每个 blocking finding 在每个 lineage point 恰有一个 effective route
+- 每个 closed finding 都有满足其 closure authority 的 additive event；source judgement 未被改写
 - 无 unresolved escalation、pending system-rereview obligation 或缺失的 semantic/runtime revalidation scope
 - 所有派生 `develop(source=integration)` 修复已 `merged`
 - 完整档适用时，required frontend scenario 与 visual smoke evidence 完整
@@ -292,6 +310,9 @@ Task 完成时，每个 required scenario 都必须有**对当前 Accepted imple
 - required user task / terminal state 覆盖合理
 - 外部边界结论没有把未验证冒充通过
 - 当前所有 blocking 缺口已由真实修复 / revision / authority closure 解决
+- local-close finding 未越出其 locality assumptions；越界者已 escalated
+- system-rereview finding 仅由新的 System Reviewer event 关闭
+- `full_snapshot_invalidated` 判断有具体失效结论依据，不以 diff size 替代
 - 当前 system-level assurance 依赖有效 closure lineage，而不是机械要求“最后一次 full review 必须 pass”
 
 ## 7. Review & Human Authority
@@ -322,7 +343,7 @@ integration-verify 不产生 Gate approval。
 - required composition reconciliation 已完成
 - 当前所需 System Reviewer event 已形成 immutable Shared Candidate Truth
 - required scenarios 已执行或有合法、明确的未运行结论
-- blocking finding 已关闭
+- blocking finding 已关闭；`open=0` 且 `escalated_unresolved=0`
 - 无 unresolved escalation、pending system-rereview obligation 或缺失的 required semantic/runtime revalidation
 - 派生 integration repair 已 `merged`
 - 当前 result / scripts / evidence 已形成稳定 Shared Candidate Truth

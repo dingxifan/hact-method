@@ -66,7 +66,7 @@ Task Contract 只定义 `develop` 独有规则。共同状态、Git truth、revi
 
 - `source=sprint`：G3 已 approved。
 - `source=foundation`：适用的 G2 / V0 Foundation authority 已完成。
-- `source=integration`：已有来自 `integration-verify` 的具体失败证据和修复边界。
+- `source=integration`：已有来自 `integration-verify` 的具体 system finding / runtime failure evidence、effective route、授权 locality 与 required semantic/runtime revalidation scope。
 - `source=manual-test`：已有来自 `manual-test` 的具体验收 finding 和修复边界。
 - `source=bug | optimization`：B Intake 已完成真实调查、问题界定、contract impact、scope 与实施授权；不运行 G1–G5。
 
@@ -104,6 +104,7 @@ Development Intake / Task Package 无论采用何种序列化，至少要能表�
 - 被前端消费的 API contract
 - migration / schema / queue / state-machine 定义
 - prior review report 与未关闭 finding
+- source system review/finding artifact、effective route 与 required revalidation scope（`source=integration` 且由 system finding 派生时）
 - Shared Candidate snapshot
 - recovery pointer / progress evidence
 - 项目当前已有 checker、hook、test entry 与 review evidence schema
@@ -265,6 +266,31 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 正常跨 Runtime 接续基于 Git snapshot、Task Contract、status 与 evidence，不基于聊天历史。
 
+### 5.10 System finding repair
+
+`source=integration` 来自 blocking system finding 时，现有 Development Intake / Task Package 必须用已有字段明确引用：
+
+- stable finding id 与 source review/finding artifact；
+- expected/effective route；
+- 已授权 local repair boundary；
+- required semantic revalidation scope；
+- required runtime revalidation scope或 not-required reason；
+- escalation conditions。
+
+不为此增加第二套 repair task schema。`reference/context/acceptance-criteria/do-not/escalate-if` 足以承载 repair contract；finding/route 的 authoritative truth 留在 System Verification artifacts。
+
+若 route 为 `local-close`：
+
+1. 在授权 locality 内形成 fixed repair candidate；
+2. 运行 required target/regression tests；
+3. 使用未参与修复的 Fresh Isolated Local Review 核 finding 根因、修复增量、声明 semantic scope 与受影响调用链；
+4. 现有 package review 若明确引用 system finding 并覆盖上述 scope，可同时满足 Fresh Isolated Local Review，不重复派第二次同责任 review；
+5. 把 fixed candidate、local review 与已完成 revalidation evidence 交回 `integration-verify`；尚需真实 runtime 的部分由该 Task 继续完成并追加 closure event。
+
+若 repair 触及 shared contract、core state machine、authorization model、broad data model、unexpected multi-package redesign，或超出声明 scope，立即停止使用 local authority，记录具体越界证据并交回 `integration-verify` 追加 escalation event。不得扩大 do-not/scope 后继续声称 local-close。
+
+若 route 为 `system-rereview`，develop 只负责 fixed repair candidate、local prerequisites 与 evidence。即使 package/local review pass、测试全绿、repair 已 merged，也不能把 system finding 标 closed；closure 必须引用新的 System Reviewer event。
+
 ## 6. Verification
 
 ### Deterministic
@@ -278,6 +304,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - 项目实际存在的 build / type / lint / test 入口已按适用范围运行
 - 当前 repo 已有 checker / hook 要求已满足
 - independent review chain 的结构、snapshot 与 finding closure 合法
+- `source=integration` system finding repair 的 source id、effective route、locality 与 revalidation evidence 可追溯
 - secret / credential 不进入版本化 artifact
 - `supersedes` 非空时 retirement obligation 已结账
 - 最终 Accepted snapshot 与通过 review / verification 的世界一致
@@ -334,7 +361,7 @@ Reviewer 必须按 `protocols/review.md` 的 same-source projection，自行读�
 
 `full-local` 仍是包级审查：它对当前包触及的 sensitive boundary、受影响调用链、局部 shared contract 与必要证据做完整独立核对，但不因此冒充 System Full Independent Review。
 
-Phase 3 schema alignment 前，现有 `develop-review-round/v2` 不新增临时字段：`risk` 继续承载 classification，Reviewer 在报告正文明确本轮 effective mode 与升档依据。不得把历史 `mode=full` 回填解释为 target `full-local`，也不得据此声称历史 package 已执行新 policy。
+现有 `develop-review-round/v2` 保持兼容，不为 package effective mode 新增字段：`risk` 继续承载 classification，Reviewer 在报告正文明确本轮 effective mode 与升档依据。不得把历史 `mode=full` 回填解释为 target `full-local`，也不得据此声称历史 package 已执行新 policy。
 
 ### Finding routing
 
@@ -421,6 +448,7 @@ Runtime 切换、恢复、新 reviewer、finding id 变化都不能清零上述�
 
 - 最终 deterministic verification 对**将被接受的同一 snapshot**通过
 - independent review 无未关闭 blocking finding
+- `source=integration` repair 只声明本 develop Task 完成，不越权声明 system finding 已关闭
 - 必要 sensitive Human Authority 已完成
 - 实现、测试与必要 evidence 已进入 Accepted Project Truth
 - `status.yml` 已准确记录 Task `merged` 与必要 pointer

@@ -149,7 +149,7 @@ Package classification 与 effective mode 由 `tasks/develop.md` 决定。Codex 
 - lightweight：Fresh Isolated Context 核 package intent/oracle、scope、受影响兼容性、必要 evidence/tests 与 escalation signals；
 - full-local：在同一基础上深入实际触及的 sensitive boundary、局部 shared contract 与完整受影响调用链。
 
-实际 fixed diff 触发升档时，补足 full-local scope；Phase 3 schema 落实前，在现有 review evidence 正文写明 effective mode 与依据，不临时扩展 checker enum。不得因已启动 lightweight reviewer 就忽略升档，也不得把任何 package review 标成 System Full Review。
+实际 fixed diff 触发升档时，补足 full-local scope；在现有 review evidence 正文写明 effective mode 与依据，不为此扩展 package checker enum。不得因已启动 lightweight reviewer 就忽略升档，也不得把任何 package review 标成 System Full Review。
 
 ### 7.5 System Verification realization
 
@@ -160,7 +160,31 @@ Package classification 与 effective mode 由 `tasks/develop.md` 决定。Codex 
 
 两条 lane 可以交错。System Reviewer 的 runtime evidence request 返回 runtime lane；runtime lane 新发现的问题进入同一 system finding lifecycle。不得把两者压成一次普通 package review，也不得因为一个 lane 已通过就跳过另一个。
 
-每次 System Reviewer invocation 都形成新的 immutable event。Targeted event 必须接 predecessor 与声明 scope；具体 schema、finding routing、closure 与 checker wiring按 Phase 3–4 contract 实现，Runtime Adapter 不先发明临时格式。
+每次 System Reviewer invocation 都形成新的 immutable event。Targeted event 必须接 predecessor 与声明 scope；artifact contract 与 routing 读取 Phase 3 templates/Review Protocol，deterministic checker、hook 与 Gate wiring 留 Phase 4，Runtime Adapter 不发明临时格式。
+
+### 7.6 System finding routing realization
+
+Codex 处理 system finding 时先从 Git artifact 读取 source judgement、current route、required revalidation 与已有 event chain，不从聊天摘要重建状态。
+
+`local-close`：
+
+1. 派 `develop(source=integration)` 在声明 locality 内形成 fixed repair candidate；
+2. 复用该 develop Task 的 Fresh Isolated Package Review 作为 local review，只要它明确覆盖 source finding 与 required semantic scope；
+3. 回到 `integration-verify` 补齐仍 required 的 runtime/semantic revalidation；
+4. 所有条件满足后追加 `system-finding-closure/v1` event。
+
+修复越出 locality 时，不让实现者自行扩大 authority；持久化 escalation evidence，把 effective route 改为 `system-rereview`，再根据 `full_snapshot_invalidated` 选择 targeted/full System Reviewer invocation。
+
+`system-rereview`：Codex 可以完成 repair 与 local prerequisites，但只能把 fixed candidate 和 evidence 交给 Fresh Isolated System Reviewer。只有新的 System Reviewer event 可以支持 closed event；runtime executor、repair owner 或主线总结都不能替代该 authority。
+
+Event 写入规则：
+
+- source review/finding artifact immutable；
+- review、standalone runtime finding、closure/escalation 各写新文件；
+- sequence 不覆盖已有文件，不复用 id；
+- targeted review 指向 predecessor 和 revalidation scope；
+- `full_snapshot_invalidated=true` 必须同时持久化具体 invalidation reason；
+- status 只保留最小 pointer/obligation index，不能复制完整 finding chain。
 
 ## 8. Git Delivery Adapter
 

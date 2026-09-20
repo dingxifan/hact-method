@@ -219,7 +219,7 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并按 `git diff --binary {reviewed_base} {reviewed_head}` 的原始字节计算 SHA-256。首次 `reviewed_base` 取**当前任务** preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。B 类在派审前另运行 `node ../hact-method-lab/templates/scripts/check-b-task.js {task-package} --diff {reviewed_base} {reviewed_head} --root .`，用方法论当前版检查器对实际固定 diff 复核共享契约边界；非 0 先查字段/范围缺口；实际越出 B 类边界则退出并处理上游决策，不得带失败派审。
 
-**首次 policy-selected Package Review**：主线以 `fork_turns="none"` 派不继承实现历史的 Codex 审查子代理（实际接口不支持空历史时报告缺口），读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 task-id、layer、迭代、classification、effective mode、固定 base/head 和权威输入位置。standard 默认 lightweight；sensitive 或实际 diff 命中升档条件时做 full-local。审查员自读权威输入，按 brief 与实际改动确定检查范围；Phase 3 schema 对齐前仍使用既有 round 模板并在正文写明 effective mode，不把其中 `mode=full` 解释为 System Full Review。
+**首次 policy-selected Package Review**：主线以 `fork_turns="none"` 派不继承实现历史的 Codex 审查子代理（实际接口不支持空历史时报告缺口），读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 task-id、layer、迭代、classification、effective mode、固定 base/head 和权威输入位置。standard 默认 lightweight；sensitive 或实际 diff 命中升档条件时做 full-local。`source=integration` 来自 system finding 时同时提供 source artifact、finding id、effective route、locality 与 revalidation scopes。审查员自读权威输入，按 brief 与实际改动确定检查范围；现有 package review 明确覆盖 system finding 时同时充当 Fresh Isolated Local Review，不重复派同责任审查。继续使用既有 round 模板并在正文写明 effective mode，不把其中 `mode=full` 解释为 System Full Review。
 
 **整改 targeted review**：默认接续未参与实现的原独立审查员，传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；不可用时用空历史新审查员按前次独立报告接续，不为等待原单元阻塞。可核执行者提供的原始日志，不采信自评替代验证，不传实现辩解。核目标 finding、修复增量与受影响调用链；局部新发现可处理，扩审须指出哪些结论因何变化失效。升级条件与轮次上限统一按 round 模板，新增文件/模块本身不触发 full。
 
@@ -358,6 +358,8 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 - `source=foundation` → status.yml 把 `foundation` task 改 `merged`、`pr` 填 `{N}`；**把标杆穿透切片登记进 项目根 `reusables.md`**（标"参考实现 / 活文档，新功能照此骨架样式做"）；走骨架完成，下游进 V1 `draft-prd-vN`
 - `source=bug / optimization` → 无需第二份总账；status.yml 已记录 PR 和合并状态
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"PR#{N} 已合并，可复测"
+
+`source=integration` repair 已合并只表示 fixed repair candidate 进入 Accepted Project Truth。若对应 system finding 为 `local-close`，回 `integration-verify` 补齐尚未完成的 semantic/runtime revalidation 并追加 closure event；若实际范围越界，先追加 escalation event；若为 `system-rereview`，等待新的 System Reviewer event。不得在 develop 状态或 PR 文字中直接把 system finding 宣布 closed。
 
 ### feedback 检查 / 就地分流
 

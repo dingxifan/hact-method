@@ -1,4 +1,4 @@
-<!-- develop 独立证据审查逐轮报告模板；现有 v2 首轮序列化仍写 full，整改后 targeted。target package effective mode 在 Phase 3 schema 对齐前写正文；此处 full 不表示 System Full Review。 -->
+<!-- develop 独立证据审查逐轮报告模板；现有 v2 首轮序列化仍写 full，整改后 targeted。target package effective mode 写正文；此处 full 不表示 System Full Review。 -->
 ---
 schema: develop-review-round/v2
 review_policy: bounded-v1
@@ -58,5 +58,7 @@ findings: []
 使用项目 `node scripts/build-review-anchor.js --task {task-id} --head {tree} --write` 直接生成下一轮草稿：自动读取 preflight/末轮、带入开放问题和机械锚，同快照自动识别 evidence_only。conclusion=pending 必须由独立审查员判定；不自动关闭问题或批准扩展。必要的规格复核用同一命令追加 `--spec --base {tree}`，普通 files 登记不生成 spec-round。旧 `{base} {head} .` 用法保留，只输出机械字段。
 
 报告中的 `reviewed_base/reviewed_head` 必须是当前仓真实存在的 commit/tree；`changed_files` 与 `diff_sha256` 必须从这两个对象机械重算。`conclusion: pass` 时不得残留 `severity: blocking + status: open`；targeted 报告须逐条回写每个 `target_finding_ids` 的关闭或仍开放状态。
+
+`source=integration` 修复 system finding 时不修改本 schema：在“本轮证据与判断”引用 source system finding id/artifact、effective route、authorized locality 与本轮覆盖的 semantic/runtime revalidation scope。该 round 可作为 Fresh Isolated Local Review evidence，但它的 package finding `verified-closed` 只表示本轮局部审查问题闭合，不等于 source system finding 已由合法 closure authority 关闭；最终状态由 additive system closure event 推导。
 
 存量 `review_profile`、`review_profile_version` 与 profile JSON 仅作历史附件保留，不生成、更新或校验；续做直接沿原报告链核固定 diff 和未关闭问题，不改写旧报告。

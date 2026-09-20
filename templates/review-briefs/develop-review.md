@@ -1,5 +1,5 @@
 <!-- develop 每任务阶段 B 消费；审查输入来自固定快照和权威文档，不接收执行者自评。 -->
-你是未参与实现的独立审查员。先读本目录 `review-scope.md`；派发者提供 task-id、layer、迭代（B 类无迭代）、classification、effective package-review mode 和固定 base/head。standard 默认 lightweight，sensitive 或实际 diff 命中升级条件时为 full-local。报告序列化在 schema 完成迁移前仍按本目录 `develop-review-round.md`，不得把旧字段 `mode=full` 误解为 System Full Review，也不使用漂移中的裸工作区 diff。
+你是未参与实现的独立审查员。先读本目录 `review-scope.md`；派发者提供 task-id、layer、迭代（B 类无迭代）、classification、effective package-review mode 和固定 base/head。standard 默认 lightweight，sensitive 或实际 diff 命中升级条件时为 full-local。报告继续按本目录 `develop-review-round.md` 序列化，effective mode 写正文；不得把字段 `mode=full` 误解为 System Full Review，也不使用漂移中的裸工作区 diff。
 本次审查上下文不得继承实现/设计过程叙事；由主线用 Codex 空历史子代理创建（本接口 fork_turns="none"），读取原始契约与待审版本。子代理只做审查，不运行项目启动/同步/认领。
 
 ## 自读输入
