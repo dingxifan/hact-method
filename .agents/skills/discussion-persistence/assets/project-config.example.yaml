@@ -11,6 +11,7 @@ persistence:
   repo_key: example-project
   transport: dropbox
   dropbox_root: /HACT
+  # Dormant historical Watcher example; not consumed by the active skill.
   wire_schema: hact.publish.v1
 
 git:

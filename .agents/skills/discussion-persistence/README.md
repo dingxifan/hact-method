@@ -37,7 +37,8 @@ Examples:
 
 The existing Watcher already supports multiple registered repositories through `config.repos`, and can append to explicitly allowed candidate branches through `allowed_incremental_base_prefixes`.
 
-V1 keeps the existing `hact.publish.v1` wire format for compatibility. The wire-format name is legacy and does not make the Skill HACT-specific.
+Historical Watcher experiments used `hact.publish.v1`; it is dormant and is not
+an active persistence wire format or fallback.
 
 ## Out of scope for V1
 

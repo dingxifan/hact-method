@@ -1202,14 +1202,13 @@ function checkSprint(iteration, root, audit = true) {
   for (const p of packages) {
     const where = p.file;
     const packageSchema = scalarText(p.fm['package-schema']);
-    // package-schema 由新版任务包显式声明。历史 V6 包没有该字段，不能因为后来新增
-    // contract-impact / asset-writes / supersedes 等字段而被追溯判红；它们仍经过下方
-    // 既有的依赖、引用和 AC 校验，但不获得新版并行资产声明的资格。
+    // Core lifecycle accepts only the current schema. Historical facts are
+    // normalized outside queue/status lifecycle, never grandfathered here.
     const strictPackageSchema = packageSchema === '2';
-    if (packageSchema && packageSchema !== '2') fail('任务包 schema', where, `${p.id}：未知 package-schema=${packageSchema}`);
+    if (packageSchema !== '2') fail('任务包 schema', where, `${p.id}：Core task 必须显式 package-schema: 2（当前=${packageSchema || '缺失'}）`);
     if (strictPackageSchema && valEmpty('module', p.fm.module)) fail('任务包 module', where, `${p.id}：schema 2 必填 TRD 稳定 module`);
     // 1. 字段完备
-    const requiredFields = strictPackageSchema ? REQUIRED : REQUIRED.filter(key => !['contract-impact', 'asset-writes', 'supersedes'].includes(key));
+    const requiredFields = REQUIRED;
     for (const key of requiredFields) {
       if (valEmpty(key, p.fm[key])) fail('字段完备', where, `${p.id}：字段「${key}」缺失/为空/占位`);
     }
@@ -1321,9 +1320,7 @@ function checkSprint(iteration, root, audit = true) {
   for (const conflict of assetConflicts) {
     fail('共享写集冲突', queueDir, `${conflict.left} 与 ${conflict.right} 同写 ${conflict.overlap.join('、')}，但 depends_on 无任一方向的依赖路径；补依赖并标串行，或证明并拆成不重叠资产键`);
   }
-  if (packages.some(p => !p.strictSchema))
-    human('共享写集冲突', '含存量任务包，涉及旧包的共享写入需人工核对；未获得新版并行资产声明资格');
-  else if (!assetConflicts.length) pass('共享写集冲突', '同文件/同共享资产写入均已由依赖路径串行化');
+  if (!assetConflicts.length) pass('共享写集冲突', '同文件/同共享资产写入均已由依赖路径串行化');
 
   // 4. AC 逐条反向覆盖：PRD 每个 AC-nn 被 ≥1 任务包 tag 引用（替代旧功能级——逐条严格强于功能级）
   if (prdIds === null) {

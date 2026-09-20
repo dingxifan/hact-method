@@ -180,10 +180,9 @@ Discussion Persistence 是 repo-local workflow skill，只用于把**已经冻�
 - 只提交本轮冻结文件
 - ordinary fast-forward append
 - 不 force push
-- Watcher success 后仍核 GitHub exact commit
 - 新 commit direct parent 必须等于 submitted `base_sha`
 
-上传 acknowledgement 为 `FETCH_FAILED` / timeout / missing ack 时进入 Skill 定义的 `INDETERMINATE`；不得自动重传、换 job id、换 branch 或重建 artifact。
+native write 或 local execution 的不确定结果先以远端 Git truth 核实；不得自动换 transport、重建 artifact 或改变 branch。
 
 ## 10. Recovery & Context Compaction Adapter
 

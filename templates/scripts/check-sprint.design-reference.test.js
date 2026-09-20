@@ -94,7 +94,7 @@ const malformedCore = task('legacy-full', ['design.md 全文（存量）'])
 write('iterations/v2/queue/demo-v2-001.md', malformedCore);
 assert.match(run().stdout, /字段「contract-impact」|字段「asset-writes」|字段「supersedes」/, 'Core package 缺当前字段必须失败');
 write('iterations/v2/queue/demo-v2-001.md', malformedCore.replace('package-schema: 2', 'package-schema: 3'));
-assert.match(run().stdout, /未知 package-schema=3/, '未知版本不得当存量放行');
+assert.match(run().stdout, /Core task 必须显式 package-schema: 2/, '未知版本不得当存量放行');
 write('iterations/v2/queue/demo-v2-001.md', task('legacy-full', ['design.md 全文（存量）']));
 write('iterations/v2/queue/demo-v2-002.md', task('legacy-full', ['design.md 全文（存量）']).replaceAll('demo-v2-001', 'demo-v2-002'));
 assert.match(run().stdout, /同写 .*但 depends_on/, '两个 schema 2 包同文件无依赖仍应阻断');
