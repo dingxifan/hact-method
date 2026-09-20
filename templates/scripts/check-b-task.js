@@ -169,27 +169,25 @@ function validate(file) {
   if (!fm) return ['缺 YAML frontmatter'];
   if (!['bug', 'optimization'].includes(String(fm.source || '').toLowerCase()))
     errors.push(`source=${fm.source || '<缺失>'}，B 类只能 bug/optimization`);
-  if ('package-schema' in fm && String(fm['package-schema']) !== '2') errors.push('未知 package-schema，不能当作存量包放行');
+  if (String(fm['package-schema']) !== '2')
+    errors.push(`active B package 必须显式使用 package-schema: 2（当前=${fm['package-schema'] || '缺失'}）`);
   const impact = String(fm['contract-impact'] || '');
   if (!['none', 'governed'].includes(impact)) errors.push('contract-impact 必须为 none 或 governed');
   const nonempty = value => typeof value === 'string' && value.trim() && !/<待填>|TODO/.test(value);
-  if (String(fm['package-schema']) === '2' || impact === 'governed') {
-    if (!['standard', 'sensitive'].includes(fm.risk)) errors.push('risk 必须为 standard 或 sensitive');
-    for (const key of ['task-id', 'title', 'description', 'context', 'risk'])
-      if (!nonempty(fm[key])) errors.push(`缺有效 ${key}`);
-    for (const key of ['files', 'reference'])
-      if (!Array.isArray(fm[key]) || !fm[key].length || !fm[key].every(nonempty)) errors.push(`缺有效 ${key} 列表`);
-    for (const key of ['depends_on', 'do-not'])
-      if (!Array.isArray(fm[key])) errors.push(`缺 ${key} 列表；无则 []`);
-    const ac = source.match(/^acceptance-criteria:\s*\n((?:[ \t]+.*\n|\s*\n)*)/m);
-    const criteria = ac ? ac[1].split(/^[ \t]+-[ \t]+\|[-+]?[ \t]*$/m).slice(1) : [];
-    if (!criteria.length || criteria.some(item => ['intent', 'oracle'].some(key => {
-      const match = item.match(new RegExp('^[ \\t]+' + key + ':[ \\t]*(.+)$', 'm'));
-      return !match || !nonempty(match[1]);
-    }))) errors.push('每条 acceptance-criteria 都需可验证的 intent/oracle');
-  }
+  if (!['standard', 'sensitive'].includes(fm.risk)) errors.push('risk 必须为 standard 或 sensitive');
+  for (const key of ['task-id', 'title', 'description', 'context', 'risk'])
+    if (!nonempty(fm[key])) errors.push(`缺有效 ${key}`);
+  for (const key of ['files', 'reference'])
+    if (!Array.isArray(fm[key]) || !fm[key].length || !fm[key].every(nonempty)) errors.push(`缺有效 ${key} 列表`);
+  for (const key of ['depends_on', 'do-not'])
+    if (!Array.isArray(fm[key])) errors.push(`缺 ${key} 列表；无则 []`);
+  const ac = source.match(/^acceptance-criteria:\s*\n((?:[ \t]+.*\n|\s*\n)*)/m);
+  const criteria = ac ? ac[1].split(/^[ \t]+-[ \t]+\|[-+]?[ \t]*$/m).slice(1) : [];
+  if (!criteria.length || criteria.some(item => ['intent', 'oracle'].some(key => {
+    const match = item.match(new RegExp('^[ \\t]+' + key + ':[ \\t]*(.+)$', 'm'));
+    return !match || !nonempty(match[1]);
+  }))) errors.push('每条 acceptance-criteria 都需可验证的 intent/oracle');
   if (impact === 'governed') {
-    if (String(fm['package-schema']) !== '2') errors.push('governed 必须使用 package-schema: 2 的短包');
     if (!Array.isArray(fm['asset-writes']) || !fm['asset-writes'].length || !fm['asset-writes'].every(nonempty))
       errors.push('governed 必须列出受影响共享资产，不能填 []');
     // reference/context 承接已确认意图、兼容边界与验证入口；真实性由 preflight 与独立审查核对。
