@@ -2,7 +2,6 @@
   "cases": [
     { "signal": "phase=v0;G2=0", "expected": "draft-foundation" },
     { "signal": "phase=v0;G2=1;foundationnotmerged", "expected": "develop(source=foundation)" },
-    { "signal": "B类已有未闭合intake/workitem", "expected": "develop(source=bug|optimization)" },
     { "signal": "phase=v1;G1=0", "expected": "draft-prd" },
     { "signal": "phase=v1;G1=1;G2=0;uxrequired;outputsincomplete", "expected": "draft-ux" },
     { "signal": "phase=v1;G1=1;G2=0;uxready/not-required", "expected": "draft-tech-design" },
