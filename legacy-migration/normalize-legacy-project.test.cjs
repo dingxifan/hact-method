@@ -56,6 +56,47 @@ try {
     assert.ok(/^[a-f0-9]{40}$/.test(resumed.commit));
     assert.deepStrictEqual(verify(resumeRoot), []);
   } finally { fs.rmSync(resumeRoot, { recursive: true, force: true }); }
+
+  // The normalizer compares raw Git blob bytes to the working file.  Exercise
+  // the policy explicitly: leading blanks, LF, CRLF, and a missing terminal
+  // newline are all preserved exactly rather than silently normalized.
+  for (const [label, status] of [
+    ['leading-blank-lf', '\n\ntasks:\n  - id: old-b-001\n    status: merged\n'],
+    ['crlf', 'tasks:\r\n  - id: old-b-001\r\n    status: merged\r\n'],
+    ['no-trailing-newline', 'tasks:\n  - id: old-b-001\n    status: merged'],
+  ]) {
+    const byteRoot = fs.mkdtempSync(path.join(os.tmpdir(), `hact-legacy-bytes-${label}-`));
+    try {
+      const bg = args => cp.execFileSync('git', ['-C', byteRoot, ...args], { encoding: 'utf8' }).trim();
+      bg(['init']); bg(['config', 'user.name', 'Test']); bg(['config', 'user.email', 'test@example.com']); bg(['config', 'core.autocrlf', 'false']);
+      fs.writeFileSync(path.join(byteRoot, 'status.yml'), status);
+      bg(['add', 'status.yml']); bg(['commit', '-m', 'legacy bytes']);
+      const base = bg(['rev-parse', 'HEAD']);
+      normalize(byteRoot, base);
+      assert.deepStrictEqual(verify(byteRoot), [], `${label}: identical raw bytes verify`);
+      const snapshot = fs.readFileSync(path.join(byteRoot, SNAPSHOT));
+      assert.deepStrictEqual(snapshot, Buffer.from(status), `${label}: snapshot preserves exact bytes`);
+    } finally { fs.rmSync(byteRoot, { recursive: true, force: true }); }
+  }
+
+  // Use a real Git pre-commit failure, not an index simulation. The failed
+  // commit must retain exactly the staged artifacts and resume may only commit
+  // those bytes after the hook is removed.
+  const hookRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-legacy-hook-resume-'));
+  try {
+    const hg = args => cp.execFileSync('git', ['-C', hookRoot, ...args], { encoding: 'utf8' }).trim();
+    hg(['init']); hg(['config', 'user.name', 'Test']); hg(['config', 'user.email', 'test@example.com']);
+    fs.writeFileSync(path.join(hookRoot, 'status.yml'), 'tasks: []\n'); hg(['add', 'status.yml']); hg(['commit', '-m', 'legacy']);
+    const base = hg(['rev-parse', 'HEAD']);
+    const hook = path.join(hookRoot, '.git', 'hooks', 'pre-commit');
+    fs.writeFileSync(hook, '#!/bin/sh\necho intentional-normalizer-hook-failure >&2\nexit 1\n');
+    try { normalize(hookRoot, base); assert.fail('failing hook must interrupt normalization commit'); }
+    catch (error) { assert.match(String(error.stderr || error.message), /intentional-normalizer-hook-failure/); }
+    assert.deepStrictEqual(hg(['diff', '--cached', '--name-only']).split(/\r?\n/).sort(), [MARKER, SNAPSHOT].sort(), 'hook failure preserves only real staged artifacts');
+    fs.unlinkSync(hook);
+    resume(hookRoot, base);
+    assert.deepStrictEqual(verify(hookRoot), [], 'real hook interruption resumes without source swap');
+  } finally { fs.rmSync(hookRoot, { recursive: true, force: true }); }
   console.log('✅ legacy normalization: truth freeze, admission refusal and tamper detection passed');
 } finally {
   if (!path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('unsafe temp cleanup');

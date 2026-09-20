@@ -132,7 +132,10 @@ function normalize(root, sourceBase) {
   write(root, SNAPSHOT, status);
   write(root, MARKER, JSON.stringify(marker, null, 2) + '\n');
   git(root, ['add', '--', MARKER, SNAPSHOT]);
-  git(root, ['diff', '--cached', '--check']);
+  // The frozen snapshot is byte-for-byte historical truth. Git's whitespace
+  // checker labels CRLF bytes as trailing whitespace, so apply it only to the
+  // generated JSON marker; the snapshot is protected by blob equality below.
+  git(root, ['diff', '--cached', '--check', '--', MARKER]);
   git(root, ['commit', '-m', 'chore(hact): freeze vNext legacy normalization baseline']);
   const errors = verify(root);
   if (errors.length) throw new Error(errors.join('\n'));
@@ -152,7 +155,7 @@ function resume(root, sourceBase) {
   if (marker.source_base !== sourceBase) throw new Error('resume source_base 与已暂存 marker 不一致；不得换 source');
   if (git(root, ['diff', '--name-only']).split(/\r?\n/).filter(Boolean).length)
     throw new Error('resume 要求 artifacts 的工作树与 index 一致');
-  git(root, ['diff', '--cached', '--check']);
+  git(root, ['diff', '--cached', '--check', '--', MARKER]);
   git(root, ['commit', '-m', 'chore(hact): freeze vNext legacy normalization baseline']);
   const errors = verify(root);
   if (errors.length) throw new Error(errors.join('\n'));
