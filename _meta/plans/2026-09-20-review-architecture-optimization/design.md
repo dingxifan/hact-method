@@ -1,579 +1,1461 @@
-# HACT vNext Review Architecture Optimization — Design Contract
+# HACT vNext — Review Architecture Optimization Design
 
-## 0. Status
+> Status: Design Freeze Candidate  
+> Scope: Review Architecture Optimization  
+> Baseline: Stable HACT vNext mainline  
+> Proposed branch: `hact/review-architecture-optimization`
 
-- Phase: Design + Contract Alignment
-- Stable baseline: `main@a8cadefe2a2775e1ab5ccec3b15baad9d036b07b`
-- Scope: A-class review architecture only
-- Runtime/checker implementation: not started in this phase
-- Frozen A/B Run 2 / Run 3: out of scope; do not modify or rerun
+---
 
-Primary principle:
+## 1. Purpose
+
+This document defines the target review architecture for HACT vNext after completion of the main vNext convergence work.
+
+The optimization is intentionally separated from the preceding Task / Protocol / Runtime convergence effort.
+
+Its governing principle is:
 
 > **One Expensive Full Review, Local Closure by Default**
 
-This design turns the prior discussion into a formal contract. It does not create a second review methodology beside HACT; it narrows package review responsibility and moves system assurance to the system level.
+The objective is not to reduce review rigor indiscriminately.
+
+The objective is to redistribute assurance responsibility so that:
+
+- Package Review prevents local defects and contract violations from propagating;
+- System Full Independent Review challenges the final integrated system once at system scope;
+- Runtime Integration Verification proves real execution behavior;
+- findings normally close at the narrowest valid authority boundary;
+- repeated Full System Review occurs only when previous system-level conclusions have been materially invalidated.
 
 ---
 
-## 1. Problem
+# 2. Design Goals
 
-Current `develop` semantics require every package to pass independent review before Accepted Project Truth. That is useful for local containment, but when every ordinary package performs a heavy full review, the process pays system-level review cost repeatedly while still needing a later integration/system judgment.
+The architecture MUST:
 
-The optimization goal is not "remove review" and not "move every package review to another runtime".
-
-The goal is to separate:
-
-1. **Package Review = Error Containment**
-2. **System Full Independent Review = System Assurance**
-3. **Runtime Integration Verification = Runtime Proof**
-
-The three layers use different evidence and cannot replace one another.
-
----
-
-## 2. Non-goals
-
-This change must not:
-
-- redesign Task / Protocol / Runtime architecture;
-- add a parallel `Final Review` Core Task;
-- weaken immutable Git snapshot / fixed diff / accepted implementation binding;
-- replace runtime integration evidence with static review;
-- replace independent semantic review with tests;
-- change Human Authority or G1-G5 responsibilities;
-- reintroduce per-package human window switching;
-- rerun or reinterpret the frozen A/B experiments;
-- make "lighter review" mean "self-review" or "no evidence".
+1. preserve reliable local defect containment;
+2. reduce unnecessary repeated full-package independent review;
+3. establish one explicit system-level semantic assurance point;
+4. preserve real runtime verification as a distinct assurance source;
+5. route every blocking system finding to an explicit closure authority;
+6. make review findings and closure evidence Git Truth;
+7. support deterministic targeted revalidation;
+8. prevent routine fixes from causing repeated Full System Review;
+9. preserve broad re-review when prior system-level assurance is genuinely invalidated;
+10. avoid adding unnecessary Core Tasks or parallel review workflows.
 
 ---
 
-## 3. Review hierarchy
+# 3. Non-Goals
 
-### 3.1 Package Review
+This optimization does NOT attempt to:
 
-Purpose:
+1. redesign PRD / UX / TRD / Plan Sprint;
+2. redesign Gate topology;
+3. introduce a new parallel `Final Review` Core Task;
+4. broadly restructure Task / Protocol / Runtime architecture;
+5. optimize Package Review to minimum token consumption in the first implementation;
+6. redesign the complete severity taxonomy unless required by existing repository contracts;
+7. run another Method A/B architecture experiment before basic implementation validation;
+8. replace Human Authority, Manual Test, or Gate approval with AI review.
 
-> Prevent obvious defects, local contract violations, and high-risk mistakes from propagating into later packages.
+---
 
-Package Review is local to one `develop` task and remains independent from the implementer context.
+# 4. Core Architecture
 
-It must always answer:
+The target assurance architecture has three distinct responsibilities.
 
-- Did the package satisfy its `intent / oracle`?
-- Did implementation leave the authorized scope?
-- Is there an obvious compatibility regression on the affected call chain?
-- Did required target verification actually run and support the claim?
-- Does the actual fixed diff cross a sensitive boundary?
-- Is there an obvious defect that must not enter Accepted Project Truth?
+```text
+Package Review
+    ↓
+Local Error Containment
 
-It does **not** own:
+All Develop Packages Merged
+    ↓
 
-- cross-package architecture consistency;
-- whole-iteration ownership gaps;
-- duplicate truth-source detection across packages;
-- complete shared-contract coherence across all consumers;
-- final system state-machine / data-lifecycle coherence;
-- final system evidence sufficiency.
+SYSTEM VERIFICATION
+├─ Semantic / Holistic Independent Review
+└─ Runtime Integration Verification
+```
 
-Those belong to System Full Independent Review.
+These responsibilities are complementary.
 
-### 3.2 Standard package
+They MUST NOT be collapsed into one generic review mechanism.
 
-Default:
+---
 
-> **Lightweight Independent Package Review**
+# 5. Package Review Contract
 
-The review remains:
+## 5.1 Purpose
 
-- fresh;
-- isolated from the owner generation context;
-- fixed-snapshot based;
-- evidence based;
-- capable of producing blocking findings.
+Package Review exists for:
 
-Its semantic scope is intentionally bounded to:
+> **Error Containment**
 
-- package contract;
-- affected behavior;
-- obvious compatibility;
-- evidence validity;
-- risk escalation.
+It does NOT provide final System Assurance.
 
-It does not perform a full-system architecture review.
+A Package Review determines whether the package is safe to enter Accepted Project Truth and proceed into later integration.
 
-### 3.3 Sensitive package
+At minimum it checks:
 
-A package receives a **Full Local Package Review** when the actual fixed diff reaches a sensitive boundary, including at minimum:
+- package intent / oracle fulfillment;
+- authorized scope compliance;
+- obvious compatibility regressions;
+- validity of required evidence;
+- required target tests;
+- sensitive-risk escalation;
+- obvious defects that must not enter Accepted Project Truth.
 
-- authentication / authorization;
+---
+
+# 6. Package Review Policy
+
+Package review policy has two initial classes:
+
+```text
+standard
+sensitive
+```
+
+The corresponding effective review modes are:
+
+```text
+standard
+→ lightweight
+
+sensitive
+→ full-local
+```
+
+Only these two effective review modes are introduced in this design.
+
+No `medium`, `enhanced`, or similar intermediate mode is defined.
+
+---
+
+## 6.1 Standard Package
+
+A Standard Package receives a Lightweight Package Review.
+
+`lightweight` means:
+
+> narrower assurance responsibility
+
+It does NOT mean:
+
+> weak correctness checking.
+
+The Lightweight Review remains responsible for local contract correctness and escalation detection.
+
+---
+
+## 6.2 Sensitive Package
+
+A Sensitive Package retains a fuller local independent review.
+
+Typical sensitive boundaries include:
+
+- authentication;
+- authorization;
 - data isolation;
 - irreversible migration;
 - destructive data operations;
 - billing / money / reconciliation;
 - externally irreversible side effects;
-- another explicitly governed high-impact boundary.
+- equivalent high-impact boundaries.
 
-Risk is derived from the actual diff, not only the task package declaration.
-
-A package initially marked standard must escalate if review observes a sensitive boundary.
+The final vocabulary and repository representation of sensitivity reasons MAY reuse existing HACT contracts where available.
 
 ---
 
-## 4. System Verification
+# 7. Classification and Effective Review Mode
 
-### 4.1 No new Final Review Core Task
+Package classification and actual review mode are separate truths.
 
-HACT does not add a new peer Task named `final-review`.
+Conceptual schema:
 
-The existing `integration-verify` stage becomes the canonical system-level verification stage in meaning.
+```yaml
+review_policy:
+  classification: standard
 
-The canonical Task name remains `integration-verify` during the first implementation phase to avoid Task-catalog inflation and unnecessary routing churn.
+  sensitive_reasons: []
 
-The user-facing / architectural phase name is:
+  escalation:
+    occurred: false
+    reasons: []
+
+  required_review:
+    mode: lightweight
+```
+
+Sensitive example:
+
+```yaml
+review_policy:
+  classification: sensitive
+
+  sensitive_reasons:
+    - authorization
+
+  escalation:
+    occurred: false
+    reasons: []
+
+  required_review:
+    mode: full-local
+```
+
+Development-time escalation example:
+
+```yaml
+review_policy:
+  classification: standard
+
+  sensitive_reasons: []
+
+  escalation:
+    occurred: true
+    reasons:
+      - authorization-boundary-discovered
+
+  required_review:
+    mode: full-local
+```
+
+A Standard Package MAY escalate to full local review.
+
+The architecture does not depend on downgrading a package from sensitive to lightweight during the same lifecycle.
+
+---
+
+# 8. Core Task Identity
+
+The existing Core Task identity:
+
+```text
+integration-verify
+```
+
+is retained.
+
+Its semantic contract is expanded to:
 
 > **System Verification**
 
-### 4.2 Two required lanes
+No new parallel `final-review`, `system-review`, or `system-verification` Core Task is introduced solely for this architecture.
 
-System Verification contains two complementary lanes.
-
-#### Lane A — Semantic / Holistic Independent Review
-
-Input:
-
-- final fixed Git snapshot for the iteration;
-- PRD / UX / TRD / Foundation / Project Truth;
-- develop task packages;
-- package review evidence;
-- implementation and architecture;
-- runtime evidence already available.
-
-It answers:
-
-- Did the final system satisfy Product / Technical Contract as a whole?
-- Did packages leave ownership gaps?
-- Did merging create duplicate truth sources?
-- Are shared contracts consistent across producers and consumers?
-- Are retirement / supersedes obligations closed?
-- Are state, permission, error handling, data lifecycle, and major architecture paths coherent?
-- Is package-level evidence sufficient for the system-level conclusion?
-- Is runtime evidence missing for any material claim?
-
-#### Lane B — Runtime Integration Verification
-
-Input:
-
-- the same accepted/fixed system candidate;
-- explicit runtime paths requested by contract or by Lane A;
-- real application/system boundaries.
-
-It proves:
-
-- real API / queue / DB / state-machine behavior;
-- frontend/backend seams;
-- real entry → terminal state;
-- external boundaries;
-- failure / retry / recovery;
-- affected runtime paths after fixes.
-
-Lane B cannot prove architectural or contract coherence by itself.
-
-Lane A cannot substitute for real runtime execution.
-
-### 4.3 Default ordering
-
-Default ordering:
+Therefore:
 
 ```text
-All sprint develop tasks merged
-→ Lane A: System Full Independent Review
-→ Review report persisted to Git
-→ Findings routed and remediated
-→ Lane B: Runtime Integration Verification
-→ targeted semantic/runtime closure as required
-→ System Verification complete
-→ Manual Test
-→ G4
+integration-verify
+Canonical Core Task ID
+
+Semantic responsibility:
+System Verification
 ```
 
-Lane A may produce `evidence-needed` findings that explicitly request runtime evidence from Lane B before semantic closure.
-
-Runtime findings route back to `develop(source=integration)`, `revise-doc`, or another explicit owner.
-
-System Verification completes only when both lanes are closed for the fixed candidate.
+This is semantic expansion without Core Task identity churn.
 
 ---
 
-## 5. Full-review frequency and revalidation
+# 9. System Verification
 
-### 5.1 Default policy
+System Verification contains two assurance lanes:
 
-Each A-class iteration should normally perform:
+```text
+SYSTEM VERIFICATION
 
-> **one expensive System Full Independent Review**
+A. Semantic / Holistic Independent Review
 
-After that, fixes do not automatically trigger another full review.
+B. Runtime Integration Verification
+```
 
-The amount of re-review is determined by:
-
-> **which previous conclusions were invalidated**
-
-not by:
-
-- number of changed lines;
-- number of commits;
-- reviewer/runtime change;
-- presence of any code modification.
-
-### 5.2 Revalidation levels
-
-#### Level 1 — Finding Closure
-
-Answers only whether the original finding root cause has been closed.
-
-Used inside `local-close`.
-
-#### Level 2 — Targeted System Re-review
-
-Default system-level revalidation after a system finding fix.
-
-Scope includes:
-
-- original finding;
-- repair delta;
-- affected semantic call chain;
-- necessary regression;
-- affected runtime path;
-- directly induced new risks.
-
-#### Level 3 — Full System Re-review
-
-Required only when prior system conclusions are broadly invalidated.
-
-Typical triggers:
-
-- shared API / schema / event semantics changed materially;
-- permission model changed;
-- core state machine changed;
-- broad data model redesign;
-- primary architecture path changed;
-- multiple packages were redesigned together;
-- Product / Technical Contract materially revised;
-- fix invalidates a wide portion of the previous full-review reasoning.
+They belong to the same system-level verification stage but use different evidence and cannot substitute for one another.
 
 ---
 
-## 6. Finding routing
+## 9.1 Semantic / Holistic Independent Review
 
-Every blocking system finding must include a closure route.
+This lane reviews the final Git candidate using:
 
-### 6.1 `local-close`
+- Product / Technical Contract;
+- final implementation;
+- architecture;
+- cross-package consistency;
+- ownership;
+- shared contracts;
+- compatibility;
+- evidence sufficiency;
+- call chains;
+- state, permission, and lifecycle consistency.
 
-Use when all are true:
+Its purpose is to determine whether the integrated implementation is semantically and architecturally valid.
+
+This lane may also request additional runtime evidence.
+
+---
+
+## 9.2 Runtime Integration Verification
+
+This lane proves actual system behavior using real execution.
+
+It covers, as applicable:
+
+- API;
+- queue;
+- database;
+- state machines;
+- frontend/backend seams;
+- external boundaries;
+- real entry-to-terminal-state paths;
+- failure;
+- retry;
+- recovery;
+- affected runtime regression after repair.
+
+Runtime Verification can discover new findings.
+
+Runtime Verification does NOT independently certify broad semantic validity after system-level contract or architecture changes.
+
+---
+
+# 10. System Verification Is Not a Rigid Two-Step Pipeline
+
+The two lanes are complementary and may exchange evidence.
+
+Conceptually:
+
+```text
+Final System Candidate
+        │
+        ▼
+┌──────────────────────────────┐
+│      SYSTEM VERIFICATION     │
+│                              │
+│ Semantic / Holistic Review   │
+│       │                      │
+│       ├─ finding             │
+│       │                      │
+│       └─ runtime evidence ───────┐
+│          request             │   │
+│                               ▼  │
+│                  Runtime Verification
+│                               │
+│                  runtime evidence/finding
+└───────────────────────────────┘
+        │
+        ▼
+Required Assurance Satisfied
+```
+
+Implementation MUST NOT assume that one lane can only start after the other has fully completed unless an existing repository contract requires that ordering.
+
+---
+
+# 11. System Finding Contract
+
+All blocking findings created inside System Verification use one common finding model.
+
+Conceptual schema:
+
+```yaml
+finding:
+  id: F001
+
+  origin: semantic-review
+  severity: blocking
+  category: compatibility
+
+  summary: >
+    ...
+
+  evidence:
+    - ...
+
+  required_action:
+    type: fix-code
+    description: >
+      ...
+
+  closure:
+    route: local-close
+
+  revalidation:
+    semantic:
+      required: true
+      scope:
+        - affected-call-chain
+
+    runtime:
+      required: true
+      scope:
+        - target-runtime-path
+
+  full_snapshot_invalidated: false
+  invalidation_reason: null
+```
+
+---
+
+# 12. Finding Origin
+
+Supported conceptual origins include:
+
+```text
+semantic-review
+runtime-verification
+```
+
+Origin identifies where the finding was first established.
+
+Origin MUST NOT determine closure route.
+
+A runtime finding is not automatically local.
+
+A semantic finding is not automatically system-level.
+
+---
+
+# 13. Finding Category
+
+Category is descriptive.
+
+Examples MAY include:
+
+- compatibility;
+- shared-contract;
+- architecture;
+- authorization;
+- state-machine;
+- data-model;
+- runtime;
+- evidence.
+
+Category MUST NOT directly determine review depth.
+
+Review depth is determined by the scope of invalidated assurance conclusions.
+
+---
+
+# 14. Closure Routes
+
+Every blocking System Verification finding MUST have exactly one effective closure route at a time.
+
+The only routing classes introduced by this design are:
+
+```text
+local-close
+system-rereview
+```
+
+No separate routing enums are created for:
+
+```text
+targeted-rereview
+full-rereview
+```
+
+Those describe review depth, not closure authority.
+
+---
+
+# 15. Closure Route Means Closure Authority
+
+This is a central architectural rule.
+
+```text
+local-close
+→ closure authority belongs to valid local independent assurance
+
+system-rereview
+→ closure authority belongs to a System Reviewer event
+```
+
+Therefore Finding Routing is fundamentally:
+
+> **Closure Authority Routing**
+
+---
+
+# 16. Local-Close
+
+`local-close` is appropriate when:
 
 - root cause is local;
-- Product / Technical Contract is unchanged;
-- shared contract is unchanged;
-- primary architecture is unchanged;
-- affected scope is bounded and explicit;
-- Fresh Isolated local review + targeted tests can prove closure.
+- Product / Technical Contract does not materially change;
+- shared contract does not materially change;
+- major architecture does not change;
+- affected scope is bounded;
+- required revalidation scope can be stated;
+- previous system-level assurance remains valid outside the affected scope.
+
+Conceptual flow:
+
+```text
+System Finding
+    ↓
+local-close
+    ↓
+Codex repair
+    ↓
+Fresh Isolated Local Review
+    ↓
+Declared Semantic Revalidation
+    ↓
+Declared Runtime Revalidation, when required
+    ↓
+Closure Evidence
+    ↓
+closed
+```
+
+---
+
+# 17. Minimum Local Closure Contract
+
+A `local-close` finding cannot close unless all required closure evidence exists.
+
+Minimum requirements:
+
+1. a concrete repair candidate exists;
+2. Fresh Isolated Review has completed;
+3. declared semantic revalidation scope has been satisfied;
+4. declared runtime revalidation scope has been satisfied when required;
+5. required target/regression tests have actually run;
+6. closure evidence is persisted as Git Truth.
+
+Runtime revalidation is conditional.
+
+It is required when:
+
+```text
+runtime scope is declared
+OR
+the repair changes runtime-observable behavior requiring proof
+```
+
+A local finding does not automatically require complete system-wide runtime verification.
+
+---
+
+# 18. Local Route Escalation
+
+A `local-close` route remains valid only while the repair remains inside the assumptions that justified local closure.
+
+If repair scope expands materially, local closure authority is revoked.
+
+Examples include:
+
+- shared contract changes;
+- core state machine changes;
+- authorization model changes;
+- broad data model changes;
+- unexpected multi-package redesign;
+- substantial expansion of declared revalidation scope.
 
 Flow:
 
 ```text
-System Full Review
-→ finding: local-close
-→ Codex fix
-→ Fresh Isolated targeted review
-→ targeted tests / affected integration regression
-→ finding closed
+local-close
+    ↓
+repair exceeds locality assumptions
+    ↓
+route escalation
+    ↓
+system-rereview
 ```
 
-No return to the system reviewer is required unless the repair itself crosses an escalation boundary.
+A local route MUST NOT be used to close a repair that has escaped its authorized locality boundary.
 
-### 6.2 `system-rereview`
+---
 
-Use when one or more are true:
+# 19. System-Rereview
 
-- shared contract changed;
-- core architecture changed;
-- multiple packages changed together;
-- permission/state/data-model semantics changed;
-- Product / Technical Contract revised;
-- repair may invalidate a system-level conclusion.
+`system-rereview` is appropriate when repair may invalidate system-level semantic conclusions.
 
-Flow:
+Typical examples:
+
+- shared contract changes;
+- core architecture changes;
+- multiple packages change together;
+- permission model changes;
+- state-machine changes;
+- broad data-model changes;
+- material Contract revision.
+
+Codex MAY:
+
+- implement the repair;
+- run local verification;
+- satisfy local prerequisites;
+- produce a fixed candidate.
+
+Codex MUST NOT independently declare a `system-rereview` finding closed.
+
+Closure requires a new System Reviewer event.
+
+---
+
+# 20. System-Rereview Does Not Mean Full Review
+
+`system-rereview` defines closure authority.
+
+It does NOT automatically define review depth.
+
+A System Reviewer event can be:
 
 ```text
-System Full Review
-→ finding: system-rereview
-→ Codex fix
-→ local verification
-→ new fixed candidate
-→ system targeted re-review by default
-→ full system re-review only if full_snapshot_invalidated=true
+targeted
+full
 ```
 
-`system-rereview` does **not** mean automatic full review.
+Default:
+
+```text
+system-rereview
++
+full_snapshot_invalidated = false
+→ targeted system re-review
+```
+
+Exception:
+
+```text
+system-rereview
++
+full_snapshot_invalidated = true
+→ full system re-review
+```
 
 ---
 
-## 7. Invalidation contract
+# 21. Full Snapshot Invalidation
 
-Each `system-rereview` finding must declare:
+`full_snapshot_invalidated` means:
 
-- semantic revalidation scope;
-- runtime revalidation scope;
-- `full_snapshot_invalidated`;
-- `invalidation_reason` when full snapshot is invalidated.
+> the previous Full System Review can no longer serve as a valid system-level assurance baseline for the new candidate.
 
-### 7.1 Default
+It does NOT mean:
 
-`full_snapshot_invalidated: false`
+- many files changed;
+- a repair is large;
+- multiple commits were created.
 
-unless broad invalidation is demonstrated.
+Broad invalidation typically includes:
 
-### 7.2 Full invalidation
+- shared API/schema/event redesign;
+- authorization model redesign;
+- core state-machine redesign;
+- broad data-model redesign;
+- major architecture-path replacement;
+- multi-package redesign;
+- material Contract revision.
 
-Set `full_snapshot_invalidated: true` only when the prior final snapshot review can no longer support a wide portion of its original conclusions.
-
-The report must state why.
-
-A large diff alone is not sufficient.
+Review depth MUST be evidence-driven, not diff-size-driven.
 
 ---
 
-## 8. System Review Report as Git Truth
+# 22. Review Report Lifecycle
 
-### 8.1 Location
+A System Review Report is:
 
-Default path:
+> an immutable historical judgement over a specific candidate snapshot.
+
+Recommended path remains conceptually:
 
 ```text
 iterations/vN/system-review/
   review-001.md
-  review-002.md
-  ...
 ```
 
-This is an authoritative handoff artifact between System Reviewer and Codex.
+Exact repository path remains subject to inventory confirmation.
 
-Chat summaries are not the official finding source.
-
-### 8.2 Report schema
-
-Proposed top-level schema:
-
-```yaml
----
-schema: hact-system-review/v1
-iteration: vN
-method_sha: <40-sha>
-review_mode: full | targeted
-prior_report: null | iterations/vN/system-review/review-NNN.md
-
-reviewed_base: <40-sha/tree as defined by implementation contract>
-reviewed_head: <40-sha>
-final_candidate: <40-sha>
-reviewed_tree: <40-tree>
-
-overall_conclusion: pass | blocked | evidence-needed
-
-semantic_revalidation_scope: []
-runtime_revalidation_scope: []
-
-full_snapshot_invalidated: false
-invalidation_reason: null
----
-```
-
-Findings are recorded in a mechanically parseable section:
-
-```yaml
-findings:
-  - id: SR-F001
-    severity: blocking | advisory
-    category: compatibility | contract | architecture | evidence | runtime | security | other
-    status: open | closed | accepted
-
-    evidence:
-      - <stable reference>
-
-    required_action:
-      type: fix-code | revise-contract | add-evidence | assign-owner | other
-      summary: <required outcome>
-
-    closure:
-      route: local-close | system-rereview
-
-    revalidation:
-      semantic:
-        scope: []
-      runtime:
-        scope: []
-
-    full_snapshot_invalidated: false
-    invalidation_reason: null
-
-    closure_evidence: []
-```
-
-### 8.3 Report rules
-
-- Every blocking finding must have a closure route.
-- Every `system-rereview` finding must have explicit revalidation scopes.
-- `full_snapshot_invalidated=true` requires a non-empty reason.
-- Targeted system review must reference the prior report.
-- Findings do not disappear between reports; closure must be explicit.
-- Report candidate/tree must be immutable and reproducible.
-- The report is not Human Authority and cannot sign G1-G5.
+Once published as Git Truth, a review report MUST NOT be rewritten to change the original judgement because later repairs occurred.
 
 ---
 
-## 9. Package review evidence compatibility
+# 23. System Review Events
 
-The first implementation should avoid unnecessary package-review schema churn.
+Every System Reviewer invocation produces a new review event.
 
-Preferred approach:
-
-- keep current immutable snapshot / diff / finding-chain evidence mechanics;
-- change reviewer semantic scope for standard vs sensitive packages;
-- retain accepted implementation binding;
-- retain full→targeted re-review mechanics;
-- reuse current risk field but derive escalation from actual diff;
-- avoid introducing another package-review ledger unless a real mechanical gap appears.
-
-The optimization is primarily a **responsibility boundary change**, not an excuse to weaken Git/evidence mechanics.
-
----
-
-## 10. State and Gate contract
-
-### 10.1 No new core state
-
-Do not add a new Task state for System Review.
-
-Existing states remain:
-
-`可取 → taken-by → done → merged`
-
-### 10.2 No new Human Gate
-
-System Full Independent Review is an AI/system verification mechanism, not a Human Authority Gate.
-
-G1-G5 remain Human Authority boundaries.
-
-### 10.3 G4 relationship
-
-The implementation phase must ensure G4 cannot be treated as ready until the iteration's System Verification obligations are complete:
-
-- semantic system review has no open blocking findings;
-- required runtime integration verification is complete;
-- required local/system revalidation is closed;
-- manual-test then proceeds under its existing authority semantics.
-
-Exact checker wiring is deferred to implementation design.
-
----
-
-## 11. Loading and runtime principles
-
-### 11.1 Package work stays local
-
-Standard package review should remain inside the local development/runtime loop and should not require repeated human window switching.
-
-### 11.2 System review is stage-bound
-
-The expensive system reviewer loads the whole iteration only after all planned sprint develop work has merged.
-
-It does not run between ordinary packages.
-
-### 11.3 Git truth handoff
-
-System Reviewer → Codex handoff uses the committed system review report and fixed Git candidate.
-
-It does not depend on chat continuity.
-
-### 11.4 Runtime choice
-
-The Method defines capability requirements and evidence boundaries, not subscription/model economics.
-
-A system review may run in a stronger independent context when available, but the method contract is expressed in terms of:
-
-- independence;
-- fixed source;
-- semantic coverage;
-- evidence sufficiency.
-
----
-
-## 12. Human Authority
-
-System Review may conclude:
-
-- pass;
-- blocking finding;
-- evidence insufficient;
-- local-close;
-- system-rereview;
-- targeted/full revalidation scope.
-
-It does not decide:
-
-- product trade-offs;
-- Gate approvals;
-- user-experience acceptance;
-- high-impact Human Authority decisions.
-
-Those remain governed by `protocols/authority.md`.
-
----
-
-## 13. Acceptance criteria for this architecture
-
-The implementation is complete only when all are true:
-
-1. Standard package review can execute a bounded lightweight independent scope without losing fixed-snapshot/evidence guarantees.
-2. Sensitive package review escalates from actual diff and preserves full local review.
-3. No new Final Review Core Task exists.
-4. `integration-verify` owns the System Verification stage semantics.
-5. A system full review report is a committed Git artifact with mechanically validated routing/invalidation fields.
-6. `local-close` findings can close in Codex with Fresh Isolated targeted review and scoped regression.
-7. `system-rereview` defaults to targeted system re-review.
-8. Full system re-review occurs only when `full_snapshot_invalidated=true`.
-9. Runtime integration evidence remains distinct from semantic system review.
-10. G4 cannot advance while required system verification blocking work remains open.
-11. Accepted implementation binding and current review-chain integrity are not weakened.
-12. No frozen A/B experiment is modified or rerun to implement this architecture.
-
----
-
-## 14. Design decision summary
+Example:
 
 ```text
-Standard Package
-→ Lightweight Independent Package Review
+review-001
+type: full
 
-Sensitive Package
-→ Full Local Independent Package Review
+review-002
+type: targeted
 
-All Sprint Develop Merged
-→ SYSTEM VERIFICATION
+review-003
+type: targeted
 
-  A. System Full Independent Review
-     → Git System Review Report
-     → local-close / system-rereview
+review-004
+type: full
+```
 
-  B. Runtime Integration Verification
-     → real runtime evidence
-     → affected path re-test
+Sequence number does not encode review depth.
 
-→ all system findings closed
+---
+
+# 24. Local Closure Does Not Produce a System Review Event
+
+Example:
+
+```text
+review-001
+  F001 → local-close
+```
+
+After valid local repair and closure:
+
+```text
+F001 → closed
+```
+
+No `review-002` is created merely because local closure occurred.
+
+This preserves the principle:
+
+> One Expensive Full Review, Local Closure by Default.
+
+---
+
+# 25. Review Lineage
+
+A targeted System Re-review MUST identify its predecessor and revalidation scope.
+
+Conceptually:
+
+```yaml
+system_review:
+  review_id: review-002
+  review_type: targeted
+
+  predecessor: review-001
+
+  revalidation_of:
+    - F003
+```
+
+A targeted review establishes assurance only for its declared scope and lineage obligations.
+
+It MUST NOT implicitly claim that the entire system received another Full Review.
+
+---
+
+# 26. System Review Report Schema
+
+Conceptual report-level structure:
+
+```yaml
+system_review:
+  review_id: review-001
+
+  review_type: full
+
+  method_sha: ...
+
+  candidate:
+    base: ...
+    head: ...
+
+  predecessor: null
+
+  revalidation_of: []
+
+  scope:
+    - final-contract
+    - architecture
+    - cross-package-consistency
+    - evidence-sufficiency
+
+  result:
+    status: blocked
+
+  evidence_state:
+    status: sufficient
+
+  findings:
+    - F001
+    - F002
+
+  created_at: ...
+```
+
+Targeted example:
+
+```yaml
+system_review:
+  review_id: review-002
+
+  review_type: targeted
+
+  method_sha: ...
+
+  candidate:
+    base: ...
+    head: ...
+
+  predecessor: review-001
+
+  revalidation_of:
+    - F002
+
+  scope:
+    - affected-shared-api
+    - affected-consumers
+
+  result:
+    status: pass
+
+  evidence_state:
+    status: sufficient
+
+  findings: []
+```
+
+---
+
+# 27. Review Result and Evidence State
+
+These are separate axes.
+
+Conceptual values:
+
+```text
+result.status
+→ pass | blocked
+
+evidence_state.status
+→ sufficient | insufficient
+```
+
+The following is invalid:
+
+```yaml
+result:
+  status: pass
+
+evidence_state:
+  status: insufficient
+```
+
+Invariant:
+
+> insufficient evidence cannot establish Review pass.
+
+Evidence insufficiency is not equivalent to proof of implementation defect.
+
+It means assurance has not yet been established.
+
+---
+
+# 28. Review Type
+
+Only two review-depth concepts are introduced:
+
+```text
+full
+targeted
+```
+
+No separate:
+
+- initial;
+- closure;
+- focused;
+- partial;
+
+review types are introduced unless an existing repository contract requires vocabulary reuse.
+
+---
+
+# 29. Closure Evidence Is Additive
+
+Original review judgement and later closure evidence are different truths.
+
+Conceptually:
+
+```text
+Review Judgement
+    ↓
+Finding
+    ↓
+Repair Candidate
+    ↓
+Closure Evidence
+```
+
+The original Review Report remains unchanged.
+
+The exact physical representation of closure evidence is deliberately NOT frozen here.
+
+Repository inventory must first determine whether HACT already has an appropriate:
+
+- history artifact;
+- status record;
+- review artifact;
+- evidence record;
+- append-only persistence pattern.
+
+The design requirement is:
+
+> original judgement is immutable; closure evidence is additive.
+
+---
+
+# 30. Local Closure Evidence Contract
+
+Conceptual model:
+
+```yaml
+finding_closure:
+  finding_id: F001
+
+  source_review: review-001
+
+  repair_candidate:
+    base: ...
+    head: ...
+
+  route:
+    expected: local-close
+    effective: local-close
+
+  local_review:
+    completed: true
+    reviewer_isolation: fresh-isolated
+    result: pass
+
+  semantic_revalidation:
+    required_scope:
+      - affected-call-chain
+
+    verified_scope:
+      - affected-call-chain
+
+    result: pass
+
+  runtime_revalidation:
+    required: true
+
+    required_scope:
+      - target-runtime-path
+
+    verified_scope:
+      - target-runtime-path
+
+    result: pass
+
+  closure:
+    result: closed
+```
+
+Escalation example:
+
+```yaml
+finding_closure:
+  finding_id: F001
+
+  source_review: review-001
+
+  route:
+    expected: local-close
+    effective: system-rereview
+
+  escalation:
+    reason:
+      - shared-contract-change
+
+  closure:
+    result: escalated
+```
+
+---
+
+# 31. Finding Durable State
+
+The architecture persists durable truth, not every transient execution step.
+
+Minimum authoritative finding states:
+
+```text
+open
+closed
+escalated
+```
+
+The design intentionally does NOT require durable states such as:
+
+```text
+repairing
+testing
+reviewing
+```
+
+unless existing runtime architecture already requires them.
+
+Those are normally execution moments, not long-lived project truth.
+
+---
+
+# 32. Finding State Semantics
+
+## open
+
+Required closure contract has not yet been satisfied.
+
+## closed
+
+All repair, review, semantic revalidation, runtime revalidation, and closure-authority requirements have been satisfied.
+
+## escalated
+
+The previous closure authority is no longer sufficient.
+
+`escalated` is not a successful terminal state.
+
+The finding ultimately still requires valid closure.
+
+---
+
+# 33. Runtime-Origin Findings
+
+Runtime Integration Verification may discover new blocking findings.
+
+All such findings use the same Finding Contract and Routing Contract.
+
+Example:
+
+```yaml
+finding:
+  id: F004
+  origin: runtime-verification
+  severity: blocking
+```
+
+A clearly local runtime defect MAY use:
+
+```text
+local-close
+```
+
+when locality and assurance assumptions are satisfied.
+
+A runtime defect that affects system-level semantic assumptions MUST use:
+
+```text
+system-rereview
+```
+
+Runtime Verification cannot independently declare broad semantic validity after a shared-contract or architecture redesign.
+
+---
+
+# 34. Findings Discovered Before Review Publication
+
+If runtime evidence is collected as part of the same initial System Verification cycle before the System Review Report is formally published, runtime findings MAY be included in that review judgement.
+
+The finding origin remains:
+
+```text
+runtime-verification
+```
+
+---
+
+# 35. Findings Discovered After Review Publication
+
+If a new runtime finding appears after a System Review Report has become Git Truth:
+
+- the existing report MUST NOT be rewritten;
+- the new finding MUST be recorded additively;
+- the normal Routing Contract applies.
+
+Exact repository artifact naming remains an implementation decision after inventory.
+
+---
+
+# 36. System Verification Completion Contract
+
+`integration-verify` / System Verification cannot complete merely because runtime tests are green.
+
+Conceptually:
+
+```yaml
+system_verification_completion:
+
+  final_candidate_identified: true
+
+  semantic_review:
+    required: true
+    satisfied: true
+
+  runtime_verification:
+    required: true
+    satisfied: true
+
+  blocking_findings:
+    open: 0
+    escalated_unresolved: 0
+
+  system_rereview_obligations:
+    pending: 0
+
+  required_revalidation:
+    semantic:
+      satisfied: true
+
+    runtime:
+      satisfied: true
+
+  completion:
+    allowed: true
+```
+
+System Verification is complete iff:
+
+1. the final candidate is identified;
+2. required system semantic review exists;
+3. required runtime verification exists;
+4. every blocking finding is validly closed;
+5. no unresolved escalation exists;
+6. no pending System Re-review obligation exists;
+7. all required semantic revalidation scopes are satisfied;
+8. all required runtime revalidation scopes are satisfied.
+
+---
+
+# 37. Full Review Does Not Need to Be Repeated Merely to End in PASS
+
+The following is a valid successful lifecycle:
+
+```text
+review-001
+type: full
+result: blocked
+
+F001
+→ local-close
+→ closed locally
+
+F002
+→ system-rereview
+→ review-002
+   type: targeted
+   result: pass
+
+Runtime Verification
+→ satisfied
+
+System Verification
+→ complete
+```
+
+The architecture MUST NOT require:
+
+```text
+latest full review result = pass
+```
+
+Instead it requires:
+
+> all findings from the Full Review have valid closure lineage and all current System Verification obligations are satisfied.
+
+---
+
+# 38. Full Re-review After Broad Invalidation
+
+If a repair broadly invalidates the previous Full Review baseline:
+
+```text
+review-001
+type: full
+        ↓
+repair causes broad invalidation
+        ↓
+review-002
+type: full
+```
+
+`review-002` establishes a new full assurance baseline for the new candidate.
+
+It is not merely an enlarged targeted review of the original finding.
+
+---
+
+# 39. Manual Test and Gate Authority
+
+System Verification completion does not replace:
+
+- Manual Test;
+- product acceptance;
+- Human Authority;
+- Gate approval;
+- user experience validation where required.
+
+The target A-class flow remains conceptually:
+
+```text
+Develop Packages
+→ Package Reviews
+→ All Develop Merged
+→ System Verification
+→ All System Findings Closed
 → Manual Test
 → G4
 ```
 
-The final policy is:
+---
 
-> **Package Review contains errors locally. System Review assures the whole system. Runtime Verification proves the running world. Revalidation follows invalidated conclusions, not change volume.**
+# 40. Architecture Invariants
+
+The following invariants are frozen by this design.
+
+```text
+INV-01
+Package Review provides Error Containment, not final System Assurance.
+
+INV-02
+Standard packages default to Lightweight Review.
+
+INV-03
+Sensitive packages require Full Local Review.
+
+INV-04
+Standard packages may escalate to Full Local Review.
+
+INV-05
+Package classification and effective review mode are distinct truths.
+
+INV-06
+integration-verify remains the canonical Core Task identity.
+
+INV-07
+System Verification is the expanded semantic responsibility of integration-verify.
+
+INV-08
+System Full Independent Review is not introduced as a parallel Core Task.
+
+INV-09
+Semantic / Holistic Review and Runtime Integration Verification are distinct,
+complementary assurance lanes.
+
+INV-10
+All blocking System Verification findings use one Finding Contract.
+
+INV-11
+Finding origin does not determine closure route.
+
+INV-12
+Each blocking finding has exactly one effective closure route at a time.
+
+INV-13
+Closure route identifies closure authority.
+
+INV-14
+local-close requires Fresh Isolated Local Review.
+
+INV-15
+Declared semantic revalidation scope must be satisfied.
+
+INV-16
+Declared runtime revalidation scope must be satisfied when required.
+
+INV-17
+If repair exceeds local-close assumptions, local closure authority is revoked.
+
+INV-18
+Revoked local-close authority escalates to system-rereview.
+
+INV-19
+system-rereview findings can only be closed by a System Reviewer event.
+
+INV-20
+system-rereview does not imply Full System Re-review.
+
+INV-21
+Full System Re-review occurs only after broad invalidation of previous
+system-level assurance.
+
+INV-22
+Review depth is evidence-driven, not diff-size-driven.
+
+INV-23
+Published System Review Reports are immutable historical judgements.
+
+INV-24
+Closure evidence is additive.
+
+INV-25
+Every System Reviewer invocation creates a new review event.
+
+INV-26
+Local closure does not create a System Review event.
+
+INV-27
+Review sequence number does not encode review depth.
+
+INV-28
+Targeted Re-review declares predecessor and revalidation scope.
+
+INV-29
+Evidence insufficiency cannot establish Review pass.
+
+INV-30
+Durable workflow truth is persisted; transient execution moments need not be.
+
+INV-31
+Runtime-origin findings use the same Finding Routing and Closure contracts.
+
+INV-32
+Runtime Verification cannot independently certify broad semantic validity
+after system-level redesign.
+
+INV-33
+integration-verify/System Verification cannot complete while any blocking
+finding, escalation, rereview obligation, or required revalidation remains unresolved.
+
+INV-34
+System Verification completion depends on valid closure lineage, not on
+repeating Full Review until a Full Review ends in PASS.
+```
+
+---
+
+# 41. Implementation Phases
+
+## Phase 1 — Review Contract Freeze
+
+Deliver:
+
+- Review Architecture Design;
+- repository inventory;
+- Current → Target mapping;
+- proposed file change map;
+- implementation sequencing.
+
+No broad checker/runtime modification.
+
+---
+
+## Phase 2 — System Verification Contract Alignment
+
+Align existing `integration-verify` semantics with System Verification.
+
+Avoid Core Task topology inflation.
+
+---
+
+## Phase 3 — Finding Routing and Invalidation Model
+
+Implement:
+
+- `local-close`;
+- `system-rereview`;
+- revalidation scope;
+- route escalation;
+- full snapshot invalidation;
+- closure authority.
+
+---
+
+## Phase 4 — Review Report and Runtime/Checker Wiring
+
+Implement:
+
+- System Review Report schema;
+- Git Truth persistence;
+- closure lineage;
+- completion checking;
+- runtime/checker enforcement.
+
+---
+
+## Phase 5 — Real A-Class Pilot
+
+Run one real A-class iteration through:
+
+```text
+Develop Packages
+→ Standard/Sensitive Package Reviews
+→ All Develop Merged
+→ System Verification
+→ Finding Routing
+→ Local/System Revalidation
+→ Runtime Verification
+→ Manual Test
+→ G4
+```
+
+The pilot is used to tune actual Package Review weight.
+
+It is NOT used to reopen the frozen architecture unless evidence shows a real contract defect.
+
+---
+
+# 42. Explicitly Deferred Implementation Decisions
+
+The following must be resolved from repository inventory rather than invented in this design:
+
+1. exact current location of Package Review policy;
+2. exact representation of sensitive classification;
+3. existing severity vocabulary;
+4. existing `required_action` vocabulary;
+5. exact `integration-verify` Task/Protocol/Runtime ownership;
+6. existing review report schema and paths;
+7. existing review round/history persistence;
+8. whether a suitable append-only closure artifact already exists;
+9. how current status serialization represents unresolved review obligations;
+10. exact checker ownership for System Verification completion;
+11. exact implementation of Fresh Isolated local review;
+12. compatibility impact on historical iterations;
+13. template/skeleton changes required;
+14. migration or normalization needs for existing accepted truth.
+
+No new mechanism should be created where an existing HACT mechanism can satisfy the same contract cleanly.
+
+---
+
+# 43. Design Freeze Condition
+
+Phase 1 Design is considered frozen when:
+
+- this architecture is accepted;
+- repository inventory is complete;
+- Current → Target mapping contains no unresolved architectural contradiction;
+- implementation can proceed without inventing new review semantics.
+
+Repository inventory MAY change file placement and implementation technique.
+
+It MUST NOT silently change the frozen architectural invariants.
+
+---
+
+# 44. Final Principle
+
+The target architecture is:
+
+> **One Expensive Full Review, Local Closure by Default**
+
+In operational terms:
+
+```text
+Package Review
+→ contain local errors
+
+System Full Independent Review
+→ challenge the complete integrated system
+
+Runtime Integration Verification
+→ prove real execution behavior
+
+Finding Routing
+→ choose the narrowest valid closure authority
+
+Broad invalidation
+→ re-enter Full System Review only when previous system assurance no longer holds
+```
+
+The optimization succeeds only if it reduces duplicated assurance work without weakening closure correctness.
