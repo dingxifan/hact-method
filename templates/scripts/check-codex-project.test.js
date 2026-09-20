@@ -30,7 +30,7 @@ try {
 } finally { fs.rmSync(root,{recursive:true,force:true}); }
 const boot=fs.readFileSync(path.resolve(__dirname,'../boot-protocol.md'),'utf8');
 const expected=require('../../_meta/fixtures/codex-boot.json').cases;
-const routes=new Map(boot.split(/\r?\n/).map(line=>line.match(/^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|/)).filter(Boolean).map(m=>[m[1].replace(/\s+/g,''),m[2]]));
+const routes=new Map(boot.split(/\r?\n/).map(line=>line.match(/^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`/)).filter(Boolean).map(m=>[m[1].replace(/\s+/g,''),m[2]]));
 assert.ok(!/^\| canonical task \| Task Contract \| legacy alias/m.test(boot), 'boot catalog stays canonical two-column');
 assert.match(boot, /draft-prd-vN[\s\S]*draft-prd/);
 assert.match(boot, /generate-integration-tests[\s\S]*integration-verify/);
