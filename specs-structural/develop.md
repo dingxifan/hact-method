@@ -18,7 +18,7 @@
 - **文件**：任务 reference 中的项目技术约束、Foundation、TRD/共享契约及测试入口可查
 - **source=sprint**：G3 已签（`plan-sprint` 完成）
 - **source=foundation**：G2(v0) 已签（`draft-foundation` 完成）；建造单元 = `iterations/v0/foundation-design.md`（获准的最小地基件 + 一根标杆切片），执行层按真实切片决定、无任务包队列
-- **source=integration**：上游联调脚本失败场景已记录，修复任务包由 `generate-integration-tests` 派出
+- **source=integration**：上游 System Verification finding / runtime 失败场景已记录，修复任务包由 `integration-verify` 派出
 - **source=manual-test**：验收问题已记录，修复任务包由 `manual-test` 派出
 - **source=bug / optimization**：任务包由 `dispatch-new` 派出，无 Gate 前置
 
@@ -113,7 +113,7 @@ api-contract:
 |-----------|---------|------|
 | `plan-sprint`（source=sprint） | 任务包（含 files / AC / reference 契约锚） | iterations/vN/queue/*.md |
 | `draft-foundation`（source=foundation） | 走骨架设计（地基件清单 + 标杆切片）+ 地基蓝图 | iterations/v0/foundation-design.md + 项目根 foundation.md |
-| `generate-integration-tests`（source=integration） | 失败联调场景 + 修复任务包 | iterations/vN/queue/*.md |
+| `integration-verify`（source=integration） | System Verification finding / 失败 runtime 场景 + 修复任务包 | iterations/vN/queue/*.md |
 | `manual-test`（source=manual-test） | 验收问题 + 修复任务包 | iterations/vN/queue/*.md |
 | `dispatch-new`（source=bug/optimization） | B 类任务包 | b-queue/*.md |
 | `revise-doc`（影响任务包时） | 更新后的任务包或 项目约束变更说明 | iterations/vN/queue/{task-id}.md 或 b-queue/{task-id}.md 更新 |
@@ -122,7 +122,7 @@ api-contract:
 
 | 下游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `generate-integration-tests`（source=sprint 全 [merged]） | 已合并到 master 的代码 | master 分支 |
+| `integration-verify`（source=sprint 全 [merged]） | 已合并到 master 的 final system candidate | master 分支 |
 | `manual-test` / 上游复测会话（source=integration/manual-test） | 已合并的修复代码 | master 分支 |
 | `deploy`（hotfix [merged]） | 已合并的 hotfix | master 分支 |
 

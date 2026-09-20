@@ -7,8 +7,8 @@
     { "signal": "phase=v1;G1=1;G2=0;uxready/not-required", "expected": "draft-tech-design" },
     { "signal": "phase=v1;G2=1;G3=0", "expected": "plan-sprint" },
     { "signal": "phase=v1;G3=1;G4=0;sprinttaskclaimable/active", "expected": "develop" },
-    { "signal": "phase=v1;G3=1;G4=0;sprinttasksmerged;integrationmissing", "expected": "integration-verify" },
-    { "signal": "phase=v1;G3=1;G4=0;integrationpassed/present", "expected": "manual-test" },
+    { "signal": "phase=v1;G3=1;G4=0;sprinttasksmerged;SystemVerificationmissing/incomplete", "expected": "integration-verify" },
+    { "signal": "phase=v1;G3=1;G4=0;integration-verifymerged;semantic+runtimelanessatisfied;nopendingsystemobligation", "expected": "manual-test" },
     { "signal": "phase=v1;G4=1;G5=0", "expected": "wrap-up-iteration" },
     { "signal": "phase=v1;G5=1", "expected": "wait" }
   ]

@@ -1,5 +1,5 @@
 <!--
-  联调测试结果模板 · generate-integration-tests 产物 · 存 integration-tests/result-{日期}.md · live 引用（不入项目仓）
+  Runtime Integration Verification 结果模板 · integration-verify 产物 · 存 integration-tests/result-{日期}.md · live 引用（不入项目仓）
   人看的视图（机器侧状态以项目根 status.yml 的 integration_tests[] 为准，见 skeleton/07）。
   填写：每条场景一行；结果 ✅/❌/未运行。已执行场景必须把证据放入 `integration-tests/evidence/vN/{场景-id}/` 并在「证据」列写项目相对路径；未运行必须写原因。
   ❌ 时「现象」填具体现象 + 复现步骤，「级别」填 [阻断]/[不阻断]。

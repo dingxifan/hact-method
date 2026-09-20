@@ -1,5 +1,7 @@
 # task: generate-integration-tests
 
+> **Legacy serialization reference only.** vNext canonical Task 是 `integration-verify`，规范真相在 `tasks/integration-verify.md`；`generate-integration-tests` 仅为输入 alias。本文件保留旧项目字段/路径参考，不得覆盖 System Verification 双 assurance lane、completion 或 review contract。
+
 **discipline**: `integration-testing`
 **Gate**: —
 **属性**: 无

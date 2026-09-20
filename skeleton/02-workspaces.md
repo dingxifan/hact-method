@@ -69,7 +69,7 @@
 - `revise-doc`（修订归项目根）
 - `plan-sprint`（含 G3 签字）
 - `develop`（写代码 + per-task 独立审查 + 推 PR 并合并到 master）
-- `generate-integration-tests`（联调脚本）
+- `integration-verify`（System Verification：系统语义独审 + runtime 联调验证）
 - `manual-test`（含 G4 签字）
 - `deploy`（部署归项目根）
 - `wrap-up-iteration`（含 G5 签字）

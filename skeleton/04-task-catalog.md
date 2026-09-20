@@ -1,5 +1,7 @@
 # 04 — 任务全谱
 
+> vNext canonical Core Task Catalog 以 `tasks/README.md` 的 12 个 Task 为准。本文件同时保留 legacy structural 分类与非 Core utility/intake 条目，用于迁移和结构对照；不得据此重新增加 Core Task。
+
 > **本文回答**：v2 有哪些 task type？每个 task 的关键字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）？
 >
 > **不回答**：discipline 的概念（→ `03-disciplines.md`）；身份与授权规则（→ `01-identity.md`）；状态枚举与流转（→ `05-state-machine.md`）；Gate 详情（→ `06-gates.md`）。
@@ -23,7 +25,7 @@
 | 准备 | `plan-sprint` | dispatch | G3 |
 | 跨段 | `revise-doc` | product / architecture（按 target 派生） | — |
 | 开发循环 | `develop` | dev-frontend / dev-backend（按 layers 派生）；自审自合并到 master | — |
-| 开发循环 | `generate-integration-tests` | integration-testing | — |
+| 开发循环 | `integration-verify` | integration-testing | — |
 | 开发循环 | `manual-test` | product | G4 |
 | 收尾 | `deploy` | deploy | — |
 | 收尾 | `wrap-up-iteration` | management | G5 |
@@ -151,7 +153,7 @@
   - `layers=[frontend]` → `dev-frontend`
   - `layers=[backend]` → `dev-backend`
   - `layers=[shared]` → 由分配者在任务包中指定 task_type
-- **完成判据**: 写代码前 preflight + 代码完成 + 首次 full/整改 targeted 独立证据审查通过（Foundation 用专用 brief）+ 末端全量绿 + PR `[merged]`（develop 自审自合并到 master，无独立 pr-review；安全敏感改动留 architecture 人工裁决）
+- **完成判据**: 写代码前 preflight + 代码完成 + standard lightweight / sensitive full-local 的 package 独立审查与整改 targeted 复审通过（Foundation 用专用 brief）+ 末端全量绿 + PR `[merged]`（develop 自审自合并到 master，无独立 pr-review；安全敏感改动留 architecture 人工裁决）
 - **主要产物**: PR（已合并）+ 代码改动 + 测试 + `code_reviews[]` 审计留痕
 - **关联 Gate**: —
 - **属性**:
@@ -171,18 +173,18 @@
 
 ---
 
-### 8. `generate-integration-tests`
+### 8. `integration-verify`
 
-> 设计联调测试场景 + 写浏览器/HTTP 脚本 + 跑测试 + 把失败转 develop(source=integration)。
+> 对 final system candidate 做 Semantic / Holistic Independent Review 与 Runtime Integration Verification，并把 finding 路由到明确承接方。
 
 - **discipline**: `integration-testing`
-- **完成判据**: 测试脚本就位 + 跑过一轮 + 失败任务全部派出 develop(source=integration)
-- **主要产物**: `integration-tests/` 目录（浏览器场景 + HTTP 脚本）+ 一轮跑结果 + 派生的修复任务包
+- **完成判据**: 两条 assurance lane 对同一 final candidate satisfied，无未关闭 blocking finding、unresolved escalation、pending system-rereview 或缺失 revalidation
+- **主要产物**: immutable system-review events + additive closure/revalidation evidence + `integration-tests/` runtime evidence + 必要修复任务包
 - **关联 Gate**: —
 - **前置条件**: sprint 完成（所有 source=sprint 的 develop 任务 `[merged]`）——任务入口检查
 - **属性**: 无
 
-详见 `specs-structural/generate-integration-tests.md`。
+详见 canonical `tasks/integration-verify.md`；`specs-structural/generate-integration-tests.md` 仅为 legacy serialization reference。
 
 ---
 

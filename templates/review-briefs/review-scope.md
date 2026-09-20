@@ -1,10 +1,10 @@
 # 审查范围与信任前提
 
-本规则适用于规范、设计、任务包、代码与地基审查，包括 standard、sensitive、full 和 targeted。开发人员（含实现代码的 AI）属于可信方，但会误解、遗漏和写错；独立审查仍须核对原文与实际证据，不能采信自评代替验证。
+本规则适用于规范、设计、任务包、代码、地基与系统审查。Package classification 为 standard/sensitive，package effective mode 为 lightweight/full-local；System Reviewer event depth 为 full/targeted。开发人员（含实现代码的 AI）属于可信方，但会误解、遗漏和写错；独立审查仍须核对原文与实际证据，不能采信自评代替验证。
 
 ## 阶段职责与独立判断
 
-PRD 审已确认需求的一致性、可达性与可验性；原型审真实用户动线与恢复；TRD 审技术承接及画面/路径数据；任务规划审全局 AC 承接、共享资产与依赖；开发审本包兑现、受影响行为与证据；联调审组合路径和终态。各阶段读取必要上游原文，不默认重新审查上游全部产物。发现确凿上游矛盾须路由修订，不能以“已签字”忽略，也不能自行追加产品要求。
+PRD 审已确认需求的一致性、可达性与可验性；原型审真实用户动线与恢复；TRD 审技术承接及画面/路径数据；任务规划审全局 AC 承接、共享资产与依赖；Package Review 审本包兑现、受影响行为、证据与升档信号；System Review 审最终候选的整体 Contract、architecture、cross-package consistency、ownership、shared contract 与 evidence sufficiency；Runtime Integration Verification 审组合路径和真实终态。各阶段读取必要上游原文，不默认重新审查上游全部产物。发现确凿上游矛盾须路由修订，不能以“已签字”忽略，也不能自行追加产品要求。
 
 审查员先快速核实际 diff、相关入口和数据流，独立决定需展开的专项；实现者的 files、risk 与测试清单是待核输入，不是范围真相。sensitive 要求对应边界有充分证据，不要求所有专项展开。不另建风险画像、覆盖表或逐维度空结论。
 

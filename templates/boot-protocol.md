@@ -68,6 +68,8 @@ Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“�
 
 用户明确要求外部 UX 设计会话时才加载 `runtime/external-ux.md`。
 
+System-review artifacts 只在 canonical Task 已路由为 `integration-verify`，或恢复该 Task 时加载。Package develop、planning 与其他 Task 不预加载完整 system-review history。
+
 ## 3. Canonical Task routing
 
 vNext Core Task Catalog：
@@ -82,7 +84,7 @@ vNext Core Task Catalog：
 | `plan-sprint` | `tasks/plan-sprint.md` |
 | `revise-doc` | `tasks/revise-doc.md` |
 | `develop` | `tasks/develop.md` |
-| `integration-verify` | `tasks/integration-verify.md` |
+| `integration-verify` | `tasks/integration-verify.md`（System Verification） |
 | `manual-test` | `tasks/manual-test.md` |
 | `deploy` | `tasks/deploy.md` |
 | `wrap-up-iteration` | `tasks/wrap-up-iteration.md` |
@@ -151,8 +153,8 @@ canonical `draft-ux`; it is not a Task name.
 | `phase=v1; G1=1; G2=0; ux ready/not-required` | `draft-tech-design` |
 | `phase=v1; G2=1; G3=0` | `plan-sprint`；若 planning 已 merged，则进入 G3 approval boundary |
 | `phase=v1; G3=1; G4=0; sprint task claimable/active` | `develop` |
-| `phase=v1; G3=1; G4=0; sprint tasks merged; integration missing` | `integration-verify` |
-| `phase=v1; G3=1; G4=0; integration passed/present` | `manual-test` |
+| `phase=v1; G3=1; G4=0; sprint tasks merged; System Verification missing/incomplete` | `integration-verify` |
+| `phase=v1; G3=1; G4=0; integration-verify merged; semantic + runtime lanes satisfied; no pending system obligation` | `manual-test` |
 | `phase=v1; G4=1; G5=0` | `wrap-up-iteration`；`deploy` 仅按用户授权/项目策略进入 |
 | `phase=v1; G5=1` | `wait` / 下一明确 Task |
 

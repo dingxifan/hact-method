@@ -29,7 +29,7 @@ tasks: []
 #    sprint: 1               # B 类 / 修复任务为 null
 #    source: sprint          # sprint / foundation / integration / manual-test / bug / optimization
 #    title: ...
-#    type: develop           # 14 种 task type（见 skeleton/04-task-catalog.md）
+#    type: develop           # canonical Core Task type；普通开发 work item 为 develop
 #    layer: backend          # frontend / backend / shared / null
 #    status: 可取            # 可取 / taken-by / done / merged
 #    assigned_to: null
@@ -38,9 +38,24 @@ tasks: []
 #    depends_on: []
 #    delivery: 可并行         # 串行 / 可并行 / null
 #    urgency: null           # hotfix / null
+# System Verification 复用同一 tasks[]，每 iteration 恰有一条；Phase 4 接 checker/hook：
+#  - id: {项目缩写}-v1-integration-verify
+#    iteration: v1
+#    sprint: null
+#    source: null
+#    title: System Verification
+#    type: integration-verify
+#    layer: null
+#    status: 可取
+#    assigned_to: null
+#    pr: null
+#    parent_id: null
+#    depends_on: []
+#    delivery: null
+#    urgency: null
 
 integration_tests: []
-# 每条（generate-integration-tests 创建/更新）：
+# 每条（integration-verify 的 runtime lane 创建/更新）：
 #  - { iteration: v1, index: 1, description: ..., status: 待执行, failure_reason: null }
 #    # status: 待执行 / 执行中 / 通过 / 失败
 

@@ -31,7 +31,7 @@ Gate 不是独立的实体——它是**一组 task 的状态聚合**。
 | **G1** | 本期 `draft-prd-vN` [merged] + 任意 `revise-doc(target=prd)` [merged]（如有） |
 | **G2** | V1+：本期 `draft-tech-design` [merged] + 任意 `revise-doc(target=trd\|foundation)` [merged]（如有）；**V0：本期 `draft-foundation`（签 G2(v0) 即地基设计验收，走骨架 `develop(source=foundation)` 在 G2 后建）** |
 | **G3** | 本期 `plan-sprint` [merged] |
-| **G4** | 本期所有 `develop(source=sprint)` [merged] + `generate-integration-tests` [merged] + 所有 `develop(source=integration)` [merged] + `manual-test` [merged] + 所有 `develop(source=manual-test)` [merged] |
+| **G4** | 本期所有 `develop(source=sprint)` [merged] + `integration-verify`（System Verification）[merged] + 所有 `develop(source=integration)` [merged] + `manual-test` [merged] + 所有 `develop(source=manual-test)` [merged] |
 | **G5** | 本期 `wrap-up-iteration` [merged] + 本期 `deploy` [merged]（部署失败 / 纯文档迭代不阻断 G5 签字，见下注） |
 
 注：`revise-doc` 在 G1/G2 关联里以"任意"出现——意思是 G1/G2 已签后再发生的 revise-doc 不撤销 Gate（详见 §6），但 revise-doc 自身仍要走 `[merged]` 才结束。

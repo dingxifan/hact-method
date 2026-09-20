@@ -219,7 +219,7 @@ preflight 通过后，主线直接实现。独立且足够大的子任务可委�
 
 **固定审查对象**：确认只有本任务 changed-files 后，精确 `git add -- {changed-files}`，以 `git write-tree` 取得 `reviewed_tree`，并按 `git diff --binary {reviewed_base} {reviewed_head}` 的原始字节计算 SHA-256。首次 `reviewed_base` 取**当前任务** preflight 的 `base_tree`；整改轮取上份 report 的 `reviewed_head`，当前树为新的 `reviewed_head`。审查员只读 `git diff {reviewed_base} {reviewed_head}`，不得用会变化的裸 `git diff` 代替报告基线。发现本任务外改动则 blocked，先分离工作树。B 类在派审前另运行 `node ../hact-method-lab/templates/scripts/check-b-task.js {task-package} --diff {reviewed_base} {reviewed_head} --root .`，用方法论当前版检查器对实际固定 diff 复核共享契约边界；非 0 先查字段/范围缺口；实际越出 B 类边界则退出并处理上游决策，不得带失败派审。
 
-**首次 full review**：主线以 `fork_turns="none"` 派不继承实现历史的 Codex 审查子代理（实际接口不支持空历史时报告缺口），读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 task-id、layer、迭代、有效 risk、固定 base/head 和权威输入位置。审查员自读权威输入，按 brief 与实际改动确定检查范围；模式、报告和升级条件按轮次模板。
+**首次 policy-selected Package Review**：主线以 `fork_turns="none"` 派不继承实现历史的 Codex 审查子代理（实际接口不支持空历史时报告缺口），读 `develop-review.md`（`source=foundation` 时改读 `foundation-review.md`），只告知 task-id、layer、迭代、classification、effective mode、固定 base/head 和权威输入位置。standard 默认 lightweight；sensitive 或实际 diff 命中升档条件时做 full-local。审查员自读权威输入，按 brief 与实际改动确定检查范围；Phase 3 schema 对齐前仍使用既有 round 模板并在正文写明 effective mode，不把其中 `mode=full` 解释为 System Full Review。
 
 **整改 targeted review**：默认接续未参与实现的原独立审查员，传 prior report、未关闭 finding ids、上一/当前 reviewed tree、必须重跑的 counterexample/regression；不可用时用空历史新审查员按前次独立报告接续，不为等待原单元阻塞。可核执行者提供的原始日志，不采信自评替代验证，不传实现辩解。核目标 finding、修复增量与受影响调用链；局部新发现可处理，扩审须指出哪些结论因何变化失效。升级条件与轮次上限统一按 round 模板，新增文件/模块本身不触发 full。
 
@@ -274,7 +274,7 @@ npm run build && npm run type-check && npm run lint && npm run test
 - 任一红 → 多为 **cross-task 集成问题**（单任务自测在阶段 A 已绿）；定位是哪个任务的改动引入，回该任务阶段 A 修。`build/type/lint` 无命令 → 跳过该条不阻断。`test` 无运行器 → 见阶段 A「测试基建缺失」处置。
 - **偏离核查**：`git diff --stat` 对比所有任务包 `files` 合集；汇总各任务返回的 `deviations` / `unmet-ac`，分别记入 PR description「偏离说明」/「遗留问题」。
 
-> 全量绿只证明可执行一致性。A 类跨包归属、共享定义、退役及组合终态由 `generate-integration-tests` 的准备核对与实际执行承接；已发现的组合缺口及证据留在 PR 遗留问题或补缝任务，供联调复用，不回灌为逐包完整重审。
+> 全量绿只证明可执行一致性。A 类整体 Contract/architecture/cross-package assurance 与组合终态由 `integration-verify` 的 System Review + Runtime Verification 承接；已发现的组合缺口及证据留在 PR 遗留问题或补缝任务，供 System Verification 复用，不回灌为逐包完整重审。
 
 ```
 ✅ 全量检测完成：build/type/lint/test 全绿（[X] passed），[无偏离 / 偏离已记录]。集合 {task-id-list} 全部通过独立审查。
@@ -354,7 +354,7 @@ merge API 把 PR 在服务端并入 master。切回 master 拉取后，把状态
 ### 移交
 
 按 `source` 更新对应追踪文件：
-- `source=sprint` → 无需额外操作（PR 号与 merged 已写入 status.yml）；同层全部 `[merged]` 后，下游 `generate-integration-tests` 前置即满足
+- `source=sprint` → 无需额外操作（PR 号与 merged 已写入 status.yml）；本期全部计划内 sprint tasks `[merged]` 后，下游 `integration-verify` 前置即满足
 - `source=foundation` → status.yml 把 `foundation` task 改 `merged`、`pr` 填 `{N}`；**把标杆穿透切片登记进 项目根 `reusables.md`**（标"参考实现 / 活文档，新功能照此骨架样式做"）；走骨架完成，下游进 V1 `draft-prd-vN`
 - `source=bug / optimization` → 无需第二份总账；status.yml 已记录 PR 和合并状态
 - `source=integration / manual-test` → 在 `_meta/sessions/{对应进度文件}` 记录"PR#{N} 已合并，可复测"

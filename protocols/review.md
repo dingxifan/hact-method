@@ -2,6 +2,17 @@
 
 Independent Review 用于对 Candidate Truth 提供独立挑战，而不是重复生成过程。
 
+## 0. Review hierarchy
+
+HACT 有两个不同 assurance boundary：
+
+1. **Package Review**：在 `develop` 内提供 Error Containment。standard package 默认 lightweight；sensitive 或实际 diff 升档的 package 使用 full-local。
+2. **System Review**：在 `integration-verify` / System Verification 内，对全部计划内 develop packages 合并后的 fixed system candidate 提供 Semantic / Holistic Independent Review。
+
+Package Review 不能宣称最终 System Assurance；System Review 也不能替代 Package Review 的本地缺陷阻断。Runtime Integration Verification 是 System Verification 的另一条证据 lane，不属于语义 review 的别名。
+
+`lightweight`、`full-local` 是 package effective mode；`full`、`targeted` 是 System Reviewer event 的 review depth。两组概念不得混作同一枚举。
+
 ## 1. 核心原则
 
 默认优先：
@@ -14,7 +25,7 @@ Independent Review 用于对 Candidate Truth 提供独立挑战，而不是重�
 
 ## 2. Reviewer projection
 
-首次 full review 默认从同一 `tasks/{task}.md` 读取：
+Package 首审按 `tasks/develop.md` 的 effective mode 做 same-source projection。无论 lightweight 或 full-local，默认从同一 `tasks/{task}.md` 读取：
 
 - frontmatter / Task identity
 - §1 Purpose & Scope
@@ -32,13 +43,15 @@ Independent Review 用于对 Candidate Truth 提供独立挑战，而不是重�
 
 这是一种 **same-source projection**，不是第二份 reviewer spec。不得为了节省加载而复制一套会漂移的 `*-review.md` Task Contract。
 
-Targeted re-review 默认只加载：
+Package targeted re-review 默认只加载：
 
 - prior report 与未关闭 finding ids；
 - 新的 fixed snapshot / changed surface；
 - 与这些 finding 直接相关的 Task sections、Shared Protocol 与 evidence。
 
 除非变化使原结论失效，不重新全文审一遍。
+
+System Reviewer 首次事件必须针对最终 system candidate 做 `full` review。后续 System Reviewer event 可以是 `targeted` 或 `full`；targeted 必须读取 predecessor、待复核 finding、声明的 semantic/runtime revalidation scope，以及该范围所需的完整调用链与 Contract。Review depth 由失效的 assurance 结论决定，不由 diff 文件数决定。
 
 ## 3. Reviewer 输入
 
@@ -80,6 +93,8 @@ Review 必须绑定明确 snapshot。代码审查使用 fixed base/head 或等�
 
 Owner 在 review 后改变实现、测试或被审文档语义时，必须形成新的 review target。
 
+System Review target 必须是全部计划内 develop packages 已进入 Accepted Project Truth 后的明确 final candidate。System Review event 是对该 candidate 的历史 judgement；事件发布后不因后续修复而改写。
+
 ## 6. Evidence
 
 Owner 的 risk、files、test 清单和“已验证”声明只是待核输入，不是 evidence truth。
@@ -108,6 +123,8 @@ Reviewer 输出至少包含：
 
 Finding 应指向具体承诺、路径或 evidence gap，不以“还能更完善”阻断。
 
+System Verification 内的 blocking findings 使用同一 system Finding Contract；origin 只说明 finding 从 semantic review 或 runtime verification 首次建立，不决定 closure authority。具体 `local-close | system-rereview` routing、route escalation 与 snapshot invalidation 由 Review Architecture Phase 3 contract 落实；在该 contract 可执行前，不得用临时枚举或聊天决定替代持久化 routing truth。
+
 ## 9. Bounded convergence
 
 Review 不无限循环：
@@ -123,6 +140,8 @@ Review 不无限循环：
 低风险 reasoning artifact 可采用 Lightweight Review；高风险 execution artifact 可保留完整 evidence chain。复杂度与风险、可逆性和实际影响成比例。
 
 Projection 只能减少无关加载，不能删掉当前 finding 所需的规范或证据。
+
+Standard Package 的 Lightweight Review 仍必须核 package intent/oracle、授权 scope、受影响兼容性、必要证据/测试和 escalation signal。Sensitive Package 的 Full Local Review 在此基础上深入实际触及的高影响边界。最终 cross-package consistency、整体 architecture 与 system-level evidence sufficiency 属于 System Review。
 
 ## 11. Human Authority
 

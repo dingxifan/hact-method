@@ -1,5 +1,7 @@
 # exec: generate-integration-tests
 
+> **Legacy runtime reference only.** vNext 启动时必须 canonicalize 为 `integration-verify` 并读取 `tasks/integration-verify.md`。本文只保留既有 runtime scenario/evidence 操作细节，不是第二套 System Verification Task Contract；与 canonical Task/Protocol 冲突时以后者为准。
+
 > AI 加载本文时，当前任务是在所有 sprint develop 任务合并后，核对组合并跑后端穿透流（+ 边界闸按需）；有结论后，决定是否加跑前端浏览器场景（非视觉基线迭代由用户决定；**涉用户任务变化或视觉基线迭代完整档必跑**）。
 > 两档制：**轻量档（默认）** = 后端**穿透流 + 边界闸（opt-in）** → **完整档** = 轻量档 + 前端浏览器场景 + 视觉冒烟断言（**涉用户任务变化或视觉基线迭代必跑**；纯后端/无视觉基线变更迭代按需）
 >

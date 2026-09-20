@@ -33,7 +33,7 @@
 
 三条件未满足 → 阻断：
 ```
-generate-integration-tests 尚未完成（{未满足条件}），无法开始人工验收。
+integration-verify / System Verification 尚未完成（{未满足条件}），无法开始人工验收。
 请完成联调后重新开始。
 ```
 
@@ -242,7 +242,7 @@ git push
 
 回顾本次验收：
 - 反复出现的问题类型 → 说明 项目约束或 TRD 有缺口，写入 项目根 `feedback.md`（格式：`{日期} | {发现} | 建议更新到 {文件哪节}`）
-- 联调通过但验收仍发现的问题 → 说明联调场景覆盖不足，写入 项目根 `feedback.md`，供下次 generate-integration-tests 参考
+- System Verification 完成但验收仍发现的问题 → 说明 semantic/runtime assurance scope 可能不足，写入项目根 `feedback.md`，供下次 `integration-verify` 参考
 - 无发现 → 跳过
 
 ```

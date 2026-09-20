@@ -13,7 +13,7 @@ required_capabilities:
   - command-execution
   - test-execution
   - persistence
-review: none
+review: required
 ---
 
 # integration-verify
@@ -22,28 +22,33 @@ review: none
 
 ### Purpose
 
-在本期计划内开发已经进入 Accepted Project Truth 后，独立于单个 develop Task 验证**组合后的真实系统**：确认跨 Task 归属、共享定义、退役关系和真实入口到终态的路径成立，并把失败准确路由回 `develop(source=integration)`、`revise-doc` 或其他明确承接方。
+在本期计划内开发已经进入 Accepted Project Truth 后，对明确的 final system candidate 完成 **System Verification**：由 Semantic / Holistic Independent Review 挑战整体 Contract 与 architecture，由 Runtime Integration Verification 证明真实组合路径，并把失败准确路由回 `develop(source=integration)`、`revise-doc` 或其他明确承接方。
 
-本 Task 继承旧 `generate-integration-tests` 的职责，但名称改为 `integration-verify`，因为“生成测试”只是手段，核心职责是整合验证。
+本 Task 继承旧 `generate-integration-tests` 的 runtime verification 职责，并扩展为 System Verification。`generate-integration-tests` 只保留为输入 alias；不得重新成为平行 Core Task。
 
 ### In scope
 
 - 核对本期多个 develop Task 合并后的组合关系
+- 对 final system candidate 执行一次 System Full Independent Review
+- 审查最终 Product / Technical Contract、architecture、cross-package consistency、ownership、shared contract、compatibility、call chain、state/permission/lifecycle consistency 与 evidence sufficiency
 - 验证必需能力有真实承接方
 - 核共享类型、枚举、错误、状态、接口和退役关系在消费者侧一致
 - 设计并执行真实入口到终态的后端穿透流
 - 识别并按需验证真实外部边界接线
 - 在用户任务或视觉基线受影响时验证真实前端任务路径
 - 对修复后的受影响组合路径进行复测
+- 按已有 system review lineage 执行必要的 targeted/full System Reviewer event
 - 形成可供 `manual-test` 读取的稳定整合验证结果
 
 ### Out of scope
 
-- 重复单个 develop Task 已完成的代码审查
+- 重复未失效的 Package Review，或把 System Review 降格为包级 review 汇总
 - 逐接口、逐字段重做没有组合价值的场景矩阵
 - 在本 Task 内直接修改业务实现
 - 用 fixture / mock 绕过本来要验证的真实接缝
 - 代替用户完成真实体验验收
+- 以 runtime tests 全绿替代 System Review，或以 System Review pass 替代 runtime verification
+- 创建新的 `final-review` / `system-review` Core Task、Human Gate 或平行动态状态机
 - 未获授权的生产写入、付费调用或不可撤销外部副作用
 
 Task Contract 只定义整合验证的任务语义；具体脚本、浏览器工具、并发方式和命令由 Runtime Adapter / 项目当前验证入口实现。
@@ -57,6 +62,7 @@ Task Contract 只定义整合验证的任务语义；具体脚本、浏览器工
 - G3 已 approved。
 - 本期所有 `source=sprint` 的 develop Task 已 `merged`。
 - 被验证代码与相关 Contract 已进入 Accepted Project Truth。
+- final system candidate 的 immutable Git identity 已明确，且包含本期全部计划内 Accepted develop results。
 - 本期测试环境约定可查；真正执行场景前，必要服务与数据环境必须可用。
 - 若上一次整合验证已派出 `develop(source=integration)` 修复，本轮相关修复必须已 `merged` 后才能对受影响路径形成新的通过结论。
 
@@ -73,6 +79,7 @@ Task Contract 只定义整合验证的任务语义；具体脚本、浏览器工
 - 本期 sprint / develop Task Package 中与组合、依赖、共享资产、`supersedes` 相关的 Contract
 - 当前 Accepted Project Truth 中的实现
 - 当前有效的 develop review / test evidence 指针
+- 当前 final Product / Technical Contract 与 architecture/foundation 约束
 - 当前动作实际触发的 Shared Protocol projection；按 `templates/boot-protocol.md` 与对应 Protocol 的最小加载规则读取，不预加载全部 `protocols/`
 
 ### Conditional
@@ -82,6 +89,7 @@ Task Contract 只定义整合验证的任务语义；具体脚本、浏览器工
 - `design.md` 中相关页面规格与视觉基线
 - 已有 integration scripts / scenario definitions
 - 已有 integration result / evidence
+- 已有 system-review event、未关闭 system finding、closure/revalidation evidence（存在时）
 - 外部边界配置、测试凭据入口和去敏样本说明
 - backlog / feedback 中与本期组合缺口有关的条目
 
@@ -97,11 +105,14 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 | Frontend verification scenarios | `integration-tests/frontend/` 或项目等价位置 | 仅在完整档适用 |
 | Integration result | `integration-tests/result-{date}.md` 或项目等价位置 | 当前验证基线、场景、证据与结论 |
 | Integration evidence | `integration-tests/evidence/` 或项目等价位置 | 真实运行证据，按项目当前 schema |
+| System Review events | `iterations/vN/system-review/review-NNN.md` 或项目等价受控位置 | 对 fixed candidate 的 immutable full/targeted historical judgement；具体 schema 在 Phase 4 落实 |
+| System finding closure evidence | `iterations/vN/system-review/` 下的 additive artifact 或项目等价受控位置 | 不改写 source review；具体物理形态在 Phase 3–4 落实 |
 
 ### State updates
 
-- `status.yml`：本 Task 生命周期
+- `status.yml`：每个 iteration 恰有一个 `type: integration-verify` 的 Core Task work item，沿用 `可取 → taken-by → done → merged`；`source` 为 `null`，详细 findings/evidence 不复制进 status
 - 必要 integration evidence / result pointer
+- 当前 system-review / closure pointer 与未解决 obligation 的最小索引；详细 judgement 保留在 Git artifact
 - 派生修复 Task 的状态由各自 `develop` Task 管理，不在本 Task 复制第二套状态
 
 ### Conditional outputs
@@ -115,7 +126,28 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 
 ## 5. Decision Rules & Boundaries
 
-### 5.1 Only current impact, but include seams
+### 5.1 Final system candidate
+
+System Verification 必须先固定 final system candidate。它不是“当前工作区”或“最新 master”的口头指代，而是可由 immutable Git object 重建、包含全部计划内 Accepted develop results 的明确 snapshot。
+
+Semantic Review 与 Runtime Verification 的结论都必须能对应到该 candidate。任一 lane 之后发生会影响其结论的实现、测试、Contract 或受版本控制配置变化，必须形成新 candidate 并按失效范围重新验证。
+
+### 5.2 Two complementary lanes
+
+System Verification 包含：
+
+1. **Semantic / Holistic Independent Review**：审整体 Contract、architecture、cross-package consistency、ownership、shared contract、compatibility、call chain、state/permission/lifecycle consistency 与 evidence sufficiency。
+2. **Runtime Integration Verification**：以真实执行证明 API、queue、database、state machine、frontend/backend seam、external boundary、terminal state、failure/retry/recovery 等适用路径。
+
+两条 lane 可以交换 evidence，不要求僵硬串行。Semantic Reviewer 可以请求 runtime evidence；Runtime Verification 可以建立新的 system finding。但两者不能互相替代，且必须对同一可追溯 candidate 成立。
+
+### 5.3 System Reviewer events and evidence state
+
+首次 System Reviewer event 对 final candidate 做 `full` review。后续事件按前序 judgement 的失效范围为 `targeted` 或 `full`；每次 invocation 形成新的 immutable event，targeted event 声明 predecessor 与 revalidation scope。
+
+Review result 与 evidence state 是两条轴：evidence insufficient 不能建立 pass。具体 report/finding/closure schema、routing 与 full snapshot invalidation 在 Review Architecture Phase 3–4 落实；在此之前不得以临时文档改写本节语义。
+
+### 5.4 Only current impact, but include seams
 
 验证范围以本期影响面为边界，同时必须覆盖本期改动触及的旧能力接缝。
 
@@ -123,7 +155,7 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 
 “全绿”只证明已执行测试的结果，不能替代 Contract reconciliation。
 
-### 5.2 Composition reconciliation
+### 5.5 Composition reconciliation
 
 执行场景前先核至少三类组合事实：
 
@@ -135,7 +167,7 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 
 准备核对不能代替实际运行；实际运行也不能代替上述静态组合核对。
 
-### 5.3 Backend penetration flows
+### 5.6 Backend penetration flows
 
 后端穿透流按**不同业务终态 / 分支决策**设计，而不是按输入种类或接口数量凑场景。
 
@@ -149,7 +181,7 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 
 场景数量由真实终态数量决定，没有固定上限或下限。
 
-### 5.4 External boundary gate
+### 5.7 External boundary gate
 
 Owner 必须识别本期新增或变化的真实外部边界，例如：
 
@@ -172,7 +204,7 @@ Owner 必须识别本期新增或变化的真实外部边界，例如：
 
 未运行边界是否阻断本 Task，取决于它是否是当前 Product / Technical Contract 的必要承诺，而不是取决于“有没有测试脚本”。
 
-### 5.5 Verification depth
+### 5.8 Runtime verification depth
 
 默认采用**轻量档**：
 
@@ -197,7 +229,7 @@ Owner 必须识别本期新增或变化的真实外部边界，例如：
 
 没有用户任务、视觉基线变化或相关 evidence gap 时，不为了形式强制完整档；用户仍可明确要求扩大验证范围。
 
-### 5.6 Failure routing
+### 5.9 Failure routing
 
 发现问题后按根因分流：
 
@@ -206,11 +238,11 @@ Owner 必须识别本期新增或变化的真实外部边界，例如：
 - **必要 Evidence 不足** → 补真实 Evidence
 - **与本期承诺无关的未来改进** → backlog
 
-integration-verify 自身不直接修改业务逻辑。
+integration-verify 自身不直接修改业务逻辑。System finding 的 closure authority 不由 origin 决定；`local-close | system-rereview` 的持久化 routing 与 escalation 规则在 Phase 3 落实。未有合法 route/closure evidence 前，不得仅因修复代码已 merged 就宣布 system finding 关闭。
 
 不得通过修改文档来取消已确认承诺，也不得让代码迁就错误 Contract。
 
-### 5.7 Re-test and evidence reuse
+### 5.10 Re-test and evidence reuse
 
 修复进入 Accepted Project Truth 后，必须重验证受影响的组合路径。
 
@@ -218,7 +250,7 @@ integration-verify 自身不直接修改业务逻辑。
 
 Task 完成时，每个 required scenario 都必须有**对当前 Accepted implementation 仍有效**的明确结论。
 
-### 5.8 Blocking vs non-blocking
+### 5.11 Blocking vs non-blocking
 
 只有不影响本期必要承诺、主流程和真实可接受性的事项才能标 non-blocking。
 
@@ -236,10 +268,14 @@ Task 完成时，每个 required scenario 都必须有**对当前 Accepted imple
 必须能够机械证明：
 
 - 所有本期 `source=sprint` develop Task 已 `merged`
+- final system candidate identity 明确且与两条 lane 的 evidence 一致
+- 至少一个对当前 lineage 有效的 System Full Independent Review baseline 存在
+- 当前所需 System Reviewer event 已完成，result/evidence state 合法
 - required backend flows 均有当前有效结果
 - result 中每个已执行场景都有 evidence pointer
 - 每个未运行场景 / boundary 都有明确原因和承接点
 - blocking finding 均已关闭
+- 无 unresolved escalation、pending system-rereview obligation 或缺失的 semantic/runtime revalidation scope
 - 所有派生 `develop(source=integration)` 修复已 `merged`
 - 完整档适用时，required frontend scenario 与 visual smoke evidence 完整
 - 项目当前 integration checker / evidence checker（若存在）通过
@@ -256,16 +292,15 @@ Task 完成时，每个 required scenario 都必须有**对当前 Accepted imple
 - required user task / terminal state 覆盖合理
 - 外部边界结论没有把未验证冒充通过
 - 当前所有 blocking 缺口已由真实修复 / revision / authority closure 解决
+- 当前 system-level assurance 依赖有效 closure lineage，而不是机械要求“最后一次 full review 必须 pass”
 
 ## 7. Review & Human Authority
 
 ### Independent Review
 
-本 Task 默认不增加第二层独立 review。
+本 Task 必须包含 Semantic / Holistic Independent Review lane。System Reviewer 使用 `protocols/review.md` 的 Fresh Isolated Context、same-source projection 与 fixed candidate 纪律，不继承 package implementer 的完整生成叙事，也不能只汇总 package review 自评。
 
-原因：`integration-verify` 本身就是对已经进入 Accepted Project Truth 的 develop 结果进行独立、跨 Task 的 verification；再机械复制一层 review 会重复职责。
-
-如果当前 Task 自身产生重要 Contract、复杂验证机制或高风险判断，按实际需要创建独立 review / specialist check，但不是固定完成门。
+Runtime Integration Verification 是同一 Task 的另一条 assurance lane，不是对 System Reviewer 的“第二层重复审查”。System Reviewer 可以消费原始 runtime evidence；runtime executor 不能独立认证 shared-contract/architecture redesign 后的广泛 semantic validity。
 
 ### Human Authority
 
@@ -285,8 +320,10 @@ integration-verify 不产生 Gate approval。
 满足：
 
 - required composition reconciliation 已完成
+- 当前所需 System Reviewer event 已形成 immutable Shared Candidate Truth
 - required scenarios 已执行或有合法、明确的未运行结论
 - blocking finding 已关闭
+- 无 unresolved escalation、pending system-rereview obligation 或缺失的 required semantic/runtime revalidation
 - 派生 integration repair 已 `merged`
 - 当前 result / scripts / evidence 已形成稳定 Shared Candidate Truth
 - 没有未解决 Authority blocker
@@ -305,7 +342,9 @@ integration-verify 不产生 Gate approval。
 满足：
 
 - deterministic 与 semantic verification 对同一最终世界成立
+- Semantic / Holistic Independent Review 与 Runtime Integration Verification 均对最终 candidate satisfied
 - integration result、必要 scripts / evidence 与 state 已进入 Accepted Project Truth
+- system review events 与 additive closure/revalidation evidence 已进入 Accepted Project Truth
 - `status.yml` 准确记录 Task `merged`
 - 当前无未关闭 blocking finding
 
@@ -313,19 +352,21 @@ integration-verify 不产生 Gate approval。
 
 ### Downstream
 
-`integration-verify` `merged` 后，`manual-test` 可进入 `可取`。
+`integration-verify` `merged` 后，且两条 lane 与全部 system finding obligations 对同一 final candidate satisfied，`manual-test` 可进入 `可取`。
 
-`manual-test` 必须重新读取 Accepted integration result，不继承本 Task 的 conversation。
+`manual-test` 必须重新读取 Accepted System Verification result（system-review lineage + integration result），不继承本 Task 的 conversation。
 
 ## 9. Recovery Notes
 
 恢复时在 `protocols/recovery.md` 共同来源之外，额外读取：
 
 - 当前 integration result
+- 当前 system-review event lineage 与 final system candidate
 - 当前验证的 Accepted implementation snapshot
 - required scenario 列表
 - 每个 scenario 的 result / evidence pointer
 - 未关闭 finding
+- 未解决 escalation / system-rereview / semantic or runtime revalidation obligation
 - 派生 `develop(source=integration)` Task 状态
 - 未运行 boundary 的原因与后续承接点
 

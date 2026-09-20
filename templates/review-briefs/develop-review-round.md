@@ -1,4 +1,4 @@
-<!-- develop 独立证据审查逐轮报告模板；首次 full，整改后默认 targeted。 -->
+<!-- develop 独立证据审查逐轮报告模板；现有 v2 首轮序列化仍写 full，整改后 targeted。target package effective mode 在 Phase 3 schema 对齐前写正文；此处 full 不表示 System Full Review。 -->
 ---
 schema: develop-review-round/v2
 review_policy: bounded-v1

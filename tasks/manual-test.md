@@ -49,14 +49,15 @@ review: none
 从 `可取` 进入 `taken-by` 前必须满足：
 
 - 当前 HACT Method fixed SHA 已知。
-- `integration-verify` 已 `merged`。
-- 当前 Accepted integration result 无未关闭 blocking finding。
+- `integration-verify` / System Verification 已 `merged`。
+- 当前 final system candidate 明确，Semantic / Holistic Independent Review 与 Runtime Integration Verification 均 satisfied。
+- 当前 Accepted system-review lineage 与 integration result 无未关闭 blocking finding、unresolved escalation、pending system-rereview 或缺失的 required revalidation。
 - 当前用于验收的 implementation snapshot 明确。
 - 测试环境可用或有明确建立方式。
 - 测试数据环境不是未获授权的生产数据环境。
 - 当前 PRD Product Contract 已进入 Accepted Project Truth。
 
-如果 integration-verify 只有“修复任务已派发”但修复尚未 `merged` / 复测，manual-test 不可进入 `可取`。
+如果 integration-verify 只有“System Review 已出报告”“runtime tests 已绿”或“修复任务已派发”中的一部分，而另一 assurance lane、修复、closure 或 revalidation 尚未闭合，manual-test 不可进入 `可取`。
 
 ## 3. Authoritative Inputs
 
@@ -65,7 +66,7 @@ review: none
 - 当前 HACT Method fixed SHA
 - `status.yml`
 - `iterations/vN/prd.md`
-- 当前 Accepted integration result
+- 当前 Accepted System Verification result，包括 system-review lineage 与 integration result
 - 当前被验收的 Accepted implementation snapshot
 - 本期 backlog 中明确标记的 `[欠账]` / 已知未闭合事项
 - 当前动作实际触发的 Shared Protocol projection；按 `templates/boot-protocol.md` 与对应 Protocol 的最小加载规则读取，不预加载全部 `protocols/`
@@ -74,12 +75,13 @@ review: none
 
 - `ux-flows.md`
 - `design.md`
+- system-review / closure / revalidation evidence
 - integration evidence
 - develop test / review evidence
 - `iterations/vN/trd.md` 的测试环境约定
 - 既有 acceptance report / prior round progress
 
-上一 Runtime 的总结不能替代 PRD、integration result 或真实用户反馈。
+上一 Runtime 的总结不能替代 PRD、System Verification artifacts 或真实用户反馈。
 
 ## 4. Outputs
 
@@ -140,12 +142,12 @@ AI 不能：
 
 ### 5.3 Evidence reuse
 
-不可视内部行为如果已经由与当前 implementation snapshot 匹配的 develop / integration Evidence 有效证明，不要求用户重复做无法观察的“手工验证”。
+不可视内部行为如果已经由与当前 implementation snapshot 匹配的 develop / System Verification Evidence 有效证明，不要求用户重复做无法观察的“手工验证”。
 
 Acceptance report 仍必须列全 PRD AC，并如实标注验证来源：
 
 - mechanical / develop
-- integration-verify
+- integration-verify / System Verification
 - human manual-test
 - mixed
 
@@ -237,7 +239,8 @@ G4 后新发现的问题：
 
 必须能够机械证明：
 
-- `integration-verify` 已 `merged`
+- `integration-verify` 已 `merged`，且两条 assurance lane 对同一 final system candidate satisfied
+- 无 open blocking system finding、unresolved escalation、pending system-rereview 或缺失 revalidation
 - acceptance report 存在且覆盖当前 PRD 全部 AC
 - 每条 AC 有明确验证来源
 - 所有本期 `develop(source=manual-test)` Task 已 `merged`
@@ -255,7 +258,7 @@ G4 后新发现的问题：
 - 核心用户任务和必要失败 / 恢复路径没有明显未验缺口
 - 范围外新需求没有被偷渡进当前 Contract
 - mechanical evidence 与 human evidence 的边界标注真实
-- 用户 acceptance 没有建立在已失效 integration / develop evidence 上
+- 用户 acceptance 没有建立在已失效 System Verification / develop evidence 上
 - 所有用户明确不能接受的问题已经修复或改变了 Contract / scope 并获得相应 Authority
 
 ## 7. Review & Human Authority
@@ -331,7 +334,7 @@ Task `merged` 与 G4 approval 语义正交；本 Task 的正常路径中，它�
 恢复时除 `protocols/recovery.md` 的共同来源外，额外读取：
 
 - 当前被验收 implementation snapshot
-- Accepted integration result
+- Accepted System Verification result（system-review lineage + integration result）
 - acceptance report
 - 未关闭用户 feedback
 - 当前轮 `develop(source=manual-test)` Task 状态

@@ -10,7 +10,7 @@
 
 ## 前置条件
 
-- **触发**：`generate-integration-tests` 完成判据满足，含组合核对完成、必需能力与主流程无未解决阻断；补缝任务仅已派发不算完成
+- **触发**：`integration-verify` / System Verification 完成判据满足，两条 assurance lane 对同一 final candidate 成立且无未解决 system obligation；补缝任务仅已派发不算完成
 - **文件**：
   - `iterations/vN/prd.md`（acceptance criteria，验收基准）
   - `integration-tests/result-{日期}.md`（联调结果，用于向用户说明当前状态）
@@ -55,7 +55,7 @@
 
 | 上游 task | 交接内容 | 格式 |
 |-----------|---------|------|
-| `generate-integration-tests` | 组合核对与测试完成判据满足，测试环境可用 | 现有联调结果记录 |
+| `integration-verify` | System Review 与 Runtime Verification 完成判据满足，测试环境可用 | system-review lineage + integration result |
 
 **输出给**
 

@@ -26,7 +26,7 @@ HACT 以 **Task** 为工作的基本单位。
 
 ### Implementation / verification
 8. `develop`
-9. `integration-verify`
+9. `integration-verify` — System Verification（Semantic / Holistic Independent Review + Runtime Integration Verification）
 10. `manual-test`
 
 ### Delivery / closeout

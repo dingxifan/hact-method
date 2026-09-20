@@ -142,6 +142,26 @@ Review 语义、projection、finding 与 bounded convergence 由 `protocols/revi
 
 Reviewer 需要探针、临时测试或生成文件时，使用独立 worktree / temp area，不污染待审 snapshot。
 
+### 7.4 Package Review modes
+
+Package classification 与 effective mode 由 `tasks/develop.md` 决定。Codex 只实现已选模式：
+
+- lightweight：Fresh Isolated Context 核 package intent/oracle、scope、受影响兼容性、必要 evidence/tests 与 escalation signals；
+- full-local：在同一基础上深入实际触及的 sensitive boundary、局部 shared contract 与完整受影响调用链。
+
+实际 fixed diff 触发升档时，补足 full-local scope；Phase 3 schema 落实前，在现有 review evidence 正文写明 effective mode 与依据，不临时扩展 checker enum。不得因已启动 lightweight reviewer 就忽略升档，也不得把任何 package review 标成 System Full Review。
+
+### 7.5 System Verification realization
+
+`integration-verify` 固定 final system candidate 后，Codex 在同一 Core Task 内实现两条 lane：
+
+- Semantic / Holistic Independent Review 使用 Fresh Isolated Context，读取 final Contract、architecture、全部相关 package evidence 与 fixed system candidate；
+- Runtime Integration Verification 使用项目真实 command/browser/service/environment 入口产生原始 execution evidence。
+
+两条 lane 可以交错。System Reviewer 的 runtime evidence request 返回 runtime lane；runtime lane 新发现的问题进入同一 system finding lifecycle。不得把两者压成一次普通 package review，也不得因为一个 lane 已通过就跳过另一个。
+
+每次 System Reviewer invocation 都形成新的 immutable event。Targeted event 必须接 predecessor 与声明 scope；具体 schema、finding routing、closure 与 checker wiring按 Phase 3–4 contract 实现，Runtime Adapter 不先发明临时格式。
+
 ## 8. Git Delivery Adapter
 
 Task / Git Truth Protocol 决定何时允许 Candidate → Accepted Truth；Codex 负责实现当前 repository 的 Git policy，例如：

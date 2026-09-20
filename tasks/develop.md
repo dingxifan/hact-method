@@ -307,7 +307,14 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 `Same Runtime + Fresh Isolated Context + Same Source of Truth`
 
-首次 review 对一个 fixed candidate 做 full review。Reviewer 至少回答三个核心问题：
+Package Review 的目的为 **Error Containment**，不是最终 System Assurance。分类与实际审查模式是两份不同的真相：
+
+- `classification=standard` 默认要求 `mode=lightweight`
+- `classification=sensitive` 要求 `mode=full-local`
+- 实际 fixed diff 发现 sensitive boundary 或其他明确升级条件时，standard 必须升为 `full-local`
+- 同一生命周期不依赖从 sensitive 降回 lightweight 才能完成
+
+`lightweight` 表示责任范围更窄，不表示弱化正确性核对。无论模式，Reviewer 都至少回答三个核心问题：
 
 1. **contract / scope**：本 Task 承诺是否兑现，是否越出授权边界
 2. **compatibility**：本次改动是否破坏受影响已有行为
@@ -322,6 +329,12 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - logging / privacy / sensitive boundaries
 
 Reviewer 必须按 `protocols/review.md` 的 same-source projection，自行读取当前审查所需的 Task sections、Development Intake、权威上游和 fixed diff；不继承 Owner 的完整生成历史，也不采信 Owner 自评替代验证。
+
+`lightweight` 不承担完整系统架构、全部跨包一致性或最终整体 assurance；这些职责在所有计划内 develop packages 合并后由 `integration-verify` / System Verification 承接。
+
+`full-local` 仍是包级审查：它对当前包触及的 sensitive boundary、受影响调用链、局部 shared contract 与必要证据做完整独立核对，但不因此冒充 System Full Independent Review。
+
+Phase 3 schema alignment 前，现有 `develop-review-round/v2` 不新增临时字段：`risk` 继续承载 classification，Reviewer 在报告正文明确本轮 effective mode 与升档依据。不得把历史 `mode=full` 回填解释为 target `full-local`，也不得据此声称历史 package 已执行新 policy。
 
 ### Finding routing
 
@@ -343,7 +356,7 @@ blocking finding 出现时：
 
 默认：
 
-`full candidate review → targeted fix → targeted re-review`
+`policy-selected initial review → targeted fix → targeted re-review`
 
 定向复审只核：
 
@@ -352,9 +365,9 @@ blocking finding 出现时：
 - 受影响回归是否有效
 - 是否出现具体变化导致此前更大范围结论失效
 
-新增文件、模块或依赖本身不自动触发 full review。只有先前结论被广泛失效时才升级 full。
+新增文件、模块或依赖本身不自动触发扩大复审。只有实际风险或先前局部结论失效时才扩大包级审查范围。
 
-每个 Task 最多允许 **3 个包含 implementation / test 实质变化的 code review snapshot**，包括首次 full candidate。纯 evidence 补证不消耗这 3 个实质代码 snapshot 配额，但仍属于 review history。
+每个 Task 最多允许 **3 个包含 implementation / test 实质变化的 code review snapshot**，包括首次 policy-selected candidate review。纯 evidence 补证不消耗这 3 个实质代码 snapshot 配额，但仍属于 review history。
 
 同一 snapshot、同一问题只做一次集中的 evidence 补证；仍不能判断时暂停并 escalation，不无限循环。
 
@@ -371,8 +384,8 @@ Runtime 切换、恢复、新 reviewer、finding id 变化都不能清零上述�
 
 命中任一项时：
 
-1. Reviewer 必须覆盖对应 sensitive boundary。
-2. 如果此前误按 standard review，先补足 sensitive review。
+1. Reviewer 必须覆盖对应 sensitive boundary，并把有效模式升为 `full-local`。
+2. 如果此前误按 standard/lightweight review，先补足 full-local review。
 3. 在结果进入 Accepted Project Truth 前，由用户或其明确指定的审批人对**该具体风险**做 Human Authority 裁决。
 
 这个裁决不是 G1–G5 的新增 Gate，也不能由更强模型替代。

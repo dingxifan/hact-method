@@ -75,6 +75,20 @@ tasks:
     depends_on: []              # string[]，依赖的 task-id 列表
     delivery: 串行              # enum，串行 / 可并行；B 类 / 修复任务可为 null
     urgency: null               # enum，hotfix / null
+  - id: hact-v2-integration-verify # 每 iteration 恰有一条 System Verification Core Task work item
+    iteration: v2
+    sprint: null
+    source: null                # 非 develop source；不得伪装成 source=integration 修复任务
+    title: System Verification
+    type: integration-verify
+    layer: null
+    status: 可取
+    assigned_to: null
+    pr: null
+    parent_id: null
+    depends_on: []
+    delivery: null
+    urgency: null
   - id: hact-b-001              # B 类示例
     iteration: null             # 不属任何迭代
     sprint: null
@@ -125,7 +139,7 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 
 | 字段 | 枚举值 |
 |---|---|
-| `tasks[].source` | sprint / foundation / integration / manual-test / bug / optimization |
+| `tasks[].source` | develop work item：sprint / foundation / integration / manual-test / bug / optimization；`type=integration-verify`：null |
 | `tasks[].status` | 可取 / taken-by / done / merged |
 | `tasks[].layer` | frontend / backend / shared / null |
 | `tasks[].delivery` | 串行 / 可并行 / null |
@@ -165,8 +179,9 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 | 提 PR（瞬态 done）| `develop` | 对应 task `status: done` + `pr`（同会话内即审即合并，done 不停留）|
 | 独立审查通过 + 自合并 | `develop` | 对应 task `status: merged` |
 | CR 结论（审计留痕）| `develop` | `code_reviews[]` 追加一条 |
-| 联调修复任务派发 | `generate-integration-tests` | 追加 task（`source=integration`, `iteration=vN`） |
-| 联调项创建 / 跑通 / 失败 / 复测 | `generate-integration-tests` | `integration_tests[]` |
+| System Verification 生命周期 | `integration-verify` | 复用 `tasks[]`，每 iteration 一个 `type=integration-verify` work item；具体 schema wiring 在 Review Architecture Phase 4 落实 |
+| 联调修复任务派发 | `integration-verify` | 追加 task（`source=integration`, `iteration=vN`） |
+| 联调项创建 / 跑通 / 失败 / 复测 | `integration-verify` | `integration_tests[]` |
 | 验收修复任务派发 | `manual-test` | 追加 task（`source=manual-test`, `iteration=vN`） |
 | 签 G4 | `manual-test` | `gates.G4` |
 | B 类派发 | `dispatch-new` | 追加 task（`source=bug/optimization`, `iteration=null`） |

@@ -1359,7 +1359,7 @@ function checkSprint(iteration, root, audit = true) {
   if (stTasks === null) {
     human('三方一致:status', '项目根无 status.yml（存量项目），queue↔status 一致性退回人工兜底');
   } else {
-    // 迭代内 queue 的三个进料口：plan-sprint 产 sprint；generate-integration-tests Step 4 产
+    // 迭代内 queue 的三个进料口：plan-sprint 产 sprint；integration-verify runtime/finding repair 产
     // integration；manual-test 产 manual-test —— 后两者同样写进 iterations/vN/queue/ 并同步
     // tasks[]，故一致性比对须一并放行（B 类 bug/optimization 走 b-queue、iteration=null，不在此列）。
     const stIds = new Set(stTasks.filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration).map(t => t.id));
