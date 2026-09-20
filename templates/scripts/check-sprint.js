@@ -1577,7 +1577,9 @@ function checkStagedReviews(root) {
         const baseTree = scalarText(preflight && preflight.base_tree);
         const accepted = isSha40(baseTree) && isSha40(reviewedHead) ? fixedDiffEvidence(root, baseTree, reviewedHead) : { error: '缺可解析 accepted tree' };
         const taskPath = findTaskPackages(root, id).map(file => path.relative(root, file).replace(/\\/g, '/'))[0] || '';
-        for (const file of staged.filter(name => !governanceWritePath(name, taskPath, path.relative(root, reportDir).replace(/\\/g, '/')))) {
+        const lifecycleGovernance = name => governanceWritePath(name, taskPath, path.relative(root, reportDir).replace(/\\/g, '/'))
+          || /^iterations\/v\d+(?:\.\d+)*\/(?:sprint|prd|trd)\.md$/.test(name);
+        for (const file of staged.filter(name => !lifecycleGovernance(name))) {
           if (accepted.error || !accepted.names.includes(file)) { fail('Accepted implementation binding', file, `${id}: staged implementation 不在 final reviewed implementation world`); continue; }
           let stagedBlob = '', reviewedBlob = '';
           try { stagedBlob = String(gitOutput(root, ['rev-parse', `:${file}`])).trim(); reviewedBlob = String(gitOutput(root, ['rev-parse', `${reviewedHead}:${file}`])).trim(); } catch {}
