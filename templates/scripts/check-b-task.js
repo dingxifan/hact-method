@@ -52,6 +52,17 @@ function normalizeDeclaredFile(file) {
   return (match ? match[1] : text).replace(/^\.\//, '');
 }
 
+// Governance artifacts are auditable, but they are not business implementation
+// files. They remain visible to the review-chain audit; this classifier only
+// keeps them out of the task package's implementation write-set.
+function governancePath(file, taskId, taskPath = '') {
+  const name = String(file || '').replace(/\\/g, '/').replace(/^\.\//, '');
+  const normalizedTask = String(taskPath || '').replace(/\\/g, '/');
+  return name === 'status.yml' || name === normalizedTask || /^status-reviews\/[^/]+\.yml$/.test(name)
+    || new RegExp(`^b-reviews/${String(taskId || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/`).test(name)
+    || new RegExp(`^iterations/[^/]+/code-reviews/${String(taskId || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/`).test(name);
+}
+
 function contractDiffSignals(diff) {
   const patterns = [
     { label: '导出共享 type/interface/enum', re: /\bexport\s+(?:interface|type|enum)\b/ },
@@ -61,8 +72,20 @@ function contractDiffSignals(diff) {
     { label: 'OpenAPI/Swagger 根声明', re: /^\s*(?:openapi|swagger)\s*:/i },
   ];
   const hits = [];
+  // Unit callers may provide an isolated changed line; a real Git binary diff
+  // always supplies +++ b/<path> before content.
+  let implementationFile = true;
   for (const line of String(diff || '').split(/\r?\n/)) {
+    if (/^\+\+\+ b\//.test(line)) {
+      const file = line.slice(6).trim();
+      // Markdown governance may quote a DTO/route/type verbatim. Contract
+      // signals are about implementation/schema changes, never prose.
+      implementationFile = /\.(?:[cm]?[jt]sx?|java|kt|cs|go|py|rb|php|sql|proto|avsc|ya?ml|json)$/i.test(file)
+        && !/\.md$/i.test(file);
+      continue;
+    }
     if (!/^[+-]/.test(line) || /^(?:\+\+\+|---)/.test(line)) continue;
+    if (!implementationFile) continue;
     const code = line.slice(1);
     for (const { label, re } of patterns) if (re.test(code)) hits.push(`${label}: ${code.trim().slice(0, 120)}`);
   }
@@ -125,10 +148,12 @@ function validateDiff(file, base, head, root = process.cwd()) {
   const fm = parseFrontmatter(fs.readFileSync(file, 'utf8'));
   const declared = new Set((Array.isArray(fm && fm.files) ? fm.files : []).map(normalizeDeclaredFile));
   const taskPath = path.relative(root, path.resolve(file)).replace(/\\/g, '/');
-  const undeclared = changedFiles.filter(changed => changed !== taskPath && !declared.has(changed.replace(/\\/g, '/')));
+  const taskId = String(fm && fm['task-id'] || path.basename(taskPath, '.md'));
+  const implementationFiles = changedFiles.filter(changed => !governancePath(changed, taskId, taskPath));
+  const undeclared = implementationFiles.filter(changed => !declared.has(changed.replace(/\\/g, '/')));
   if (undeclared.length) errors.push(`固定 diff 含未声明 files：${undeclared.join('、')}`);
   const governed = fm && fm['contract-impact'] === 'governed';
-  const pathHits = governed ? prohibitedPathHits(changedFiles) : contractPathHits(changedFiles);
+  const pathHits = governed ? prohibitedPathHits(implementationFiles) : contractPathHits(implementationFiles);
   if (pathHits.length) errors.push(`固定 diff 命中共享契约/迁移路径：${pathHits.join('、')}`);
   const signals = contractDiffSignals(diff);
   if (governed ? signals.some(signal => signal.startsWith('数据库 DDL:')) : signals.length) errors.push(`固定 diff 出现共享契约变更信号：${signals.join('；')}`);
@@ -137,34 +162,32 @@ function validateDiff(file, base, head, root = process.cwd()) {
   return errors;
 }
 
-function validate(file) {
-  const source = fs.readFileSync(file, 'utf8');
+function validate(file, sourceOverride = null) {
+  const source = sourceOverride === null ? fs.readFileSync(file, 'utf8') : sourceOverride;
   const fm = parseFrontmatter(source);
   const errors = [];
   if (!fm) return ['缺 YAML frontmatter'];
   if (!['bug', 'optimization'].includes(String(fm.source || '').toLowerCase()))
     errors.push(`source=${fm.source || '<缺失>'}，B 类只能 bug/optimization`);
-  if ('package-schema' in fm && String(fm['package-schema']) !== '2') errors.push('未知 package-schema，不能当作存量包放行');
+  if (String(fm['package-schema']) !== '2')
+    errors.push(`active B package 必须显式使用 package-schema: 2（当前=${fm['package-schema'] || '缺失'}）`);
   const impact = String(fm['contract-impact'] || '');
   if (!['none', 'governed'].includes(impact)) errors.push('contract-impact 必须为 none 或 governed');
   const nonempty = value => typeof value === 'string' && value.trim() && !/<待填>|TODO/.test(value);
-  if (String(fm['package-schema']) === '2' || impact === 'governed') {
-    if (!['standard', 'sensitive'].includes(fm.risk)) errors.push('risk 必须为 standard 或 sensitive');
-    for (const key of ['task-id', 'title', 'description', 'context', 'risk'])
-      if (!nonempty(fm[key])) errors.push(`缺有效 ${key}`);
-    for (const key of ['files', 'reference'])
-      if (!Array.isArray(fm[key]) || !fm[key].length || !fm[key].every(nonempty)) errors.push(`缺有效 ${key} 列表`);
-    for (const key of ['depends_on', 'do-not'])
-      if (!Array.isArray(fm[key])) errors.push(`缺 ${key} 列表；无则 []`);
-    const ac = source.match(/^acceptance-criteria:\s*\n((?:[ \t]+.*\n|\s*\n)*)/m);
-    const criteria = ac ? ac[1].split(/^[ \t]+-[ \t]+\|[-+]?[ \t]*$/m).slice(1) : [];
-    if (!criteria.length || criteria.some(item => ['intent', 'oracle'].some(key => {
-      const match = item.match(new RegExp('^[ \\t]+' + key + ':[ \\t]*(.+)$', 'm'));
-      return !match || !nonempty(match[1]);
-    }))) errors.push('每条 acceptance-criteria 都需可验证的 intent/oracle');
-  }
+  if (!['standard', 'sensitive'].includes(fm.risk)) errors.push('risk 必须为 standard 或 sensitive');
+  for (const key of ['task-id', 'title', 'description', 'context', 'risk'])
+    if (!nonempty(fm[key])) errors.push(`缺有效 ${key}`);
+  for (const key of ['files', 'reference'])
+    if (!Array.isArray(fm[key]) || !fm[key].length || !fm[key].every(nonempty)) errors.push(`缺有效 ${key} 列表`);
+  for (const key of ['depends_on', 'do-not'])
+    if (!Array.isArray(fm[key])) errors.push(`缺 ${key} 列表；无则 []`);
+  const ac = source.match(/^acceptance-criteria:\s*\n((?:[ \t]+.*\n|\s*\n)*)/m);
+  const criteria = ac ? ac[1].split(/^[ \t]+-[ \t]+\|[-+]?[ \t]*$/m).slice(1) : [];
+  if (!criteria.length || criteria.some(item => ['intent', 'oracle'].some(key => {
+    const match = item.match(new RegExp('^[ \\t]+' + key + ':[ \\t]*(.+)$', 'm'));
+    return !match || !nonempty(match[1]);
+  }))) errors.push('每条 acceptance-criteria 都需可验证的 intent/oracle');
   if (impact === 'governed') {
-    if (String(fm['package-schema']) !== '2') errors.push('governed 必须使用 package-schema: 2 的短包');
     if (!Array.isArray(fm['asset-writes']) || !fm['asset-writes'].length || !fm['asset-writes'].every(nonempty))
       errors.push('governed 必须列出受影响共享资产，不能填 []');
     // reference/context 承接已确认意图、兼容边界与验证入口；真实性由 preflight 与独立审查核对。
@@ -178,29 +201,44 @@ function validate(file) {
 
 function main() {
   const args = process.argv.slice(2);
-  let base = null, head = null, root = process.cwd();
+  let base = null, head = null, root = process.cwd(), staged = false;
   const files = [];
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === '--diff') { base = args[index + 1]; head = args[index + 2]; index += 2; }
     else if (args[index] === '--root') { root = path.resolve(args[index + 1]); index += 1; }
+    else if (args[index] === '--staged') staged = true;
     else files.push(args[index]);
   }
   if (!files.length) {
-    console.error('用法: node check-b-task.js <b-queue/task-id.md> [...] [--diff <base> <head>] [--root <项目根>]');
+    console.error('用法: node check-b-task.js <b-queue/task-id.md> [...] [--staged] [--diff <base> <head>] [--root <项目根>]');
     process.exit(2);
   }
   if ((base && !head) || (!base && head) || ((base || head) && files.length !== 1)) {
     console.error('--diff 必须同时给 base/head，且一次只校验一个 B 类任务包');
     process.exit(2);
   }
+  if (staged && (base || head)) {
+    console.error('--staged 不能与 --diff 同时使用');
+    process.exit(2);
+  }
   let failed = false;
   for (const file of files) {
-    if (!fs.existsSync(file)) {
+    if (!staged && !fs.existsSync(file)) {
       failed = true;
       console.error(`❌ ${file}\n  - 任务包文件不存在`);
       continue;
     }
-    const errors = base ? validateDiff(file, base, head, root) : validate(file);
+    let stagedSource = null;
+    if (staged) {
+      const taskPath = path.relative(root, path.resolve(file)).replace(/\\/g, '/');
+      try { stagedSource = git(root, ['show', `:${taskPath}`]); }
+      catch (error) {
+        failed = true;
+        console.error(`❌ ${file}\n  - 无法读取 staged B package：${String(error.stderr || error.message).trim()}`);
+        continue;
+      }
+    }
+    const errors = base ? validateDiff(file, base, head, root) : validate(file, stagedSource);
     if (errors.length) {
       failed = true;
       console.error(`❌ ${file}`);
@@ -214,4 +252,4 @@ function main() {
 
 if (require.main === module) main();
 module.exports = { parseFrontmatter, contractPathHits, contractDiffSignals, extractPublicContracts,
-  publicContractSignals, validate, validateDiff };
+  publicContractSignals, governancePath, validate, validateDiff };

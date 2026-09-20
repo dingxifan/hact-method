@@ -43,12 +43,6 @@ path. Absolute paths, parent traversal, `.git/**`, and `.github/**` remain
 hard-rejected. Narrow the list again when a repository needs a smaller write
 surface.
 
-`base_branch` normally names the configured stable branch (`main`). For an
-incremental Shared Candidate update, it may instead equal `target_branch` only
-when that candidate matches `allowed_incremental_base_prefixes`. The remote
-candidate HEAD must exactly equal packet `base_sha`; the Watcher then appends
-only the submitted files with an ordinary fast-forward push.
-
 Run in a foreground terminal while testing:
 
 ```powershell
@@ -93,6 +87,21 @@ for `origin/<base_branch>`. After `git fetch origin`, the Watcher compares it
 before checkout, writing files, committing, or pushing. A mismatch fails at
 `precondition` without publishing an artifact.
 
+### Current base-branch limitation
+
+Watcher v0.1.2 validates `job.base_branch` against the repository's configured
+`base_branch`. In the current HACT setup that configured branch is `main`, so a
+publish package cannot use a prior candidate branch as its base.
+
+When a cumulative candidate has not been merged to `main`, publish the next
+candidate from the current `main` SHA and include the complete desired candidate
+file set again, plus the new changes. The resulting target branch represents
+the new cumulative snapshot even though its Git parent is `main`.
+
+This is a Watcher / persistence-adapter limitation, not a HACT Git Truth rule.
+Do not change `watcher.mjs` merely to make an incremental candidate chain unless
+that infrastructure change is separately authorized and reviewed.
+
 ## Result package
 
 The successful result at `HACT/results/<job_id>.result.json` is:
@@ -116,6 +125,36 @@ file bytes. The same `job_id` plus the same hash is skipped safely. The same
 `failed` and a separate collision result is written without replacing the
 original result. No changed content yields `status: "no_changes"` without an
 empty commit.
+
+### ChatGPT Dropbox connector status caveat
+
+Observed with the current ChatGPT Dropbox connector: the publish file can
+already be present in Dropbox and can even have been processed by Watcher while
+`check_upload_file_status` returns:
+
+```text
+FAILED_PRECONDITION
+Failed to download source file (reason: FETCH_FAILED)
+```
+
+Treat that connector result as **indeterminate**, not as authoritative publish
+failure.
+
+For a HACT publish attempt:
+
+1. Check `HACT/results/<job_id>.result.json`.
+2. Check whether the request was archived in `done/` or `failed/`.
+3. If Watcher reports success, verify `commit_sha` in GitHub and verify the
+   expected changed files / candidate content.
+4. Only conclude end-to-end failure when Watcher result and/or Git verification
+   establish failure.
+
+In this persistence chain, Watcher result plus verified Git SHA is the
+end-to-end completion evidence. Dropbox upload polling status alone is not.
+
+The connector's internal reason for the false-negative polling result is not
+established here; this README records only the behavior that has been observed
+and the safe operational response.
 
 ## Crash recovery
 

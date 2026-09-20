@@ -204,8 +204,13 @@ code_reviews: []
   assert.strictEqual(emptyIndex.stdout, withoutIndex.stdout, '缺索引与显式空索引输出须逐字节一致');
   assert.strictEqual(emptyIndex.stderr, withoutIndex.stderr);
 
-  const legacyTask = `---
+  // Archive is a Core contract test: every task that enters queue/status/merged
+  // lifecycle is a current schema=2 task. Historical truth belongs exclusively
+  // to legacy-migration regression, never to this fixture.
+  const coreTask = `---
+package-schema: 2
 task-id: ${ITERATION_ID}
+module: archive
 sprint_id: v1-s1
 layers: [backend]
 source: sprint
@@ -232,14 +237,56 @@ do-not: []
 escalate-if: []
 ---
 `;
-  write(`iterations/v1/queue/${ITERATION_ID}.md`, legacyTask);
+  write(`iterations/v1/queue/${ITERATION_ID}.md`, coreTask);
   write('iterations/v1/prd.md', '## 核心功能\n- AC-01: intent: 审查归档后仍能核对\n');
   write('iterations/v1/sprint.md', `| task-id | title | layers | 依赖 | 状态 | PR | 交付 |
 | ${ITERATION_ID} | 归档后检查本期 | backend | — | [merged] | — | 可并行 |
 `);
+  write(`iterations/v1/code-reviews/${ITERATION_ID}/preflight.md`, `---
+task_id: ${ITERATION_ID}
+timing: before-code
+base_ref: ${baseRef}
+base_tree: ${baseTree}
+result: pass
+---
+`);
+  write(`iterations/v1/code-reviews/${ITERATION_ID}/round-01.md`, fs.readFileSync(path.join(tempRoot, `b-reviews/${REVIEW_ID}/round-01.md`), 'utf8')
+    .replaceAll(REVIEW_ID, ITERATION_ID).replace('src/archive.js', 'src/iteration.js'));
+  // Give the iteration its own reviewed implementation tree.
+  write('src/iteration.js', 'module.exports = "iteration";\n'); git(['read-tree', baseTree]); git(['add', 'src/iteration.js']);
+  const iterationHead = git(['write-tree']).trim();
+  const iterationEvidence = diffEvidence(baseTree, iterationHead);
+  write(`iterations/v1/code-reviews/${ITERATION_ID}/round-01.md`, `---
+schema: develop-review-round/v2
+task_id: ${ITERATION_ID}
+round: 1
+mode: full
+risk: standard
+prior_report: null
+target_finding_ids: []
+base_ref: ${baseRef}
+reviewed_base: ${baseTree}
+reviewed_head: ${iterationHead}
+diff_sha256: ${iterationEvidence.hash}
+changed_files: [src/iteration.js]
+escalate_to_full: false
+conclusion: pass
+---
+
+## Findings
+
+\`\`\`yaml
+findings: []
+\`\`\`
+`);
   const iterationReview = `  - iteration: v1
     task_id: ${ITERATION_ID}
     rounds: 1
+    code_rounds: 1
+    spec_rounds: 0
+    freshness: pass
+    review_report_dir: iterations/v1/code-reviews/${ITERATION_ID}
+    review_evidence_version: develop-review-round/v2
 `;
   write('status-reviews/v1.yml', `code_reviews:\n${iterationReview}`);
   write('status.yml', `iterations:
@@ -261,90 +308,74 @@ code_review_archives:
 code_reviews: []
 `);
   result = run('v1');
-  assert.notStrictEqual(result.status, 0, '无 adoption boundary 时旧 schema 不再获得隐式豁免');
-  assert.doesNotMatch(result.stdout, /code_reviews\[\] 无条目/, '即使严格审计失败，检查 #9 仍须从本期归档定位历史条目');
-  assert.match(result.stdout, /rounds|code_rounds|review_report_dir|审计/, '失败原因必须是证据不完整而不是归档不可见');
+  assert.strictEqual(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.doesNotMatch(result.stdout, /code_reviews\[\] 无条目/, '检查 #9 必须读取本期归档');
   write('status.yml', fs.readFileSync(path.join(tempRoot, 'status.yml'), 'utf8')
     .replace(/code_review_archives:[\s\S]*?code_reviews: \[\]\n/, 'code_reviews: []\n'));
   result = run('v1');
   assert.notStrictEqual(result.status, 0, '移除归档索引后检查 #9 应重新发现缺条目');
   assert.match(result.stdout, /code_reviews\[\] 无条目/);
+  write('status.yml', `iterations:
+  v1:
+    gates:
+      G5: { signed: true, date: 2026-09-14 }
+tasks:
+  - id: ${ITERATION_ID}
+    source: sprint
+    iteration: v1
+    layer: backend
+    status: merged
+    depends_on: []
+    delivery: 可并行
+code_review_archives:
+  - iteration: v1
+    file: status-reviews/v1.yml
+    count: 1
+code_reviews: []
+`);
 
-  // Without an explicit boundary, historical missing evidence remains debt.
+  // A valid archived Core record remains scoped: unrelated planning commits do
+  // not re-audit every historical archive, while touching this Core task does.
   git(['add', '.']); git(['commit', '-m', 'fixture historical baseline']);
-  const acceptedTruthBase = git(['rev-parse', 'HEAD']).trim();
-  assert.notStrictEqual(run('v1').status, 0, 'schema age alone must never imply grandfathering');
-
-  // R2.3 adoption explicitly freezes the pre-adoption accepted truth. No synthetic review evidence is added.
-  write('_meta/method-sync.json', JSON.stringify({
-    schema: 2,
-    state: 'verified',
-    source: 'a'.repeat(40),
-    adoption: {
-      schema: 2,
-      kind: 'legacy-project',
-      method_source: 'a'.repeat(40),
-      source_base: acceptedTruthBase,
-      accepted_truth_base: acceptedTruthBase,
-      accepted_truth_status_sha256: crypto.createHash('sha256').update(git(['show', `${acceptedTruthBase}:status.yml`])).digest('hex'),
-      legacy_accepted_tasks: [ITERATION_ID],
-    },
-  }, null, 2) + '\n');
-  git(['add', '_meta/method-sync.json']); git(['commit', '-m', 'adopt R2.3 boundary']);
-  result = run('v1');
-  assert.strictEqual(result.status, 0, `explicit grandfathered truth must pass without fabricated v2 history: ${result.stdout}\n${result.stderr}`);
-  assert.match(result.stdout, /legacy accepted truth/, 'full audit must say why history was accepted');
-
   fs.appendFileSync(path.join(tempRoot, 'iterations/v1/sprint.md'), '\nplanning note\n');
   git(['add', 'iterations/v1/sprint.md']);
   const stagedAudit = () => childProcess.spawnSync(process.execPath, [checkSprint, '--staged', tempRoot], { encoding: 'utf8' });
   result = stagedAudit();
-  assert.strictEqual(result.status, 0, `unmodified grandfathered truth must not block unrelated planning: ${result.stdout}\n${result.stderr}`);
+  assert.strictEqual(result.status, 0, `unmodified archived Core audit must not block: ${result.stdout}\n${result.stderr}`);
   write('scripts/check-sprint.js', fs.readFileSync(checkSprint, 'utf8'));
   const shell = process.platform === 'win32' ? path.join(process.env.ProgramFiles, 'Git', 'bin', 'sh.exe') : '/bin/sh';
   const hooked = childProcess.spawnSync(shell, [path.join(__dirname, 'pre-commit-hook.sh')], { cwd: tempRoot, encoding: 'utf8' });
-  assert.strictEqual(hooked.status, 0, `real hook ignores untouched grandfathered history: ${hooked.stdout}\n${hooked.stderr}`);
+  assert.strictEqual(hooked.status, 0, `real hook ignores unrelated archived Core reports: ${hooked.stdout}\n${hooked.stderr}`);
   assert.strictEqual((hooked.stderr.match(/check-sprint.js --staged/g) || []).length, 1, 'one scoped audit per commit');
-  git(['reset', 'HEAD', '--', 'iterations/v1/sprint.md']);
-  write('iterations/v1/sprint.md', fs.readFileSync(path.join(tempRoot, 'iterations/v1/sprint.md'), 'utf8').replace('\nplanning note\n', ''));
+  assert.strictEqual(run('v1').status, 0, 'explicit full audit accepts archived Core review evidence');
   const baselineStatus = fs.readFileSync(path.join(tempRoot, 'status.yml'), 'utf8');
   fs.appendFileSync(path.join(tempRoot, 'status.yml'), '\n# unrelated status note\n');
   git(['add', 'status.yml']);
-  assert.strictEqual(stagedAudit().status, 0, 'status note must not trigger historical audit');
+  assert.strictEqual(stagedAudit().status, 0, 'status note must not trigger archived Core audit');
   write('status.yml', baselineStatus.replace('iteration: v1', 'iteration: v2'));
   git(['add', 'status.yml']);
   assert.notStrictEqual(stagedAudit().status, 0, 'status-only task ownership changes still require global planning consistency');
-  // 暂存真实规划字段变更，才会把本期 queue 纳入提交输入闭合检查。
-  write('status.yml', baselineStatus.replace('delivery: 可并行', 'delivery: 串行')); git(['add', 'status.yml']);
+  write('status.yml', baselineStatus); git(['add', 'status.yml']);
   const originalQueue = fs.readFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), 'utf8');
   fs.appendFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), '\nunstaged planning change\n');
   assert.match(stagedAudit().stderr, /未暂存变化/, 'global planning input must match index');
   write(`iterations/v1/queue/${ITERATION_ID}.md`, originalQueue);
   write('status.yml', baselineStatus.replace('code_reviews: []', `code_reviews:\n  - task_id: ${ITERATION_ID}\n    rounds: 1\n`));
   git(['add', 'status.yml']);
-  assert.notStrictEqual(stagedAudit().status, 0, 'new or edited audit record must be checked even for an old merged task');
+  assert.notStrictEqual(stagedAudit().status, 0, 'new or edited audit record must be checked for a merged Core task');
   write('status.yml', baselineStatus); git(['add', 'status.yml']);
   fs.appendFileSync(path.join(tempRoot, `iterations/v1/queue/${ITERATION_ID}.md`), '\nchanged task\n');
   git(['add', `iterations/v1/queue/${ITERATION_ID}.md`]);
   result = stagedAudit();
-  assert.notStrictEqual(result.status, 0, 'touching grandfathered accepted truth must restore strict vNext audit');
-  assert.match(result.stdout, /审计|code_reviews/);
-
-  // Reopen itself is allowed to enter active work without fabricating a completed review,
-  // but grandfathering does not follow the task into its post-adoption re-merge.
-  git(['reset', 'HEAD', '--', `iterations/v1/queue/${ITERATION_ID}.md`]);
-  write(`iterations/v1/queue/${ITERATION_ID}.md`, originalQueue);
-  write('status.yml', baselineStatus.replace('status: merged', 'status: taken-by'));
-  git(['add', 'status.yml']);
+  assert.strictEqual(result.status, 0, `touching a valid Core task keeps its archived audit valid: ${result.stdout}\n${result.stderr}`);
+  // T1 was reviewed and passed; substituting implementation T2 in the merged
+  // index must fail even though the report remains internally self-consistent.
+  write('src/iteration.js', 'module.exports = "unreviewed T2";\n');
+  git(['add', 'src/iteration.js']);
   result = stagedAudit();
-  assert.strictEqual(result.status, 0, `reopen begins post-adoption work but is not falsely required to have final evidence yet: ${result.stdout}\n${result.stderr}`);
-  git(['commit', '-m', 'reopen accepted truth']);
-  write('status.yml', baselineStatus);
-  git(['add', 'status.yml']);
-  result = stagedAudit();
-  assert.notStrictEqual(result.status, 0, 're-merging a reopened legacy task must require full vNext evidence');
-  assert.match(result.stdout, /review|审计|rounds|code_reviews/);
-  console.log('✅ check-sprint review archive / R2.3 adoption boundary 正反夹具通过');
+  assert.notStrictEqual(result.status, 0, 'T1 reviewed PASS then T2 staged for merged must fail');
+  assert.match(result.stdout, /Accepted implementation binding/);
+  console.log('✅ check-sprint review archive 与提交范围正反夹具通过');
 } finally {
   const resolvedTemp = path.resolve(tempRoot);
   const resolvedOsTemp = path.resolve(os.tmpdir());

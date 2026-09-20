@@ -11,12 +11,16 @@ let wt;
 try {
   init(method);
   for (const file of ['AGENTS.md', 'gitee-ops.md', '.codex/agents/researcher.toml', '.codex/agents/worker.toml',
-    '.codex/agents/reviewer.toml', '.codex/agents/sensitive_reviewer.toml', 'scripts/check-gate.js', 'scripts/check-sprint.js',
+    '.codex/agents/reviewer.toml', '.codex/agents/sensitive_reviewer.toml', 'scripts/check-gate.js',
     'scripts/check-hook-state.js', 'scripts/check-codex-project.js', 'scripts/pre-commit-hook.sh'])
     write(method, 'templates/' + file, fs.readFileSync(path.join(realTemplates, file), 'utf8').replace(/\r\n/g, '\n'));
   // 此夹具不读取本机真实凭据；测试的是分发与实际 hook 执行，凭据扫描本体不在此替身中测。
   write(method, 'templates/scripts/check-secrets.js', 'process.exit(0);\n');
   write(method, 'templates/scripts/check-example.js', 'console.log("old template");\n');
+  write(method, 'tasks/develop.md', '# adopted task\n');
+  write(method, 'protocols/review.md', '# adopted review protocol\n');
+  write(method, 'runtime/codex.md', '# adopted runtime\n');
+  write(method, 'utilities/harvest-notes.md', '# adopted utility\n');
   write(method, 'specs-execution/develop.md', '# adopted behavior\n');
   git(method, ['add', '.']); git(method, ['commit', '-m', 'old']);
   const oldExample = fs.readFileSync(path.join(method, 'templates/scripts/check-example.js'));
@@ -45,14 +49,6 @@ try {
   assert.strictEqual(inventory.operations.find(x => x.to === 'AGENTS.md').action, 'merge');
   assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'check 零写入');
   const prepared = prepare(project, source); wt = prepared.worktree;
-  const adoptionMeta = JSON.parse(fs.readFileSync(path.join(wt, '_meta/method-sync.json'), 'utf8'));
-  assert.strictEqual(adoptionMeta.schema, 2, 'R2.3 method-sync record uses adoption-aware schema');
-  assert.strictEqual(adoptionMeta.adoption.kind, 'legacy-project');
-  assert.strictEqual(adoptionMeta.adoption.schema, 2, 'adoption record uses reconciled-truth schema');
-  assert.strictEqual(adoptionMeta.adoption.source_base, originalHead, 'source base pins the pre-upgrade project HEAD');
-  assert.strictEqual(adoptionMeta.adoption.accepted_truth_base, null, 'accepted truth is not frozen before reconciliation completes');
-  assert.deepStrictEqual(adoptionMeta.adoption.legacy_accepted_tasks, [], 'pre-freeze record creates no synthetic legacy truth');
-  assert.strictEqual(adoptionMeta.adoption.method_source, source.sha);
   assert.strictEqual(git(project, ['rev-parse', 'HEAD']), originalHead);
   assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'prepare 不碰原树/暂存区');
   assert.strictEqual(fs.readFileSync(path.join(wt, 'scripts/check-example.js'), 'utf8'), 'console.log("new template");\n');
@@ -95,16 +91,6 @@ try {
   write(wt, 'business.ts', 'not a methodology change\n');
   assert.throws(() => finish(wt, source), /范围外/);
   fs.unlinkSync(path.join(wt, 'business.ts'));
-  // 对账在 prepare 后才恢复的历史 merged 事实，必须进入 adoption snapshot。
-  write(wt, 'status.yml', originalState.replace('tasks: []', `tasks:
-  - id: historic-v1-001
-    source: bug
-    type: develop
-    iteration: null
-    layer: backend
-    status: merged
-    depends_on: []
-    delivery: 可并行`));
   git(wt, ['add', '-A']);
   assert.match(git(wt, ['diff', '--cached', '--name-status']), /^D\s+standards-shared\.md$/m,
     '真实 hook 前预暂存删除后，finish 仍须可重复登记并提交');
@@ -120,10 +106,6 @@ try {
   assert.strictEqual(git(project, ['show', result.branch + ':iterations/v1/code-reviews/historical.md']), 'historical report must stay byte-identical');
   assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v1.yml']), 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly');
   assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v2.yml']), 'code_reviews: []', '迁移执行人新增的项目归档可随本地同步提交');
-  const finalizedMeta = JSON.parse(git(project, ['show', result.branch + ':_meta/method-sync.json']));
-  assert.strictEqual(finalizedMeta.adoption.source_base, originalHead);
-  assert.notStrictEqual(finalizedMeta.adoption.accepted_truth_base, originalHead, 'accepted truth freezes after reconciliation, not at source base');
-  assert.deepStrictEqual(finalizedMeta.adoption.legacy_accepted_tasks, ['historic-v1-001']);
   assert.strictEqual(prepare(project, source).state, 'branch-exists');
   const project2 = path.join(temp, 'clean-project'); init(project2);
   write(project2, 'project.md', '# Clean project\n');
@@ -148,19 +130,18 @@ try {
   assert.strictEqual(git(project2, ['rev-parse', 'HEAD']), integrated.commit);
   assert.ok(!fs.existsSync(wt2));
   assert.strictEqual(prepare(project2, source).state, 'already-integrated');
-  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'adopted scripts, adoption boundary and real hook match');
+  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'adopted scripts and real hook match');
   assert.strictEqual(runtimeCheck(project2).source, source.sha);
-  const integratedMeta = JSON.parse(fs.readFileSync(path.join(project2, '_meta/method-sync.json'), 'utf8'));
-  assert.strictEqual(integratedMeta.adoption.accepted_truth_base, git(project2, ['rev-parse', integratedMeta.adoption.accepted_truth_base]), 'accepted_truth_base remains a real commit after integration');
-  // init-project 的新仓 metadata：没有 source/history，也必须与 schema=2 runtime-check 相容。
-  const newProjectMeta = { ...integratedMeta, adoption: { schema: 2, kind: 'new-project', method_source: source.sha,
-    source_base: null, accepted_truth_base: null, accepted_truth_status_sha256: null, legacy_accepted_tasks: [] } };
-  write(project2, '_meta/method-sync.json', JSON.stringify(newProjectMeta, null, 2) + '\n');
-  git(project2, ['add', '_meta/method-sync.json']); git(project2, ['commit', '-m', 'fixture: init-project metadata']);
-  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'init-project new-project schema 2 metadata passes runtime-check');
   write(method, 'specs-execution/develop.md', '# moving branch behavior\n');
   git(method, ['add', '.']); git(method, ['commit', '-m', 'method evolves']);
+  assert.strictEqual(readAdopted(project2, 'tasks/develop.md'), '# adopted task\n');
+  assert.strictEqual(readAdopted(project2, 'protocols/review.md'), '# adopted review protocol\n');
+  assert.strictEqual(readAdopted(project2, 'runtime/codex.md'), '# adopted runtime\n');
+  assert.strictEqual(readAdopted(project2, 'utilities/harvest-notes.md'), '# adopted utility\n');
   assert.strictEqual(readAdopted(project2, 'specs-execution/develop.md'), '# adopted behavior\n', 'moving method HEAD must not change project rules');
+  assert.throws(() => readAdopted(project2, '../outside.md'), /只允许/);
+  assert.throws(() => readAdopted(project2, '/absolute.md'), /只允许/);
+  assert.throws(() => readAdopted(project2, 'tasks\\develop.md'), /只允许/);
   assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'new branch does not force an upgrade');
   const copiedScript = fs.readFileSync(path.join(project2, 'scripts/check-example.js'));
   write(project2, 'scripts/check-example.js', 'outdated or mismatched script\n');

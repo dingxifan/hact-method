@@ -115,21 +115,7 @@ git commit -m "feat: 初始化项目 {name}"
 
 **4.2 强制获取 Gitee 远端地址：**
 
-首次 hook 接通后，在 `_meta/method-sync.json` 记录 `schema: 2`、`state: verified`、`methodRoot`（项目到方法论仓相对路径）和本次固定的 `source` SHA，并显式写 adoption：
-```json
-{
-  "adoption": {
-    "schema": 2,
-    "kind": "new-project",
-    "method_source": "{与 source 相同的 40 位方法 SHA}",
-    "source_base": null,
-    "accepted_truth_base": null,
-    "accepted_truth_status_sha256": null,
-    "legacy_accepted_tasks": []
-  }
-}
-```
-新仓没有 pre-adoption Accepted Truth，严禁为未来任务预留 legacy id。运行 `sync-method.cjs --runtime-check --root .` 通过后随初始化提交。只适用于新仓；存量仓必须走既有隔离同步流程，由同步脚本从采用前固定 HEAD 机械建立 `legacy-project` boundary，不能只改 source 或手写 legacy 集合声称升级。后续规范用该工具 `--read`，脚本使用项目副本。
+首次 hook 接通后，在已有 `_meta/method-sync.json` 格式记录 `schema: 1`、`state: verified`、`methodRoot`（项目到方法论仓相对路径）和本次固定的 `source` SHA；运行 `sync-method.cjs --runtime-check --root .` 通过后随初始化提交。只适用于新仓，存量仓仍走既有隔离同步流程，不能只改 source 声称升级。后续规范用该工具 `--read`，脚本使用项目副本。
 
 ```
 请提供项目的 Gitee 远端仓库地址（格式：https://gitee.com/{user}/{repo}.git）。

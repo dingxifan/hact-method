@@ -111,7 +111,7 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
     spec_rounds: 1               # int ≥0，freshness/contract/claim 独立复核数
     freshness: revised           # enum，pass / revised
     review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
-    review_evidence_version: develop-review-round/v2   # post-adoption 完成任务必填；缺失只表示 unknown，legacy 身份只看 adoption boundary
+    review_evidence_version: develop-review-round/v2   # 新任务 round 报告 schema；存量缺失按 legacy/unknown
 ```
 
 ### 审查归档索引与文件约束
@@ -139,9 +139,7 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 
 > rounds/code_rounds/spec_rounds 为审查次数与恢复依据；时间戳/分钟成本字段可选且不阻断，不补估、不强制对齐。固定 Git 基线、审查范围、报告链与 finding 闭合仍必需。
 >
-> **R2.3 adoption compatibility**：上述字段约束适用于 post-adoption work。既有项目迁移时，`_meta/method-sync.json.adoption` 显式记录不可变的 `source_base`、对账后的 `accepted_truth_base`、该 commit 的 `status.yml` SHA-256 与其中已经 `merged` 的 `legacy_accepted_tasks`；`source_base` 可不同于 `accepted_truth_base`，不得把迁移前漏记事实排除在对账快照外。这些任务可作为 Legacy Accepted Truth 保留其真实历史形态，不追补当时不存在的 vNext review evidence。legacy 身份只来自这个显式 boundary；缺字段、旧 package schema 或文件年代都不能自动获得豁免。legacy task 一旦在 adoption 后被修改或 reopen 后再次 merged，其新 delta 按当前 lifecycle 严格校验。
->
-> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验核固定 diff、targeted 继承链与问题闭合，并对缺必要字段硬失败。完整迭代扫描也不再按“旧 schema / 缺字段”推断 legacy；只有显式 adoption boundary 中已证明的 Legacy Accepted Truth 才跳过不存在的历史 vNext 证据。
+> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验核固定 diff、targeted 继承链与问题闭合，并对缺必要字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
 
 > 问题、证据、严重程度与处置状态按 `templates/review-briefs/develop-review-round.md` 写入逐轮报告。`status.yml` 通过 `review_report_dir` 引用，读取问题时沿报告链按稳定 finding id 取最新处置，不另维护 issues/comment 副本。历史内联内容原样保留。
 

@@ -2,7 +2,7 @@
 
 ## 当前状态
 - 当前阶段：**第三阶段·写执行层规范**（边用边补）+ **第四阶段·团队引入**（进行中）
-- 上次更新：2026-09-19
+- 上次更新：2026-09-16
 
 ## 各阶段完成情况
 
@@ -16,10 +16,6 @@
 > 阶段编号变更（2026-08-30）：原第三阶段「开发看板应用」**已取消**——配套看板应用停更（最后提交 2026-06-03）、CC_TOKEN 与 webhook 链路失效，相关机制已从方法论全面移除。其后阶段编号顺延（原第四→第三、原第五→第四）。**本文件「历史里程碑」及 `_meta/status-history.md` 中出现的"第三/四/五阶段"沿用旧编号**，不回改。
 
 ## 本阶段进展
-
-- **R2.4 — Native Repository Write First & External Adapter Dormant（2026-09-19）**：仓库能力拆分为 repository-read / repository-write / repository-execution。当前 remote/provider 有已授权 native repository-write 时，远端 branch/commit/PR 优先直接持久化；测试、hook、worktree、build 等仍必须由真实本地执行环境给证据。native write 不得绕过既有 branch/PR/protected-branch 治理；已有本地实现/测试/审查 worktree 时从该 worktree commit/push，不远端重构第二份 diff。Dropbox/Watcher 已从 active execution options 退出并标为 dormant experimental asset；不自动回退，重新启用须显式方法决策。本批不改变 task/Gate/review lifecycle，通过 PR #2 管理，最终状态以 Git/PR 事实为准。
-
-- **R2.3 — Explicit Adoption Boundary & Legacy Accepted Truth Compatibility（2026-09-19）**：既有项目方法同步以 `source_base → reconciled adoption truth → adoption commit` 冻结显式 boundary，并记录对账后 status snapshot hash；后续升级不得重写或扩张该对象。checker 仅据此承认 Legacy Accepted Truth，不要求伪造旧 preflight/round/tree/report 证据，也不再用旧 schema/缺字段推断豁免；staged 审计只读取 HEAD boundary。legacy task 一旦被修改或 reopen 后再次 merged，新 delta 恢复完整 vNext 审计。定向 Node 回归与独立审查通过，已通过 PR #1 合并到 `main@9519bdf5d2e7b1f2ceb2d959a2a04878c006f567`。
 
 - **011/012 反馈后的提交审计减法（2026-09-16）**：仅方法论仓修订。提交按 Git 暂存差异核本次任务审计，保留全局依赖/共享资产检查；状态事件与普通审计在 hook 中只路由一次。review-chain 增加中间轮校验，合法 revise/evidence-needed 不再被当成格式失败，最终合并仍要求闭合。末轮 round 取代重复 final-review 要求，preflight 核实际控制位置，静态规则复用真实消费样本；不加映射表或豁免账。file-extract 未改动、未分发，自动接续实验不在本轮范围。
 
@@ -91,8 +87,6 @@
 
 > 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
 
-- 2026-09-19 R2.4 Native Repository Write First & External Adapter Dormant — native repository-write 成为匹配 provider 且已授权时的首选远端持久化能力；repository-execution 保留在本地；Dropbox/Watcher 退出 active routing
-- 2026-09-19 R2.3 显式 Adoption Boundary 与 Legacy Accepted Truth 兼容 — 迁移按 source base、对账 truth、adoption commit 三阶段冻结；历史不补造 vNext 证据，未来 delta 全量受当前 lifecycle 约束；schema 启发式豁免退出
 - 2026-09-04 Claude Code + Codex 双运行时适配 — 共同能力接口/预检/启动协议 + 双薄入口 + Codex 5.6 四角色模板；执行规范全面中立化；同步补齐 B 类契约升级、V0 证据账本、共享写集冲突与门卫漂移信号；A/B/C/D 四场景协议演练哈希一致，真实跨运行时项目试点待做
 - 2026-09-04 强模型时代编排纯减法 — 能力预检改为任务路由后按需检查；freshness 无漂移只留紧凑摘要；删除可由事件时间戳计算的 implementation/review/round 派生分钟，保留累计 spec 墙钟；V0/Gate/独审/最终验证不动
 - 2026-09-04 双运行时全面独审与内部闭合 — 首轮 `block`（12 findings）→ 五轮独立复核后 `pass`；补齐中立命令、全状态路由、真实 Git diff/finding 闭合、任务依赖/工作树白名单、B 契约、V0 ledger、联调证据、hook、初始化诊断及 schema-complete handoff 变异测试；外部实机试点仍待做
