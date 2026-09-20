@@ -156,19 +156,25 @@ fs.chmodSync(path.join(hookRepo, '.git', 'hooks', 'pre-commit'), 0o755);
 const hookTask = path.join(hookRepo, 'b-queue', 'demo-b-002.md');
 fs.writeFileSync(hookTask, `---\nsource: bug\ncontract-impact: none\nasset-writes: []\n---\n`);
 assert.strictEqual(runGitInHook(['add', 'b-queue/demo-b-002.md']).status, 0);
+fs.writeFileSync(hookTask, shortPackage('src/service.ts', 'none').replaceAll('demo-b-001', 'demo-b-002'));
 const malformedCommit = runGitInHook(['commit', '-m', 'malformed B must fail']);
-assert.notStrictEqual(malformedCommit.status, 0, '真实 pre-commit 必须拒绝缺 schema 的新 B 包');
+assert.notStrictEqual(malformedCommit.status, 0, '真实 pre-commit 必须按 index 拒绝缺 schema 的新 B 包，不能读取工作区合法诱饵');
 assert.match(`${malformedCommit.stdout}\n${malformedCommit.stderr}`, /package-schema: 2/);
 assert.strictEqual(runGitInHook(['reset']).status, 0);
 fs.writeFileSync(hookTask, shortPackage('src/service.ts', 'none').replaceAll('demo-b-001', 'demo-b-002'));
 assert.strictEqual(runGitInHook(['add', 'b-queue/demo-b-002.md']).status, 0);
+fs.writeFileSync(hookTask, `---\nsource: bug\ncontract-impact: none\nasset-writes: []\n---\n`);
 const validCommit = runGitInHook(['commit', '-m', 'valid schema 2 B passes']);
-assert.strictEqual(validCommit.status, 0, `合法 schema=2 B 包应通过真实 hook：${validCommit.stdout}\n${validCommit.stderr}`);
+assert.strictEqual(validCommit.status, 0, `合法 staged schema=2 B 包不应被工作区坏副本误拦：${validCommit.stdout}\n${validCommit.stderr}`);
+assert.match(runGitInHook(['show', 'HEAD:b-queue/demo-b-002.md']).stdout, /package-schema: 2/,
+  '真实 commit 必须保存已验证的 staged schema=2 blob');
+assert.strictEqual(runGitInHook(['checkout', '--', 'b-queue/demo-b-002.md']).status, 0);
 fs.writeFileSync(hookTask, shortPackage('src/service.ts', 'none')
   .replaceAll('demo-b-001', 'demo-b-002').replace('package-schema: 2\n', ''));
 assert.strictEqual(runGitInHook(['add', 'b-queue/demo-b-002.md']).status, 0);
+fs.writeFileSync(hookTask, shortPackage('src/service.ts', 'none').replaceAll('demo-b-001', 'demo-b-002'));
 const downgradedCommit = runGitInHook(['commit', '-m', 'modified B must retain schema 2']);
-assert.notStrictEqual(downgradedCommit.status, 0, '已存在 active B 包被修改后也不能删除 schema');
+assert.notStrictEqual(downgradedCommit.status, 0, '已存在 active B 包的 staged blob 删除 schema 后也不能用工作区诱饵绕过');
 assert.match(`${downgradedCommit.stdout}\n${downgradedCommit.stderr}`, /package-schema: 2/);
 
 if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('临时路径越界');

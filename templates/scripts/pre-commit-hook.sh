@@ -97,7 +97,7 @@ fi
 # --- B 类任务包契约边界（check-b-task.js）---
 b_tasks=$(echo "$staged" | grep -E '^b-queue/.*\.md$' || true)
 for task in $b_tasks; do
-  run scripts/check-b-task.js "$task"
+  run scripts/check-b-task.js --staged "$task"
 done
 
 # --- 联调证据共同落盘契约 ---

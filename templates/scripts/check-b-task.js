@@ -162,8 +162,8 @@ function validateDiff(file, base, head, root = process.cwd()) {
   return errors;
 }
 
-function validate(file) {
-  const source = fs.readFileSync(file, 'utf8');
+function validate(file, sourceOverride = null) {
+  const source = sourceOverride === null ? fs.readFileSync(file, 'utf8') : sourceOverride;
   const fm = parseFrontmatter(source);
   const errors = [];
   if (!fm) return ['缺 YAML frontmatter'];
@@ -201,29 +201,44 @@ function validate(file) {
 
 function main() {
   const args = process.argv.slice(2);
-  let base = null, head = null, root = process.cwd();
+  let base = null, head = null, root = process.cwd(), staged = false;
   const files = [];
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === '--diff') { base = args[index + 1]; head = args[index + 2]; index += 2; }
     else if (args[index] === '--root') { root = path.resolve(args[index + 1]); index += 1; }
+    else if (args[index] === '--staged') staged = true;
     else files.push(args[index]);
   }
   if (!files.length) {
-    console.error('用法: node check-b-task.js <b-queue/task-id.md> [...] [--diff <base> <head>] [--root <项目根>]');
+    console.error('用法: node check-b-task.js <b-queue/task-id.md> [...] [--staged] [--diff <base> <head>] [--root <项目根>]');
     process.exit(2);
   }
   if ((base && !head) || (!base && head) || ((base || head) && files.length !== 1)) {
     console.error('--diff 必须同时给 base/head，且一次只校验一个 B 类任务包');
     process.exit(2);
   }
+  if (staged && (base || head)) {
+    console.error('--staged 不能与 --diff 同时使用');
+    process.exit(2);
+  }
   let failed = false;
   for (const file of files) {
-    if (!fs.existsSync(file)) {
+    if (!staged && !fs.existsSync(file)) {
       failed = true;
       console.error(`❌ ${file}\n  - 任务包文件不存在`);
       continue;
     }
-    const errors = base ? validateDiff(file, base, head, root) : validate(file);
+    let stagedSource = null;
+    if (staged) {
+      const taskPath = path.relative(root, path.resolve(file)).replace(/\\/g, '/');
+      try { stagedSource = git(root, ['show', `:${taskPath}`]); }
+      catch (error) {
+        failed = true;
+        console.error(`❌ ${file}\n  - 无法读取 staged B package：${String(error.stderr || error.message).trim()}`);
+        continue;
+      }
+    }
+    const errors = base ? validateDiff(file, base, head, root) : validate(file, stagedSource);
     if (errors.length) {
       failed = true;
       console.error(`❌ ${file}`);
