@@ -1,0 +1,348 @@
+#!/usr/bin/env node
+'use strict';
+
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const cp = require('child_process');
+const { validate, parseYamlText } = require('./check-system-review.js');
+
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-system-review-'));
+const methodSha = 'f'.repeat(40);
+const write = (rel, text) => {
+  const target = path.join(root, ...rel.split('/'));
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, text);
+};
+const git = args => cp.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+const commit = message => { git(['add', '.']); git(['commit', '-m', message]); return git(['rev-parse', 'HEAD']); };
+
+git(['init']);
+git(['config', 'user.name', 'System Review Test']);
+git(['config', 'user.email', 'system-review@example.com']);
+write('_meta/method-sync.json', JSON.stringify({ schema: 1, state: 'verified', source: methodSha }));
+write('app.txt', 'base\n');
+const base = commit('base');
+write('app.txt', 'candidate\n');
+const candidate = commit('candidate');
+write('app.txt', 'repair\n');
+const repair = commit('repair');
+
+const review = ({ number = 1, type = 'full', head = candidate, predecessor = null,
+  revalidation = [], result = 'pass', evidence = 'sufficient', finding = null }) => `---
+schema: system-review/v1
+iteration: v1
+review_id: review-${String(number).padStart(3, '0')}
+review_type: ${type}
+reviewer_isolation: fresh-isolated
+method_sha: ${methodSha}
+candidate:
+  base: ${number === 1 ? base : candidate}
+  head: ${head}
+predecessor: ${predecessor}
+revalidation_of: [${revalidation.join(', ')}]
+scope:
+  - ${type === 'full' ? 'final-contract' : 'affected-call-chain'}
+evidence:
+  - evidence/system.txt
+result:
+  status: ${result}
+evidence_state:
+  status: ${evidence}
+findings:${finding ? `
+  - id: ${finding.id}
+    origin: ${finding.origin || 'semantic-review'}
+    severity: blocking
+    category: ${finding.category || 'compatibility'}
+    summary: ${finding.summary || 'candidate violates contract'}
+    evidence:
+      - evidence/system.txt
+    required_action:
+      type: fix-code
+      description: repair the behavior
+    closure:
+      route: ${finding.route}
+    revalidation:
+      semantic:
+        required: true
+        scope:
+          - affected-call-chain
+      runtime:
+        required: ${finding.runtimeRequired === false ? 'false' : 'true'}
+        not_required_reason: ${finding.runtimeRequired === false ? 'no runtime-observable behavior' : 'null'}
+        scope:${finding.runtimeRequired === false ? ' []' : '\n          - target-runtime-path'}
+    full_snapshot_invalidated: ${finding.invalidated ? 'true' : 'false'}
+    invalidation_reason: ${finding.invalidated ? 'shared API redesign invalidates consumers' : 'null'}
+    state: open` : ' []'}
+advisories: []
+created_at: 2026-09-20T12:00:00Z
+---
+
+## Judgement
+
+fixture
+`;
+
+const closure = ({ findingId = 'SV-F001', number = 1, route = 'local-close', result = 'closed',
+  prior = null, reviewerEvent = null, invalidated = false, runtimeRequired = true,
+  sourceArtifact = 'iterations/v1/system-review/review-001.md' }) => `---
+schema: system-finding-closure/v1
+iteration: v1
+closure_id: closure-${String(number).padStart(3, '0')}
+finding_id: ${findingId}
+source_artifact: ${sourceArtifact}
+prior_closure: ${prior}
+evidence:
+  - evidence/system.txt
+repair_candidate:
+  base: ${candidate}
+  head: ${repair}
+route:
+  expected: ${number === 1 ? (result === 'escalated' ? 'local-close' : route) : 'system-rereview'}
+  effective: ${route}
+local_review:
+  required: ${route === 'local-close' ? 'true' : 'false'}
+  report: ${route === 'local-close' ? 'local-reviews/F001.md' : 'null'}
+  reviewer_isolation: ${route === 'local-close' ? 'fresh-isolated' : 'null'}
+  result: ${route === 'local-close' ? 'pass' : 'not-required'}
+semantic_revalidation:
+  required_scope:
+    - affected-call-chain
+  verified_scope:
+    - affected-call-chain
+  result: pass
+runtime_revalidation:
+  required: ${runtimeRequired ? 'true' : 'false'}
+  not_required_reason: ${runtimeRequired ? 'null' : 'no runtime-observable behavior'}
+  required_scope:${runtimeRequired ? '\n    - target-runtime-path' : ' []'}
+  verified_scope:${runtimeRequired ? '\n    - target-runtime-path' : ' []'}
+  result: ${runtimeRequired ? 'pass' : 'not-required'}
+system_reviewer_event: ${reviewerEvent}
+full_snapshot_invalidated: ${invalidated ? 'true' : 'false'}
+invalidation_reason: ${invalidated ? 'shared API redesign invalidates consumers' : 'null'}
+escalation:
+  occurred: ${result === 'escalated' ? 'true' : 'false'}
+  reason: ${result === 'escalated' ? 'repair changed shared API' : 'null'}
+result: ${result}
+created_at: 2026-09-20T13:00:00Z
+---
+
+## Evidence
+
+fixture
+`;
+
+const standaloneFinding = ({ route = 'system-rereview', runtimeRequired = false } = {}) => `---
+schema: system-finding/v1
+iteration: v1
+finding_id: SV-F001
+origin: runtime-verification
+severity: blocking
+category: runtime
+summary: runtime path fails after review publication
+candidate:
+  head: ${candidate}
+source_review: review-001
+evidence:
+  - evidence/system.txt
+required_action:
+  type: fix-code
+  description: repair runtime behavior
+closure:
+  route: ${route}
+revalidation:
+  semantic:
+    required: true
+    scope:
+      - affected-call-chain
+  runtime:
+    required: ${runtimeRequired ? 'true' : 'false'}
+    not_required_reason: ${runtimeRequired ? 'null' : 'no runtime-observable repair'}
+    scope:${runtimeRequired ? '\n      - target-runtime-path' : ' []'}
+full_snapshot_invalidated: false
+invalidation_reason: null
+state: open
+created_at: 2026-09-20T12:30:00Z
+---
+
+## Evidence and impact
+
+fixture
+`;
+
+const status = ({ state = 'merged', final = candidate, reviewNumber = 1, result = 'integration-tests/result-v1.md' } = {}) => `project: demo
+schema: 1
+generated_by: hact-method
+review_architecture: system-verification/v1
+iterations: {}
+tasks:
+  - id: demo-v1-integration-verify
+    iteration: v1
+    sprint: null
+    source: null
+    title: System Verification
+    type: integration-verify
+    layer: null
+    status: ${state}
+    assigned_to: codex
+    pr: null
+    parent_id: null
+    depends_on: []
+    delivery: null
+    urgency: null
+    system_review_dir: iterations/v1/system-review
+    current_system_review: iterations/v1/system-review/review-${String(reviewNumber).padStart(3, '0')}.md
+    integration_result: ${result}
+    final_candidate: ${final}
+integration_tests: []
+code_review_archives: []
+code_reviews: []
+`;
+
+const integration = ({ final = candidate, reviewNumber = 1, ids = [], scope = ['baseline-runtime-path'], satisfied = true } = {}) => `---
+schema: integration-result/v2
+iteration: v1
+candidate_head: ${final}
+system_review_dir: iterations/v1/system-review
+current_system_review: iterations/v1/system-review/review-${String(reviewNumber).padStart(3, '0')}.md
+revalidation_of: [${ids.join(', ')}]
+runtime_scope: [${scope.join(', ')}]
+result_status: ${satisfied ? 'satisfied' : 'blocked'}
+evidence_state: sufficient
+created_at: 2026-09-20T14:00:00Z
+---
+
+| # | 模块 | 场景描述 | 结果 | 证据 | 未运行原因 | 现象 | 级别 | 复测 |
+|---|---|---|---|---|---|---|---|---|
+| BE-01 | backend | real path | ✅ | \`integration-tests/evidence/v1/BE-01/transcript.txt\` | — | — | — | 通过 |
+`;
+
+function reset() {
+  for (const rel of ['iterations/v1/system-review', 'integration-tests', 'local-reviews'])
+    fs.rmSync(path.join(root, ...rel.split('/')), { recursive: true, force: true });
+  write('evidence/system.txt', 'evidence\n');
+  write('integration-tests/evidence/v1/BE-01/transcript.txt', 'HTTP 200\nstate=done\n');
+}
+
+function validPass() {
+  reset();
+  write('status.yml', status());
+  write('iterations/v1/system-review/review-001.md', review({}));
+  write('integration-tests/result-v1.md', integration());
+}
+
+assert.deepStrictEqual(parseYamlText('root:\n  list:\n    - id: one\n      nested:\n        ok: true\n'),
+  { root: { list: [{ id: 'one', nested: { ok: true } }] } }, 'controlled YAML parser handles nested finding shape');
+
+try {
+  validPass();
+  assert.deepStrictEqual(validate('v1', root), [], 'full pass + runtime evidence completes System Verification');
+  write('iterations/v1/acceptance-report.md', '## 验收结论\n通过\n');
+  const gatePass = cp.spawnSync(process.execPath, [path.join(__dirname, 'check-gate.js'), 'G4', 'v1', root], { cwd: root, encoding: 'utf8' });
+  assert.strictEqual(gatePass.status, 0, gatePass.stdout + gatePass.stderr);
+
+  write('status.yml', status({ final: base }));
+  assert.ok(validate('v1', root).some(error => /final_candidate/.test(error)), 'stale final candidate fails');
+
+  reset();
+  write('status.yml', status({ final: repair }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'local-close' } })
+    .replace('route: local-close', 'route: missing-route'));
+  write('integration-tests/result-v1.md', integration({ final: repair }));
+  const missingRouteErrors = validate('v1', root, { inProgress: true });
+  assert.ok(missingRouteErrors.some(error => /closure route/.test(error)), `missing route fails: ${missingRouteErrors.join(' | ')}`);
+
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'system-rereview', invalidated: true } })
+    .replace('invalidation_reason: shared API redesign invalidates consumers', 'invalidation_reason: null'));
+  assert.ok(validate('v1', root, { inProgress: true }).some(error => /invalidation reason/.test(error)), 'invalidation without reason fails');
+
+  reset();
+  write('status.yml', status({ final: repair, reviewNumber: 2 }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'system-rereview', runtimeRequired: false } }));
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: repair, predecessor: 'missing-review', revalidation: ['SV-F001'] }));
+  write('integration-tests/result-v1.md', integration({ final: repair, reviewNumber: 2 }));
+  assert.ok(validate('v1', root, { inProgress: true }).some(error => /predecessor/.test(error)), 'targeted without valid predecessor fails');
+
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: repair, predecessor: 'review-001', revalidation: [] }));
+  assert.ok(validate('v1', root, { inProgress: true }).some(error => /revalidation_of/.test(error)), 'targeted system-rereview without finding scope fails');
+
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: repair, predecessor: 'review-001', revalidation: ['SV-F001'] }));
+  assert.ok(validate('v1', root).some(error => /remains open/.test(error)), 'later pass cannot silently remove finding');
+
+  reset();
+  write('status.yml', status({ final: repair }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'local-close' } }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({ route: 'system-rereview', result: 'escalated' }));
+  write('integration-tests/result-v1.md', integration({ final: repair }));
+  assert.ok(validate('v1', root).some(error => /remains escalated/.test(error)), 'unresolved escalation fails completion');
+
+  reset();
+  write('status.yml', status({ final: repair }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'local-close' } }));
+  write('local-reviews/F001.md', '---\nconclusion: pass\n---\n');
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({}));
+  write('integration-tests/result-v1.md', integration({ final: repair, ids: ['SV-F001'], scope: ['target-runtime-path'] }));
+  assert.deepStrictEqual(validate('v1', root), [], 'valid local-close lifecycle passes');
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({})
+    .replace('required_scope:\n    - affected-call-chain', 'required_scope: []'));
+  assert.ok(validate('v1', root).some(error => /semantic required scope dropped/.test(error)), 'closure cannot drop declared semantic scope');
+
+  reset();
+  write('status.yml', status({ final: repair, reviewNumber: 2 }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'system-rereview', runtimeRequired: false } }));
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: repair, predecessor: 'review-001', revalidation: ['SV-F001'] }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({ route: 'system-rereview', reviewerEvent: 'iterations/v1/system-review/review-002.md', runtimeRequired: false }));
+  write('integration-tests/result-v1.md', integration({ final: repair, reviewNumber: 2 }));
+  assert.deepStrictEqual(validate('v1', root), [], 'valid targeted system-rereview lifecycle passes');
+
+  reset();
+  write('status.yml', status({ final: repair, reviewNumber: 2 }));
+  write('iterations/v1/system-review/review-001.md', review({}));
+  write('iterations/v1/system-review/findings/SV-F001.md', standaloneFinding());
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: repair, predecessor: 'review-001', revalidation: ['SV-F001'] }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({
+    route: 'system-rereview', reviewerEvent: 'iterations/v1/system-review/review-002.md', runtimeRequired: false,
+    sourceArtifact: 'iterations/v1/system-review/findings/SV-F001.md'
+  }));
+  write('integration-tests/result-v1.md', integration({ final: repair, reviewNumber: 2 }));
+  assert.deepStrictEqual(validate('v1', root), [], 'post-publication runtime finding uses standalone artifact and common targeted closure');
+
+  reset();
+  write('status.yml', status({ final: repair, reviewNumber: 2 }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'local-close', runtimeRequired: false } }));
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: repair, predecessor: 'review-001', revalidation: ['SV-F001'] }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({ route: 'system-rereview', result: 'escalated', runtimeRequired: false }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-002.md', closure({
+    number: 2, route: 'system-rereview', prior: 'iterations/v1/system-review/closures/SV-F001/closure-001.md',
+    reviewerEvent: 'iterations/v1/system-review/review-002.md', runtimeRequired: false
+  }));
+  write('integration-tests/result-v1.md', integration({ final: repair, reviewNumber: 2 }));
+  assert.deepStrictEqual(validate('v1', root), [], 'local-close escalation followed by targeted System Reviewer closure passes');
+
+  reset();
+  write('status.yml', status({ final: repair, reviewNumber: 2 }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'system-rereview', invalidated: true, runtimeRequired: false } }));
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'full', head: repair, predecessor: 'review-001', revalidation: ['SV-F001'] }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({ route: 'system-rereview', reviewerEvent: 'iterations/v1/system-review/review-002.md', invalidated: true, runtimeRequired: false }));
+  write('integration-tests/result-v1.md', integration({ final: repair, reviewNumber: 2 }));
+  assert.deepStrictEqual(validate('v1', root), [], 'valid full re-review after broad invalidation passes');
+
+  git(['add', '.']); git(['commit', '-m', 'publish system review']);
+  write('iterations/v1/system-review/review-001.md', fs.readFileSync(path.join(root, 'iterations/v1/system-review/review-001.md'), 'utf8') + '\nmutation\n');
+  git(['add', 'iterations/v1/system-review/review-001.md']);
+  assert.ok(validate('v1', root, { inProgress: true, staged: true }).some(error => /immutable/.test(error)), 'published event modification fails staged audit');
+
+  fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+  for (const name of ['check-system-review.js', 'check-integration-evidence.js', 'check-sprint.js'])
+    fs.copyFileSync(path.join(__dirname, name), path.join(root, 'scripts', name));
+  fs.copyFileSync(path.join(__dirname, 'pre-commit-hook.sh'), path.join(root, 'pre-commit.sh'));
+  const shell = process.platform === 'win32' ? path.join(process.env.ProgramFiles, 'Git', 'bin', 'sh.exe') : '/bin/sh';
+  const hooked = cp.spawnSync(shell, ['pre-commit.sh'], { cwd: root, encoding: 'utf8' });
+  assert.strictEqual(hooked.status, 1, hooked.stdout + hooked.stderr);
+  assert.match(hooked.stdout + hooked.stderr, /check-system-review\.js v1 \. --in-progress --staged/, 'hook routes system-review artifacts to staged checker');
+
+  console.log('✅ System Review routing, lineage, closure, invalidation and immutable-event fixtures passed');
+} finally {
+  fs.rmSync(root, { recursive: true, force: true });
+}

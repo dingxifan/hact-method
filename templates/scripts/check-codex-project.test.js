@@ -34,5 +34,6 @@ const routes=new Map(boot.split(/\r?\n/).map(line=>line.match(/^\|\s*`([^`]+)`\s
 assert.ok(!/^\| canonical task \| Task Contract \| legacy alias/m.test(boot), 'boot catalog stays canonical two-column');
 assert.match(boot, /draft-prd-vN[\s\S]*draft-prd/);
 assert.match(boot, /generate-integration-tests[\s\S]*integration-verify/);
+assert.match(boot, /review_architecture=system-verification\/v1[\s\S]*check-system-review\.js/);
 for(const row of expected) assert.strictEqual(routes.get(row.signal),row.expected,'任务状态路由 '+row.signal);
 console.log('✅ Codex 初始化与角色配置正反例通过');

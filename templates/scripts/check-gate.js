@@ -7,7 +7,7 @@
  *      偏离处理对不对）机器判不了，**不碰，留人签**——脚本只把可机械的挡在签字前。
  *
  * 用法（在项目仓根目录执行）：
- *   node scripts/check-gate.js G4 vN     # 验 G4：manual-test 修复任务全 merged + 验收报告结论=通过
+ *   node scripts/check-gate.js G4 vN     # 验 G4：System Verification complete + manual-test 修复全 merged + 验收报告通过
  *   node scripts/check-gate.js G5 vN     # 验 G5：本期开发/修订任务闭合 + 项目事实文件存在
  *
  * 退出码：有任一 FAIL → 1；全 pass → 0；用法错误 / 自身出错 → 2。
@@ -89,6 +89,24 @@ function checkG4(iteration, root) {
   const statusPath = path.join(root, 'status.yml');
   const tasks = parseTasks(statusPath);
 
+  // System Verification：只对显式采用 review_architecture 的项目强制；legacy 不补造历史 evidence。
+  const statusSource = exists(statusPath) ? fs.readFileSync(statusPath, 'utf8') : '';
+  const reviewArchitecture = (statusSource.match(/^review_architecture:\s*([^#\r\n]+)/m) || [])[1]?.trim();
+  if (reviewArchitecture === 'system-verification/v1') {
+    const systemTasks = (tasks || []).filter(t => t.type === 'integration-verify' && t.iteration === iteration);
+    if (systemTasks.length !== 1) fail('G4:System Verification', statusPath, `${iteration} 必须且只能有一个 integration-verify task`);
+    else if (systemTasks[0].status !== 'merged') fail('G4:System Verification', statusPath, `integration-verify 尚未 merged（当前 ${systemTasks[0].status || '<缺失>'}）`);
+    const systemChecker = path.join(__dirname, 'check-system-review.js');
+    if (!exists(systemChecker)) fail('G4:System Verification', systemChecker, '缺 check-system-review.js，不能证明 System Verification completion');
+    else {
+      const systemErrors = require(systemChecker).validate(iteration, root);
+      if (systemErrors.length) fail('G4:System Verification', path.join(root, 'iterations', iteration, 'system-review'), systemErrors.join('；'));
+      else pass('G4:System Verification', '双 assurance lane、finding closure 与 revalidation completion 通过');
+    }
+  } else {
+    human('G4:System Verification legacy', 'status.yml 未声明 review_architecture=system-verification/v1；按存量方法执行，不推断或补造历史 System Review evidence');
+  }
+
   // 判据3：所有 develop(source=manual-test, iteration=vN) 已 merged
   if (tasks === null) {
     fail('G4:manual-test任务状态', statusPath, 'status.yml 不存在，无法核 source=manual-test 任务是否全 merged（存量项目退回人工兜底）');
@@ -126,7 +144,8 @@ function checkG5(iteration, root) {
   if (tasks === null) fail('G5:任务闭合', statusPath, '缺 status.yml');
   else {
     const pending = tasks.filter(t => t.iteration === iteration
-      && (t.type === 'develop' || t.type === 'revise-doc' || ['sprint', 'integration', 'manual-test', 'revise-doc'].includes(t.source))
+      && (t.type === 'develop' || t.type === 'revise-doc' || t.type === 'integration-verify'
+        || ['sprint', 'integration', 'manual-test', 'revise-doc'].includes(t.source))
       && t.status !== 'merged');
     if (pending.length) fail('G5:任务闭合', statusPath, '本期必要任务未 merged：' + pending.map(t => t.id || '?').join(', '));
     else pass('G5:任务闭合', '本期已登记开发/修订任务闭合');
@@ -184,14 +203,19 @@ function checkStaged(root) {
   const oldTasks = new Map((parseTasksSource(previousSource) || []).map(t => [t.id, t]));
   if (tasks === null) throw new Error('缺可解析 tasks 段（按 status 模板块式写入）');
   const merged = tasks.filter(t => t.status === 'merged' && oldTasks.get(t.id)?.status !== 'merged' &&
-    (t.type === 'develop' || ['sprint', 'foundation', 'integration', 'manual-test', 'bug', 'optimization'].includes(t.source)));
+    (t.type === 'develop' || t.type === 'integration-verify'
+      || ['sprint', 'foundation', 'integration', 'manual-test', 'bug', 'optimization'].includes(t.source)));
   // 只核本次状态事件的产物，不因其他迭代在制品阻断认领/登记。
   const inputs = new Set(['status.yml']);
   for (const [key] of signed) inputs.add('iterations/' + key.split(':')[0]);
   if (signed.length) for (const file of ['project.md', 'foundation.md', 'design.md']) inputs.add(file);
   for (const task of merged) {
     if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(task.id)) throw new Error('非法 task-id');
-    if (['bug', 'optimization'].includes(task.source)) {
+    if (task.type === 'integration-verify') {
+      if (!/^v\d+(?:\.\d+)*$/.test(task.iteration || '')) throw new Error('integration-verify 缺合法 iteration');
+      inputs.add(task.system_review_dir || `iterations/${task.iteration}/system-review`);
+      if (task.integration_result) inputs.add(task.integration_result);
+    } else if (['bug', 'optimization'].includes(task.source)) {
       inputs.add('b-queue/' + task.id + '.md');
       inputs.add('b-reviews/' + task.id);
     } else {
@@ -225,6 +249,11 @@ function checkStaged(root) {
     if (gate === 'G4') checkG4(version, root);
     if (gate === 'G5') checkG5(version, root);
     human('Gate 确认', key + ' 必须对应用户明确确认；字段和脚本不代替人签');
+  }
+  for (const task of merged.filter(item => item.type === 'integration-verify')) {
+    const systemChecker = path.join(root, 'scripts', 'check-system-review.js');
+    if (!exists(systemChecker)) fail('System Verification checker', systemChecker, 'review_architecture task 合并必须安装 check-system-review.js');
+    else run('check-system-review.js', [task.iteration, root]);
   }
   // One staged audit covers new merged events and changed records without rescanning old rounds.
   run('check-sprint.js', ['--staged', root]);
@@ -266,5 +295,5 @@ function main() {
   process.exit(fails.length ? 1 : 0);
 }
 
-if (require.main === module) main();
 module.exports = { parseGates, parseTasks, parseTasksSource };
+if (require.main === module) main();

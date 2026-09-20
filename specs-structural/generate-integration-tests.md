@@ -38,7 +38,7 @@
 |------|------|------|
 | 测试脚本（后端） | `integration-tests/backend/{场景名}.http` 或 `.sh` | HTTP 请求文件 / curl 脚本 |
 | 场景定义（前端）**（用户任务或视觉基线变化时必跑）** | `integration-tests/frontend/vN-scenarios.md` | Codex的操作、预期与证据要求；具体执行器见Codex 项目入口 |
-| 组合核对与测试结果 | `integration-tests/result-{日期}.md` | 见 `../hact-method-lab/templates/integration-result.md`；组合核对记录基线、证据与问题处置；已执行场景引用真实证据，未运行写原因 |
+| 组合核对与测试结果 | `integration-tests/result-{日期}.md` | `integration-result/v2`；绑定 final candidate/current review/revalidation/runtime scope；已执行场景引用真实证据，未运行写原因 |
 | 修复任务包（[阻断] 失败时） | `iterations/vN/queue/{task-id}.md` | 见 develop.md §字段规范 |
 | backlog.md 条目（[不阻断] 失败时） | `backlog.md` | `- [ ] {日期} \| [不阻断] {描述} \| 联调发现` |
 | 进度断点（compact 时写入） | `_meta/sessions/generate-integration-tests-progress.md` | 场景结论与修复/补缝 task-id；恢复核结果记录中的基线与问题，不重复有效验证 |

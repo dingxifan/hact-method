@@ -30,5 +30,40 @@ fs.writeFileSync(result, `| # | 模块 | 场景描述 | 结果 | 证据 | 未运
 | S-02 | web | 导出 | 未运行 | — | — | — | — | — |
 `);
 assert.ok(validate(path.relative(root, result), root).length >= 2, '无证据和无原因必须失败');
+
+const sha = 'a'.repeat(40);
+const linked = `---
+schema: integration-result/v2
+iteration: v1
+candidate_head: ${sha}
+system_review_dir: iterations/v1/system-review
+current_system_review: iterations/v1/system-review/review-002.md
+revalidation_of: [SV-F001]
+runtime_scope: [target-runtime-path]
+result_status: satisfied
+evidence_state: sufficient
+created_at: 2026-09-20T12:00:00Z
+---
+
+| # | 模块 | 场景描述 | 结果 | 证据 | 未运行原因 | 现象 | 级别 | 复测 |
+|---|---|---|---|---|---|---|---|---|
+| BE-01 | backend | 创建到终态 | ✅ | \`${backendEvidence}\` | — | — | — | 通过 |
+`;
+fs.writeFileSync(result, linked);
+const linkedOptions = {
+  requireSystemLinkage: true,
+  expectedIteration: 'v1',
+  expectedCandidate: sha,
+  expectedReview: 'iterations/v1/system-review/review-002.md',
+  requiredRevalidationOf: ['SV-F001'],
+  requiredRuntimeScope: ['target-runtime-path']
+};
+assert.deepStrictEqual(validate(path.relative(root, result), root, linkedOptions), [], 'v2 System Verification linkage 应通过');
+assert.ok(validate(path.relative(root, result), root, { ...linkedOptions, expectedCandidate: 'b'.repeat(40) })
+  .some(error => /final_candidate/.test(error)), 'candidate mismatch 必须失败');
+fs.writeFileSync(result, linked.replace('evidence_state: sufficient', 'evidence_state: insufficient'));
+assert.ok(validate(path.relative(root, result), root, linkedOptions).some(error => /insufficient/.test(error)), 'insufficient 不能 satisfied');
+fs.writeFileSync(result, linked.replace('| ✅ |', '| ❌ |'));
+assert.ok(validate(path.relative(root, result), root, linkedOptions).some(error => /失败场景/.test(error)), '失败场景不能 satisfied');
 fs.rmSync(root, { recursive: true, force: true });
 console.log('✅ check-integration-evidence 正反夹具通过');

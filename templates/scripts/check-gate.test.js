@@ -42,6 +42,24 @@ try {
   write('iterations/v1/acceptance-report.md', '## 验收结论\n未通过\n');
   assert.strictEqual(run('G4', 'v1').status, 1, '验收不通过仍阻断');
   write('iterations/v1/acceptance-report.md', '## 验收结论\n通过\n');
+  write('status.yml', 'review_architecture: system-verification/v1\n' + state(4));
+  const missingSystemTask = run('G4', 'v1');
+  assert.strictEqual(missingSystemTask.status, 1, '采用 Review Architecture 后缺 integration-verify task 必须阻断 G4');
+  assert.match(missingSystemTask.stdout + missingSystemTask.stderr, /System Verification|integration-verify/);
+  write('status.yml', 'review_architecture: system-verification/v1\n' + state(4, `tasks:
+  - id: demo-v1-integration-verify
+    iteration: v1
+    source: null
+    type: integration-verify
+    status: merged
+    system_review_dir: iterations/v1/system-review
+    current_system_review: iterations/v1/system-review/review-001.md
+    integration_result: integration-tests/result-v1.md
+    final_candidate: ${'a'.repeat(40)}
+`));
+  const missingSystemEvidence = run('G4', 'v1');
+  assert.strictEqual(missingSystemEvidence.status, 1, '只有 merged 标记、没有 System Review evidence 仍阻断 G4');
+  assert.match(missingSystemEvidence.stdout + missingSystemEvidence.stderr, /System Verification|system review/i);
   write('status.yml', state(5)); git(['add', 'status.yml']);
   assert.strictEqual(run('--staged').status, 0, 'status-only G5 正常签署；旧 Markdown 不参与');
   write('status.yml', state(5, pending)); git(['add', 'status.yml']);
@@ -71,6 +89,7 @@ try {
   assert.match(missingAudit.stdout + missingAudit.stderr, /review|审计/);
   const hook = fs.readFileSync(path.join(__dirname, 'pre-commit-hook.sh'), 'utf8');
   assert.match(hook, /run scripts\/check-gate.js --staged/);
+  assert.match(hook, /run scripts\/check-system-review\.js "\$version" \. --in-progress --staged/);
   assert.doesNotMatch(hook, /added_gates=/);
   const shell = process.platform === 'win32'
     ? path.join(process.env.ProgramFiles, 'Git', 'bin', 'sh.exe') : '/bin/sh';

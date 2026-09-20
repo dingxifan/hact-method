@@ -10,6 +10,7 @@ closure_id: closure-001
 finding_id: SV-F001
 source_artifact: iterations/vN/system-review/review-001.md
 prior_closure: null
+evidence: []
 repair_candidate:
   base: <40-char commit SHA>
   head: <40-char commit SHA>

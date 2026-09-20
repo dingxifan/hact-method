@@ -1,5 +1,5 @@
 ﻿# status.yml · 机器侧状态契约（项目根，由 init-project 创建一次）
-# 字段定义见 ../hact-method-lab/skeleton/07-status-contract.md。机器侧消费者（check-sprint.js / check-gate.js）按受控 YAML 结构读取。
+# 字段定义见 ../hact-method-lab/skeleton/07-status-contract.md。机器侧消费者（check-sprint.js / check-system-review.js / check-gate.js）按受控 YAML 结构读取。
 # 序列化：沿用下方缩进与块式 tasks；Gate 用 signed/date 内联或分行对象，不随意改紧凑 YAML 形态。
 # 写入纪律：每次只改对应字段，其余不动；显式写 null，不省略键。
 # 总规则：凡往 iterations/vN/queue/ 写任务包处，同步往 tasks[] 追加一条；状态流转按 task-id 改。
@@ -7,6 +7,7 @@
 project: {项目名}
 schema: 1
 generated_by: hact-method
+review_architecture: system-verification/v1
 
 iterations:
   v1:
@@ -53,6 +54,10 @@ tasks: []
 #    depends_on: []
 #    delivery: null
 #    urgency: null
+#    system_review_dir: iterations/v1/system-review
+#    current_system_review: iterations/v1/system-review/review-001.md
+#    integration_result: integration-tests/result-{date}.md
+#    final_candidate: {40-char project commit SHA}
 
 integration_tests: []
 # 每条（integration-verify 的 runtime lane 创建/更新）：

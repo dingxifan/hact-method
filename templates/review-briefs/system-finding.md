@@ -11,6 +11,7 @@ finding_id: SV-F001
 origin: runtime-verification
 severity: blocking
 category: runtime
+summary: <current candidate 上的具体 runtime problem>
 candidate:
   head: <40-char commit SHA>
 source_review: review-001

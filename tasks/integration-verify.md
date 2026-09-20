@@ -103,7 +103,7 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 |---|---|---|
 | Backend verification flows | `integration-tests/backend/` 或项目等价位置 | 真实入口到终态的穿透流 |
 | Frontend verification scenarios | `integration-tests/frontend/` 或项目等价位置 | 仅在完整档适用 |
-| Integration result | `integration-tests/result-{date}.md` 或项目等价位置 | 当前验证基线、场景、证据与结论 |
+| Integration result | `integration-tests/result-{date}.md` | `integration-result/v2`；绑定 final candidate、current System Review、runtime/revalidation scope 与场景证据 |
 | Integration evidence | `integration-tests/evidence/` 或项目等价位置 | 真实运行证据，按项目当前 schema |
 | System Review events | `iterations/vN/system-review/review-NNN.md` | `system-review/v1`；对 fixed candidate 的 immutable full/targeted historical judgement |
 | Post-publication runtime finding | `iterations/vN/system-review/findings/{finding-id}.md` | `system-finding/v1`；仅用于 review 发布后新建立的 runtime-origin finding |
@@ -113,7 +113,7 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 
 - `status.yml`：每个 iteration 恰有一个 `type: integration-verify` 的 Core Task work item，沿用 `可取 → taken-by → done → merged`；`source` 为 `null`，详细 findings/evidence 不复制进 status
 - 必要 integration evidence / result pointer
-- 当前 system-review / closure pointer 与未解决 obligation 的最小索引；详细 judgement 保留在 Git artifact
+- 当前 `system_review_dir`、`current_system_review`、`integration_result`、`final_candidate` 最小 pointer；未解决 obligation 由 checker 沿 Git artifacts 推导，不复制进 status
 - 派生修复 Task 的状态由各自 `develop` Task 管理，不在本 Task 复制第二套状态
 
 ### Conditional outputs
@@ -297,6 +297,7 @@ Task 完成时，每个 required scenario 都必须有**对当前 Accepted imple
 - 所有派生 `develop(source=integration)` 修复已 `merged`
 - 完整档适用时，required frontend scenario 与 visual smoke evidence 完整
 - 项目当前 integration checker / evidence checker（若存在）通过
+- `node scripts/check-system-review.js vN` 对当前 Git Truth 通过
 - 最终 result 与被验证的 Accepted implementation snapshot 对应
 
 ### Semantic

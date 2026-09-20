@@ -94,7 +94,7 @@
 - 返回：每步结果（✅/❌）+ HTTP 状态码 + 关键字段摘要 + transcript 项目相对路径 + 断在哪一步及现象
 - **流间状态互扰**：只有各流使用独立实体 / 数据前缀且不写共享产物时才可并行；隔离不了则串行跑（穿透流本就少）。运行时不支持隔离执行时，由主线串行执行并如实记录。
 
-全部返回后，汇总写入 `integration-tests/result-{日期}.md`，每条已执行后端流在「证据」列引用其 transcript；**同步写 `status.yml` 的 `integration_tests[]`**（每条场景一项）：
+全部返回后，汇总写入 `integration-tests/result-{日期}.md`：使用 `integration-result/v2` frontmatter 绑定 iteration、final candidate、system-review dir/current event、revalidation finding ids、runtime scope、result/evidence state；每条已执行后端流在「证据」列引用其 transcript。**同步写 `status.yml` 的 `integration_tests[]`**（每条场景一项），但不把 finding/closure 明细复制进 status：
 ```yaml
 - { iteration: vN, index: {序号}, description: {场景描述}, status: {通过/失败}, failure_reason: {失败现象 或 null} }
 ```
@@ -153,7 +153,7 @@
 2. 从 ux-flows 的 U/S 和本期改动生成前端场景定义 `integration-tests/frontend/v{N}-scenarios.md`：每条包含用户任务/场景锚、前置数据、真实入口、操作、可观察任务结果、相关失败/取消/恢复与证据类型。已有有效用例复用；新旧系统差异必须核对。证据落 `integration-tests/evidence/vN/{场景-id}/`，不按 15 条等任意数量裁掉必要路径。
    - **禁恒真式断言**：不得用**元素计数**判 UI 元素消失/弹窗关闭——组件库普遍在关闭后保留 DOM 节点（计数恒 ≥1），该断言在构造上无法侦测关闭，**永远绿**。判"消失/关闭"一律按**可见性**（`offsetParent === null` / 实测尺寸为 0）。每条断言写完自问一遍：**被测行为反过来时，这条会不会红？**不会红即无效断言，重写。
 3. 由 Codex 主线把场景定义编译为可执行脚本，更新脚本索引并追加前端部分；commit + push
-4. 按模块启动纯执行单元运行浏览器场景，证据落 `integration-tests/evidence/vN/{场景-id}/`，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`。仅在模块数据、环境和写入产物均隔离时并行，否则串行；运行时不支持隔离执行时由主线串行执行。完成前运行 `node ../hact-method-lab/templates/scripts/check-integration-evidence.js integration-tests/result-{日期}.md .`；已执行无证据、未运行无原因均阻断
+4. 按模块启动纯执行单元运行浏览器场景，证据落 `integration-tests/evidence/vN/{场景-id}/`，汇总结果追加至 `result-{日期}.md`，更新 `status.yml`。仅在模块数据、环境和写入产物均隔离时并行，否则串行；运行时不支持隔离执行时由主线串行执行。完成前运行 `node scripts/check-integration-evidence.js integration-tests/result-{日期}.md .`；已执行无证据、未运行无原因均阻断
 5. **视觉冒烟断言**（涉视觉基线迭代必做，按实际变化选择）：在关键页面加载后通过浏览器场景能力执行 JS，实测以下确定值，取数源 = `design.md`「〇、视觉冒烟锚点」段，不符即 `[阻断]`：
    - **主色覆盖**：`getComputedStyle(document.documentElement).getPropertyValue('--el-color-primary').trim()`（按本项目 UI 库主色变量名调整）== design.md 主色 token —— 抓「token 定义了没覆盖库主题」
    - **视口无外溢**：目标视口宽下 `document.documentElement.scrollWidth - window.innerWidth <= 0` —— 抓「视口外溢」
@@ -168,7 +168,7 @@
 
 develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的测试脚本（后端必跑，完整档含前端）。
 
-更新 `result-{日期}.md`，**同步更新 `status.yml` 的 `integration_tests[]`**（按复测结果改各项 status，通过项 failure_reason 置 null）。
+更新 `result-{日期}.md` 的 candidate/revalidation/runtime scope 与场景行，**同步更新 `status.yml` 的 `integration_tests[]`**（按复测结果改各项 status，通过项 failure_reason 置 null）。
 
 ---
 
@@ -177,10 +177,11 @@ develop(source=integration) 全部 [merged] 后，重跑**所有**已生成的�
 先对本轮共同结果执行：
 
 ```bash
-node ../hact-method-lab/templates/scripts/check-integration-evidence.js integration-tests/result-{日期}.md .
+node scripts/check-integration-evidence.js integration-tests/result-{日期}.md .
+node scripts/check-system-review.js vN .
 ```
 
-非 0 先补后端 transcript、浏览器证据或未运行原因。该检查只核附件契约，通过后仍须核以下语义与完成判据：
+任一非 0 先按报告补 runtime evidence/linkage 或 system finding/closure/revalidation。前者只核 runtime artifact，后者聚合两条 lane 与 completion；通过后仍须核以下语义判据：
 
 - [ ] 所有穿透流均有明确结论（无"未测"条目）
 - [ ] 组合核对已完成，必需能力及主流程无未解决阻断；修复任务已合并并通过相关复核，不能仅凭 owner 已指定放行

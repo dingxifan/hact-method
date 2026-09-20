@@ -82,6 +82,7 @@ echo "" > "../{name}/b-queue/.gitkeep"
 - `scripts/check-hook-state.js`：内容复制自 `templates\scripts\check-hook-state.js`（只读报告实际生效 hook、tracked 门卫与方法论模板三方状态；不安装、不覆盖）
 - `scripts/check-codex-project.js`：内容复制自 `templates\scripts\check-codex-project.js`（只读诊断 Codex 入口与角色配置形状；只报告缺口，不安装、不覆盖）
 - `scripts/check-integration-evidence.js`：内容复制自 `templates\scripts\check-integration-evidence.js`（核联调结果中已执行场景的共同证据路径真实存在、未运行场景有明确原因与移交）
+- `scripts/check-system-review.js`：内容复制自 `templates\scripts\check-system-review.js`（核 System Review event、finding route、closure lineage、revalidation、invalidation 与 final candidate completion；G4 只消费其结果，不复制规则）
 - `scripts/check-ux.js`：内容复制自 `templates\scripts\check-ux.js`（用户任务/场景/AC/页面多对多引用与证据索引检查；不证明浏览器行为或用户接受）
 - `scripts/check-reusables.js`：内容复制自 `templates\scripts\check-reusables.js`（`reusables.md` 登记表 linter，纯 Node 无外部依赖；门卫在「改了 reusables.md」或「本次 commit 有文件删除/改名」时自动核登记路径是否还在——该表被 `draft-tech-design`/`plan-sprint`/`draft-prd-vN` 当权威源读，失真则那些检查静默放行）
 - `scripts/check-conn.js`：内容复制自 `templates\scripts\check-conn.js`（连接与凭据的统一寻址 + 体检，纯 Node 无外部依赖；代码托管操作取 token / `deploy` 取服务器坐标 / 任何要连数据库或第三方 API 的任务都经它取值，门卫在「改了 connections.yml」时自动核零机密与引用完备）

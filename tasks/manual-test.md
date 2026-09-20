@@ -248,6 +248,7 @@ G4 后新发现的问题：
 - acceptance report 中所有 in-scope blocking issue 均有关闭结论
 - G4 record 绑定明确 approved snapshot
 - 项目当前 G4 checker / hook（若存在）通过
+- Review Architecture 项目中，G4 checker 已消费 `check-system-review.js` completion 结果；不能只凭 `status: merged` 放行
 - 最终 report、state 与用户实际验收的 implementation world 一致
 
 ### Semantic

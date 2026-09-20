@@ -70,6 +70,8 @@ Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“�
 
 System-review artifacts 只在 canonical Task 已路由为 `integration-verify`，或恢复该 Task 时加载。Package develop、planning 与其他 Task 不预加载完整 system-review history。
 
+`review_architecture=system-verification/v1` 时，`integration-verify` 进入 `merged` 或 `manual-test` 路由前必须运行项目副本 `node scripts/check-system-review.js vN`；从 checker 返回的具体 open/escalated/rereview/revalidation 缺口继续，不从文件存在性推断完成。
+
 ## 3. Canonical Task routing
 
 vNext Core Task Catalog：
@@ -136,7 +138,7 @@ canonical `draft-ux`; it is not a Task name.
 
 1. 读取 `project.md`。
 2. 读取 `status.yml iterations.*.gates`；存在 `iterations/v0/` 时先判断 V0。
-3. 读取 `status.yml tasks[]` 判断当前 work item、Owner、source、依赖与状态。动态状态不从旧 Markdown 复选框推断。
+3. 读取 `status.yml tasks[]` 判断当前 work item、Owner、source、依赖与状态。`review_architecture=system-verification/v1` 时，沿唯一 `type=integration-verify` 条目的 system-review/runtime pointers 判断 pending obligation；动态状态不从旧 Markdown 复选框或聊天总结推断。
 4. 用户已明确 canonical Task 时优先该 Task；用户给 legacy alias 时先 canonicalize。
 5. 用户只给 task-id 时，先在 `status.yml` 与对应 queue 找到该 Task Contract/source，再继续。
 6. B 类 task-id / bug / optimization 请求先做 B Intake；已有合法 Development Intake 且用户已授权实现时直接衔接 `develop`。

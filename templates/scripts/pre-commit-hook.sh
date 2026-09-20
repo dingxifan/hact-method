@@ -13,6 +13,7 @@
 #   status.yml 新签 Gate / merged → check-gate.js --staged
 #   b-queue/*.md                  → check-b-task.js（B 类不得夹带共享契约修订）
 #   integration-tests/result-*.md → check-integration-evidence.js（已执行有证据、未运行有原因）
+#   iterations/vN/system-review/** → check-system-review.js --in-progress --staged（immutable event / finding / closure chain）
 #   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
 #   connections.yml                 → check-conn.js（零机密 + 凭据引用完备 + 凭据落位安全）
 #   任何 staged 文件                → check-secrets.js（反查 ~/.hact/secrets.env 的真值）
@@ -104,6 +105,12 @@ done
 integration_results=$(echo "$staged" | grep -E '^integration-tests/result-.*\.md$' || true)
 for result in $integration_results; do
   run scripts/check-integration-evidence.js "$result"
+done
+
+# --- System Review immutable/additive artifacts ---
+system_review_iters=$(echo "$staged" | sed -nE 's#^iterations/(v[0-9]+(\.[0-9]+)*)/system-review/.*#\1#p' | sort -u)
+for version in $system_review_iters; do
+  run scripts/check-system-review.js "$version" . --in-progress --staged
 done
 
 # --- reusables.md 登记表（check-reusables.js）---

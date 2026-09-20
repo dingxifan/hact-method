@@ -2,13 +2,52 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { parseFrontmatter, listItems, scalarText } = require('./check-sprint.js');
 
 function clean(cell) { return String(cell || '').trim().replace(/^`|`$/g, ''); }
 
-function validate(resultFile, root = process.cwd()) {
+function validate(resultFile, root = process.cwd(), options = {}) {
   const errors = [];
   const absoluteResult = path.resolve(root, resultFile);
   if (!fs.existsSync(absoluteResult)) return [`结果文件不存在：${resultFile}`];
+  const fm = parseFrontmatter(absoluteResult);
+  let resultStatus = null;
+  if (fm) {
+    const value = key => scalarText(fm[key]);
+    const schema = value('schema');
+    if (schema !== 'integration-result/v2') errors.push(`未知 integration result schema：${schema || '<缺失>'}`);
+    const iteration = value('iteration');
+    const candidate = value('candidate_head');
+    const reviewDir = value('system_review_dir').replace(/\\/g, '/');
+    const currentReview = value('current_system_review').replace(/\\/g, '/');
+    const createdAt = value('created_at');
+    resultStatus = value('result_status');
+    const evidenceState = value('evidence_state');
+    const revalidationOf = listItems(fm.revalidation_of);
+    const runtimeScope = listItems(fm.runtime_scope);
+    if (!/^v\d+(?:\.\d+)*$/.test(iteration)) errors.push('integration result iteration 非法');
+    if (!/^[0-9a-f]{40}$/i.test(candidate)) errors.push('integration result candidate_head 非 40 位 SHA');
+    if (reviewDir !== `iterations/${iteration}/system-review`) errors.push('system_review_dir 与 iteration 不一致');
+    if (!new RegExp(`^iterations/${iteration.replace(/\./g, '\\.')}/system-review/review-\\d{3}\\.md$`).test(currentReview))
+      errors.push('current_system_review 路径非法');
+    if (!['satisfied', 'blocked'].includes(resultStatus)) errors.push('result_status 非法');
+    if (!['sufficient', 'insufficient'].includes(evidenceState)) errors.push('evidence_state 非法');
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(createdAt) || Number.isNaN(Date.parse(createdAt))) errors.push('created_at 必须是 ISO-8601');
+    if (!runtimeScope.length) errors.push('runtime_scope 必须非空');
+    if (new Set(runtimeScope).size !== runtimeScope.length) errors.push('runtime_scope 不得重复');
+    if (new Set(revalidationOf).size !== revalidationOf.length || revalidationOf.some(id => !/^SV-F\d{3}$/.test(id)))
+      errors.push('revalidation_of 必须是唯一 SV-FNNN 列表');
+    if (resultStatus === 'satisfied' && evidenceState !== 'sufficient') errors.push('evidence insufficient 不能建立 runtime satisfied');
+    if (options.expectedIteration && iteration !== options.expectedIteration) errors.push('integration result iteration 与 System Verification 不一致');
+    if (options.expectedCandidate && candidate !== options.expectedCandidate) errors.push('integration result candidate 与 final_candidate 不一致');
+    if (options.expectedReview && currentReview !== options.expectedReview) errors.push('integration result current_system_review 与 status 不一致');
+    for (const id of options.requiredRevalidationOf || []) if (!revalidationOf.includes(id))
+      errors.push(`runtime revalidation_of 缺 ${id}`);
+    for (const scope of options.requiredRuntimeScope || []) if (!runtimeScope.includes(scope))
+      errors.push(`runtime_scope 缺 ${scope}`);
+  } else if (options.requireSystemLinkage) {
+    errors.push('System Verification completion 要求 integration-result/v2 frontmatter');
+  }
   const rows = fs.readFileSync(absoluteResult, 'utf8').split(/\r?\n/)
     .filter(line => /^\|/.test(line))
     .map(line => line.split('|').slice(1, -1).map(cell => cell.trim()))
@@ -20,8 +59,10 @@ function validate(resultFile, root = process.cwd()) {
     if (!['✅', '❌', '未运行'].includes(result)) { errors.push(`${id}: 结果「${result}」非法`); continue; }
     if (result === '未运行') {
       if (!notRunReason || /^(?:—|-|无|none)$/i.test(notRunReason)) errors.push(`${id}: 未运行必须写原因与移交`);
+      if (resultStatus === 'satisfied' && /\[?阻断\]?/.test(cells[7] || '')) errors.push(`${id}: blocking 未运行场景不能建立 runtime satisfied`);
       continue;
     }
+    if (resultStatus === 'satisfied' && result === '❌') errors.push(`${id}: 失败场景不能建立 runtime satisfied`);
     if (!evidence || /^(?:—|-|无|none)$/i.test(evidence)) { errors.push(`${id}: 已执行但无证据路径`); continue; }
     const paths = evidence.split(/<br\s*\/?>|[,，]/i).map(clean).filter(Boolean);
     for (const relative of paths) {

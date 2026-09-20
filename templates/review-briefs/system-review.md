@@ -69,6 +69,7 @@ findings: []
 
 - First event for a lineage is `review_type=full`, `predecessor=null`, `revalidation_of=[]`.
 - Targeted event names one existing predecessor, non-empty `revalidation_of`, and the complete affected scope. It does not claim another Full System Review.
+- A later Full System Re-review also names its predecessor and non-empty `revalidation_of`; it establishes a new full baseline rather than erasing prior history.
 - Every invocation creates a new `review-NNN.md`; sequence does not encode depth.
 - `result.status=pass` requires `evidence_state.status=sufficient` and `findings=[]`; advisories do not block.
 - A blocked full review can remain the assurance baseline after every finding gains valid additive closure lineage; a later full PASS is not mechanically required.

@@ -1,7 +1,7 @@
 # 07 · status.yml 状态契约
 
 > 本文件定义**项目根** `status.yml` 的字段、类型、枚举与取值，是**人与检查器共同的单一事实**。
-> 机器侧消费者（`check-sprint.js` / `check-gate.js`，以及任何后续取数工具）都从 `status.yml` 进入，不解析任何叙述性 markdown；具体消费者只按本契约读取自己需要的字段。
+> 机器侧消费者（`check-sprint.js` / `check-system-review.js` / `check-gate.js`，以及任何后续取数工具）都从 `status.yml` 进入，不解析任何叙述性 markdown；具体消费者只按本契约读取自己需要的字段。
 > 设计依据：`_meta/plans/2026-05-31-status-contract/design.md`。
 
 ---
@@ -46,6 +46,7 @@
 project: {项目名}                # string，项目名
 schema: 1                        # int，本契约 schema 版本号；字段演进靠它兼容
 generated_by: hact-method        # string，固定 hact-method（Codex）
+review_architecture: system-verification/v1 # 新采用 Review Architecture 的项目固定值；存量缺失表示 legacy，不补造 evidence
 
 iterations:                      # 按版本分块；每期一个 key
   v1:
@@ -89,6 +90,10 @@ tasks:
     depends_on: []
     delivery: null
     urgency: null
+    system_review_dir: iterations/v2/system-review
+    current_system_review: iterations/v2/system-review/review-001.md
+    integration_result: integration-tests/result-2026-09-20.md
+    final_candidate: <40-char project commit SHA>
   - id: hact-b-001              # B 类示例
     iteration: null             # 不属任何迭代
     sprint: null
@@ -156,6 +161,17 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 > 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验核固定 diff、targeted 继承链与问题闭合，并对缺必要字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
 
 > 问题、证据、严重程度与处置状态按 `templates/review-briefs/develop-review-round.md` 写入逐轮报告。`status.yml` 通过 `review_report_dir` 引用，读取问题时沿报告链按稳定 finding id 取最新处置，不另维护 issues/comment 副本。历史内联内容原样保留。
+
+### System Verification 最小指针
+
+`review_architecture: system-verification/v1` 是前瞻采用标记，不是完成状态。采用后，每期必须有且仅有一个 `type=integration-verify` work item，并只在该条目存：
+
+- `system_review_dir`：固定为 `iterations/vN/system-review`；
+- `current_system_review`：当前最新 immutable reviewer event；
+- `integration_result`：当前 runtime result；
+- `final_candidate`：两条 lane 最终共同指向的 project commit。
+
+Findings、routes、revalidation 与 closure events 不复制进 status，由 checker 沿上述 pointer 读取 Git artifacts 推导。存量项目缺采用标记时继续按原 schema 解释；迁移不能自动添加标记并声称历史 System Verification 已发生。
 
 ### 不进 YAML（留在 markdown 里，供人阅读）
 任务包字段正文、`description`、`completion_report`、`output`、PRD/TRD/sprint/联调报告正文。
