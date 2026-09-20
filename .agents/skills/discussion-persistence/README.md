@@ -19,8 +19,6 @@ It standardizes:
 - `agents/openai.yaml` — UI metadata; implicit invocation disabled
 - `references/protocol.md` — V1 contract
 - `references/recovery.md` — abnormal-path recovery rules
-- `references/conformance.md` — native/local persistence regression cases
-- `assets/project-config.example.yaml` — optional native repository configuration example
 
 ## Explicit invocation
 
