@@ -442,6 +442,17 @@ try {
     'unreachable loose Git blob cannot satisfy committed evidence');
   git(['reset', '--hard', repair]);
 
+  validPass();
+  write('[object Object]', 'coercion decoy\n');
+  write('iterations/v1/system-review/review-001.md', review({}).replace('evidence/system.txt', `git:${candidate}`));
+  const unquotedRawErrors = validateStagedComplete();
+  assert.ok(unquotedRawErrors.some(error => /non-empty project-relative path string/.test(error)),
+    `unquoted raw Git object must not coerce to a tracked filename: ${unquotedRawErrors.join(' | ')}`);
+  git(['commit', '-m', 'unquoted raw Git fixture']);
+  assert.ok(validate('v1', root).some(error => /non-empty project-relative path string/.test(error)),
+    'committed unquoted raw Git object cannot coerce to a tracked filename');
+  git(['reset', '--hard', repair]);
+
   reset();
   write('status.yml', status({ final: repair }));
   write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'local-close' } }));

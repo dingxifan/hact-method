@@ -158,7 +158,11 @@ function isAncestor(root, base, head) {
 function validateEvidencePointers(root, reader, pointers, context, errors) {
   if (!Array.isArray(pointers) || !pointers.length) { errors.push(`${context}: evidence must be a non-empty list`); return; }
   for (const pointer of pointers) {
-    const value = String(pointer || '').trim();
+    if (typeof pointer !== 'string' || !pointer.trim()) {
+      errors.push(`${context}: every evidence pointer must be a non-empty project-relative path string`);
+      continue;
+    }
+    const value = pointer.trim();
     if (/^git:/i.test(value)) { errors.push(`${context}: evidence must be a project-relative Git-tracked file, not a raw Git object: ${value}`); continue; }
     try {
       reader.read(value);
