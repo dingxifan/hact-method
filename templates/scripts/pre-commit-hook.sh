@@ -104,7 +104,7 @@ done
 # --- 联调证据共同落盘契约 ---
 integration_results=$(echo "$staged" | grep -E '^integration-tests/result-.*\.md$' || true)
 for result in $integration_results; do
-  run scripts/check-integration-evidence.js "$result"
+  run scripts/check-integration-evidence.js "$result" . --staged
 done
 
 # --- System Review immutable/additive artifacts ---

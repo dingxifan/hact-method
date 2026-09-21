@@ -19,6 +19,7 @@ route:
   effective: local-close | system-rereview
 local_review:
   required: true
+  task_id: <integration repair task id>
   report: <project-relative path or null>
   reviewer_isolation: fresh-isolated | null
   result: pass | fail | not-required
@@ -53,7 +54,9 @@ created_at: <ISO-8601>
 `route.effective=local-close` 且 `result=closed` 时必须同时满足：
 
 - fixed repair candidate exists;
+- `local_review.task_id` identifies a merged same-iteration `develop(source=integration)` repair task;
 - `local_review.required=true`, `reviewer_isolation=fresh-isolated`, `result=pass`;
+- `local_review.report` is that task's final passing `develop-review-round/v2`, binds the repair candidate tree, and references the source system finding plus required scopes;
 - semantic required/verified scope 相等且 result=pass；
 - runtime required 时 required/verified scope 相等且 result=pass；不 required 时有非空 reason 且 result=not-required；
 - `system_reviewer_event=null`；

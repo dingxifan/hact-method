@@ -85,7 +85,7 @@ function parseTasksSource(source) {
 }
 
 /* ---------------- G4 ---------------- */
-function checkG4(iteration, root) {
+function checkG4(iteration, root, options = {}) {
   const statusPath = path.join(root, 'status.yml');
   const tasks = parseTasks(statusPath);
 
@@ -99,7 +99,7 @@ function checkG4(iteration, root) {
     const systemChecker = path.join(__dirname, 'check-system-review.js');
     if (!exists(systemChecker)) fail('G4:System Verification', systemChecker, '缺 check-system-review.js，不能证明 System Verification completion');
     else {
-      const systemErrors = require(systemChecker).validate(iteration, root);
+      const systemErrors = require(systemChecker).validate(iteration, root, { staged: Boolean(options.staged) });
       if (systemErrors.length) fail('G4:System Verification', path.join(root, 'iterations', iteration, 'system-review'), systemErrors.join('；'));
       else pass('G4:System Verification', '双 assurance lane、finding closure 与 revalidation completion 通过');
     }
@@ -246,14 +246,14 @@ function checkStaged(root) {
     if (gate === 'G1') run('check-docs.js', ['--prd', path.join(dir, 'prd.md')]);
     if (gate === 'G2' && version !== 'v0') run('check-docs.js', [path.join(dir, 'prd.md'), path.join(dir, 'trd.md')]);
     if (gate === 'G3') run('check-sprint.js', [version]);
-    if (gate === 'G4') checkG4(version, root);
+    if (gate === 'G4') checkG4(version, root, { staged: true });
     if (gate === 'G5') checkG5(version, root);
     human('Gate 确认', key + ' 必须对应用户明确确认；字段和脚本不代替人签');
   }
   for (const task of merged.filter(item => item.type === 'integration-verify')) {
     const systemChecker = path.join(root, 'scripts', 'check-system-review.js');
     if (!exists(systemChecker)) fail('System Verification checker', systemChecker, 'review_architecture task 合并必须安装 check-system-review.js');
-    else run('check-system-review.js', [task.iteration, root]);
+    else run('check-system-review.js', [task.iteration, root, '--staged']);
   }
   // One staged audit covers new merged events and changed records without rescanning old rounds.
   run('check-sprint.js', ['--staged', root]);

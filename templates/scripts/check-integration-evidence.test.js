@@ -4,6 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const cp = require('child_process');
 const { validate } = require('./check-integration-evidence.js');
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-integration-evidence-'));
@@ -65,5 +66,20 @@ fs.writeFileSync(result, linked.replace('evidence_state: sufficient', 'evidence_
 assert.ok(validate(path.relative(root, result), root, linkedOptions).some(error => /insufficient/.test(error)), 'insufficient 不能 satisfied');
 fs.writeFileSync(result, linked.replace('| ✅ |', '| ❌ |'));
 assert.ok(validate(path.relative(root, result), root, linkedOptions).some(error => /失败场景/.test(error)), '失败场景不能 satisfied');
+
+const git = args => cp.execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+fs.writeFileSync(result, linked);
+git(['init']); git(['config', 'user.name', 'Integration Evidence Test']); git(['config', 'user.email', 'integration@example.com']);
+git(['add', '.']); git(['commit', '-m', 'linked evidence']);
+assert.deepStrictEqual(validate(path.relative(root, result), root, { ...linkedOptions, staged: true }), [], 'staged v2 reads index truth');
+git(['rm', '--cached', backendEvidence]);
+assert.ok(validate(path.relative(root, result), root, { ...linkedOptions, staged: true }).some(error => /Git index/.test(error)),
+  'untracked runtime evidence cannot satisfy staged validation');
+git(['reset', '--hard', 'HEAD']);
+fs.writeFileSync(result, linked.replace('evidence_state: sufficient', 'evidence_state: insufficient'));
+git(['add', path.relative(root, result)]);
+fs.writeFileSync(result, linked);
+assert.ok(validate(path.relative(root, result), root, { ...linkedOptions, staged: true }).some(error => /insufficient/.test(error)),
+  'worktree satisfied cannot replace insufficient result stored in index');
 fs.rmSync(root, { recursive: true, force: true });
 console.log('✅ check-integration-evidence 正反夹具通过');

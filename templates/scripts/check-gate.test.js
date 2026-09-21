@@ -90,6 +90,8 @@ try {
   const hook = fs.readFileSync(path.join(__dirname, 'pre-commit-hook.sh'), 'utf8');
   assert.match(hook, /run scripts\/check-gate.js --staged/);
   assert.match(hook, /run scripts\/check-system-review\.js "\$version" \. --in-progress --staged/);
+  assert.match(hook, /check-integration-evidence\.js "\$result" \. --staged/);
+  assert.match(fs.readFileSync(checker, 'utf8'), /check-system-review\.js'[\s\S]*task\.iteration, root, '--staged'/);
   assert.doesNotMatch(hook, /added_gates=/);
   const shell = process.platform === 'win32'
     ? path.join(process.env.ProgramFiles, 'Git', 'bin', 'sh.exe') : '/bin/sh';
