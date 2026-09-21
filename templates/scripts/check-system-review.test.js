@@ -92,7 +92,7 @@ fixture
 
 const closure = ({ findingId = 'SV-F001', number = 1, route = 'local-close', result = 'closed',
   prior = null, reviewerEvent = null, invalidated = false, runtimeRequired = true,
-  sourceArtifact = 'iterations/v1/system-review/review-001.md' }) => `---
+  sourceArtifact = 'iterations/v1/system-review/review-001.md', repairBase = candidate, repairHead = repair }) => `---
 schema: system-finding-closure/v1
 iteration: v1
 closure_id: closure-${String(number).padStart(3, '0')}
@@ -102,8 +102,8 @@ prior_closure: ${prior}
 evidence:
   - evidence/system.txt
 repair_candidate:
-  base: ${candidate}
-  head: ${repair}
+  base: ${repairBase}
+  head: ${repairHead}
 route:
   expected: ${number === 1 ? (result === 'escalated' ? 'local-close' : route) : 'system-rereview'}
   effective: ${route}
@@ -287,6 +287,29 @@ try {
   assert.ok(validateStagedComplete().some(error => /semantic assurance frontier/.test(error)), 'unreviewed final candidate advance fails semantic frontier');
 
   reset();
+  write('status.yml', status({ final: candidate }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'local-close' } }));
+  writeLocalReview({ reviewedHead: git(['rev-parse', `${base}^{tree}`]) });
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({ repairBase: base, repairHead: base }));
+  write('integration-tests/result-v1.md', integration({ final: candidate, ids: ['SV-F001'], scope: ['target-runtime-path'] }));
+  assert.ok(validateStagedComplete().some(error => /descend from source finding candidate/.test(error)),
+    'closure repair cannot move backward behind source finding candidate');
+
+  reset();
+  write('status.yml', status({ final: candidate, reviewNumber: 2 }));
+  write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'local-close', runtimeRequired: false } }));
+  write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: candidate, predecessor: 'review-001', revalidation: ['SV-F001'] }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-001.md', closure({ route: 'system-rereview', result: 'escalated', runtimeRequired: false }));
+  write('iterations/v1/system-review/closures/SV-F001/closure-002.md', closure({
+    number: 2, route: 'system-rereview', prior: 'iterations/v1/system-review/closures/SV-F001/closure-001.md',
+    reviewerEvent: 'iterations/v1/system-review/review-002.md', runtimeRequired: false,
+    repairBase: candidate, repairHead: candidate
+  }));
+  write('integration-tests/result-v1.md', integration({ final: candidate, reviewNumber: 2 }));
+  assert.ok(validateStagedComplete().some(error => /descend from prior closure repair candidate/.test(error)),
+    'later closure cannot omit an earlier escalation repair candidate');
+
+  reset();
   write('status.yml', status({ final: repair, reviewNumber: 3 }));
   write('iterations/v1/system-review/review-001.md', review({ result: 'blocked', finding: { id: 'SV-F001', route: 'system-rereview', runtimeRequired: false } }));
   write('iterations/v1/system-review/review-002.md', review({ number: 2, type: 'targeted', head: forked, predecessor: 'review-001', revalidation: ['SV-F001'] }));
@@ -405,6 +428,19 @@ try {
   git(['add', 'status.yml', '_meta/method-sync.json', 'iterations/v1/system-review/review-001.md', 'evidence/system.txt', 'integration-tests/result-v1.md']);
   assert.ok(validate('v1', root, { staged: true }).some(error => /runtime evidence|Git index|不在 index Git Truth/.test(error)),
     'staged completion cannot consume untracked integration result/runtime evidence');
+
+  validPass();
+  const looseBlob = cp.execFileSync('git', ['hash-object', '-w', '--stdin'], {
+    cwd: root, input: 'unreachable loose evidence\n', encoding: 'utf8'
+  }).trim();
+  write('iterations/v1/system-review/review-001.md', review({}).replace('evidence/system.txt', `"git:${looseBlob}"`));
+  const stagedLooseErrors = validateStagedComplete();
+  assert.ok(stagedLooseErrors.some(error => /project-relative Git-tracked file/.test(error)),
+    `unreachable loose Git blob cannot satisfy staged evidence: ${stagedLooseErrors.join(' | ')}`);
+  git(['commit', '-m', 'loose evidence fixture']);
+  assert.ok(validate('v1', root).some(error => /project-relative Git-tracked file/.test(error)),
+    'unreachable loose Git blob cannot satisfy committed evidence');
+  git(['reset', '--hard', repair]);
 
   reset();
   write('status.yml', status({ final: repair }));

@@ -159,11 +159,7 @@ function validateEvidencePointers(root, reader, pointers, context, errors) {
   if (!Array.isArray(pointers) || !pointers.length) { errors.push(`${context}: evidence must be a non-empty list`); return; }
   for (const pointer of pointers) {
     const value = String(pointer || '').trim();
-    const gitRef = value.match(/^git:([0-9a-f]{40})$/i);
-    if (gitRef) {
-      if (!gitObjectType(root, gitRef[1])) errors.push(`${context}: evidence Git object does not exist: ${value}`);
-      continue;
-    }
+    if (/^git:/i.test(value)) { errors.push(`${context}: evidence must be a project-relative Git-tracked file, not a raw Git object: ${value}`); continue; }
     try {
       reader.read(value);
     } catch (error) { errors.push(`${context}: invalid evidence pointer ${value}: ${error.message}`); }
@@ -315,7 +311,7 @@ function validate(iteration, root = process.cwd(), options = {}) {
       validateFinding(finding, rel, errors);
       validateEvidencePointers(root, reader, finding?.evidence, `${rel}:${finding?.id || '<missing-id>'}`, errors);
       if (finding?.id && sourceFindings.has(finding.id)) errors.push(`${rel}: duplicate system finding ${finding.id}`);
-      else if (finding?.id) sourceFindings.set(finding.id, { rel, finding });
+      else if (finding?.id) sourceFindings.set(finding.id, { rel, finding, candidate: doc.candidate?.head });
     }
   });
 
@@ -338,7 +334,7 @@ function validate(iteration, root = process.cwd(), options = {}) {
     validateEvidencePointers(root, reader, doc.evidence, rel, errors);
     if (doc.origin !== 'runtime-verification') errors.push(`${rel}: standalone finding origin must be runtime-verification`);
     if (sourceFindings.has(id)) errors.push(`${rel}: duplicate system finding ${id}`);
-    else sourceFindings.set(id, { rel, finding: normalized });
+    else sourceFindings.set(id, { rel, finding: normalized, candidate: doc.candidate?.head });
   }
   for (const pending of pendingRevalidations) for (const findingId of pending.ids)
     if (!sourceFindings.has(findingId)) errors.push(`${pending.rel}: unknown revalidation finding ${findingId}`);
@@ -379,6 +375,10 @@ function validate(iteration, root = process.cwd(), options = {}) {
       if (!ROUTES.has(doc.route?.expected) || !ROUTES.has(doc.route?.effective)) errors.push(`${rel}: invalid route`);
       const priorEffective = index === 0 ? source.finding.closure?.route : lastClosure.get(findingId)?.route?.effective;
       const priorDoc = index === 0 ? null : lastClosure.get(findingId);
+      const requiredAncestor = priorDoc?.repair_candidate?.head || source.candidate;
+      if (isSha(requiredAncestor) && isSha(doc.repair_candidate?.head)
+          && !isAncestor(root, requiredAncestor, doc.repair_candidate.head))
+        errors.push(`${rel}: repair_candidate.head must descend from ${index === 0 ? 'source finding candidate' : 'prior closure repair candidate'} ${requiredAncestor}`);
       if (doc.route?.expected !== priorEffective) errors.push(`${rel}: route.expected must match prior effective route`);
       if (priorEffective === 'system-rereview' && doc.route?.effective === 'local-close') errors.push(`${rel}: system-rereview cannot downgrade to local-close`);
       if (typeof doc.full_snapshot_invalidated !== 'boolean') errors.push(`${rel}: full_snapshot_invalidated must be boolean`);
