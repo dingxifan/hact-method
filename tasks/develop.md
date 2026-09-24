@@ -483,3 +483,11 @@ Task `merged` 与 G1–G5 approval 正交。develop 本身不创建新的 Gate�
 如果代码已经被接受/合并但 `status.yml` 尚未落定，先核真实 Git 结果再补 state；不得重复实现、重复 PR 或重开 review。
 
 如果 Local Working Truth 还没有 stable snapshot，只能由当前 Owner 谨慎恢复；需要跨 Runtime / session 时优先先形成 safe checkpoint，而不是传递完整聊天。
+
+## 10. Runtime Routing
+
+canonical Task 始终是 `develop`；实际 crossing 只允许 `Execution Task Runtime`、`Review Dispatch`、`Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。Runtime job creation 不产生 ownership transfer；owner/state 仍只按既有 status / owner policy 改变。crossing 只引用 Development Contract / Task Package 的 authoritative identity，不复制、重述或覆盖其语义。G3 与既有 Authority boundary 不变。
+
+每个 develop package 的 `Review Dispatch` **REQUIRED**：standard package 默认 `lightweight`；sensitive package 或 actual fixed diff 命中 sensitive boundary 时必须 `full-local`，完全沿用本 Task 既有升档与 bounded re-review 规则。Runtime/checker/job completion 不替代 Independent Review 或本 Task Completion & Handoff。
+
+只有 finding 表明 authoritative Contract truth 必须改变时，才可用 `Derived Child Task` 路由到 canonical `revise-doc`；child 必须先满足既有 registration、intake/package、status、readiness 与 ownership 要求。不得由 Runtime prompt 或 job 直接修改 Contract。

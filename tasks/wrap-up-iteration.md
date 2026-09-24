@@ -368,3 +368,11 @@ G5 approved 后，本 iteration 正常生命周期闭合。
 
 - 更新 deployment truth
 - 不撤销历史 G5
+
+## 10. Runtime Routing
+
+Stay Local 为默认；实际 crossing 只允许 `Reality Probe`、`Review Dispatch`、`Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。canonical Task 始终是 `wrap-up-iteration`；Runtime job 不创建 ownership/state、Gate 或 closeout truth。
+
+Independent Semantic `Review Dispatch` **CONDITIONAL, NOT DEFAULT**：只在 deviation、revision 或 fact reconciliation 复杂时触发，且不能替代 G5 Human Authority。普通 mechanical closeout 不新增 review completion condition。
+
+真实 gap 可通过 `Derived Child Task` 建立 canonical `revise-doc` 或 `develop` work，前提是满足既有 registration/intake/package/status/ownership 要求；historical merged Tasks/Gates 不 reopen。用户侧“完成”仍只由实际 iteration closeout 与 G5 语义建立，Runtime/review/child completion 单独均不足够。

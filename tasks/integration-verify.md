@@ -395,3 +395,11 @@ integration-verify 不产生 Gate approval。
 从第一个“对当前世界尚无有效结论”的 required scenario / finding 继续。
 
 不要因为 session 中断而重跑仍然有效的场景，也不要因为旧报告写着“pass”而跳过已经失效的 evidence。
+
+## 10. Runtime Routing
+
+canonical `integration-verify` 在全部 verification / repair-return 期间保持 active；实际 crossing 只允许 `Execution Task Runtime`、`Review Dispatch`、`Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。Runtime job 不创建 ownership/state，也不替代本 Task 的 final candidate 或 completion truth。
+
+System Semantic / Holistic Independent Review 的 `Review Dispatch` **REQUIRED**，必须针对 fixed final system candidate 使用 reviewer-specific projection。Runtime Integration Verification 是独立 assurance lane；runtime PASS、checker PASS 或 execution completion 均不能替代 System Review。
+
+system finding 按既有 route 派生 canonical `develop(source=integration)` 或 `revise-doc` child；适用的 repair return 使用 `resume-active-origin`。完整链仍为 source finding → effective closure route → canonical child repair/revision → fixed candidate → required isolated review → semantic/runtime revalidation → required system re-review/escalation → additive closure event。`repair merged + test PASS` 单独不能关闭 finding，historical finding 不改写。
