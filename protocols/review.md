@@ -259,6 +259,27 @@ Reviewer 可以给出 pass、blocking finding、evidence insufficient，但不�
 - irrelevant prior attempts；
 - mutable worktree narrative。
 
+### 17.1 Mechanical reviewer projection manifest
+
+Runtime dispatch 必须先用项目副本 `node scripts/build-review-projection.js`（Method 源为 `templates/scripts/build-review-projection.js`）生成 deterministic `hact-review-projection/v1` manifest。该 builder 只做 allowlist serialization，不读取 filesystem / Git / network / chat / Runtime，也不选择 review scope 或作语义判断。
+
+manifest 只允许：
+
+- `schema`、`review_type: initial | targeted`、`reviewer_isolation: fresh-isolated`；
+- `method_sha`；
+- `task_contract` 的 `ref + immutable_identity`；
+- `shared_protocol_refs[]`；
+- `fixed_candidate` 的 `ref + immutable_identity`；
+- `authoritative_upstream_artifact_refs[]`；
+- `original_evidence_refs[]`；
+- 仅 targeted re-review 可有的 `prior_report_ref`（`ref + immutable_identity`）与非空 `open_finding_ids[]`。
+
+reference array 按 `ref + immutable_identity` canonical sort，finding ids canonical sort；等价输入必须生成 byte-identical JSON。initial review 出现 `prior_report_ref` 或 `open_finding_ids` 必须失败；targeted review 缺任一项也必须失败。targeted manifest 只运输既有 prior report / finding lineage，不创建 replacement identity 或 closure。
+
+输入采用 fail-closed top-level allowlist。未知字段一律拒绝，尤其包括：`owner_full_chat`、`owner_private_reasoning`、`owner_defensive_summary`、`irrelevant_prior_attempts`、`mutable_worktree_narrative`、`review_result`、`verdict`、`pass`、`gate`、`gate_approval`、`task_completion`、`completion`、`authority_sufficient`、`authority_decision`。不得把它们改名塞入允许字段；允许的 reference object 也只能有 `ref` 与 `immutable_identity`。
+
+manifest 存在只证明投影结构与默认排除项经过机械约束，不证明 Fresh Isolation 实际成立，也不证明 review PASS、Authority、Gate、Task state 或 completion。实际 Runtime Review Dispatch 必须只使用该 projection，并另外建立可证明的 Fresh Isolated Context。
+
 review dispatch 的 crossing 只记录这些固定输入的引用和 receipt，不复制 semantic Contract，也不改变 Task ownership、state、Gate 或 Human Authority。
 
 Owner 对 implementation、test 或被审 artifact 的语义作出改变后，旧 review head / candidate identity 对新实现失效，必须形成新的 fixed review target。Targeted re-review 保留原 finding IDs、prior report 和 round/event chain；不得创建 replacement finding identity 或改写历史 report。
