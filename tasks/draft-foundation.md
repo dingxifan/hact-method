@@ -295,3 +295,9 @@ G2(v0) approved 后：
 - Foundation 实现进入 Accepted Project Truth 后，再进入 V1 `draft-prd`
 
 下游从 Git 重新读取 Accepted Truth，不继承完整 conversation。
+
+## 9. Runtime Routing
+
+`draft-foundation` 保持 reasoning-dominant canonical Task，Stay Local 为默认；实际 crossing 只允许 `Reality Probe` 与 `Review Dispatch`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。probe / review 均为 `delegated`，Runtime job 不创建或转移 ownership/state。
+
+`Review Dispatch` **NOT DEFAULT**：只有 separate project rule 独立要求 high-risk architecture review 时才允许触发，不因 Runtime capability 或一般设计工作自动新增 review completion condition。`Reality Probe` 只返回 evidence / uncertainty，不替代 architecture / invariant decisions。Human Authority 与既有 G2(v0) / V0 boundaries、Completion & Handoff 均保持不变；不得发明新的 crossing kind。

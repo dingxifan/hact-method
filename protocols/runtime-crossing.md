@@ -163,10 +163,10 @@ backend 支持 lookup/idempotency 时，先持久化 request key，再 start；�
 
 外部 effect 只有在 authoritative observation 证明 effect 不存在时才可 retry。effect 无法唯一观察时，不得自动 retry；进入 reconciliation，并使用 operation-specific idempotency/compensation contract（如有），否则 escalation。
 
-## 9. 后续消费者边界
+## 9. 已实现消费者与边界
 
-后续 Batch 可以让 Runtime adapter / orchestration skill 消费本协议，也可以增加 mechanical `check-runtime-crossing`。这些消费者不得重新定义 Task Contract、创建 HACT state、批准 Gate、认证 Authority sufficiency、用 Runtime state 宣告 Task completion，或重开 historical merged work。
+Runtime adapters、Runtime Orchestration Skill、Task routing、Authority / Review / Recovery integration、boot loading、Runtime Crossing template、mechanical `check-runtime-crossing` 及其 tests 已作为本协议的实现消费者落地。它们共同消费这里的 crossing identity、versioned receipt、append-only lifecycle、Effective Permission 与 recovery 语义，不建立平行 truth/state/orchestration model。
 
-checker 将来只可机械检查 schema/version、字段与 identity 格式、status/ownership/reference、event monotonicity、hash/bytes、request key、permission ceiling、origin/return/target，以及是否复制了禁止的 semantic Contract 字段。它不得认证 Authority sufficiency、semantic Contract validity、产品/UX/risk correctness、Gate approval、Task completion、review PASS 或用户语言是否构成授权。
+这些消费者不得重新定义 Task Contract、创建 HACT state 或 ownership、批准 Gate、认证 Authority sufficiency、用 Runtime state 宣告 Task completion，或重开 historical merged work。具体 Task 是否允许/要求 crossing 与 Review Dispatch，仍由对应 canonical Task Contract 的 Runtime Routing 规则决定。
 
-本 Batch 不实现 checker、Runtime adapter、skill、task/review/recovery/boot 改动或测试；它们只是本语义协议的未来消费者。
+`check-runtime-crossing` 只机械检查 schema/version、字段与 identity 格式、status/ownership/reference、event monotonicity、hash/bytes、request key、permission ceiling、origin/return/target，以及是否复制了禁止的 semantic Contract 字段。它不认证 Authority sufficiency、semantic Contract validity、产品/UX/risk correctness、Gate approval、Task completion、review PASS、用户语言是否构成授权，或外部 effect 是否真实发生。

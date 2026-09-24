@@ -348,3 +348,9 @@ Task `merged` 与 G4 approval 语义正交；本 Task 的正常路径中，它�
 - 先核 approved snapshot 与当前 Git world 是否仍一致
 - 一致则补持久化 report / state / G4 record
 - 不一致则重新验受影响部分，不能把旧 authority event强行绑定到新实现
+
+## 10. Runtime Routing
+
+`manual-test` 保持 human-led canonical acceptance Task，Stay Local 为默认；实际 crossing 只允许 `Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery Protocol 与 Runtime Orchestration Skill。human-led ownership、真实 user acceptance 与 G4 Human Authority boundary 不因 Runtime job 改变。
+
+本 Task **不默认增加 AI Independent Review**，normal/default routing 不允许 `Review Dispatch`。发现需要修复的真实缺口时，只能按既有规则建立 canonical `develop(source=manual-test)` Derived Child Task，并先满足 registration、intake/package、status、readiness 与 ownership 要求；child / Runtime completion 不能替代重新验收、G4 或本 Task Completion & Handoff。不得发明新的 crossing kind。
