@@ -47,6 +47,13 @@ candidate:
   ref: null
   identity: null
 
+external:
+  # Required for kind=external-execution; otherwise leave unused/null.
+  # Identity/evidence only: this block never grants Human Authority or widens permission_ceiling.
+  action: null # exact external operation identity/scope; not prose authorization
+  target: null # exact external resource/environment/endpoint identity
+  snapshot_identity: null # immutable world/candidate/configuration/snapshot identity
+
 return:
   origin_task_ref: null
   origin_issue_ref: null

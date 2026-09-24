@@ -40,6 +40,7 @@ function validRecord() {
       authority_refs: ['authority:user-message-001']
     },
     candidate: { ref: 'refs/heads/feature', identity: sha('d') },
+    external: { action: null, target: null, snapshot_identity: null },
     return: {
       origin_task_ref: null, origin_issue_ref: null, affected_scope: [],
       return_mode: null, return_condition: null
@@ -77,6 +78,10 @@ const parsedTemplate = checker.parseYamlText(fs.readFileSync(
 assert.strictEqual(parsedTemplate.schema, 'hact-runtime-crossing/v2');
 assert.strictEqual(parsedTemplate.status.authoritative, false, 'inline comments must not change boolean parsing');
 assert.deepStrictEqual(parsedTemplate.lifecycle.events, []);
+assert.deepStrictEqual(Object.keys(parsedTemplate.external), ['action', 'target', 'snapshot_identity'],
+  'canonical template must declare exactly the external execution identity fields');
+assert.deepStrictEqual(parsedTemplate.external, { action: null, target: null, snapshot_identity: null },
+  'canonical external block must not invent defaults');
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-runtime-crossing-'));
 const legacy = checker.validateProject(temp);
@@ -182,9 +187,27 @@ external.external = {
 };
 assert.deepStrictEqual(checker.validateRecord(external, { recordPath }), [],
   'valid external action/target/snapshot references must pass');
-const invalidExternal = clone(external);
-invalidExternal.external.snapshot_identity = 'latest';
-assert.ok(checker.validateRecord(invalidExternal).some(error => /external\.snapshot_identity/.test(error)));
+for (const [field, pattern] of [
+  ['action', /external\.action/],
+  ['target', /external\.target/],
+  ['snapshot_identity', /external\.snapshot_identity/]
+]) {
+  const missing = clone(external);
+  delete missing.external[field];
+  assert.ok(checker.validateRecord(missing).some(error => pattern.test(error)),
+    `external-execution missing ${field} must fail`);
+}
+const mutableExternalSnapshot = clone(external);
+mutableExternalSnapshot.external.snapshot_identity = 'latest';
+assert.ok(checker.validateRecord(mutableExternalSnapshot).some(error => /external\.snapshot_identity/.test(error)));
+
+const nonExternalMetadata = clone(valid);
+nonExternalMetadata.external = clone(external.external);
+nonExternalMetadata.lifecycle.events = [
+  { ...event('event-001', 1), permissions_exercised: { external_write: true } }
+];
+assert.ok(checker.validateRecord(nonExternalMetadata).some(error => /exceeds permission_ceiling mechanically/.test(error)),
+  'external metadata on a non-external kind must not authorize external_write beyond permission_ceiling');
 
 const partialReceipt = clone(valid);
 partialReceipt.persistence.dispatch.record_blob_sha = null;

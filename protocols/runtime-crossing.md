@@ -59,6 +59,21 @@ immutable dispatch data 至少按适用性包含：
 
 `kind` 只使用：`stay-local`、`reality-probe`、`capability-slice`、`execution-task`、`child-task`、`external-execution`、`review-dispatch`。
 
+`kind=external-execution` 时，immutable dispatch data 必须包含：
+
+```yaml
+external:
+  action:
+  target:
+  snapshot_identity:
+```
+
+- `action`：exact external operation identity / scope，不是自然语言授权或 Authority 替代物；
+- `target`：exact external resource / environment / endpoint identity；
+- `snapshot_identity`：本次外部 effect 获准所依据的 immutable world / candidate / configuration / snapshot identity。
+
+三项都属于 `external-execution` 的 immutable dispatch identity，必须在任何 non-idempotent dispatch 前存在并进入 versioned snapshot。其他 crossing kind 可以保留空的 `external` block；其存在或填充值本身都不授权 external action，也不扩大 `permission_ceiling`。Effective Permission 与 Human Authority 仍必须按 §7 在每个 action boundary 重新计算。
+
 ## 4. Versioned dispatch boundary
 
 任何非幂等 action 开始前，immutable dispatch data 必须已进入 versioned Git snapshot，dispatcher 必须持有并核验精确 persistence receipt：
