@@ -298,3 +298,24 @@ vNext 可以继续消费项目已经部署的：
 3. 若两者无法兼容，显式记录 compatibility gap 并创建迁移工作，不由 Runtime 静默猜测。
 
 Runtime Adapter 可以随 Codex capability 演进；Task Contract 与 Shared Protocol 不绑定某个 Codex 版本。
+
+## 14. Generic Runtime Crossing Adapter
+
+Codex job、thread、session 或 subagent 本身不是 canonical Task，也不构成 ownership transfer。实际 crossing 按 `.agents/skills/runtime-orchestration/SKILL.md` 与 `protocols/runtime-crossing.md` 执行；没有 crossing 的 Stay Local flow 不建记录。
+
+Codex 只消费 dispatcher 提供且可核验的：
+
+- canonical Task / Method SHA；
+- authoritative Contract 与 status snapshot identity；
+- exact artifact / candidate / repository identity；
+- ownership / origin / return reference；
+- permission ceiling 与 current Authority references；
+- versioned dispatch receipt、durable `crossing_id` / `request_key`。
+
+permission ceiling 不是当前授权。每次 repository mutation、commit、push/shared transport、external action、retry、recovery continuation、deployment/promotion、Runtime/action dispatch 及 lifecycle boundary 前，Codex 都重新计算 Effective Permission；它不能因 tool capability 自行扩大 scope 或 Authority。
+
+执行中把 `job_id`、revision、polling result、artifact/evidence/action receipt 与 terminal/recovery facts 返回为 append-only crossing lifecycle event，并提供可核验的 lifecycle-head identity。Codex 不直接把 Runtime result 写成 HACT state；只有既有 status contract 明确授权的 state mutation 才可执行。
+
+start 结果不确定时先按 durable request key lookup；backend 无 recoverable identity 时进入 `CAPABILITY_GAP` / reconciliation，禁止 blind retry。external effect 只有在 authoritative observation 证明未发生时才可 retry，否则按 operation-specific idempotency/compensation contract 或 escalation 处理。
+
+Codex 作为 reviewer 时必须使用 `protocols/review.md` 的 reviewer-specific projection 与 Fresh Isolated Context；实现叙事、Owner private reasoning 和 mutable-worktree narrative 不进入 reviewer input。checker PASS、job completion、review PASS 或 commit 都不能由 Codex 单独投射为 Gate、Human Authority 或 Task completion。

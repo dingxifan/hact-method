@@ -123,6 +123,12 @@ GitHub SHA 是最终 persistence truth。
 2. Reasoning escalation
 3. Isolation gap
 
+发生实际 crossing 时才加载 `.agents/skills/runtime-orchestration/SKILL.md` 与 `protocols/runtime-crossing.md`，并只使用协议已有 kind。没有 crossing 的 Stay Local / legacy flow 不创建 Runtime Crossing Record，也不迁移现有 schema。
+
+ChatGPT 作为 Single Front Door 保持 canonical Task 与用户目标叙事不变。跨 Runtime 只改变 bounded execution location，不自动改变 Task identity、state、ownership、Gate 或 Authority。
+
+dispatch 前固定并持久化 immutable crossing identity、`crossing_id`、`request_key`、精确 artifact/snapshot 与 versioned receipt。每次 repository mutation、commit、shared transport/push、external action、retry/recovery continuation、deployment/promotion、Runtime/action dispatch 及 lifecycle boundary 前，都按 `protocols/authority.md` 重新计算 Effective Permission。
+
 ## 7. Reasoning effort
 
 Effort / model tier 属于 Runtime 内部配置，不写入 Task Contract。
@@ -138,6 +144,8 @@ ChatGPT-owned Task 默认：
 `Main Chat Owner → fixed Git candidate → Fresh Chat Review Context`
 
 Fresh reviewer 加载同一 Method SHA、同一 Task Contract 和 `protocols/review.md`，自己读取 candidate 与 authoritative inputs，不读 Owner 生成聊天。
+
+跨 Runtime review 使用 reviewer-specific projection：只传 fixed candidate、权威 artifact、原始 evidence 与实际需要的 Shared Protocol；targeted re-review 可再传 prior report / open finding ids。Owner full chat、private reasoning、defensive summary、irrelevant attempts 与 mutable worktree narrative 默认排除，Fresh Isolation 必须可证明。
 
 默认不要求换模型品牌。
 
@@ -156,6 +164,12 @@ Fresh reviewer 加载同一 Method SHA、同一 Task Contract 和 `protocols/rev
 
 已明确且已授权的读取、整理、写 artifact、修 finding、确定性检查准备和持久化应连续推进。
 
+普通用户始终留在主 ChatGPT interaction surface；内部 Task/Runtime routing 统一翻译成面向用户目标的 One User Narrative。除显式 audit mode 外，不要求用户理解 crossing/job/event id。
+
+routine implementation、test/build repair、review dispatch、polling、crossing persistence、routine recovery 和已授权 child registration 不打断用户。genuine product/business decision、Human Experience、sensitive risk、Authority expansion、external/production action、Gate/final acceptance 或不可消解歧义才中断。
+
+用户侧只能在实际请求结果的适用 completion conditions 满足时显示“完成”。Runtime completed、review PASS、commit 或 child Task completion 单独都不能建立完成。
+
 ## 10. Recovery
 
 Conversation 丢失后重新执行 Bootstrap，从 Method SHA、`status.yml`、当前 Task Contract、Accepted Truth、candidate、review findings 和 recovery pointer 恢复。
@@ -171,6 +185,8 @@ Conversation 丢失后重新执行 Bootstrap，从 Method SHA、`status.yml`、�
 
 恢复，不凭记忆重新提交。
 
+Bridge/tool start 或 external effect 不确定时，按 Runtime Crossing Record 的 versioned dispatch/lifecycle receipt、durable request key 与 `protocols/recovery.md` 恢复。先 lookup/authoritative observation；无法恢复 execution identity 时进入 `CAPABILITY_GAP` / reconciliation，不 blind retry。Runtime observed state 不覆盖 authoritative HACT status。
+
 ## 11. Cross-runtime handoff
 
 正常 ChatGPT → Codex handoff 应发生在稳定边界：
@@ -182,6 +198,8 @@ Conversation 丢失后重新执行 Bootstrap，从 Method SHA、`status.yml`、�
 `聊天总结 → Codex`
 
 Independent review、specialist check、Decision escalation 可以读取固定 Shared Candidate snapshot。
+
+同一 Task 内的 capability slice、Reality Probe、External Execution、Derived Child Task 或 Review Dispatch 由 Runtime Orchestration Skill 管理，传递 exact immutable identity，不用 prompt 重述 semantic Contract。Bridge/tool 的 `job_id`、revision、poll/result/evidence receipt 只追加进 crossing lifecycle；tool/job terminal state 不等于 HACT completion。
 
 用户明确要求外部 UX 设计会话时，使用 `runtime/external-ux.md`，最终仍回到 `tasks/draft-ux.md` 的同一 completion chain。
 

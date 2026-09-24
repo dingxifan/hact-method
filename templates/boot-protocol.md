@@ -49,6 +49,7 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 | Human Authority 判断 | `protocols/authority.md` |
 | 中断、恢复、重入 | `protocols/recovery.md` |
 | B 类 bug / optimization intake | `protocols/b-intake.md` |
+| 实际跨 Runtime dispatch / polling / recovery | `protocols/runtime-crossing.md` |
 
 Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“可能会用到”而把全部 Protocol 当启动上下文。
 
@@ -67,6 +68,16 @@ Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“�
 纯 reasoning / document work 若 Task Contract 已足够，不必预加载整份 Runtime Adapter。
 
 用户明确要求外部 UX 设计会话时才加载 `runtime/external-ux.md`。
+
+### 2.4 Runtime Orchestration 按实际 crossing 加载
+
+Stay Local 是默认。只有当前 canonical Task 确实需要协议允许的 Runtime crossing 时，才在 Task Contract 和所需 Shared Protocol 之后加载：
+
+- `protocols/runtime-crossing.md`；
+- `.agents/skills/runtime-orchestration/SKILL.md`；
+- 当前 Runtime 对应的 adapter 小节。
+
+该 Skill 只实现既有 Task/Protocol 决定，不建立第二套 Task routing、state、Gate、Authority、Review 或 completion system。无 crossing 的 legacy / Stay Local flow 不要求 Runtime Crossing Record，也不触发 status、Gate 或 Task Package schema migration。加载 Runtime/skill 或发现 tool capability 都不能静默扩大 Authority。
 
 System-review artifacts 只在 canonical Task 已路由为 `integration-verify`，或恢复该 Task 时加载。Package develop、planning 与其他 Task 不预加载完整 system-review history。
 
@@ -179,8 +190,9 @@ Task 确定后：
 1. 加载 `tasks/{task}.md`；
 2. 读取其 Authoritative Inputs；
 3. 按 §2 的触发规则加载实际需要的 Shared Protocol；
-4. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
-5. 再开始正式修改 / review / verification。
+4. 只有实际 crossing 才加载 Runtime Orchestration Skill；
+5. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
+6. 再开始正式修改 / review / verification。
 
 正常启动只输出当前 Task 范围和下一动作；异常时给出可查依据。任务途中不重复声明整套运行时。
 
@@ -191,3 +203,5 @@ Task 确定后：
 Context compaction、session interruption 或跨 Runtime 恢复时，不重新执行整套任务路由；读取 fixed Method SHA、当前 Task、Accepted Truth、candidate/evidence 与实际 Git state，从第一个未满足 completion condition 继续。
 
 需要浏览器、远端、托管、部署或独审时才核对应 capability。缺必需 capability 时形成明确 gap，不把未执行的验证写成已完成。
+
+实际 crossing 的 dispatch、polling 与 recovery 使用 versioned Runtime Crossing receipt 和 append-only lifecycle；不从 job/thread 状态推断 HACT state 或 completion。`check-runtime-crossing` 只验证机械结构，不能替代 Authority、Review、Gate 或 Task completion 判断。
