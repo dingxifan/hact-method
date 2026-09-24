@@ -236,3 +236,44 @@ Standard Package 的 Lightweight Review 仍必须核 package intent/oracle、授
 ## 16. Human Authority
 
 Reviewer 可以给出 pass、blocking finding、evidence insufficient，但不能替用户完成 Gate、真实体验验收或业务取舍。
+
+## 17. Runtime Review Dispatch
+
+每次 Independent Review 的 Runtime dispatch 都必须使用 reviewer-specific projection，并使 Fresh Isolated Context 可证明。Owner narrative 不是 review evidence。
+
+允许输入仅为当前 review 所需的固定事实：
+
+- Method SHA；
+- Task Contract；
+- relevant Shared Protocol；
+- fixed candidate identity；
+- authoritative upstream artifacts；
+- original evidence；
+- targeted re-review 所需的 prior report 与 open finding IDs。
+
+默认排除：
+
+- Owner full chat；
+- Owner private reasoning；
+- Owner defensive summary；
+- irrelevant prior attempts；
+- mutable worktree narrative。
+
+review dispatch 的 crossing 只记录这些固定输入的引用和 receipt，不复制 semantic Contract，也不改变 Task ownership、state、Gate 或 Human Authority。
+
+Owner 对 implementation、test 或被审 artifact 的语义作出改变后，旧 review head / candidate identity 对新实现失效，必须形成新的 fixed review target。Targeted re-review 保留原 finding IDs、prior report 和 round/event chain；不得创建 replacement finding identity 或改写历史 report。
+
+Runtime crossing 不改变既有 system finding lifecycle：
+
+```text
+source finding
+→ effective closure route
+→ child repair/revision Task
+→ fixed candidate
+→ required isolated review
+→ semantic/runtime revalidation
+→ system re-review/escalation when required
+→ additive closure event
+```
+
+historical finding 永不被重写或删除。`local-close`、`system-rereview`、invalidation、escalation、Gate 与 Human Authority 继续完全由本协议既有规则治理；Runtime job 或 mechanical checker 均无权替代。
