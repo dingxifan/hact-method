@@ -169,3 +169,11 @@ B 类不运行 G1–G5。
 - 无 Human Authority 边界。
 
 质量和交付纪律由 `tasks/develop.md` 继续承担。
+
+## 10. Runtime Routing
+
+B Intake 是 diagnosis/reasoning，不是 `develop`。implementation authorization 前保持 Stay Local，或只使用 `Reality Probe` 获取 evidence / uncertainty；Runtime job、probe result 或 crossing record 都不构成代码修改授权。
+
+取得明确 implementation authorization 且 Intake 满足既有硬前置后，才可使用 `Derived Child Task` 路由到 canonical `develop(source=bug|optimization)`。child 必须按既有 registration、Development Intake / Task Package、status、readiness 与 ownership 规则建立；Runtime job creation 不等于 develop claim、ownership 或 authorization。
+
+B Intake 没有自己的 Independent Review lifecycle，也不允许 `Review Dispatch`。下游 `develop` 的 required review、verification、Human Authority 与 completion 规则完整保留。所有 crossing 遵循 Runtime Crossing / Authority / Recovery Protocol 与 Runtime Orchestration Skill；diagnosis 始终不等于 implementation authorization。

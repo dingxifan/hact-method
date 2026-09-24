@@ -236,3 +236,9 @@ G1 approved 后：
 - 无 UX 前置或 UX 已完成 → `draft-tech-design`
 
 下游从 Git 重新读取 approved Product Contract，不继承完整 conversation。
+
+## 9. Runtime Routing
+
+Stay Local 为默认；实际 crossing 只允许 `Reality Probe` 与 `Review Dispatch`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。`Reality Probe` 只返回 evidence / uncertainty，不创建或修改 Product Contract。
+
+`Review Dispatch` **REQUIRED**：既有 Independent Review 必须接收 reviewer-specific projection，包括 fixed candidate/source identity 与权威输入，不以 Owner narrative 或 Runtime summary 替代。Runtime routing / review 不替代 Product Human Authority 或 G1，也不以 job/review completion 改写本 Task 的 Completion & Handoff。

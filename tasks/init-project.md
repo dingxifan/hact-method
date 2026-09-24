@@ -406,3 +406,9 @@ Review 的隔离方式与 finding 结构引用 `protocols/review.md`。
 - 必要 background / connection / runtime entry
 
 不继承完整初始化 conversation。
+
+## 9. Runtime Routing
+
+Stay Local 为默认；实际 crossing 只允许 `Reality Probe`、`Same-Task Capability Slice`、`Review Dispatch`，并遵循 `protocols/runtime-crossing.md`、`authority.md`、`recovery.md`、`review.md` 与 Runtime Orchestration Skill。crossing 只引用现有 Task / Contract / status / Authority truth，`init-project` identity 与既有 ownership/state 不因 Runtime job 改变。
+
+`Review Dispatch` **仅为 conditional**：reconcile 既有 repository 内容、修改 Method template、guard/hook/security conflict，或 unresolved high-impact Foundation ambiguity 时才触发。其余 bootstrap 不新增默认 review completion condition；Review Dispatch 也不产生 Gate、Human Authority 或 Task completion。

@@ -346,3 +346,9 @@ Independent Review、browser verification 或 AC 对账发现 blocking finding �
 - integration / manual-test 可复用 U/S 作为真实系统验证锚点
 
 下游从 Git 重新读取 Accepted Truth，不继承完整 conversation。
+
+## 9. Runtime Routing
+
+无实际 crossing 时继续 Stay Local 且不创建 Runtime Crossing Record。实际 crossing 只允许 `Same-Task Capability Slice` 与 `Review Dispatch`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。
+
+`Same-Task Capability Slice` 可承载 browser / prototype execution，但 canonical Task 始终是 `draft-ux`，ownership/state 不因 Runtime job 转移。`Review Dispatch` **REQUIRED**，必须在既有 real-user acceptance boundary 前完成 fresh-isolated same-source Independent Review。Human Experience 仍是 Human Authority；review、browser result 或 Runtime completion 都不能替代用户接受或本 Task completion。

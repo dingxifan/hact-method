@@ -459,3 +459,9 @@ G3 approved 后：
 - Owner 从 Git 读取自己的 Task Package、Accepted upstream truth 与 status；
 - 认领前运行 dependency/readiness 检查，依赖未满足则保持 `可取`，不进入 `taken-by`；
 - 正常 handoff 基于 Git snapshot，不传完整 planning conversation。
+
+## 9. Runtime Routing
+
+Stay Local 为默认；实际 crossing 只允许 `Reality Probe` 与 `Review Dispatch`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。`Reality Probe` 只提供 planning evidence / uncertainty，不创建 Task Package、status 或 scope truth。
+
+`Review Dispatch` **REQUIRED**，以 same-source reviewer projection 审查 fixed planning candidate，并保留既有 AC fidelity/completeness、intent/oracle/example、API derivation、baseline、risk、shared asset 与 queue/status consistency 语义。G3 始终是独立 Human Authority；Review Dispatch、checker PASS 或 Runtime completion 都不能批准 G3 或替代本 Task completion。
