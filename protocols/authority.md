@@ -56,3 +56,21 @@ ChatGPT 能写 Git 不代表它可以批准产品需求；Codex 能部署不代�
 已授权实施时可在既定 scope 内连续工作，但不得因为“顺便更好”自行扩大产品、技术或数据范围。
 
 Contract drift 应通过明确 revision / escalation 处理。
+
+## 7. Runtime Crossing 的 Effective Permission
+
+Runtime Crossing Record 中的 `permission_ceiling` 只是该 crossing 的最大上限，不是当前授权。根据 `runtime-crossing.md`，在每一次 repository mutation、commit、push/shared transport、external action、retry、recovery continuation、deployment/promotion、Runtime/action dispatch，以及对应 lifecycle boundary 前，都必须紧邻动作重新计算：
+
+```text
+Effective Permission =
+Task Contract authorization boundary
+∩ current Human Authority
+∩ current resource permissions
+∩ environment protection
+∩ tool capability
+∩ stored permission ceiling
+```
+
+最窄限制胜出；先前计算、Runtime receipt 或 Git persistence receipt 都不能授权后续边界。Human Authority、环境策略或资源权限的收窄/撤销立即优先适用。
+
+权限扩张必须由新的、scoped、immutable Authority event 明确绑定 action/scope、snapshot/world、target/environment 和适用的 validity scope。Runtime Crossing 只能 append 对该事件的引用，不能自行创建 Authority、ownership 或 state。

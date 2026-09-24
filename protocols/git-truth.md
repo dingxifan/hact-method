@@ -67,3 +67,11 @@ Git 不保存：
 Task Contract 只要求正式 artifact 能形成 Shared Candidate / Accepted Project Truth。
 
 具体写入机制由 Runtime / Persistence Adapter 实现。Adapter 不拥有 Task 的语义决策权，不得在机械落盘时重新设计 artifact。
+
+## 7. Runtime Crossing 的 Durable Governance Truth
+
+`runtime-crossing.md` 定义的 Runtime Crossing Record 是 additive Durable Governance Truth，用于安全编排与恢复；它不是 semantic Contract、实现真相或第四层 Git Truth。现有 Local Working Truth / Shared Candidate Truth / Accepted Project Truth 三层语义保持不变。
+
+非幂等 dispatch 前，immutable dispatch data 必须已进入 versioned Git snapshot，并核验由 record path、commit SHA、record blob SHA 组成的精确 receipt；需要跨 Runtime 恢复时，该 exact commit 还必须通过已授权 transport 可达并记录 verified reachable ref。Local Working Truth、dirty worktree path、可变 branch name 或未验证的文件系统写入均不足以建立此边界。
+
+dispatch 后的 Runtime facts 只通过 append-only lifecycle events 引入。并发更新必须 compare-before-append；immutable dispatch data 变化、同 event id 内容冲突或 sequence history 分叉时不得 last-writer-wins，必须先 reconciliation。Persistence Adapter 只实现这些机械边界，不获得语义决策权或额外 Authority。

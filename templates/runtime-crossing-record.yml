@@ -1,0 +1,105 @@
+# Runtime Crossing Record v2
+# Stable project path: _meta/runtime-crossings/{crossing_id}.yml
+# This record is additive Durable Governance Truth, not a semantic Contract or a fourth Git Truth level.
+
+# --- Immutable dispatch data ---
+# Finalize and commit this section before dispatch. After dispatch, do not edit it in place.
+schema: hact-runtime-crossing/v2
+crossing_id: null
+kind: null # stay-local | reality-probe | capability-slice | execution-task | child-task | external-execution | review-dispatch
+
+task:
+  id: null
+  source: null
+  method_sha: null
+
+status:
+  authoritative_ref: null
+  snapshot_identity: null
+  observed_state: null
+  observed_at: null
+  authoritative: false # observation only; authoritative Task state remains in the existing status contract
+
+ownership:
+  mode: null # delegated | transferred
+  owner_ref: null
+  effective_from: null
+
+repository:
+  identity: null
+  workspace: null
+
+contract:
+  authoritative_ref: null
+  immutable_identity: null
+  # Do not copy semantic Contract fields into this record.
+
+authority:
+  permission_ceiling:
+    repository_write: false
+    commit: false
+    push: false
+    deploy: false
+    external_write: false
+  authority_refs: []
+
+candidate:
+  ref: null
+  identity: null
+
+return:
+  origin_task_ref: null
+  origin_issue_ref: null
+  affected_scope: []
+  return_mode: null
+  return_condition: null
+
+runtime:
+  adapter: null
+  request_key: null
+  # --- Lifecycle-produced projection fields ---
+  # Introduce these facts through append-only events. Null is the initial projection and is not
+  # permission to rewrite the immutable adapter/request_key dispatch identity.
+  job_id: null
+  revision: null
+  status: null
+  indeterminate: false
+
+# --- Persistence receipts ---
+# dispatch binds the exact pre-dispatch record snapshot. lifecycle_head binds the latest committed event head.
+# A receipt proves durability only; it never grants or widens Authority.
+persistence:
+  dispatch:
+    record_path: null
+    commit_sha: null
+    record_blob_sha: null
+    reachable_ref: null # null only when execution is strictly local and no cross-Runtime recovery is required
+    verified_at: null
+  lifecycle_head:
+    commit_sha: null
+    record_blob_sha: null
+    last_event_id: null
+    verified_at: null
+
+# --- Lifecycle-produced append-only data ---
+# Append/union by stable event_id with compare-before-append. Never use last-writer-wins.
+lifecycle:
+  events: []
+  # Event shape:
+  # - event_id: null
+  #   sequence: null
+  #   revision: null
+  #   type: null
+  #   timestamp: null
+  #   authority_refs: []
+  #   runtime_receipts: []
+  #   artifact_refs: []
+  #   evidence_refs: []
+  #   details: {}
+
+artifacts: []
+evidence: []
+
+recovery:
+  last_stable_point: null
+  next_action: null

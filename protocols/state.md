@@ -98,3 +98,9 @@ Gate 回答“项目是否被授权进入下一成熟阶段”。
 Task 可以 `merged` 而 Gate 尚未批准。Gate 也不是第五种 Task state。
 
 对 sprint develop 而言，G3 通过 Preconditions 控制是否允许从 `可取` 认领；它不改变四态本身。
+
+## 9. Runtime Crossing 不产生第二套状态
+
+跨 Runtime 执行遵循 `runtime-crossing.md`。Runtime Crossing Record 中的 `observed_state` 只是 non-authoritative observation；恢复时必须重新读取现有 status contract，冲突时以 authoritative status 为准。
+
+Runtime event、job status 或 terminal result 都不得自行推断或写入 `taken-by`、`done`、`merged`，也不得创建或转移 ownership。`delegated` crossing 保留原 Task Owner；`transferred` 只有在既有 status contract 已显式完成 ownership 转移后才成立。derived child Task 同样必须先按现有规则成为 canonical registered Task；crossing 只引用这些事实。
