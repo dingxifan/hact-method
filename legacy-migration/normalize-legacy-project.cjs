@@ -55,8 +55,8 @@ function readLegacy(root, methodRoot) {
   catch { return { kind: 'unprovable', source, files: [] }; }
   const fromSource = legacyTemplateFiles(methodRoot, commit);
   if (metadata.schema === sync.MANIFEST_SCHEMA) {
+    sync.readOwnedManifest(root, methodRoot);
     const priorSource = sync.loadSource(methodRoot, commit);
-    sync.verify(root, priorSource);
     return {
       kind: 'current', source: commit,
       files: sync.expected(priorSource).map(item => ({ path: item.to, sha256: item.sha256, bytes: item.bytes, ownership: item.ownership })),

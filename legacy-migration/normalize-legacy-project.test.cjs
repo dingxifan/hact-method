@@ -67,6 +67,8 @@ assert.strictEqual(JSON.parse(fs.readFileSync(path.join(project, '_meta', 'metho
 assert.ok(fs.existsSync(path.join(project, normalizer.EVIDENCE)));
 
 commit(project, 'adopted current method');
+fs.appendFileSync(path.join(project, 'AGENTS.md'), 'project post-adoption rule\n');
+commit(project, 'project customizes merged entry');
 fs.writeFileSync(path.join(method, 'templates', 'AGENTS.md'), '# Agents\n\n## Method\ncurrent agents v2\n\n## Project\n');
 commit(method, 'upgrade current method');
 const target2 = sync.loadSource(method, 'HEAD');
@@ -75,7 +77,7 @@ assert.deepStrictEqual(upgradePlan.blockers, []);
 assert.strictEqual(upgradePlan.legacy_method.kind, 'current');
 assert.strictEqual(upgradePlan.files.find(item => item.path === 'AGENTS.md').action, 'merge-three-way');
 assert.strictEqual(normalizer.applyPlan(project, target2, upgradePlan).state, 'verified');
-assert.strictEqual(fs.readFileSync(path.join(project, 'AGENTS.md'), 'utf8'), '# Agents\n\n## Method\ncurrent agents v2\n\n## Project\nproject-only rule\n');
+assert.strictEqual(fs.readFileSync(path.join(project, 'AGENTS.md'), 'utf8'), '# Agents\n\n## Method\ncurrent agents v2\n\n## Project\nproject-only rule\nproject post-adoption rule\n');
 assert.ok(fs.existsSync(path.join(project, normalizer.UPGRADE_EVIDENCE_DIR, `${target2.source}.json`)));
 assert.ok(fs.existsSync(path.join(project, normalizer.EVIDENCE)), 'initial normalization evidence remains');
 

@@ -269,5 +269,5 @@ if (require.main === module) {
 }
 module.exports = {
   META, MANIFEST_SCHEMA, sha256, git, gitRoot, safe, writeAtomic, loadSource, expected, inspect,
-  install, verify, runtimeCheck, readAdopted, writeManifest, currentHash, ensureClean,
+  install, verify, runtimeCheck, readAdopted, writeManifest, currentHash, ensureClean, readOwnedManifest,
 };

@@ -66,7 +66,7 @@ function reviewErrors(root, task) {
   if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return [`缺 document review 目录：${path.relative(root, dir)}`];
   const reports = fs.readdirSync(dir).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
   if (!reports.length) return ['缺 document review round'];
-  let previous = '', previousOpen = [];
+  let previous = '', previousOpen = [], previousCandidate = '', finalReport = null;
   for (let index = 0; index < reports.length; index += 1) {
     const file = path.join(dir, reports[index]);
     const fm = parseFrontmatter(file);
@@ -106,22 +106,38 @@ function reviewErrors(root, task) {
     if (index > 0 && JSON.stringify([...targets].sort()) !== JSON.stringify([...previousOpen].sort()))
       errors.push(`${label}: targeted 必须覆盖上一轮全部 open blocking findings`);
     if (closed.some(id => !previousOpen.includes(id))) errors.push(`${label}: closed finding 不在上一轮 open 集合`);
+    if (closed.length && fm.candidate_commit === previousCandidate)
+      errors.push(`${label}: 关闭 blocking finding 必须绑定新的 fixed candidate`);
     const computedOpen = [...new Set([...previousOpen.filter(id => !closed.includes(id)), ...newIds])].sort();
     if (JSON.stringify(computedOpen) !== JSON.stringify([...declaredOpen].sort())) errors.push(`${label}: open finding 集合与 lineage 不一致`);
     if (!['pass', 'revise'].includes(fm.conclusion)) errors.push(`${label}: conclusion 非法`);
     if (fm.conclusion === 'pass' && computedOpen.length) errors.push(`${label}: pass 仍有 open blocking findings`);
     if (fm.conclusion === 'revise' && !computedOpen.length) errors.push(`${label}: revise 缺 open blocking finding`);
     previousOpen = computedOpen;
+    previousCandidate = fm.candidate_commit;
     previous = file;
+    finalReport = fm;
   }
   const last = parseFrontmatter(path.join(dir, reports.at(-1)));
   if (!last || last.conclusion !== 'pass' || previousOpen.length) errors.push('末轮 document review 必须 pass 且无 open blocking finding');
+  errors.finalReport = finalReport;
   return errors;
 }
 
-function checkTask(root, task) {
+function checkTask(root, task, options = {}) {
   if (!DOCUMENT_TYPES.has(task.type)) return;
   const errors = reviewErrors(root, task);
+  const final = errors.finalReport;
+  if (final && isSha40(final.candidate_commit)) {
+    try { git(root, ['merge-base', '--is-ancestor', final.candidate_commit, 'HEAD']); }
+    catch { errors.push('final reviewed candidate 不在当前 HEAD 历史中'); }
+    try {
+      const artifact = `iterations/${task.iteration}/trd.md`;
+      const acceptedBytes = options.staged ? git(root, ['show', `:${artifact}`], true) : fs.readFileSync(path.join(root, artifact));
+      if (sha256(acceptedBytes) !== final.artifact_sha256)
+        errors.push('当前接受的 TRD 与 final reviewed candidate artifact 不一致');
+    } catch { errors.push('无法读取当前接受的 TRD artifact'); }
+  }
   if (errors.length) errors.forEach(error => fail('document task completion', `${task.id}: ${error}`));
   else pass('document task completion', `${task.id} 的 fixed candidate、Fresh Review 与 finding lineage 已闭合`);
 }
@@ -131,9 +147,13 @@ function ensureStagedWorld(root, task) {
   const inputs = ['status.yml', `iterations/${task.iteration}/trd.md`, `iterations/${task.iteration}/document-reviews/${task.id}`];
   const dirty = git(root, ['diff', '--name-only', '--', ...inputs]);
   const untracked = git(root, ['ls-files', '--others', '--exclude-standard', '--', ...inputs]);
+  const reportDir = `iterations/${task.iteration}/document-reviews/${task.id}`;
+  const stagedReports = git(root, ['diff', '--cached', '--name-status', '--', reportDir]);
   if (dirty) fail('staged truth', `completion 相关文件有未暂存变化：${dirty.replace(/\r?\n/g, ', ')}`);
   if (untracked) fail('staged truth', `completion 相关文件未加入暂存区：${untracked.replace(/\r?\n/g, ', ')}`);
-  return !dirty && !untracked;
+  const rewritten = stagedReports.split(/\r?\n/).filter(Boolean).filter(line => !line.startsWith('A\t'));
+  if (rewritten.length) fail('immutable review', `已存在的 document review round 不得修改、删除或改名：${rewritten.join(', ')}`);
+  return !dirty && !untracked && !rewritten.length;
 }
 
 function checkDuplicateTasks(tasks) {
@@ -149,7 +169,7 @@ function runStaged(root) {
   checkDuplicateTasks(current);
   const before = new Map(previous.map(task => [task.id, task]));
   for (const task of current) if (task.status === 'merged' && before.get(task.id)?.status !== 'merged') {
-    if (ensureStagedWorld(root, task)) checkTask(root, task);
+    if (ensureStagedWorld(root, task)) checkTask(root, task, { staged: true });
   }
 }
 
