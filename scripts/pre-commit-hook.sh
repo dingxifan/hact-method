@@ -24,7 +24,7 @@ fail=0
 # --- 运行时文本的绝对路径（check-paths.js）---
 # 触发口：staged 里有运行时目录/文件下的 .md/.js/.sh/.yml。
 # 历史档（_meta/）与 STATUS.md 不在范围内——它们记录既成事实，写具体路径是对的。
-if echo "$staged" | grep -qE '^(skeleton|guide|templates|tasks|protocols|runtime|utilities)/.*\.(md|js|sh|yml)$|^(AGENTS|BRIEF)\.md$'; then
+if echo "$staged" | grep -qE '^(skeleton|guide|templates|tasks|protocols|runtime|utilities|legacy-migration)/.*\.(md|js|cjs|sh|yml)$|^(AGENTS|BRIEF)\.md$'; then
   if [ -f scripts/check-paths.js ]; then
     echo "▶ pre-commit: node scripts/check-paths.js" >&2
     node scripts/check-paths.js || fail=1

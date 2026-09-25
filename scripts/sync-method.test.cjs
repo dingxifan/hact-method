@@ -8,73 +8,77 @@ const path = require('path');
 const childProcess = require('child_process');
 const sync = require('./sync-method.cjs');
 
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-method-install-'));
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-method-install-v2-'));
 const method = path.join(temp, 'method');
 const project = path.join(temp, 'project');
-const driftProject = path.join(temp, 'drift-project');
+const customProject = path.join(temp, 'custom-project');
 const forgedProject = path.join(temp, 'forged-project');
 const run = (cwd, args) => childProcess.execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 function init(root) {
   fs.mkdirSync(root, { recursive: true }); run(root, ['init', '-q']);
   run(root, ['config', 'user.email', 'test@example.com']); run(root, ['config', 'user.name', 'Test']);
 }
-init(method); init(project); init(driftProject); init(forgedProject);
-fs.mkdirSync(path.join(method, 'templates', 'scripts'), { recursive: true });
-fs.writeFileSync(path.join(method, 'templates', 'AGENTS.md'), 'current agents\n');
-fs.writeFileSync(path.join(method, 'templates', 'gitee-ops.md'), 'ops\n');
-fs.writeFileSync(path.join(method, 'templates', 'scripts', 'pre-commit-hook.sh'), '#!/bin/sh\n');
-fs.writeFileSync(path.join(method, 'templates', 'scripts', 'check-gate.js'), 'console.log("gate")\n');
-fs.writeFileSync(path.join(method, 'templates', 'scripts', 'retired-check.js'), 'console.log("old")\n');
-run(method, ['add', '.']); run(method, ['commit', '-qm', 'method']);
-fs.writeFileSync(path.join(project, 'README.md'), 'project\n'); run(project, ['add', '.']); run(project, ['commit', '-qm', 'project']);
-fs.writeFileSync(path.join(driftProject, 'README.md'), 'project\n'); run(driftProject, ['add', '.']); run(driftProject, ['commit', '-qm', 'project']);
-fs.writeFileSync(path.join(forgedProject, 'project-owned.txt'), 'keep\n'); run(forgedProject, ['add', '.']); run(forgedProject, ['commit', '-qm', 'project']);
+function commit(root, message) { run(root, ['add', '-A']); run(root, ['commit', '-qm', message]); }
+function writeMethod() {
+  fs.mkdirSync(path.join(method, 'templates', 'scripts'), { recursive: true });
+  fs.writeFileSync(path.join(method, 'templates', 'AGENTS.md'), 'current agents\n');
+  fs.writeFileSync(path.join(method, 'templates', 'gitee-ops.md'), 'ops\n');
+  fs.writeFileSync(path.join(method, 'templates', 'scripts', 'pre-commit-hook.sh'), '#!/bin/sh\n');
+  fs.writeFileSync(path.join(method, 'templates', 'scripts', 'check-gate.js'), 'console.log("gate")\n');
+  fs.writeFileSync(path.join(method, 'templates', 'scripts', 'retired-check.js'), 'console.log("old")\n');
+  fs.writeFileSync(path.join(method, 'templates', 'method-install-policy.json'), `${JSON.stringify({
+    schema: 'hact-method-install-policy/v1', default_ownership: 'method-owned',
+    files: { 'AGENTS.md': 'merged', 'gitee-ops.md': 'project-owned' },
+  }, null, 2)}\n`);
+  commit(method, 'method');
+}
+
+init(method); init(project); init(customProject); init(forgedProject); writeMethod();
+for (const root of [project, customProject, forgedProject]) {
+  fs.writeFileSync(path.join(root, 'README.md'), 'project\n'); commit(root, 'project');
+}
+fs.writeFileSync(path.join(customProject, 'AGENTS.md'), 'project rules\n'); commit(customProject, 'custom agents');
 
 const source = sync.loadSource(method, 'HEAD');
 assert.ok(sync.inspect(project, source).rows.every(row => row.state === 'missing'));
 assert.strictEqual(sync.install(project, source).state, 'verified');
-assert.strictEqual(sync.install(driftProject, source).state, 'verified');
 assert.strictEqual(sync.verify(project, source).state, 'verified');
 assert.strictEqual(sync.runtimeCheck(project, method).source, source.source);
 assert.strictEqual(sync.readAdopted(project, method, 'templates/AGENTS.md'), 'current agents\n');
+assert.throws(() => sync.install(customProject, source), /legacy normalization/);
+assert.strictEqual(fs.readFileSync(path.join(customProject, 'AGENTS.md'), 'utf8'), 'project rules\n');
 
-run(project, ['add', '.']); run(project, ['commit', '-qm', 'installed old method']);
-run(driftProject, ['add', '.']); run(driftProject, ['commit', '-qm', 'installed old method']);
-fs.writeFileSync(path.join(driftProject, 'scripts', 'retired-check.js'), 'project drift\n');
-run(driftProject, ['add', '.']); run(driftProject, ['commit', '-qm', 'drift old method file']);
-fs.writeFileSync(path.join(project, 'project-owned.txt'), 'keep\n'); run(project, ['add', '.']); run(project, ['commit', '-qm', 'project data']);
+commit(project, 'installed old method');
+fs.writeFileSync(path.join(project, 'project-owned.txt'), 'keep\n'); commit(project, 'project data');
 fs.rmSync(path.join(method, 'templates', 'scripts', 'retired-check.js'));
-run(method, ['add', '-A']); run(method, ['commit', '-qm', 'retire old checker']);
+fs.writeFileSync(path.join(method, 'templates', 'scripts', 'check-gate.js'), 'console.log("gate-v2")\n');
+commit(method, 'next method');
 const next = sync.loadSource(method, 'HEAD');
-
-const forgedBytes = fs.readFileSync(path.join(forgedProject, 'project-owned.txt'));
-const forgedHash = require('crypto').createHash('sha256').update(forgedBytes).digest('hex');
-fs.mkdirSync(path.join(forgedProject, '_meta'), { recursive: true });
-fs.writeFileSync(path.join(forgedProject, '_meta', 'method-sync.json'), `${JSON.stringify({
-  schema: 'hact-method-install/v1',
-  source: source.source,
-  files: [{ path: 'project-owned.txt', sha256: forgedHash }],
-}, null, 2)}\n`);
-run(forgedProject, ['add', '.']); run(forgedProject, ['commit', '-qm', 'forged ownership']);
-assert.throws(() => sync.install(forgedProject, next), /does not match its Method source/);
-assert.strictEqual(fs.readFileSync(path.join(forgedProject, 'project-owned.txt'), 'utf8'), 'keep\n', 'forged ownership must never delete project data');
-
-assert.throws(() => sync.install(driftProject, next), /retired Method-owned path drifted/);
 assert.strictEqual(sync.install(project, next).state, 'verified');
 assert.ok(!fs.existsSync(path.join(project, 'scripts', 'retired-check.js')), 'clean retired Method-owned file must be removed');
-assert.strictEqual(fs.readFileSync(path.join(project, 'project-owned.txt'), 'utf8'), 'keep\n', 'project-owned neighbor must remain');
+assert.strictEqual(fs.readFileSync(path.join(project, 'project-owned.txt'), 'utf8'), 'keep\n');
+assert.strictEqual(fs.readFileSync(path.join(project, 'scripts', 'check-gate.js'), 'utf8'), 'console.log("gate-v2")\n');
 
-run(project, ['add', '-A']); run(project, ['commit', '-qm', 'installed current method']);
+const forgedBytes = fs.readFileSync(path.join(forgedProject, 'README.md'));
+fs.mkdirSync(path.join(forgedProject, '_meta'), { recursive: true });
+fs.writeFileSync(path.join(forgedProject, '_meta', 'method-sync.json'), `${JSON.stringify({
+  schema: sync.MANIFEST_SCHEMA,
+  source: source.source,
+  files: [{ path: 'README.md', ownership: 'method-owned', source_sha256: sync.sha256(forgedBytes), installed_sha256: sync.sha256(forgedBytes) }],
+}, null, 2)}\n`);
+commit(forgedProject, 'forged ownership');
+assert.throws(() => sync.install(forgedProject, next), /does not match its Method source/);
+
+commit(project, 'installed current method');
 const metadataPath = path.join(project, '_meta', 'method-sync.json');
 const tampered = JSON.parse(fs.readFileSync(metadataPath, 'utf8')); tampered.files = [];
 fs.writeFileSync(metadataPath, `${JSON.stringify(tampered, null, 2)}\n`);
 assert.throws(() => sync.verify(project, next), /file-manifest-mismatch/);
 run(project, ['checkout', '--', '_meta/method-sync.json']);
-
-fs.writeFileSync(path.join(project, 'AGENTS.md'), 'drift\n');
-assert.throws(() => sync.verify(project, next), /verification failed/);
+fs.writeFileSync(path.join(project, 'AGENTS.md'), 'unrecorded drift\n');
+assert.throws(() => sync.verify(project, next), /installed-content-drift/);
 assert.throws(() => sync.install(project, next), /worktree must be clean/);
 
 if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('temp escaped');
 fs.rmSync(temp, { recursive: true, force: true });
-console.log('✅ current-only Method install/verify fixtures passed');
+console.log('✅ current-only Method install/verify v2 fixtures passed');

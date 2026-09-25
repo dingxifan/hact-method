@@ -1,41 +1,50 @@
-<!--
-  TRD 独立内容审查 brief · draft-tech-design Step 5 消费 · live 引用（不入项目仓）
-  命名规范：templates/review-briefs/{被审产物}-review.md（本文审 iterations/vN/trd.md）。
-  派发：draft-tech-design 主线派隔离审查单元，令其读本文件按指令执行，只告知本期迭代版本 vN。
-       审查单元据本 brief 自读 trd.md + prd.md，看不到也不需要生成对话 / 疑点答疑。
-  分工：linter（check-docs）+ 门卫守结构与覆盖齐全性；本文只查 linter 兜不住的内容有效性。
-  改动审查维度去改本文件（单一来源），不在 spec 正文重述。
--->
-你是一名独立审查员，从未参与本份 TRD 的撰写讨论。本期迭代版本由派发者告知（下文路径中的 `vN` 替换为本期实际版本号）。
-本次审查上下文不得继承实现/设计过程叙事；由主线用 Codex 空历史子代理创建（本接口 fork_turns="none"），读取原始契约与待审版本。子代理只做审查，不运行项目启动/同步/认领。
+# TRD Independent Review 入口
 
-【自读输入】（你自己读下列文件，不依赖任何转述）
-- 本目录 `review-scope.md`：设计审查的信任前提，防止把可信开发人员恶意绕过作为隐含设计要求。
-- 定稿 TRD（待审产物）：`iterations/vN/trd.md` 全文
-- PRD（需求事实，AC 来源）：`iterations/vN/prd.md` 全文
-- project.md 的当前技术选择、Foundation 与本期涉及的共享契约/配置；只读相关边界。
-- 业务流 / 原型（如存在）：`iterations/vN/ux-flows.md` / `iterations/vN/prototype.html`
-- **不读**生成对话与疑点答疑——你的价值正在于陌生视角，不被生成时的理由锚定。
+本文件不是第二份审查规范。权威要求只来自同一 adopted Method SHA 的：
 
-【审查立场】
-核技术设计是否忠实承接已确认需求及画面数据，不重新评判业务方向；按证据判断，不预设必须找到问题。
+- `tasks/draft-tech-design.md` §7 Review & Human Authority；
+- `protocols/review.md`；
+- `templates/review-briefs/review-scope.md`。
 
-【检查内容】（完整核对适用内容，不逐类写空结论）
+派发者必须提供：
 
-1. 内部一致性：接口引用的字段在数据库设计段有对应表/列；模块调用方向无悬空 / 无环；接口 / 表 / 模块命名互不矛盾。核实体标识、时间/金额单位、展示值与归一键的来源语义，不能凭底层类型相同就混用。设计不得静默改变已确认的项目选择或 Foundation 不变量；指出冲突与需裁决的取舍。
-2. AC 真承接：每条 `# 满足 AC` 的载体**内容真覆盖**该 AC（非仅 id 在场）；幕 2 精化例子忠实 PRD 行为例子意图（状态码 / 错误码 / 断言没夹带、没缩水）。逐条比对 TRD 载体文本与 PRD AC，指出仅挂 id 不实现、或精化偏离的条目。
-3. 字段满足画面：`prototype.html` 在时，逐画面核接口请求/响应字段够该画面所需数据，避免前端拿不到要显示的字段。指出缺字段处；并沿 U/S 检查跨接口组合能否达到任务结果、失败后能否恢复，不能只核每页各自有数据。
-4. 覆盖完整：「测试环境约定」四项齐（后端地址 / 前端访问 / 数据库指向 / 副作用禁止清单）；有无明显遗漏的错误码 / 边界 / 空态。指出缺口。
+- Method SHA；
+- task id 与 iteration；
+- fixed candidate commit/tree；
+- TRD path 与 SHA-256；
+- authoritative PRD/UX/Foundation/project inputs；
+- 适用的 original evidence；
+- targeted re-review 时的 prior report 与全部 open finding IDs。
 
-【边界 — 不审以下，这些归用户拍板 / 留下游】
-- 技术选型方向取舍——归用户 + `decisions.md`，你不替用户判选型。
-- runnable 测试是否写出——留 develop（TRD 只出规格，2026-06-16：测试在代码存在后才稳）。
+Reviewer 使用 Fresh Isolated Context，只从 fixed candidate 读取允许内容，不继承 Owner narrative，不修改项目。审查重点直接读取 `tasks/draft-tech-design.md` §7，不在本文件复制。
 
-【输出格式】
-每条 finding：
-- 类别：{内部一致性 / AC真承接 / 字段满足画面 / 覆盖完整}
-- 位置：{接口名 / 表名 / 模块名 / AC 编号 / 段落}
-- 问题：{具体描述，一句话，含"为何是问题"}
-- 严重程度：{阻断 / 建议}
+输出追加到：
 
-只写 findings、必要证据与未完成验证；无发现输出 `findings: []`。建议不阻断，不凑数。
+```text
+iterations/vN/document-reviews/{task-id}/round-NN.md
+```
+
+报告使用 `hact-document-review/v1`，至少包含：
+
+```yaml
+---
+schema: hact-document-review/v1
+task_id: {task-id}
+task_type: draft-tech-design
+round: 1
+review_type: initial                 # initial | targeted
+reviewer_isolation: fresh-isolated
+prior_report: null                   # targeted 指向紧邻上一轮项目相对路径
+candidate_commit: {40-char SHA}
+candidate_tree: {40-char tree SHA}
+artifact_path: iterations/vN/trd.md
+artifact_sha256: {64-char SHA-256}
+target_finding_ids: []               # targeted 覆盖上一轮全部 open blocker
+blocking_finding_ids: []             # 本轮新建 blocker
+closed_finding_ids: []               # 本轮经新 candidate 验证关闭
+open_blocking_finding_ids: []        # 本轮结束后的完整 open 集合
+conclusion: pass                     # pass | revise
+---
+```
+
+正文写 finding 的具体位置、依据、严重程度与 required action。无发现写 `findings: []`。`pass` 必须对应空的 `open_blocking_finding_ids`；Gate/G2 仍由用户独立批准。

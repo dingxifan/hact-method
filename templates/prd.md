@@ -10,7 +10,7 @@
   - 每条有行为的 AC 拆三层：`intent`（用户可观察结果）/ `oracle`（如何判定满足）/ `example`（可选派生说明）。
     intent 与 oracle 是规范真值；example 默认不高于 oracle。下游 plan-sprint 只有在封闭输入下独立复算通过，才可把例子标为 golden 并要求字面测试。
     写不出 oracle 通常说明 AC 模糊；example 与 oracle 算不一致时修 example，不让代码迁就。
-  - `涉及实体` 列出的实体名，须在 TRD `### 表：{名}` 有对应表（linter 跨文件对账）。
+  - `涉及实体` 列出的实体名，须在 TRD 有同名 `### 表：{名}` 或 `### 承载：{名}`（artifact / external-system / derived-state / runtime-state；linter 跨文件对账）。
   - 提示写在 HTML 注释里（linter 忽略）；交付时保留 `ac-format` 标记，其余提示/占位块删除。
 -->
 

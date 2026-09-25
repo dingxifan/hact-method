@@ -22,7 +22,9 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 
 ### Current-schema boundary
 
-- 项目必须满足当前 Method schema；缺失或不匹配时 fail closed，不进入兼容/normalization 路径。历史事实只作 Git reference，不进入当前 lifecycle。
+- 日常 Core 只接受当前 Method schema；缺失或不匹配时 fail closed。
+- 旧项目必须先在 Core 之外按 `guide/08-旧项目全面接入新版.md` 完成一次性 normalization、所有权归类、隔离候选与独立迁移审查。该边界不是运行时兼容层；完成后不再读取旧 schema。
+- 历史事实只作 Git reference，不进入当前 lifecycle，不补造 review/Gate/Task 证据。
 
 ## 2. 最小加载规则
 

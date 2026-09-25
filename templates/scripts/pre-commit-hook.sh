@@ -10,7 +10,7 @@
 #   iterations/vN/prd.md|as-built-ledger.md → check-as-built-ledger.js（走过 V0 时）
 #   iterations/vN/trd.md            → check-docs.js（PRD+TRD 交叉）
 #   sprint/queue/审查记录 → check-sprint.js --staged（全局依赖 + 本次任务审计，不重扫历史）
-#   status.yml 新签 Gate / merged → check-gate.js --staged
+#   status.yml 新签 Gate / merged → check-gate.js --staged + check-task-completion.js --staged
 #   b-queue/*.md                  → check-b-task.js（B 类不得夹带共享契约修订）
 #   integration-tests/result-*.md → check-integration-evidence.js（已执行有证据、未运行有原因）
 #   iterations/vN/system-review/** → check-system-review.js --in-progress --staged（immutable report chain）
@@ -92,6 +92,7 @@ done
 # --- 单源状态：新签 Gate 与新 merged 任务 ---
 if echo "$staged" | grep -qE '^status\.yml$'; then
   run scripts/check-gate.js --staged
+  run scripts/check-task-completion.js --staged
 elif echo "$staged" | grep -qE '^(iterations/v[0-9]+(\.[0-9]+)*/(sprint\.md|queue/.*\.md|code-reviews/)|b-queue/.*\.md$|b-reviews/)'; then
   run scripts/check-sprint.js --staged
 fi

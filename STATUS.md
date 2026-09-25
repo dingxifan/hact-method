@@ -1,22 +1,25 @@
 # STATUS.md — hact-method
 
 ## 当前状态
-- 当前阶段：**当前版彻底收敛·最终验证与独立复审**
+- 当前阶段：**存量接入与文档 Task 收口·实施验证**
 - 上次更新：2026-09-25
-- 当前计划：`_meta/plans/2026-09-25-current-only-contraction/task_plan.md`
-- 固定基线：commit `84dd7fb9e6c540d24d7ef04ca77b30d50a91a171` / tree `bb8074971d7de9c1a7cd4b56cf787e2263e170b8`
+- 当前计划：`_meta/plans/2026-09-25-legacy-adoption-and-document-closeout/task_plan.md`
+- 固定基线：commit `a9bcde43a5ce8b2ee95c63b0fabc1fe0ff563c58` / tree `620f36f83132c661f5a74cf6ca4c788af67257f8`
 
 ## 各阶段完成情况
 
 | 阶段 | 状态 | 完成日期 |
 |------|------|---------|
 | 方法基础 | ✅ 完成 | 2026-09-20 前 |
-| 当前版收敛 | 🔄 最终验证中 | — |
+| 当前版收敛 | ✅ 完成 | 2026-09-25 |
+| 存量接入与文档 Task 收口 | 🔄 实施验证中 | — |
 | 真实项目试行 | ⏳ 待开始 | — |
 
 > 本文件后续较早日期内容是历史记录。与当前状态冲突时，不构成执行要求；当前执行只读取 `tasks/`、`protocols/`、模板和检查器。
 
 ## 本阶段进展
+
+- **存量接入与文档 Task 收口（2026-09-25）**：保持 current-only Core，不恢复运行时兼容层；在 Core 前增加一次性 legacy normalization、install manifest v2 与文件所有权策略。文档 Task 使用 task-specific completion checker，不再套 develop review-chain；TRD review brief 收缩为 Task/Protocol 的薄入口；重复 Task ID fail closed；TRD 支持非表技术承载。当前在独立 worktree 实施和验证，尚未 push 或向项目仓分发。
 
 - **当前版彻底收敛（2026-09-25）**：不再考虑旧版兼容。`tasks/` 成为唯一任务契约；退役 structural/execution 双层 specs、runtime crossing、watcher、discussion persistence、legacy migration 和 review projection。默认同一运行时执行到结论，一个用户动作最多一次对外交接；机械错误直接修正复验。质量链保留固定候选、独立审查、真实联调、Gate 人签及 external-effect 收据；系统 finding 必须通过新候选关闭。安装器改为当前版覆盖和安全清理。当前候选正在跑完整回归与独立复审，尚未 commit、push 或分发。
 

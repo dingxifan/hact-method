@@ -133,7 +133,7 @@ code_reviews:                    # 每个 task 的 latest immutable review point
 | `integration_tests[].status` | 待执行 / 执行中 / 通过 / 失败 |
 | `code_reviews[].conclusion` | pass / blocked |
 
-> 每个任务终态前运行 `node scripts/check-sprint.js --review-chain {task-id}`。固定 Git 基线、review scope、report chain 与 finding closure 仍必需；status 不保存轮数或 findings 副本。
+> Task 终态检查按 `tasks[].type` 路由。`develop` 才运行 `node scripts/check-sprint.js --review-chain {task-id}`；`draft-tech-design` 运行 `node scripts/check-task-completion.js --task {task-id}`，读取 `iterations/vN/document-reviews/{task-id}/round-NN.md`。其他类型以对应 Task Contract 为准。固定 Git 基线、review scope、report chain 与 finding closure 仍必需；status 不保存轮数或 findings 副本。
 
 ### System Verification 最小指针
 

@@ -29,7 +29,7 @@ Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2
 - 识别会阻断技术设计的真实疑点
 - 定义本期技术选型变更、数据模型、接口、模块和共享资产边界
 - 承接 PRD 每条 AC，并把不可视区 oracle 精化到技术可执行精度
-- 对 PRD 实体 → TRD 表、PRD AC → TRD 技术载体做双向 deterministic cross-check
+- 对 PRD 实体 → TRD 技术承载、PRD AC → TRD 技术载体做双向 deterministic cross-check
 - 承接 UX 的用户任务、状态、失败 / 恢复和画面数据需求
 - 明确测试环境与验证入口
 - 原地维护 `foundation.md` 的新跨切面关注点
@@ -155,13 +155,15 @@ PRD 的 `intent` 是外部可观察承诺，TRD 不重写其含义。
 
 普通 `example` 只帮助理解；除非上游已经明确成为 golden contract，否则不能因为 TRD 写了具体数字 / 字符串就自动升格为新承诺。
 
-### 5.3 实体 → 表 deterministic cross-check
+### 5.3 实体 → 技术承载 deterministic cross-check
 
-对 PRD 每个持久化数据实体，TRD 必须有明确技术承载。
+对 PRD 每个实体，TRD 必须有明确、与真实形态一致的技术承载。
 
-当前结构化 schema 使用 `### 表：{实体}` 时：
+当前结构化 schema：
 
-- PRD 实体 → TRD 表必须有正向覆盖
+- 持久化表使用 `### 表：{实体}`；
+- 非表实体使用 `### 承载：{实体}`，类型只允许 `artifact | external-system | derived-state | runtime-state`，并给出稳定位置；
+- PRD 实体 → TRD 同名技术承载必须有正向覆盖
 - TRD 新表 → 必须能解释其上游来源或纯技术必要性
 - 非持久化实体 / 外部系统 / 前端态必须明确说明，而不是伪造表来让 checker 变绿
 
@@ -287,7 +289,7 @@ Required。
 
 `Same Runtime + Fresh Isolated Context + Same Source of Truth`
 
-特殊 review focus 继承旧 `trd-review` 的实质要求：
+本 Task 的 review focus：
 
 1. TRD 内部一致性
 2. AC 真承接，而非只贴 id
@@ -297,6 +299,8 @@ Required。
 6. 新 Foundation 关注点没有越权或空口升档
 
 Reviewer 按 `protocols/review.md` 的 same-source projection 读取本 Task 必要 sections；不继承 Owner 的疑点处理叙事，也不替用户完成产品 / 业务取舍。
+
+每次 invocation 在 `iterations/vN/document-reviews/{task-id}/round-NN.md` 追加一个 `hact-document-review/v1` immutable report。报告绑定 candidate commit/tree、TRD path/SHA-256、Fresh Isolation、prior report 与 stable finding lineage；旧报告不得改写。`templates/review-briefs/trd-review.md` 只是指向本节与 Review Protocol 的薄入口，不复制审查规范。
 
 ### Human Authority
 
@@ -334,6 +338,7 @@ deterministic check 或 Independent Review 出现 blocking finding 时回 `taken
 - Independent Review 无未关闭 blocking finding
 - 必要架构 / authority 问题已经获得相应 Human Authority
 - TRD 与相关项目事实已进入 Accepted Project Truth
+- `node scripts/check-task-completion.js --task {task-id}` 对 final candidate/report chain 通过
 
 此时 **G2 尚未因此自动批准**。
 

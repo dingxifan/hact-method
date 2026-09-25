@@ -104,3 +104,14 @@ Task 可以 `merged` 而 Gate 尚未批准。Gate 也不是第五种 Task state�
 跨 Runtime 执行不创建状态或 ownership 记录。恢复时直接重新读取 authoritative status。
 
 Runtime event、job status 或 terminal result 都不得自行推断或写入 `taken-by`、`done`、`merged`，也不得创建或转移 ownership。child Task 必须先按现有规则成为 canonical registered Task；Runtime location 不改变这些事实。
+
+## 10. 终态检查按 Task 类型路由
+
+任何 Task 进入 `merged` 前，以该 Task Contract 的 Completion & Handoff 为准。通用状态协议不把某一类 Task 的 checker 扩张成所有 Task 的完成判据。
+
+- `develop` 使用 package `review-chain`；
+- `draft-tech-design` 使用 `check-docs`、fixed candidate 与 `hact-document-review/v1` report chain，并运行 `node scripts/check-task-completion.js --task {task-id}`；
+- `integration-verify` 使用 system review 与 runtime integration verification 双 lane；
+- 其他 Task 使用自身 Contract 声明的 deterministic completion profile。
+
+项目 hook 在 `status.yml` 出现新 `merged` 事件时运行 `check-task-completion.js --staged`。checker 只证明对应 Task 的确定性完成证据，不批准 Gate、Human Authority 或业务取舍。

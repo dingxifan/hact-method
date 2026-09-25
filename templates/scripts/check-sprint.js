@@ -358,6 +358,12 @@ function parseStatusTasksSource(source) {
   return tasks;
 }
 
+function duplicateTaskIds(tasks) {
+  const counts = new Map();
+  for (const task of tasks || []) if (task.id) counts.set(task.id, (counts.get(task.id) || 0) + 1);
+  return [...counts].filter(([, count]) => count > 1).map(([id]) => id);
+}
+
 // 迭代内 queue 的三个进料口（三方一致 + 审计留痕两处共用，故提到模块级）。
 const ITER_SOURCES = new Set(['sprint', 'integration', 'manual-test']);
 
@@ -666,6 +672,11 @@ function checkReady(subject, root) {
     fail('认领就绪', 'status.yml', '缺 status.yml，无法证明依赖已 merged');
     return;
   }
+  const duplicateIds = duplicateTaskIds(statusTasks);
+  if (duplicateIds.length) {
+    fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${duplicateIds.join(', ')}`);
+    return;
+  }
   const errors = dependencyReadinessErrors(packages, selectedIds, statusTasks);
   errors.forEach(message => fail('认领就绪', 'status.yml', message));
   if (!errors.length && packages.length === selectedIds.length)
@@ -700,6 +711,11 @@ function checkWaveReady(subject, root) {
   const statusTasks = parseStatusTasks(path.join(root, 'status.yml'));
   if (statusTasks === null) {
     fail('wave 准入', 'status.yml', '缺 status.yml，无法证明依赖与 active consumer');
+    return;
+  }
+  const duplicateIds = duplicateTaskIds(statusTasks);
+  if (duplicateIds.length) {
+    fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${duplicateIds.join(', ')}`);
     return;
   }
   const errors = dependencyReadinessErrors(packages, selectedIds, statusTasks);
@@ -1100,6 +1116,8 @@ function checkSprint(iteration, root, audit = true) {
   // 集合本就不可信，基于它下的判断没有证据力。
   const queueIds = packages.map(p => p.id);
   const stTasks = parseStatusTasks(path.join(root, 'status.yml'));   // 第 9 项也用，故不进抑制块
+  const duplicateStatusIds = duplicateTaskIds(stTasks);
+  if (duplicateStatusIds.length) fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${duplicateStatusIds.join(', ')}`);
   if (unparsed > 0) {
     human('三方一致', `queue 有 ${unparsed} 个包 frontmatter 解析失败（见上方 FAIL），queue 侧集合不完整 —— 三方一致本轮不比对（避免把一个格式问题放大成 N 条假漂移）；修好解析后重跑即恢复`);
   } else {
@@ -1202,7 +1220,13 @@ function checkStagedReviews(root) {
   const readAt = (ref, file) => { try { return gitOutput(root, ['show', `${ref}:${file}`]); } catch { return ''; } };
   const iterations = new Set(), selected = new Map(), mustClose = new Set(), inputs = new Set(['status.yml']);
   const tasks = parseStatusTasksSource(readAt('', 'status.yml'));
-  const beforeTasks = new Map(parseStatusTasksSource(readAt('HEAD', 'status.yml')).map(t => [t.id, t]));
+  const previousTasks = parseStatusTasksSource(readAt('HEAD', 'status.yml'));
+  const duplicateCurrent = duplicateTaskIds(tasks), duplicatePrevious = duplicateTaskIds(previousTasks);
+  if (duplicateCurrent.length || duplicatePrevious.length) {
+    fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${[...new Set([...duplicateCurrent, ...duplicatePrevious])].join(', ')}`);
+    return;
+  }
+  const beforeTasks = new Map(previousTasks.map(t => [t.id, t]));
   const select = (id, required = false) => selected.set(id, required || selected.get(id) || false);
   for (const file of staged) {
     const queue = file.match(/^iterations\/(v\d+(?:\.\d+)*)\/(?:sprint\.md|queue\/([^/]+)\.md)$/);

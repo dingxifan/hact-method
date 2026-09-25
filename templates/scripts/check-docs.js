@@ -3,7 +3,7 @@
  * check-docs.js · hact-method 产物结构 linter（子计划 1 · 地基）
  *
  * 用途：机械核对 PRD / TRD 的「结构完备」+「交叉一致」完成判据。
- *      交叉一致含两条：PRD 涉及实体↔TRD 表；PRD AC-nn↔TRD「# 满足 AC」回链
+ *      交叉一致含两条：PRD 涉及实体↔TRD 技术承载；PRD AC-nn↔TRD「# 满足 AC」回链
  *      （逐条正向挡悬空 + 逐条反向验覆盖，替代 draft-tech-design 旧人工「覆盖映射自检」）。
  *      只验确定性可查的部分；语义判据（场景5要素/三角评估/AC是否用户真要的/
  *      载体是否真承接 AC 而非仅 id 在场）不碰，留人（🧑 段）。
@@ -17,7 +17,7 @@
  * 退出码：有任一 FAIL → 1；全 pass → 0。
  *
  * 解析策略：容错行扫描（按固定 header + 槽位标签），非完整 markdown AST。
- *          依赖模板的固定 header（## 段落 / ### 功能：/ ### 表：/ ### 接口：）与
+ *          依赖模板的固定 header（## 段落 / ### 功能：/ ### 表：/ ### 承载：/ ### 接口：）与
  *          槽位写法（**字段**：值）。HTML 注释（<!-- -->）整体忽略。
  */
 'use strict';
@@ -108,9 +108,11 @@ function splitBlocks(sec, h3prefix) {
   let cur = null;
   for (const ln of sec.lines) {
     const m = !ln.commented && ln.text.match(reH3);
-    if (m && m[1].startsWith(h3prefix)) {
-      cur = { name: m[1].slice(h3prefix.length).trim(), start: ln.n, lines: [] };
-      blocks.push(cur);
+    if (m) {
+      if (m[1].startsWith(h3prefix)) {
+        cur = { name: m[1].slice(h3prefix.length).trim(), start: ln.n, lines: [] };
+        blocks.push(cur);
+      } else cur = null;
     } else if (cur) {
       cur.lines.push(ln);
     }
@@ -225,16 +227,29 @@ function checkTRD(path) {
     else pass('TRD段落非空', `「## ${title}」有内容`);
   }
 
-  // 数据库设计 → 表块
+  // 数据库设计 → 表块或显式非表承载块
   const tables = [];
+  const carriers = [];
   const db = sectionByTitle(sections, '数据库设计');
   if (db) {
-    const blocks = splitBlocks(db, '表：');
-    if (blocks.length === 0) fail('TRD表块存在', `${file}:${db.start}`, '「数据库设计」段无任何「### 表：」块');
-    for (const b of blocks) {
+    const tableBlocks = splitBlocks(db, '表：');
+    const carrierBlocks = splitBlocks(db, '承载：');
+    if (tableBlocks.length === 0 && carrierBlocks.length === 0)
+      fail('TRD技术承载存在', `${file}:${db.start}`, '「数据库设计」段无「### 表：」或「### 承载：」块');
+    for (const b of tableBlocks) {
       tables.push(b.name);
+      carriers.push({ name: b.name, type: 'table' });
       const f = getSlot(b.lines, '字段');
       if (f && isEmptyVal(f.val)) fail('TRD表字段非空', `${file}:${f.line}`, `表「${b.name}」字段槽为空或占位`);
+    }
+    const allowedCarrierTypes = new Set(['artifact', 'external-system', 'derived-state', 'runtime-state']);
+    for (const b of carrierBlocks) {
+      const type = getSlot(b.lines, '类型');
+      const location = getSlot(b.lines, '位置');
+      if (!type || !allowedCarrierTypes.has(type.val.trim()))
+        fail('TRD承载类型', `${file}:${b.start}`, `承载「${b.name}」类型须为 ${[...allowedCarrierTypes].join(' / ')}`);
+      if (!location || isEmptyVal(location.val)) fail('TRD承载位置', `${file}:${b.start}`, `承载「${b.name}」缺非空位置`);
+      carriers.push({ name: b.name, type: type?.val.trim() || '' });
     }
   }
 
@@ -260,24 +275,24 @@ function checkTRD(path) {
     let m; const re = /AC-\d+/g;
     while ((m = re.exec(ln.text))) acRefs.add(m[0]);
   }
-  return { tables, acRefs: [...acRefs] };
+  return { tables, carriers, acRefs: [...acRefs] };
 }
 
 // ---------------- 交叉一致 ----------------
 function checkCross(prdRes, trdRes, prdPath, trdPath) {
   const { entities, acIds, acBad } = prdRes;
-  const { tables, acRefs } = trdRes;
+  const { carriers, acRefs } = trdRes;
   const norm = s => s.trim().toLowerCase();
 
-  // 1. PRD 涉及实体 ↔ TRD 表
-  const tableSet = new Set(tables.map(norm));
+  // 1. PRD 涉及实体 ↔ TRD 技术承载（表或显式非表 carrier）
+  const carrierSet = new Set(carriers.map(item => norm(item.name)));
   const seen = new Set();
   for (const e of entities) {
     if (seen.has(norm(e))) continue;
     seen.add(norm(e));
-    if (!tableSet.has(norm(e)))
-      fail('交叉:实体有对应表', `${prdPath} → ${trdPath}`, `PRD 涉及实体「${e}」在 TRD 无对应「### 表：${e}」`);
-    else pass('交叉:实体有对应表', `实体「${e}」↔ 表存在`);
+    if (!carrierSet.has(norm(e)))
+      fail('交叉:实体有技术承载', `${prdPath} → ${trdPath}`, `PRD 涉及实体「${e}」在 TRD 无同名「### 表：」或「### 承载：」`);
+    else pass('交叉:实体有技术承载', `实体「${e}」↔ 技术承载存在`);
   }
 
   // 2. PRD AC ↔ TRD `# 满足 AC：AC-nn` 回链（draft-tech-design 覆盖映射自检的机械化）

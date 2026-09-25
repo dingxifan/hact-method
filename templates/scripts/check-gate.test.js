@@ -88,6 +88,7 @@ try {
   assert.match(missingAudit.stdout + missingAudit.stderr, /review|审计/);
   const hook = fs.readFileSync(path.join(__dirname, 'pre-commit-hook.sh'), 'utf8');
   assert.match(hook, /run scripts\/check-gate.js --staged/);
+  assert.match(hook, /run scripts\/check-task-completion.js --staged/);
   assert.match(hook, /run scripts\/check-system-review\.js "\$version" \. --in-progress --staged/);
   assert.match(hook, /check-integration-evidence\.js "\$result" \. --staged/);
   assert.match(fs.readFileSync(checker, 'utf8'), /check-system-review\.js'[\s\S]*task\.iteration, root, '--staged'/);
@@ -95,6 +96,7 @@ try {
   const shell = process.platform === 'win32'
     ? path.join(process.env.ProgramFiles, 'Git', 'bin', 'sh.exe') : '/bin/sh';
   fs.copyFileSync(checker, path.join(root, 'scripts', 'check-gate.js'));
+  fs.copyFileSync(path.join(__dirname, 'check-task-completion.js'), path.join(root, 'scripts', 'check-task-completion.js'));
   fs.copyFileSync(path.join(__dirname, 'check-system-review.js'), path.join(root, 'scripts', 'check-system-review.js'));
   fs.copyFileSync(path.join(__dirname, 'check-integration-evidence.js'), path.join(root, 'scripts', 'check-integration-evidence.js'));
   fs.copyFileSync(path.join(__dirname, 'git-truth-reader.js'), path.join(root, 'scripts', 'git-truth-reader.js'));

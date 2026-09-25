@@ -84,6 +84,12 @@ function parseTasksSource(source) {
   return inTasks && tasks.every(t => t.id && ['可取', 'taken-by', 'done', 'merged'].includes(t.status)) ? tasks : null;
 }
 
+function duplicateTaskIds(tasks) {
+  const counts = new Map();
+  for (const task of tasks || []) if (task.id) counts.set(task.id, (counts.get(task.id) || 0) + 1);
+  return [...counts].filter(([, count]) => count > 1).map(([id]) => id);
+}
+
 /* ---------------- G4 ---------------- */
 function checkG4(iteration, root, options = {}) {
   const statusPath = path.join(root, 'status.yml');
@@ -193,8 +199,11 @@ function checkStaged(root) {
   const current = parseGates(currentSource), previous = parseGates(previousSource);
   const signed = [...current].filter(([key, value]) => value.signed && !previous.get(key)?.signed);
   const tasks = parseTasksSource(currentSource);
-  const oldTasks = new Map((parseTasksSource(previousSource) || []).map(t => [t.id, t]));
+  const previousTasks = parseTasksSource(previousSource) || [];
   if (tasks === null) throw new Error('缺可解析 tasks 段（按 status 模板块式写入）');
+  const duplicateIds = [...new Set([...duplicateTaskIds(tasks), ...duplicateTaskIds(previousTasks)])];
+  if (duplicateIds.length) throw new Error(`status.yml 存在重复 task id，禁止静默 Map 覆盖：${duplicateIds.join(', ')}`);
+  const oldTasks = new Map(previousTasks.map(t => [t.id, t]));
   const merged = tasks.filter(t => t.status === 'merged' && oldTasks.get(t.id)?.status !== 'merged' &&
     (t.type === 'develop' || t.type === 'integration-verify'
       || ['sprint', 'foundation', 'integration', 'manual-test', 'bug', 'optimization'].includes(t.source)));
