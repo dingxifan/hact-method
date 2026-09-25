@@ -76,7 +76,7 @@ function reviewErrors(root, task) {
     try {
       git(root, ['cat-file', '-e', `HEAD:${relativeFile}`]);
       const additions = git(root, ['log', '--format=%H', '--diff-filter=A', '--', relativeFile]).split(/\r?\n/).filter(Boolean);
-      const touches = git(root, ['log', '--format=%H', '--', relativeFile]).split(/\r?\n/).filter(Boolean);
+      const touches = git(root, ['log', '--full-history', '--format=%H', '--', relativeFile]).split(/\r?\n/).filter(Boolean);
       if (additions.length !== 1) errors.push(`${label}: 无法证明唯一 immutable creation commit`);
       else if (touches.length !== 1 || touches[0] !== additions[0]) errors.push(`${label}: immutable report 在首次加入后仍被 Git 历史触及`);
       else {

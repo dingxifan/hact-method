@@ -15,6 +15,7 @@ const runCheck = args => childProcess.spawnSync(process.execPath, [checker, ...a
 const write = (relative, content) => { const file = path.join(temp, relative); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, content); };
 
 runGit(['init', '-q']); runGit(['config', 'user.email', 'test@example.com']); runGit(['config', 'user.name', 'Test']);
+const mainBranch = runGit(['branch', '--show-current']);
 write('status.yml', 'tasks:\n  - id: mail-v11-trd\n    iteration: v11\n    type: draft-tech-design\n    status: taken-by\n');
 write('iterations/v11/prd.md', '# PRD\n');
 write('iterations/v11/trd.md', '# TRD\n');
@@ -83,6 +84,19 @@ result = runCheck(['--staged', temp]);
 assert.notStrictEqual(result.status, 0);
 assert.match(result.stdout, /首次加入后仍被 Git 历史触及/);
 runGit(['reset', '--hard', 'HEAD~2']);
+
+runGit(['checkout', '-qb', 'rewrite-branch']);
+write('iterations/v11/document-reviews/mail-v11-trd/round-01.md', fs.readFileSync(path.join(temp, 'iterations/v11/document-reviews/mail-v11-trd/round-01.md'), 'utf8').replace('findings: []', 'findings: branch rewrite'));
+runGit(['add', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']); runGit(['commit', '-qm', 'branch rewrites historical review']);
+runGit(['checkout', 'HEAD~1', '--', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']);
+runGit(['add', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']); runGit(['commit', '-qm', 'branch restores historical review']);
+runGit(['checkout', mainBranch]); runGit(['merge', '--no-ff', '-qm', 'merge rewrite and restore branch', 'rewrite-branch']);
+write('status.yml', 'tasks:\n  - id: mail-v11-trd\n    iteration: v11\n    type: draft-tech-design\n    status: merged\n');
+runGit(['add', 'status.yml']);
+result = runCheck(['--staged', temp]);
+assert.notStrictEqual(result.status, 0);
+assert.match(result.stdout, /首次加入后仍被 Git 历史触及/);
+runGit(['reset', '--hard', 'HEAD^1']);
 
 runGit(['reset', '--hard', 'HEAD']);
 write('iterations/v11/trd.md', '# TRD changed after review\n');
