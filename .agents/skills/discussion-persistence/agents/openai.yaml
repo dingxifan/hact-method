@@ -1,7 +1,0 @@
-interface:
-  display_name: "Discussion Persistence"
-  short_description: "Persist finalized discussion artifacts to verified Git truth."
-  default_prompt: "Persist the finalized artifacts from this discussion using the registered project persistence adapter."
-
-policy:
-  allow_implicit_invocation: false

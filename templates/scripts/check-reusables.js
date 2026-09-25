@@ -92,8 +92,7 @@ const isPathShaped = t => t.includes('/');
 function checkReusables(root) {
   const file = path.join(root, 'reusables.md');
   if (!fs.existsSync(file)) {
-    // 存量项目可能还没建这张表——与 check-sprint 对 status.yml 的兜底同口径：提示，不 FAIL。
-    human('reusables 存在性', `未找到 ${path.relative(process.cwd(), file) || 'reusables.md'}——存量项目未建表则忽略本项；已建项目请确认路径`);
+    fail('reusables 存在性', file, '当前 Method 要求 reusables.md');
     return;
   }
   const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
@@ -101,10 +100,7 @@ function checkReusables(root) {
   // 只扫「已落地资产」段：「建议已拒绝」表登记的是**没有落地**的东西，路径不该存在。
   let start = lines.findIndex(l => /^##\s+已落地资产/.test(l));
   if (start < 0) {
-    // 早期模板用的是 `## 组件 / UI 元素` 这类分类小标题，没有「已落地资产」总段。
-    // 这类仓判 FAIL 会把每一次带删除/改名的提交都拦死在一个与本次改动无关的历史差异上，
-    // 于是门卫整体被 --no-verify 绕过——与 check-sprint 对无 status.yml 的存量项目同口径：提示，不拦。
-    human('reusables 结构', '未找到「## 已落地资产」段（疑为早期模板的分类式表头）——本检查跳过；如需生效，把表头对齐当前 `templates/reusables.md`');
+    fail('reusables 结构', file, '当前 Method 要求「## 已落地资产」段');
     return;
   }
   let end = lines.findIndex((l, i) => i > start && /^##\s+/.test(l));

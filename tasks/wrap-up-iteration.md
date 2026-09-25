@@ -19,7 +19,7 @@ review: none
 
 ### Purpose
 
-在 G4 之后把本期已经发生的真实结果、偏离、退役、欠账、长期项目事实和必要审计索引对账闭合，形成稳定 iteration closeout；Task 自身完成后，G5 进入 ready，由用户对明确 Accepted snapshot 做最终 Iteration Closed authority approval。
+在 G4 之后把本期已经发生的真实结果、偏离、退役、欠账、长期项目事实和最终质量证据对账闭合，形成稳定 iteration closeout；Task 自身完成后，G5 进入 ready，由用户对明确 Accepted snapshot 做最终 Iteration Closed authority approval。
 
 ### In scope
 
@@ -29,7 +29,7 @@ review: none
 - 明确跨期欠账的真实去向和责任
 - 更新 `project.md` 的长期产品 / 技术事实
 - 准确记录 deployment state
-- 维护当前 status contract 要求的 review audit archive / index
+- 确认当前 System Review 结论、最终候选和联调结果指针一致
 - 形成 G5 readiness
 - 在 Task `merged` 后记录用户 G5 approval
 
@@ -73,8 +73,6 @@ review: none
 - deploy log / deployment state
 - decisions / revision record
 - prior project.md
-- current `status-reviews/` archive
-- B-class merged review entries that current status contract要求在本次机械归档
 - unresolved incident / waiver / accepted defer evidence
 
 上一 Runtime 的总结不是 iteration closeout truth。必须重新读取 durable artifacts 和真实 deployment state。
@@ -87,8 +85,6 @@ review: none
 |---|---|---|
 | Long-term project facts | `project.md` | 只更新本期真实改变的稳定事实 |
 | Closeout corrections | PRD / TRD / Foundation / decisions / backlog 等现有权威位置 | 仅在真实偏离需要时 |
-| Review audit archive | `status-reviews/{key}.yml` 等当前 status contract 位置 | 机械归档，不改历史 finding 语义 |
-| Archive index | `status.yml` 当前约定字段 | 与 archive 文件、count 一致 |
 
 ### State updates
 
@@ -102,7 +98,6 @@ review: none
 - `develop` repair
 - backlog / accepted defer
 - deployment truth update
-- recovery pointer
 
 不要求清空 feedback、创建私人 notes 或复制一份 gates.md。
 
@@ -199,20 +194,7 @@ feedback 可以：
 
 不以反馈数量、是否为空、是否已转私人 notes 判断 G5 readiness。
 
-### 5.8 Review audit archive
-
-当前项目若使用 `status.yml code_reviews[]` + `status-reviews/` 归档：
-
-- iteration 相关完整 review entry 原样搬入对应 archive
-- 不改 finding / comment / issue 历史
-- archive index / count 与实际文件一致
-- 不归档 `tasks[]`、Gate 或无关状态
-- B-class 归档按当前 status contract 的唯一 B archive 规则维护
-- 不按条数或迭代数人为设置清理阈值
-
-这是审计机械动作，不产生新的语义判断。
-
-### 5.9 G5 single authority event
+### 5.8 G5 single authority event
 
 当 wrap-up Task 已 `merged` 后：
 
@@ -246,7 +228,7 @@ feedback 可以：
 - retirement obligation 有结论
 - project.md 存在且本期事实更新可追溯
 - deployment state 有明确枚举 / 事实来源
-- 当前 review archive 文件、index、count、唯一性满足 status contract
+- 当前 System Review 报告链、最终候选和联调结果满足 status contract
 - 项目当前 `check-gate` / `check-sprint` 等 closeout checker（若存在）通过
 - wrap-up Task `merged` snapshot 明确
 - G5 approval record（批准后）绑定明确 Accepted snapshot
@@ -295,7 +277,7 @@ G5 必须绑定明确 Accepted Project Truth snapshot。
 - 本期 closeout candidate 已形成
 - 必要 revision / repair 已闭合
 - retirement / debt / deployment truth 已对账
-- project.md 与必要 archive candidate 已稳定
+- project.md 与必要质量证据所绑定的 candidate 已稳定
 - deterministic closeout checks 可对 candidate 执行
 - 不存在未解决 Authority blocker
 
@@ -313,7 +295,7 @@ G5 必须绑定明确 Accepted Project Truth snapshot。
 满足：
 
 - deterministic / semantic closeout verification 对同一 snapshot 成立
-- project.md、必要 revision / archive / state 已进入 Accepted Project Truth
+- project.md、必要 revision / review result / state 已进入 Accepted Project Truth
 - `status.yml` 准确记录 wrap-up-iteration `merged`
 
 此时 **G5 进入 ready，但不会因为 Task `merged` 自动 approved**。
@@ -350,7 +332,7 @@ G5 approved 后，本 iteration 正常生命周期闭合。
 - retirement obligation
 - deployment state / deploy log
 - `project.md`
-- review archive / index
+- 最新 System Review、final candidate 与 integration result
 
 如果 wrap-up 已 `merged`、G5 尚未 approved：
 
@@ -358,7 +340,7 @@ G5 approved 后，本 iteration 正常生命周期闭合。
 - 重新读取 Accepted closeout snapshot
 - 只呈现当前 G5 facts 并请求 / 等待 Human Authority
 
-如果 G5 已 approved 但机械 archive / state persistence 异常：
+如果 G5 已 approved 但机械 state persistence 异常：
 
 - 先核 approved snapshot 与当前 Git truth
 - 能证明仍是同一世界时补机械记录
@@ -368,11 +350,3 @@ G5 approved 后，本 iteration 正常生命周期闭合。
 
 - 更新 deployment truth
 - 不撤销历史 G5
-
-## 10. Runtime Routing
-
-Stay Local 为默认；实际 crossing 只允许 `Reality Probe`、`Review Dispatch`、`Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。canonical Task 始终是 `wrap-up-iteration`；Runtime job 不创建 ownership/state、Gate 或 closeout truth。
-
-Independent Semantic `Review Dispatch` **CONDITIONAL, NOT DEFAULT**：只在 deviation、revision 或 fact reconciliation 复杂时触发，且不能替代 G5 Human Authority。普通 mechanical closeout 不新增 review completion condition。
-
-真实 gap 可通过 `Derived Child Task` 建立 canonical `revise-doc` 或 `develop` work，前提是满足既有 registration/intake/package/status/ownership 要求；historical merged Tasks/Gates 不 reopen。用户侧“完成”仍只由实际 iteration closeout 与 G5 语义建立，Runtime/review/child completion 单独均不足够。

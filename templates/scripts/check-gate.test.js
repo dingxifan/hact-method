@@ -42,18 +42,17 @@ try {
   write('iterations/v1/acceptance-report.md', '## 验收结论\n未通过\n');
   assert.strictEqual(run('G4', 'v1').status, 1, '验收不通过仍阻断');
   write('iterations/v1/acceptance-report.md', '## 验收结论\n通过\n');
-  write('status.yml', 'review_architecture: system-verification/v1\n' + state(4));
+  write('status.yml', state(4));
   const missingSystemTask = run('G4', 'v1');
   assert.strictEqual(missingSystemTask.status, 1, '采用 Review Architecture 后缺 integration-verify task 必须阻断 G4');
   assert.match(missingSystemTask.stdout + missingSystemTask.stderr, /System Verification|integration-verify/);
-  write('status.yml', 'review_architecture: system-verification/v1\n' + state(4, `tasks:
+  write('status.yml', state(4, `tasks:
   - id: demo-v1-integration-verify
     iteration: v1
     source: null
     type: integration-verify
     status: merged
-    system_review_dir: iterations/v1/system-review
-    current_system_review: iterations/v1/system-review/review-001.md
+    latest_system_review: iterations/v1/system-review/review-001.md
     integration_result: integration-tests/result-v1.md
     final_candidate: ${'a'.repeat(40)}
 `));
@@ -61,7 +60,7 @@ try {
   assert.strictEqual(missingSystemEvidence.status, 1, '只有 merged 标记、没有 System Review evidence 仍阻断 G4');
   assert.match(missingSystemEvidence.stdout + missingSystemEvidence.stderr, /System Verification|system review/i);
   write('status.yml', state(5)); git(['add', 'status.yml']);
-  assert.strictEqual(run('--staged').status, 0, 'status-only G5 正常签署；旧 Markdown 不参与');
+  assert.strictEqual(run('--staged').status, 1, '当前 Method 不允许移除 integration-verify / System Review 后签 G5');
   write('status.yml', state(5, pending)); git(['add', 'status.yml']);
   assert.strictEqual(run('--staged').status, 1, 'status-only G5 仍拦未完成修订');
   write('status.yml', state(5));
@@ -96,14 +95,60 @@ try {
   const shell = process.platform === 'win32'
     ? path.join(process.env.ProgramFiles, 'Git', 'bin', 'sh.exe') : '/bin/sh';
   fs.copyFileSync(checker, path.join(root, 'scripts', 'check-gate.js'));
+  fs.copyFileSync(path.join(__dirname, 'check-system-review.js'), path.join(root, 'scripts', 'check-system-review.js'));
+  fs.copyFileSync(path.join(__dirname, 'check-integration-evidence.js'), path.join(root, 'scripts', 'check-integration-evidence.js'));
+  fs.copyFileSync(path.join(__dirname, 'git-truth-reader.js'), path.join(root, 'scripts', 'git-truth-reader.js'));
+  write('scripts/check-secrets.js', 'process.exit(0);\n');
   write('pre-commit.sh', hook.replace(/\r\n/g, '\n'));
   assert.strictEqual(cp.spawnSync(shell, ['-n', 'pre-commit.sh'], { cwd: root }).status, 0, 'hook 必须实际通过 shell 语法检查');
   const hookFail = cp.spawnSync(shell, ['pre-commit.sh'], { cwd: root, encoding: 'utf8' });
   assert.strictEqual(hookFail.status, 1, hookFail.stdout + hookFail.stderr);
   assert.match(hookFail.stdout + hookFail.stderr, /check-gate.js --staged/, '实际 shell 调到状态门');
-  write('status.yml', state(5)); git(['add', 'status.yml']);
+  const finalCandidate = git(['rev-parse', 'HEAD']).trim();
+  const systemTask = `tasks:
+  - id: demo-v1-integration-verify
+    iteration: v1
+    source: null
+    type: integration-verify
+    status: merged
+    latest_system_review: iterations/v1/system-review/review-001.md
+    integration_result: integration-tests/result-v1.md
+    final_candidate: ${finalCandidate}
+`;
+  write('iterations/v1/system-review/review-001.md', `---
+schema: system-review/v2
+review_id: review-001
+review_type: full
+candidate: ${finalCandidate}
+prior_report: null
+target_finding_ids: []
+new_finding_ids: []
+closed_finding_ids: []
+open_finding_ids: []
+conclusion: pass
+evidence_refs: []
+created_at: 2026-09-25T12:00:00Z
+---
+# System Review
+`);
+  write('integration-tests/evidence/v1/S-01/result.txt', 'PASS\n');
+  write('integration-tests/result-v1.md', `---
+schema: integration-result/v3
+iteration: v1
+candidate_head: ${finalCandidate}
+latest_system_review: iterations/v1/system-review/review-001.md
+runtime_scope: [S-01]
+result_status: satisfied
+evidence_state: sufficient
+created_at: 2026-09-25T12:10:00Z
+---
+| # | 模块 | 场景描述 | 结果 | 证据（项目相对路径） | 未运行原因 | 现象 | 级别 | 复测 |
+|---|---|---|---|---|---|---|---|---|
+| S-01 | core | smoke | ✅ | integration-tests/evidence/v1/S-01/result.txt | — | — | — | — |
+`);
+  write('status.yml', state(5, systemTask)); git(['add', 'status.yml', 'iterations/v1/system-review/review-001.md', 'integration-tests', 'scripts/check-system-review.js', 'scripts/check-secrets.js']);
   const hookPass = cp.spawnSync(shell, ['pre-commit.sh'], { cwd: root, encoding: 'utf8' });
-  assert.strictEqual(hookPass.status, 0, hookPass.stdout + hookPass.stderr);
+  assert.strictEqual(hookPass.status, 0, `hook stdout:\n${hookPass.stdout}\nhook stderr:\n${hookPass.stderr}`);
   console.log('✅ Gate 单源状态、G5 真实缺口、签署路由与 merged 审查回归通过');
 } finally {
   fs.rmSync(root, { recursive: true, force: true });

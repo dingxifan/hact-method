@@ -29,13 +29,13 @@ Gate approval 是独立 Human Authority Event。
 
 用户批准的必须是一个明确、可重新读取的 fixed snapshot，而不是聊天中的模糊“当前版本”。
 
-现有项目继续使用其 `status.yml` Gate serialization；当前兼容 schema 通常为：
+Gate 只使用当前 `status.yml` serialization：
 
 ```yaml
 Gx: { signed: true, date: YYYY-MM-DD }
 ```
 
-vNext 不要求为了表达 snapshot binding 额外增加 `approved_by` / `approved_at` / `approved_snapshot` 字段。
+不为 snapshot binding 额外增加 `approved_by` / `approved_at` / `approved_snapshot` 字段。
 
 持久化 Gate approval 时：
 
@@ -63,7 +63,7 @@ Gate readiness 同时依赖：
 
 G3 需要在用户批准前完成 planning 的 deterministic / semantic readiness。
 
-为兼容现有 `status.yml` 与 `check-sprint.js`：
+当前 `status.yml` 与 `check-sprint.js` 规则为：
 
 - `plan-sprint` 可以在 G3 approval 前，把已经完成的 sprint develop Task 正式登记到 Accepted Project Truth，初始 `status: 可取`；
 - `可取` 只表示“已登记、未认领”，不代表认领前置已经满足；

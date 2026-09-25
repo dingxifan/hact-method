@@ -8,12 +8,11 @@
 # ⚠️ 先查 `git config --get core.hooksPath`：有值则 .git/hooks/ 被忽略，
 #    须改为把本脚本调用追加进该 hooksPath 下的 pre-commit。装完必须真触发一次验证。
 #
-# 兼容：node 缺失或脚本缺失 → no-op 放行，绝不 brick 提交。
-#      `git commit --no-verify` 可绕过——护栏非密码锁。
+# 当前 Method 要求 Node 与 checker 已安装；缺失即 FAIL。
 # ------------------------------------------------------------------
 set -u
 
-command -v node >/dev/null 2>&1 || { echo "⚠️  pre-commit: 未找到 node，跳过检查（放行）" >&2; exit 0; }
+command -v node >/dev/null 2>&1 || { echo "❌ pre-commit: 未找到 node" >&2; exit 1; }
 
 # core.quotepath 默认为 true：非 ASCII 文件名会被转义并加引号输出（"guide/99-ä»..."），
 # 前导引号会让 ^ 锚定的路由正则全部落空。本仓 guide/ 下全是中文名，不关它整条路由形同虚设。
@@ -25,7 +24,7 @@ fail=0
 # --- 运行时文本的绝对路径（check-paths.js）---
 # 触发口：staged 里有运行时目录/文件下的 .md/.js/.sh/.yml。
 # 历史档（_meta/）与 STATUS.md 不在范围内——它们记录既成事实，写具体路径是对的。
-if echo "$staged" | grep -qE '^(skeleton|specs-structural|specs-execution|guide|templates)/.*\.(md|js|sh|yml)$|^(CLAUDE|BRIEF)\.md$'; then
+if echo "$staged" | grep -qE '^(skeleton|guide|templates|tasks|protocols|runtime|utilities)/.*\.(md|js|sh|yml)$|^(AGENTS|BRIEF)\.md$'; then
   if [ -f scripts/check-paths.js ]; then
     echo "▶ pre-commit: node scripts/check-paths.js" >&2
     node scripts/check-paths.js || fail=1

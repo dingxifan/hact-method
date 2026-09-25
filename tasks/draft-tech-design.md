@@ -60,7 +60,7 @@ Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2
 
 若 PRD 全部 `draft-ux: 不需要`，UX 前置不适用。
 
-技术栈已有 Accepted Truth 时不重新询问；存量项目技术层确实为空时，才把必要技术栈选择作为本 Task 的 Human Authority / architecture decision 处理。
+技术栈已有 Accepted Truth 时不重新询问；技术层为空表示当前 Method 前置不完整，先回 `init-project` / Foundation 补齐。
 
 ## 3. Authoritative Inputs
 
@@ -352,9 +352,3 @@ G2 approved 后：
 - 本 Task 新增且标记“待建”的 Foundation 关注点必须在 `plan-sprint` 形成对应地基跟进 package
 
 下游不继承完整 conversation。
-
-## 9. Runtime Routing
-
-Stay Local 为默认；实际 crossing 只允许 `Reality Probe` 与 `Review Dispatch`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。`Reality Probe` 只返回 evidence / uncertainty，不得自行修改 Technical Contract。
-
-`Review Dispatch` **REQUIRED**，使用 fresh-isolated same-source reviewer projection 对 fixed candidate 建立既有 Independent Review evidence。architecture / safety / cost 的 Human Authority 与 G2 继续由本 Contract 决定；crossing、review 或 Runtime completion 均不能替代。

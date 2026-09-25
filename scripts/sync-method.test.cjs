@@ -1,166 +1,80 @@
+#!/usr/bin/env node
 'use strict';
-const assert = require('assert'), fs = require('fs'), os = require('os'), path = require('path'), cp = require('child_process');
-const { loadSource, inspectProject, prepare, verify, finish, safePath, runtimeCheck, readAdopted } = require('./sync-method.cjs');
-const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-distribution-'));
-const method = path.join(temp, 'method'), project = path.join(temp, 'project with space');
-const realTemplates = path.resolve(__dirname, '../templates');
-const git = (root, args) => cp.execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
-const write = (root, name, body) => { fs.mkdirSync(path.dirname(path.join(root, name)), { recursive: true }); fs.writeFileSync(path.join(root, name), body); };
-const init = root => { fs.mkdirSync(root); git(root, ['init', '-b', 'main']); git(root, ['config', 'user.name', 'Test']); git(root, ['config', 'user.email', 'test@example.com']); git(root, ['config', 'core.autocrlf', 'false']); };
-let wt;
-try {
-  init(method);
-  for (const file of ['AGENTS.md', 'gitee-ops.md', '.codex/agents/researcher.toml', '.codex/agents/worker.toml',
-    '.codex/agents/reviewer.toml', '.codex/agents/sensitive_reviewer.toml', 'scripts/check-gate.js',
-    'scripts/check-hook-state.js', 'scripts/check-codex-project.js', 'scripts/pre-commit-hook.sh'])
-    write(method, 'templates/' + file, fs.readFileSync(path.join(realTemplates, file), 'utf8').replace(/\r\n/g, '\n'));
-  // 此夹具不读取本机真实凭据；测试的是分发与实际 hook 执行，凭据扫描本体不在此替身中测。
-  write(method, 'templates/scripts/check-secrets.js', 'process.exit(0);\n');
-  write(method, 'templates/scripts/check-example.js', 'console.log("old template");\n');
-  write(method, 'tasks/develop.md', '# adopted task\n');
-  write(method, 'protocols/review.md', '# adopted review protocol\n');
-  write(method, 'runtime/codex.md', '# adopted runtime\n');
-  write(method, 'utilities/harvest-notes.md', '# adopted utility\n');
-  write(method, 'specs-execution/develop.md', '# adopted behavior\n');
-  git(method, ['add', '.']); git(method, ['commit', '-m', 'old']);
-  const oldExample = fs.readFileSync(path.join(method, 'templates/scripts/check-example.js'));
-  write(method, 'templates/scripts/check-example.js', 'console.log("new template");\n');
-  git(method, ['add', '.']); git(method, ['commit', '-m', 'new']);
-  git(method, ['branch', 'codex/context-reduction']);
-  const source = loadSource(method, 'codex/context-reduction');
-  init(project);
-  write(project, 'AGENTS.md', '# 项目\n不能操作生产数据。\n');
-  write(project, 'project.md', '# 项目事实\n');
-  write(project, 'status.yml', 'iterations:\n  v1:\n    gates:\n      G1: { signed: false, date: null }\ntasks: []\n');
-  write(project, 'standards-shared.md', '# 项目约束\n只使用本地文件。\n');
-  write(project, 'scripts/check-example.js', oldExample);
-  write(project, '.codex/config.toml', 'model = "keep-user-choice"\n');
-  write(project, 'connections.yml', 'keep: existing-config\n');
-  write(project, 'iterations/v1/code-reviews/historical.md', 'historical report must stay byte-identical\n');
-  write(project, 'status-reviews/v1.yml', 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly\n');
-  git(project, ['add', '.']); git(project, ['commit', '-m', 'base']);
-  const originalHead = git(project, ['rev-parse', 'HEAD']);
-  write(project, 'user-wip.txt', 'do not touch');
-  write(project, 'scripts/check-example.js', 'uncommitted user override\n');
-  const originalStatus = git(project, ['status', '--porcelain=v1']);
-  assert.throws(() => inspectProject(method, source), /方法论仓本身/);
-  const inventory = inspectProject(project, source);
-  assert.strictEqual(inventory.operations.find(x => x.to === 'scripts/check-example.js').action, 'update', '按 HEAD 不按主树在制品选覆盖策略');
-  assert.strictEqual(inventory.operations.find(x => x.to === 'AGENTS.md').action, 'merge');
-  assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'check 零写入');
-  const prepared = prepare(project, source); wt = prepared.worktree;
-  assert.strictEqual(git(project, ['rev-parse', 'HEAD']), originalHead);
-  assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus, 'prepare 不碰原树/暂存区');
-  assert.strictEqual(fs.readFileSync(path.join(wt, 'scripts/check-example.js'), 'utf8'), 'console.log("new template");\n');
-  assert.strictEqual(fs.readFileSync(path.join(wt, 'AGENTS.md'), 'utf8'), '# 项目\n不能操作生产数据。\n');
-  assert.strictEqual(fs.readFileSync(path.join(wt, 'status-reviews/v1.yml'), 'utf8'), 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly\n', 'status-reviews 项目数据逐字节保留');
-  assert.ok(!fs.existsSync(path.join(wt, '_meta/method-sync-pending/files/status-reviews')), 'status-reviews 不生成未知候选');
-  assert.ok(!fs.existsSync(path.join(wt, 'user-wip.txt')));
-  assert.ok(verify(wt, source).some(e => /约束|候选/.test(e)));
-  const candidate = path.join(wt, '_meta/method-sync-pending/files/AGENTS.md');
-  fs.appendFileSync(candidate, '\nmanual merge in progress\n');
-  assert.strictEqual(prepare(project, source).state, 'resume');
-  assert.match(fs.readFileSync(candidate, 'utf8'), /manual merge in progress/, '恢复不覆盖在制候选');
-  write(wt, 'AGENTS.md', fs.readFileSync(candidate, 'utf8') + '\n项目禁区：不能操作生产数据。\n');
-  fs.unlinkSync(candidate);
-  write(wt, 'project.md', '# 项目事实\n## 项目约束\n只使用本地文件。\n');
-  fs.unlinkSync(path.join(wt, 'standards-shared.md'));
-  write(wt, '_meta/method-sync-review.md', '保留本地文件约束到 project，状态不变，原配置不动；以临时 Git 真跑验证，无业务环境验证。\n');
-  const hook = git(project, ['rev-parse', '--path-format=absolute', '--git-path', 'hooks']) + '/pre-commit';
-  fs.writeFileSync(hook, '#!/bin/sh\nsh scripts/pre-commit-hook.sh\n'); fs.chmodSync(hook, 0o755);
-  assert.deepStrictEqual(verify(wt, source), []);
-  const originalState = fs.readFileSync(path.join(wt, 'status.yml'), 'utf8');
-  write(wt, 'status.yml', originalState.replace('tasks: []', 'tasks:\n  - id: demo-b-001\n    source: bug\n    status: 可取'));
-  assert.ok(verify(wt, source).some(e => /缺任务包/.test(e)));
-  write(wt, 'b-queue/demo-b-001.md', '---\nsource: bug\nreference:\n  - standards-shared.md\n---\n');
-  assert.ok(verify(wt, source).some(e => /活跃包仍引用/.test(e)));
-  fs.unlinkSync(path.join(wt, 'b-queue/demo-b-001.md'));
-  write(wt, 'status.yml', originalState);
-  assert.ok(verify(wt, { ...source, sha: '0'.repeat(40) }).some(e => /版本不一致/.test(e)));
-  write(method, 'templates/scripts/check-example.js', 'uncommitted source change\n');
-  assert.ok(verify(wt, source).some(e => /固定版本|未提交/.test(e)), '不能用未提交方法源码给固定版本背书');
-  write(method, 'templates/scripts/check-example.js', source.get('templates/scripts/check-example.js'));
-  write(wt, 'scripts/check-example.js', 'console.log("stale customized checker");\n');
-  assert.ok(verify(wt, source).some(e => /固定方法版本/.test(e)));
-  write(wt, 'scripts/check-example.js', source.get('templates/scripts/check-example.js'));
-  write(wt, 'AGENTS.override.md', '# Old override\n');
-  assert.ok(verify(wt, source).some(e => /遮蔽/.test(e)));
-  fs.unlinkSync(path.join(wt, 'AGENTS.override.md'));
-  write(wt, 'status-reviews/v2.yml', 'code_reviews: []\n');
-  assert.throws(() => finish(wt, source, true), /在制品|基线/);
-  write(wt, 'business.ts', 'not a methodology change\n');
-  assert.throws(() => finish(wt, source), /范围外/);
-  fs.unlinkSync(path.join(wt, 'business.ts'));
-  git(wt, ['add', '-A']);
-  assert.match(git(wt, ['diff', '--cached', '--name-status']), /^D\s+standards-shared\.md$/m,
-    '真实 hook 前预暂存删除后，finish 仍须可重复登记并提交');
-  const result = finish(wt, source);
-  assert.strictEqual(result.state, 'committed');
-  assert.strictEqual(result.pushed, false);
-  assert.strictEqual(fs.existsSync(wt), false);
-  assert.ok(!git(project, ['worktree', 'list', '--porcelain']).includes(wt.replace(/\\/g, '/')));
-  assert.strictEqual(git(project, ['rev-parse', 'HEAD']), originalHead, '默认不集成');
-  assert.strictEqual(git(project, ['status', '--porcelain=v1']), originalStatus);
-  assert.strictEqual(git(project, ['show', result.branch + ':.codex/config.toml']), 'model = "keep-user-choice"');
-  assert.strictEqual(git(project, ['show', result.branch + ':connections.yml']), 'keep: existing-config');
-  assert.strictEqual(git(project, ['show', result.branch + ':iterations/v1/code-reviews/historical.md']), 'historical report must stay byte-identical');
-  assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v1.yml']), 'code_reviews:\n  - task_id: historical-v1-001\n    comment: preserve exactly');
-  assert.strictEqual(git(project, ['show', result.branch + ':status-reviews/v2.yml']), 'code_reviews: []', '迁移执行人新增的项目归档可随本地同步提交');
-  assert.strictEqual(prepare(project, source).state, 'branch-exists');
-  const project2 = path.join(temp, 'clean-project'); init(project2);
-  write(project2, 'project.md', '# Clean project\n');
-  write(project2, 'status.yml', 'iterations:\n  v1:\n    gates:\n      G1: { signed: false, date: null }\ntasks: []\n');
-  git(project2, ['add', '.']); git(project2, ['commit', '-m', 'base']);
-  const prepared2 = prepare(project2, source), wt2 = prepared2.worktree;
-  write(wt2, '_meta/method-sync-review.md', '无旧规则，原状态保留，实际 hook 接线已验证。\n');
-  const hook2 = git(project2, ['rev-parse', '--path-format=absolute', '--git-path', 'hooks']) + '/pre-commit';
-  fs.writeFileSync(hook2, '#!/bin/sh\nsh scripts/pre-commit-hook.sh\n'); fs.chmodSync(hook2, 0o755);
-  const originalExec = cp.execFileSync;
-  cp.execFileSync = function(bin, args, opts) {
-    if (bin === 'git' && args.includes('remove') && args.includes(wt2)) throw new Error('fixture cleanup failure');
-    return originalExec.call(this, bin, args, opts);
-  };
-  try { assert.throws(() => finish(wt2, source), /fixture cleanup failure/); }
-  finally { cp.execFileSync = originalExec; }
-  const committedBeforeCleanup = git(wt2, ['rev-parse', 'HEAD']);
-  assert.strictEqual(git(wt2, ['status', '--porcelain=v1']), '');
-  const integrated = finish(wt2, source, true);
-  assert.strictEqual(integrated.commit, committedBeforeCleanup, '提交后清理失败可接续，不制造重复提交');
-  assert.strictEqual(integrated.state, 'integrated');
-  assert.strictEqual(git(project2, ['rev-parse', 'HEAD']), integrated.commit);
-  assert.ok(!fs.existsSync(wt2));
-  assert.strictEqual(prepare(project2, source).state, 'already-integrated');
-  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'adopted scripts and real hook match');
-  assert.strictEqual(runtimeCheck(project2).source, source.sha);
-  write(method, 'specs-execution/develop.md', '# moving branch behavior\n');
-  git(method, ['add', '.']); git(method, ['commit', '-m', 'method evolves']);
-  assert.strictEqual(readAdopted(project2, 'tasks/develop.md'), '# adopted task\n');
-  assert.strictEqual(readAdopted(project2, 'protocols/review.md'), '# adopted review protocol\n');
-  assert.strictEqual(readAdopted(project2, 'runtime/codex.md'), '# adopted runtime\n');
-  assert.strictEqual(readAdopted(project2, 'utilities/harvest-notes.md'), '# adopted utility\n');
-  assert.strictEqual(readAdopted(project2, 'specs-execution/develop.md'), '# adopted behavior\n', 'moving method HEAD must not change project rules');
-  assert.throws(() => readAdopted(project2, '../outside.md'), /只允许/);
-  assert.throws(() => readAdopted(project2, '/absolute.md'), /只允许/);
-  assert.throws(() => readAdopted(project2, 'tasks\\develop.md'), /只允许/);
-  assert.deepStrictEqual(runtimeCheck(project2).errors, [], 'new branch does not force an upgrade');
-  const copiedScript = fs.readFileSync(path.join(project2, 'scripts/check-example.js'));
-  write(project2, 'scripts/check-example.js', 'outdated or mismatched script\n');
-  assert.match(runtimeCheck(project2).errors.join('\n'), /方法论版本漂移/, 'report source drift before task evidence errors');
-  write(project2, 'scripts/check-example.js', copiedScript);
-  assert.throws(() => readAdopted(project2, '../outside.md'), /只允许/);
-  assert.throws(() => runtimeCheck(project), /方法论版本漂移/, 'no recorded version is not implicit latest');
-  assert.throws(() => safePath(project, '../outside'), /非法/);
-  const linked = path.join(project, 'linked');
-  fs.symlinkSync(method, linked, process.platform === 'win32' ? 'junction' : 'dir');
-  assert.throws(() => safePath(project, 'linked/forbidden'), /链接/);
-  fs.unlinkSync(linked);
-  console.log('✅ 分发：固定版本/真实 Git/脏主树保护/自定义候选/恢复/版本校验/实际 hook/本地提交与 worktree 双重回收通过');
-} finally {
-  // 仅本测试独有 mkdtemp，先注销已登记 worktree，再删已验证临时根；不操作真实项目。
-  if (wt && fs.existsSync(wt)) {
-    if (!path.resolve(wt).startsWith(path.resolve(temp) + path.sep)) throw new Error('测试 worktree 越界');
-    git(project, ['worktree', 'remove', '--force', wt]);
-  }
-  if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('临时目录越界');
-  fs.rmSync(temp, { recursive: true, force: true });
+
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const childProcess = require('child_process');
+const sync = require('./sync-method.cjs');
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'hact-method-install-'));
+const method = path.join(temp, 'method');
+const project = path.join(temp, 'project');
+const driftProject = path.join(temp, 'drift-project');
+const forgedProject = path.join(temp, 'forged-project');
+const run = (cwd, args) => childProcess.execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+function init(root) {
+  fs.mkdirSync(root, { recursive: true }); run(root, ['init', '-q']);
+  run(root, ['config', 'user.email', 'test@example.com']); run(root, ['config', 'user.name', 'Test']);
 }
+init(method); init(project); init(driftProject); init(forgedProject);
+fs.mkdirSync(path.join(method, 'templates', 'scripts'), { recursive: true });
+fs.writeFileSync(path.join(method, 'templates', 'AGENTS.md'), 'current agents\n');
+fs.writeFileSync(path.join(method, 'templates', 'gitee-ops.md'), 'ops\n');
+fs.writeFileSync(path.join(method, 'templates', 'scripts', 'pre-commit-hook.sh'), '#!/bin/sh\n');
+fs.writeFileSync(path.join(method, 'templates', 'scripts', 'check-gate.js'), 'console.log("gate")\n');
+fs.writeFileSync(path.join(method, 'templates', 'scripts', 'retired-check.js'), 'console.log("old")\n');
+run(method, ['add', '.']); run(method, ['commit', '-qm', 'method']);
+fs.writeFileSync(path.join(project, 'README.md'), 'project\n'); run(project, ['add', '.']); run(project, ['commit', '-qm', 'project']);
+fs.writeFileSync(path.join(driftProject, 'README.md'), 'project\n'); run(driftProject, ['add', '.']); run(driftProject, ['commit', '-qm', 'project']);
+fs.writeFileSync(path.join(forgedProject, 'project-owned.txt'), 'keep\n'); run(forgedProject, ['add', '.']); run(forgedProject, ['commit', '-qm', 'project']);
+
+const source = sync.loadSource(method, 'HEAD');
+assert.ok(sync.inspect(project, source).rows.every(row => row.state === 'missing'));
+assert.strictEqual(sync.install(project, source).state, 'verified');
+assert.strictEqual(sync.install(driftProject, source).state, 'verified');
+assert.strictEqual(sync.verify(project, source).state, 'verified');
+assert.strictEqual(sync.runtimeCheck(project, method).source, source.source);
+assert.strictEqual(sync.readAdopted(project, method, 'templates/AGENTS.md'), 'current agents\n');
+
+run(project, ['add', '.']); run(project, ['commit', '-qm', 'installed old method']);
+run(driftProject, ['add', '.']); run(driftProject, ['commit', '-qm', 'installed old method']);
+fs.writeFileSync(path.join(driftProject, 'scripts', 'retired-check.js'), 'project drift\n');
+run(driftProject, ['add', '.']); run(driftProject, ['commit', '-qm', 'drift old method file']);
+fs.writeFileSync(path.join(project, 'project-owned.txt'), 'keep\n'); run(project, ['add', '.']); run(project, ['commit', '-qm', 'project data']);
+fs.rmSync(path.join(method, 'templates', 'scripts', 'retired-check.js'));
+run(method, ['add', '-A']); run(method, ['commit', '-qm', 'retire old checker']);
+const next = sync.loadSource(method, 'HEAD');
+
+const forgedBytes = fs.readFileSync(path.join(forgedProject, 'project-owned.txt'));
+const forgedHash = require('crypto').createHash('sha256').update(forgedBytes).digest('hex');
+fs.mkdirSync(path.join(forgedProject, '_meta'), { recursive: true });
+fs.writeFileSync(path.join(forgedProject, '_meta', 'method-sync.json'), `${JSON.stringify({
+  schema: 'hact-method-install/v1',
+  source: source.source,
+  files: [{ path: 'project-owned.txt', sha256: forgedHash }],
+}, null, 2)}\n`);
+run(forgedProject, ['add', '.']); run(forgedProject, ['commit', '-qm', 'forged ownership']);
+assert.throws(() => sync.install(forgedProject, next), /does not match its Method source/);
+assert.strictEqual(fs.readFileSync(path.join(forgedProject, 'project-owned.txt'), 'utf8'), 'keep\n', 'forged ownership must never delete project data');
+
+assert.throws(() => sync.install(driftProject, next), /retired Method-owned path drifted/);
+assert.strictEqual(sync.install(project, next).state, 'verified');
+assert.ok(!fs.existsSync(path.join(project, 'scripts', 'retired-check.js')), 'clean retired Method-owned file must be removed');
+assert.strictEqual(fs.readFileSync(path.join(project, 'project-owned.txt'), 'utf8'), 'keep\n', 'project-owned neighbor must remain');
+
+run(project, ['add', '-A']); run(project, ['commit', '-qm', 'installed current method']);
+const metadataPath = path.join(project, '_meta', 'method-sync.json');
+const tampered = JSON.parse(fs.readFileSync(metadataPath, 'utf8')); tampered.files = [];
+fs.writeFileSync(metadataPath, `${JSON.stringify(tampered, null, 2)}\n`);
+assert.throws(() => sync.verify(project, next), /file-manifest-mismatch/);
+run(project, ['checkout', '--', '_meta/method-sync.json']);
+
+fs.writeFileSync(path.join(project, 'AGENTS.md'), 'drift\n');
+assert.throws(() => sync.verify(project, next), /verification failed/);
+assert.throws(() => sync.install(project, next), /worktree must be clean/);
+
+if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('temp escaped');
+fs.rmSync(temp, { recursive: true, force: true });
+console.log('✅ current-only Method install/verify fixtures passed');

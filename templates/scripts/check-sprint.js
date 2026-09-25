@@ -25,7 +25,7 @@
  *
  * 序列化前提（见 templates/queue/task-package.md + sub3c-design D1）：任务包用 YAML frontmatter。
  *   纯 Node 无外部依赖；frontmatter / status.yml 用针对本 schema 的容错行扫描，非完整 YAML AST。
- * 存量项目（无 status.yml）：三方一致的 status 侧退回兜底（pass + 提示），与 check-gate 同。
+ * 当前 Method 要求 status.yml、current package schema 与 current review schema；缺失直接 FAIL。
  */
 'use strict';
 const fs = require('fs');
@@ -43,7 +43,7 @@ function readLines(p) { return fs.readFileSync(p, 'utf8').split(/\r?\n/); }
 function exists(p) { try { return fs.statSync(p).isFile(); } catch { return false; } }
 function stripComment(s) { return s.replace(/\s+#.*$/, '').trim(); } // 去行尾 ` # 注释`
 
-// 任务包机械必含字段（specs-structural/develop.md §字段规范的可校验子集）。
+// 任务包机械必含字段（tasks/develop.md 的可校验子集）。
 // status 不在内（与 status.yml 重复，由后者权威）；api-contract 条件必填，单独判。
 const REQUIRED = ['task-id', 'sprint_id', 'layers', 'source', 'task_type', 'contract-impact',
   'urgency', 'risk', 'title', 'description', 'depends_on', 'files', 'asset-writes', 'supersedes',
@@ -361,189 +361,6 @@ function parseStatusTasksSource(source) {
 // 迭代内 queue 的三个进料口（三方一致 + 审计留痕两处共用，故提到模块级）。
 const ITER_SOURCES = new Set(['sprint', 'integration', 'manual-test']);
 
-/* ---------- status.yml：抽 code_reviews[] 的 iteration/task_id/rounds 拆分（同上容错扫描） ----------
- * 只取顶层键即可判完备性；`comment` 常是长中文单行、`issues:` 是更深缩进的子列表，
- * 均靠「顶层条目缩进 === baseIndent」这一条挡住，不做完整 YAML AST。 */
-function parseCodeReviews(statusPath) {
-  if (!exists(statusPath)) return null;
-  return parseCodeReviewsSource(readLines(statusPath).join('\n'));
-}
-function parseCodeReviewsSource(source) {
-  const out = [];
-  let inBlk = false, baseIndent = null, cur = null;
-  const flush = () => { if (cur) { out.push(cur); cur = null; } };
-  const clean = v => (v || '').trim().replace(/^["']|["']$/g, '').trim();
-  for (const raw of source.split(/\r?\n/)) {
-    const line = raw.replace(/\t/g, '  ');
-    if (/^code_reviews:\s*$/.test(line)) { inBlk = true; continue; }
-    if (!inBlk) continue;
-    if (/^\s*#/.test(line)) continue;                               // 注释行（含顶格 `#` 的 schema 示例块）——
-    // 必须先于下面的"顶层新键"判定：真实 status.yml 在 code_reviews[] 中段夹着顶格注释示例
-    // （doc-extract 即如此），当作块结束会静默丢掉其后的全部条目（实测漏 4 条）。
-    if (/^\S/.test(line) && !/^-/.test(line)) { flush(); break; }   // 顶层新键 → 本块结束
-    if (line.trim() === '') continue;
-    const item = line.match(/^(\s*)-\s+(.*)$/);
-    if (item) {
-      const indent = item[1].length;
-      if (baseIndent === null) baseIndent = indent;
-      if (indent === baseIndent) {
-        flush(); cur = {};
-        const kv = item[2].match(/^([A-Za-z_-]+):\s*(.*)$/);
-        if (kv) cur[kv[1]] = clean(kv[2]);
-        continue;
-      }
-      continue;                                                     // issues[] 等子列表项，跳过
-    }
-    const kv = line.match(/^\s+([A-Za-z_-]+):\s*(.*)$/);
-    if (kv && cur && !(kv[1] in cur)) cur[kv[1]] = clean(kv[2]);    // 首次出现为准，防子块同名键覆盖
-  }
-  flush();
-  return out;
-}
-
-/* ---------- status.yml：抽 code_review_archives[] 索引 ----------
- * 索引本身同样是受控的顶层对象列表；归档内容继续交给 parseCodeReviews()，
- * 不为归档文件另造 code_reviews 解析器。存量 status.yml 无此段时返回空数组。 */
-function parseCodeReviewArchives(statusPath) {
-  if (!exists(statusPath)) return null;
-  return parseCodeReviewArchivesSource(readLines(statusPath).join('\n'));
-}
-function parseCodeReviewArchivesSource(source) {
-  const out = [];
-  let inBlk = false, baseIndent = null, cur = null;
-  const flush = () => { if (cur) { out.push(cur); cur = null; } };
-  const clean = v => (v || '').trim().replace(/^['"]|['"]$/g, '').trim();
-  for (const raw of source.split(/\r?\n/)) {
-    const line = raw.replace(/\t/g, '  ');
-    const header = line.match(/^code_review_archives:\s*(.*?)\s*$/);
-    if (header) {
-      if (stripComment(header[1]) === '[]') return [];
-      inBlk = true;
-      continue;
-    }
-    if (!inBlk) continue;
-    if (/^\s*#/.test(line)) continue;
-    if (/^\S/.test(line) && !/^-/.test(line)) { flush(); break; }
-    if (line.trim() === '') continue;
-    const item = line.match(/^(\s*)-\s+(.*)$/);
-    if (item) {
-      const indent = item[1].length;
-      if (baseIndent === null) baseIndent = indent;
-      if (indent === baseIndent) {
-        flush(); cur = {};
-        const kv = item[2].match(/^([A-Za-z_-]+):\s*(.*)$/);
-        if (kv) cur[kv[1]] = clean(kv[2]);
-        continue;
-      }
-    }
-    const kv = line.match(/^\s+([A-Za-z_-]+):\s*(.*)$/);
-    if (kv && cur && !(kv[1] in cur)) cur[kv[1]] = clean(kv[2]);
-  }
-  flush();
-  return out;
-}
-
-const CODE_REVIEW_ARCHIVE_PATH = /^status-reviews\/[A-Za-z0-9][A-Za-z0-9-]*\.yml$/;
-
-function hasSymlinkSegment(root, target) {
-  const stop = path.resolve(root);
-  let probe = path.resolve(target);
-  while (probe !== stop) {
-    try { if (fs.lstatSync(probe).isSymbolicLink()) return true; }
-    catch { /* 不存在由调用方单独判 */ }
-    const parent = path.dirname(probe);
-    if (parent === probe) return true;
-    probe = parent;
-  }
-  return false;
-}
-
-function archiveTopLevelKeys(archivePath) {
-  return readLines(archivePath).flatMap(raw => {
-    if (!raw.trim() || /^\s*#/.test(raw) || /^\s/.test(raw)) return [];
-    const match = raw.match(/^([A-Za-z_][\w-]*):/);
-    return match ? [match[1]] : [];
-  });
-}
-
-/* 两个消费者的统一入口：主文件 + status.yml 索引到的归档文件。
- * 校验失败写入 findings，但仍返回能安全读取的条目，让调用方继续给出完整诊断。 */
-function loadCodeReviews(root) {
-  const statusPath = path.join(root, 'status.yml');
-  const current = parseCodeReviews(statusPath);
-  if (current === null) return null;
-  const archives = parseCodeReviewArchives(statusPath) || [];
-  const out = [...current];
-  const liveIds = new Set(current.map(item => item.task_id).filter(Boolean));
-  const archivedIds = new Set();
-  const seenFiles = new Set();
-  const seenKeys = new Set();
-
-  for (const archive of archives) {
-    const rel = archive.file || '';
-    const key = archive.iteration;
-    if (!(key === 'null' || /^v\d+(?:\.\d+)*$/.test(key || ''))) {
-      fail('code_review_archives', 'status.yml', `归档 iteration 必须为 vN 或 null：${key || '<缺失>'}`);
-    } else if (seenKeys.has(key)) {
-      fail('code_review_archives', 'status.yml', `归档 key 重复：${key}`);
-    } else {
-      seenKeys.add(key);
-    }
-    if (seenFiles.has(rel)) {
-      fail('code_review_archives', 'status.yml', `归档 file 重复：${rel || '<缺失>'}`);
-      continue;
-    }
-    seenFiles.add(rel);
-    if (!CODE_REVIEW_ARCHIVE_PATH.test(rel)) {
-      fail('code_review_archives', 'status.yml', `归档 file 只允许 status-reviews/{key}.yml，拒绝绝对路径、.. 与非法字符：${rel || '<缺失>'}`);
-      continue;
-    }
-    if (key === 'null' || /^v\d+(?:\.\d+)*$/.test(key || '')) {
-      const fileKey = key === 'null' ? 'b' : key.replace(/\./g, '-');
-      const expected = `status-reviews/${fileKey}.yml`;
-      if (rel !== expected) {
-        fail('code_review_archives', 'status.yml', `归档 iteration=${key} 必须指向 ${expected}，当前为 ${rel}`);
-        continue;
-      }
-    }
-    const archivePath = path.join(root, ...rel.split('/'));
-    if (hasSymlinkSegment(root, archivePath)) {
-      fail('code_review_archives', rel, '拒绝通过符号链接/junction 读取归档');
-      continue;
-    }
-    if (!exists(archivePath)) {
-      fail('code_review_archives', rel, '索引指向的归档文件不存在');
-      continue;
-    }
-    const topKeys = archiveTopLevelKeys(archivePath);
-    if (topKeys.length !== 1 || topKeys[0] !== 'code_reviews') {
-      fail('code_review_archives', rel, '归档文件顶层必须且只能有 code_reviews:');
-      continue;
-    }
-    const entries = parseCodeReviews(archivePath) || [];
-    if (!/^(?:0|[1-9]\d*)$/.test(archive.count || '')) {
-      fail('code_review_archives', 'status.yml', `${rel} 的 count 必须为 int>=0`);
-    } else if (Number(archive.count) !== entries.length) {
-      fail('code_review_archives', rel, `count=${archive.count}，实际 code_reviews 条目数=${entries.length}`);
-    }
-    for (const entry of entries) {
-      if (entry.task_id && liveIds.has(entry.task_id)) {
-        fail('code_review_archives', rel, `${entry.task_id} 同时出现在 status.yml 与归档，code_reviews 条目必须唯一`);
-      }
-      if (entry.task_id && archivedIds.has(entry.task_id)) {
-        fail('code_review_archives', rel, `${entry.task_id} 在多个归档中重复，code_reviews 条目必须唯一`);
-      }
-      if (entry.task_id) archivedIds.add(entry.task_id);
-    }
-    out.push(...entries);
-  }
-  return out;
-}
-
-const REVIEW_AUDIT_FIELDS = [
-  'review_report_dir',
-];
-const isUInt = v => /^\d+$/.test(v || '');
 const isSha40 = v => /^[0-9a-f]{40}$/i.test(v || '');
 const isSha256 = v => /^[0-9a-f]{64}$/.test(v || '');
 
@@ -617,17 +434,13 @@ function governanceWritePath(name, taskPackagePath, reviewReportDir) {
   const file = String(name || '').replace(/\\/g, '/').replace(/^\.\//, '');
   const task = String(taskPackagePath || '').replace(/\\/g, '/');
   const report = String(reviewReportDir || '').replace(/\\/g, '/').replace(/\/$/, '');
-  return file === 'status.yml' || file === task || /^status-reviews\/[^/]+\.yml$/.test(file)
+  return file === 'status.yml' || file === task
     || Boolean(report && (file === report || file.startsWith(report + '/')));
 }
 
 function reviewAuditErrors(root, id, cr, options = {}) {
   const errors = [];
-  const evidenceVersion = cr.review_evidence_version || '';
-  if (evidenceVersion && evidenceVersion !== 'develop-review-round/v2')
-    errors.push(`未知 review_evidence_version=${evidenceVersion}`);
   const foundationReview = id === 'foundation';
-  if (!['pass', 'revised'].includes(cr.freshness)) errors.push('freshness 必须为 pass 或 revised');
   const relDir = cr.review_report_dir || '';
   const absRoot = path.resolve(root);
   const absDir = path.resolve(root, relDir);
@@ -663,12 +476,9 @@ function reviewAuditErrors(root, id, cr, options = {}) {
 
   const reports = fs.readdirSync(absDir).filter(f => /^round-\d{2}\.md$/.test(f)).sort();
   if (!reports.length) errors.push('审查链缺 round 报告');
-  if (isUInt(cr.code_rounds) && reports.length !== Number(cr.code_rounds))
-    errors.push(`round report 数 ${reports.length} != code_rounds ${cr.code_rounds}`);
   let previousEscalated = false, previousReviewedHead = '', lastConclusion = '';
   const openBlocking = new Set();
   const openActions = new Map();
-  let boundedPolicy = false;
   let declaredTaskFiles = [];
   let taskPackagePath = '';
   let taskPackageSchema = '';
@@ -684,8 +494,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       declaredTaskFiles = listItems(packageFm && packageFm.files).map(normalizeFileAsset).sort();
     }
   }
-  if (taskPackageSchema === '2' && evidenceVersion !== 'develop-review-round/v2')
-    errors.push('package-schema=2 必须写 review_evidence_version=develop-review-round/v2');
+  if (!foundationReview && taskPackageSchema !== '2') errors.push('任务包必须 package-schema: 2');
   const findingId = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-F\\d{3}$`);
   reports.forEach((file, index) => {
     const rp = parseFrontmatter(path.join(absDir, file));
@@ -693,14 +502,13 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     const mode = r('mode');
     const risk = r('risk');
     const reportSchema = r('schema');
+    for (const retired of ['review_profile', 'review_profile_version', 'standards_checked'])
+      if (rp && Object.prototype.hasOwnProperty.call(rp, retired)) errors.push(`${file}: retired field ${retired} is forbidden`);
     if (!rp || r('task_id') !== id) errors.push(`${file}: task_id 不匹配`);
     if (Number(r('round')) !== index + 1) errors.push(`${file}: round 与文件序号不符`);
     if (!['full', 'targeted'].includes(mode)) errors.push(`${file}: mode 非法`);
     if (!['standard', 'sensitive'].includes(risk)) errors.push(`${file}: risk 非法`);
-    if (reportSchema && reportSchema !== 'develop-review-round/v2')
-      errors.push(`${file}: 未知 round schema=${reportSchema}`);
-    if (evidenceVersion === 'develop-review-round/v2' && reportSchema !== 'develop-review-round/v2')
-      errors.push(`${file}: review_evidence_version=v2 时 round schema 必须为 develop-review-round/v2`);
+    if (reportSchema !== 'develop-review-round/v2') errors.push(`${file}: round schema 必须为 develop-review-round/v2`);
     if (index === 0 && mode !== 'full') errors.push(`${file}: 首轮必须 full`);
     if (previousEscalated && mode !== 'full') errors.push(`${file}: 上轮要求 escalate_to_full，本轮却非 full`);
     if (!isSha40(r('base_ref'))) errors.push(`${file}: base_ref 非固定 40 位 SHA`);
@@ -713,14 +521,12 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     if (!isSha256(r('diff_sha256'))) errors.push(`${file}: diff_sha256 非 64 位小写 hex`);
     const reportedChangedFiles = listItems(rp && rp.changed_files).map(name => name.replace(/\\/g, '/')).sort();
     const policy = r('review_policy');
-    if (policy && policy !== 'bounded-v1') errors.push(`${file}: 未知 review_policy=${policy}`);
-    if (boundedPolicy && policy !== 'bounded-v1') errors.push(`${file}: bounded-v1 启用后不得退回旧策略`);
-    if (policy === 'bounded-v1') boundedPolicy = true;
+    if (policy !== 'bounded-v1') errors.push(`${file}: review_policy 必须为 bounded-v1`);
     const evidenceOnly = r('evidence_only') === 'true';
     if (r('evidence_only') && !['true', 'false'].includes(r('evidence_only')))
       errors.push(`${file}: evidence_only 非布尔`);
     if (evidenceOnly) {
-      if (!boundedPolicy || mode !== 'targeted' || !previousReviewedHead
+      if (mode !== 'targeted' || !previousReviewedHead
           || r('reviewed_base') !== previousReviewedHead || r('reviewed_head') !== previousReviewedHead
           || reportedChangedFiles.length || r('escalate_to_full') !== 'false')
         errors.push(`${file}: evidence_only 必须是 bounded-v1 targeted 同快照空增量且不扩审`);
@@ -780,7 +586,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       if (!findingId.test(finding.id || '')) errors.push(`${file}: finding id 不符合 ${id}-FNNN`);
       if (!['blocking', 'advisory'].includes(finding.severity || '')) errors.push(`${file}: ${finding.id} severity 非法或缺失`);
       if (!['open', 'verified-closed', 'advisory'].includes(finding.status || '')) errors.push(`${file}: ${finding.id} status 非法或缺失`);
-      if (boundedPolicy && finding.severity === 'blocking' && finding.status === 'open'
+      if (finding.severity === 'blocking' && finding.status === 'open'
           && !['fix-code', 'fix-mechanism', 'revise-doc', 'downgrade-claim', 'global-gap-review', 'request-evidence'].includes(finding.action))
         errors.push(`${file}: 开放阻断 ${finding.id} 必须有可执行 action，不能以 backlog 挂起后阻断`);
       if (finding.severity === 'blocking' && finding.status === 'open') openBlocking.add(finding.id);
@@ -790,7 +596,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     }
     if (r('conclusion') === 'pass' && openBlocking.size)
       errors.push(`${file}: conclusion=pass 但仍有 open blocking finding：${[...openBlocking].join(', ')}`);
-    if (boundedPolicy) {
+    {
       const awaitingEvidence = [...openActions.values()].some(action => action === 'request-evidence');
       const awaitingFix = [...openActions.values()].some(action => action !== 'request-evidence');
       if (r('conclusion') === 'evidence-needed' && !awaitingEvidence)
@@ -815,40 +621,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
 }
 
 /* A/B 共用的单任务 review 审计。显式调用代表当前任务正在走新流程，
- * 因此缺字段是 FAIL；迭代扫描仍对没有任何新字段的存量条目只留人签。 */
-function checkReviewAudit(taskId, root) {
-  const statusPath = path.join(root, 'status.yml');
-  if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
-    fail('review 审计', statusPath, 'task-id 只允许字母、数字和连字符，拒绝路径片段');
-    return;
-  }
-  const crs = loadCodeReviews(root);
-  if (crs === null) {
-    fail('review 审计', statusPath, '缺 status.yml');
-    return;
-  }
-  const matches = crs.filter(c => c.task_id === taskId);
-  if (matches.length !== 1) {
-    fail('review 审计', statusPath, matches.length
-      ? `${taskId} 有 ${matches.length} 个 code_reviews[] 条目，必须唯一`
-      : `${taskId} 无 code_reviews[] 条目`);
-    return;
-  }
-  const cr = matches[0];
-  const errors = [];
-  if (!isUInt(cr.rounds) || Number(cr.rounds) < 1) errors.push('rounds 须为 int>=1');
-  if (!isUInt(cr.code_rounds) || Number(cr.code_rounds) < 1) errors.push('code_rounds 须为 int>=1');
-  if (!isUInt(cr.spec_rounds)) errors.push('spec_rounds 须为 int>=0');
-  if (isUInt(cr.rounds) && isUInt(cr.code_rounds) && isUInt(cr.spec_rounds)
-      && Number(cr.rounds) !== Number(cr.code_rounds) + Number(cr.spec_rounds))
-    errors.push('rounds 必须等于 code_rounds + spec_rounds');
-  const missing = REVIEW_AUDIT_FIELDS.filter(k => !(k in cr));
-  if (missing.length) errors.push(`缺report 字段：${missing.join('/')}`);
-  else errors.push(...reviewAuditErrors(root, taskId, cr));
-  if (errors.length) fail('review 审计', statusPath, `${taskId}: ${errors.join('；')}`);
-  else pass('review 审计', `${taskId} 的 freshness、轮次、固定 diff、逐轮报告与墙钟证据均合法`);
-}
-
+ * 缺字段直接 FAIL。 */
 function checkReviewChain(taskId, root, inProgress = false) {
   if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
     fail('review chain', 'task-id', 'task-id 只允许字母、数字和连字符');
@@ -866,15 +639,7 @@ function checkReviewChain(taskId, root, inProgress = false) {
     fail('review chain', taskId, `须唯一定位 review 目录，当前 ${candidates.length} 个`);
     return;
   }
-  const reports = fs.readdirSync(candidates[0]).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
-  const taskPackages = findTaskPackages(root, taskId);
-  const packageFm = taskPackages.length === 1 ? parseFrontmatter(taskPackages[0]) : null;
-  const cr = {
-    freshness: 'pass',
-    review_report_dir: path.relative(root, candidates[0]).replace(/\\/g, '/'),
-    review_evidence_version: scalarText(packageFm && packageFm['package-schema']) === '2' ? 'develop-review-round/v2' : '',
-    code_rounds: reports.length,
-  };
+  const cr = { review_report_dir: path.relative(root, candidates[0]).replace(/\\/g, '/') };
   const errors = reviewAuditErrors(root, taskId, cr, { inProgress });
   errors.forEach(message => fail('review chain', cr.review_report_dir, `${taskId}: ${message}`));
   if (!errors.length) pass('review chain', `${taskId} 的 preflight/fixed diff/round/finding 链合法${inProgress ? '（仅本轮记录有效，不代表可合并）' : '且已闭合'}`);
@@ -1095,11 +860,14 @@ function checkWorktreeFromReports(subject, root, progressIds = '') {
       continue;
     }
     let acceptedFiles = changedFiles;
-    if (value('review_policy') === 'bounded-v1') {
+    if (value('review_policy') !== 'bounded-v1') {
+      fail('工作树白名单', relative, '当前 report 必须 review_policy=bounded-v1');
+      continue;
+    }
+    {
       // A final targeted/evidence-only delta is not the complete accepted implementation.
       const audit = reviewAuditErrors(root, value('task_id'), {
-        freshness: 'pass', review_report_dir: path.relative(root, reportDir),
-        review_evidence_version: 'develop-review-round/v2', code_rounds: String(roundFiles.length),
+        review_report_dir: path.relative(root, reportDir),
       }, { preMerge: true });
       if (audit.length) {
         fail('工作树白名单', relative, `bounded 审查链无效：${audit.join('；')}`);
@@ -1197,13 +965,12 @@ function checkSprint(iteration, root, audit = true) {
   // 收集任务包 AC tag 引用到的 PRD AC id（逐条反向覆盖用）+ 解析 PRD AC id 集
   const referencedAcIds = new Set();
   const prdPath = path.join(iterDir, 'prd.md');
-  const prdIds = prdAcIds(prdPath);   // Set | null（存量无 prd.md → 退人工兜底）
+  const prdIds = prdAcIds(prdPath);   // Set | null
 
   for (const p of packages) {
     const where = p.file;
     const packageSchema = scalarText(p.fm['package-schema']);
-    // Core lifecycle accepts only the current schema. Historical facts are
-    // normalized outside queue/status lifecycle, never grandfathered here.
+    // Core lifecycle accepts only the current schema.
     const strictPackageSchema = packageSchema === '2';
     if (packageSchema !== '2') fail('任务包 schema', where, `${p.id}：Core task 必须显式 package-schema: 2（当前=${packageSchema || '缺失'}）`);
     if (strictPackageSchema && valEmpty('module', p.fm.module)) fail('任务包 module', where, `${p.id}：schema 2 必填 TRD 稳定 module`);
@@ -1212,7 +979,7 @@ function checkSprint(iteration, root, audit = true) {
     for (const key of requiredFields) {
       if (valEmpty(key, p.fm[key])) fail('字段完备', where, `${p.id}：字段「${key}」缺失/为空/占位`);
     }
-    // 新格式任务包必须显式声明共享写集；存量旧格式缺字段继续兼容，但不得靠省略字段获得并行资格。
+    // 当前任务包必须显式声明共享写集。
     if (strictPackageSchema && !p.fm['asset-writes'])
       fail('共享写集字段', where, `${p.id}：新任务包缺 asset-writes；无共享资产也必须填 []`);
     if (strictPackageSchema && !p.fm['contract-impact'])
@@ -1235,8 +1002,8 @@ function checkSprint(iteration, root, audit = true) {
     const enforceDesignRef = packageSchema === '2' || Boolean(designRefFormat);
     if (/frontend/.test(p.layersStr) && enforceDesignRef) {
       const designPath = path.join(root, 'design.md');
-      if (!['sliced-v1', 'legacy-full'].includes(designRefFormat)) {
-        fail('reference design', where, `${p.id}：frontend 须填 design-reference-format=sliced-v1|legacy-full`);
+      if (designRefFormat !== 'sliced-v1') {
+        fail('reference design', where, `${p.id}：frontend 须填 design-reference-format=sliced-v1`);
       } else if (!exists(designPath)) {
         fail('reference design', where, `${p.id}：项目根缺 design.md`);
       } else {
@@ -1250,12 +1017,7 @@ function checkSprint(iteration, root, audit = true) {
         const pageBody = designText.slice(pageStart, nextTopOffset >= 0 ? pageStart + nextTopOffset : designText.length);
         const pageTitles = [...pageBody.matchAll(/^###\s+(.+)$/gm)]
           .map(match => match[1].trim()).filter(title => !/[<{].*[>}]|页面\/功能名/.test(title));
-        if (designRefFormat === 'legacy-full') {
-          if (!designRefs.some(ref => /全文（存量）|全文\(存量\)/i.test(ref)))
-            fail('reference design', where, `${p.id}：legacy-full 必须显式写 design.md 全文（存量）`);
-          if (hasPageSection && pageTitles.length)
-            fail('reference design', where, `${p.id}：design 已有页面规格标题，不得继续用 legacy-full`);
-        } else {
+        {
           if (!globalRef) fail('reference design', where, `${p.id}：sliced-v1 缺 design.md 全局视觉基线锚`);
           const baseline = scalarText(p.fm['baseline']).toLowerCase() === 'visual';
           if (!baseline && !pageTitles.some(title => designRefs.some(ref => ref.includes(title))))
@@ -1266,8 +1028,7 @@ function checkSprint(iteration, root, audit = true) {
       fail('reference design', where, `${p.id}：非 frontend 不得填写 design-reference-format`);
     }
     if (refs.length) {
-      const noAnchor = refs.filter(r => !hasStableAnchor(r)
-        && !(designRefFormat === 'legacy-full' && /design\.md.*全文[（(]存量[）)]/i.test(r)));
+      const noAnchor = refs.filter(r => !hasStableAnchor(r));
       if (noAnchor.length) fail('reference 稳定锚', where, `${p.id}：${noAnchor.length} 条 reference 无符号/章节/行号锚（首条：${noAnchor[0].slice(0, 40)}…）`);
       // draft-ux 是**可选**环节（PRD 标 `draft-ux: 需要` 才触发）——ux-flows.md 不存在时，
       // 前端 AC 的形态权威落在 TRD「交互技术方案」段，此处不得强求引用一份不存在的文件。
@@ -1324,9 +1085,9 @@ function checkSprint(iteration, root, audit = true) {
 
   // 4. AC 逐条反向覆盖：PRD 每个 AC-nn 被 ≥1 任务包 tag 引用（替代旧功能级——逐条严格强于功能级）
   if (prdIds === null) {
-    human('AC 逐条覆盖', `未找到 ${prdPath}（存量项目），逐条 AC 反向覆盖无法机械核 —— 由签字人确认 PRD 每条 AC 均有任务覆盖`);
+    fail('AC 逐条覆盖', prdPath, '当前 Method 要求 PRD 与 AC-nn');
   } else if (prdIds.size === 0) {
-    human('AC 逐条覆盖', `PRD 未发现 AC-nn 形式的 id（存量旧格式 AC1？）—— 逐条覆盖退人工兜底`);
+    fail('AC 逐条覆盖', prdPath, 'PRD 未发现 AC-nn 形式的 id');
   } else {
     const uncovered = [...prdIds].filter(id => !referencedAcIds.has(id));
     if (uncovered.length) fail('AC 逐条覆盖', prdPath, `PRD AC 未被任何任务包引用：${uncovered.join('、')}`);
@@ -1335,10 +1096,7 @@ function checkSprint(iteration, root, audit = true) {
 
   // 5. 三方一致：queue ↔ sprint.md ↔ status.yml
   //
-  // ⚠️ 级联抑制：queue 侧集合来自解析成功的包。若有包 frontmatter 解析失败（存量旧格式仓——
-  // 字段写成 Markdown 列表而非 YAML），它们不在 queueIds 里，比对就会把 sprint.md / status.yml
-  // 里**全部**任务报成"queue 无"——一个根因放大成 N 条下游误报（实测：4 个存量仓里 ~50 条三方
-  // 一致 FAIL 中只有 ~8 条是真漂移，其余全是这条级联）。故解析不全时本项整体退 🧑，不出 FAIL：
+  // 级联抑制：queue 解析失败时集合不可信，避免一个根因放大成 N 条一致性误报；
   // 集合本就不可信，基于它下的判断没有证据力。
   const queueIds = packages.map(p => p.id);
   const stTasks = parseStatusTasks(path.join(root, 'status.yml'));   // 第 9 项也用，故不进抑制块
@@ -1357,7 +1115,7 @@ function checkSprint(iteration, root, audit = true) {
     if (!qNotSp.length && !spNotQ.length) pass('三方一致:sprint', `queue ↔ sprint.md 一致（${queueIds.length} 个任务）`);
   }
   if (stTasks === null) {
-    human('三方一致:status', '项目根无 status.yml（存量项目），queue↔status 一致性退回人工兜底');
+    fail('三方一致:status', 'status.yml', '当前 Method 要求 status.yml');
   } else {
     // 迭代内 queue 的三个进料口：plan-sprint 产 sprint；integration-verify runtime/finding repair 产
     // integration；manual-test 产 manual-test —— 后两者同样写进 iterations/vN/queue/ 并同步
@@ -1424,80 +1182,15 @@ function checkSprint(iteration, root, audit = true) {
   }
   if (puntHitCount === 0) pass('归属真空', '任务包 do-not/context 无"移交他包"措辞');
 
-  // 9. 审计留痕完备性：已 [merged] 的任务须在主文件或索引归档中有 code_reviews[] 条目（develop 末端义务，长期要求）
-  //    并须记 rounds（2026-07-30 加的独审轮数仪器）。本项在「标记 [merged]」那次 commit 上触发——
-  //    status-only merged 提交由 check-gate --staged 触发单任务审查核对。
-  //    实证驱动：file-extract v2 十一个任务全部在仪器落地后合并，rounds 记录数 0、两个任务连条目都没有，
-  //    而无任何机械检查发现——仪器装了不响，与它要解的问题同一失效类。
-  if (!audit) {
-    pass('审计范围', '提交检查仅核本次涉及任务；全局依赖和共享资产检查保留');
-  } else if (stTasks === null) {
-    human('审计留痕', '无 status.yml（存量项目），code_reviews[] 完备性退回人工兜底');
-  } else {
-    const crs = loadCodeReviews(root) || [];
-    // 按 task_id 建索引，`iteration` 只在条目自带时才用来排除——存量仓（mail-ai）的 code_reviews[]
-    // 条目普遍不写 iteration，按 iteration 硬过滤会把它们全判成"无条目"（实测假阳性 8 条）。
-    const crByTask = new Map(crs.filter(c => c.task_id && (!c.iteration || c.iteration === iteration))
-                                .map(c => [c.task_id, c]));
-    const mergedIds = stTasks
-      .filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged')
-      .map(t => t.id);
-    const noEntry = [], noRounds = [], badRounds = [], noSplit = [], badSplit = [];
-    const noAudit = [], partialAudit = [], badAudit = [], nonCorePackages = [];
-    for (const id of mergedIds) {
-      const cr = crByTask.get(id);
-      if (!cr) { noEntry.push(id); continue; }
-      const taskPackage = packages.find(p => p.id === id);
-      if (!taskPackage || !taskPackage.strictSchema) {
-        // Core never silently downgrades because a package is old or missing.
-        // A normalizer keeps historical facts outside the active lifecycle;
-        // any item presented here as a merged Core task must satisfy Core.
-        nonCorePackages.push(id);
-        continue;
-      }
-      if (!('rounds' in cr)) { badRounds.push(id + '(缺 rounds)'); continue; }
-      if (!/^\d+$/.test(cr.rounds) || Number(cr.rounds) < 1) badRounds.push(`${id}(rounds=${cr.rounds})`);
-      if (!('code_rounds' in cr) || !('spec_rounds' in cr)) {
-        noSplit.push(id);
-      } else if (!/^\d+$/.test(cr.code_rounds) || Number(cr.code_rounds) < 1
-                 || !/^\d+$/.test(cr.spec_rounds) || Number(cr.spec_rounds) < 0
-                 || Number(cr.rounds) !== Number(cr.code_rounds) + Number(cr.spec_rounds)) {
-        badSplit.push(`${id}(rounds=${cr.rounds},code=${cr.code_rounds},spec=${cr.spec_rounds})`);
-      }
-      const presentLegacyAudit = REVIEW_AUDIT_FIELDS.filter(k => k in cr);
-      if (!presentLegacyAudit.length) {
-        noAudit.push(id);
-      } else if (presentLegacyAudit.length !== REVIEW_AUDIT_FIELDS.length) {
-        partialAudit.push(`${id}(缺 ${REVIEW_AUDIT_FIELDS.filter(k => !(k in cr)).join('/')})`);
-      } else {
-        const errs = reviewAuditErrors(root, id, cr);
-        if (errs.length) badAudit.push(`${id}: ${errs.join('；')}`);
-      }
+  // 9. 当前 review report chain：status 不复制轮次/findings，只核 immutable reports。
+  if (audit) {
+    if (stTasks === null) fail('审计留痕', 'status.yml', '当前 Method 要求 status.yml');
+    else {
+      const mergedIds = stTasks.filter(t => ITER_SOURCES.has(t.source) && t.iteration === iteration && t.status === 'merged').map(t => t.id);
+      for (const id of mergedIds) checkReviewChain(id, root, false);
+      if (!mergedIds.length) pass('审计留痕', '本迭代尚无 merged develop task');
     }
-    if (noEntry.length)
-      fail('审计留痕', 'status.yml', `已 [merged] 但 code_reviews[] 无条目：${noEntry.join(', ')} —— develop 末端漏写审计留痕`);
-    if (badRounds.length)
-      fail('审计留痕', 'status.yml', `rounds 非 int≥1（见 skeleton/07 值域）：${badRounds.join(', ')}`);
-    if (noRounds.length)
-      human('审计留痕', `有 code_reviews 条目但缺 rounds：${noRounds.join(', ')} —— rounds 是 2026-07-30 新增字段，存量条目普遍无；本期新合并的应补（轮数事后不可复原，只能当场记）`);
-    if (badSplit.length)
-      fail('审计留痕', 'status.yml', `rounds 拆分非法或总数不相等：${badSplit.join(', ')}`);
-    if (noSplit.length)
-      fail('审计留痕', 'status.yml', `schema 2 缺 code_rounds/spec_rounds：${noSplit.join(', ')}`);
-    if (partialAudit.length)
-      fail('审计留痕', 'status.yml', `report 字段只写了一部分：${partialAudit.join('；')}`);
-    if (badAudit.length)
-      fail('审计留痕', 'status.yml', `report 审计非法：${badAudit.join('；')}`);
-    if (noAudit.length)
-      fail('审计留痕', 'status.yml', `schema 2 缺必需 report 审计字段：${noAudit.join(', ')}`);
-    if (nonCorePackages.length)
-      fail('审计留痕', 'status.yml', `merged task 缺 Core package/schema，不能按历史年代降低审计：${nonCorePackages.join(', ')}`);
-    if (!mergedIds.length)
-      pass('审计留痕', '本迭代尚无 [merged] 任务，无需审计留痕');
-    else if (!noEntry.length && !badRounds.length && !noRounds.length && !badSplit.length && !noSplit.length
-             && !partialAudit.length && !badAudit.length && !noAudit.length && !nonCorePackages.length)
-      pass('审计留痕', `${mergedIds.length} 个 [merged] 任务均有合法 rounds 与逐轮 reports`);
-  }
+  } else pass('审计范围', '提交检查仅核本次涉及任务；全局依赖和共享资产检查保留');
 
   // 语义残量（留人签）
   human('G3:人签','疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / 任务包 AC 逐条忠实于其回链的 PRD AC（内容真覆盖，非仅 id 在场）—— 语义判断，由签字人确认');
@@ -1519,17 +1212,7 @@ function checkStagedReviews(root) {
     const review = file.match(/^(?:iterations\/v\d+(?:\.\d+)*\/code-reviews|b-reviews)\/([^/]+)\/(.+)$/);
     if (review) select(review[1], /^round-\d+\.md$/.test(review[2]));
   }
-  if (staged.some(file => file === 'status.yml' || /^status-reviews\/[^/]+\.yml$/.test(file))) {
-    const records = ref => {
-      const status = readAt(ref, 'status.yml');
-      const archives = parseCodeReviewArchivesSource(status).map(a => a.file).filter(f => CODE_REVIEW_ARCHIVE_PATH.test(f || ''));
-      for (const file of archives) inputs.add(file);
-      return new Map([status, ...archives.map(file => readAt(ref, file))].flatMap(parseCodeReviewsSource).map(r => [r.task_id, r]));
-    };
-    const before = records('HEAD'), after = records('');
-    for (const id of new Set([...before.keys(), ...after.keys()])) {
-      if (JSON.stringify(before.get(id)) !== JSON.stringify(after.get(id))) { select(id, true); mustClose.add(id); }
-    }
+  if (staged.includes('status.yml')) {
     const currentTasks = new Map(tasks.map(t => [t.id, t]));
     for (const id of new Set([...beforeTasks.keys(), ...currentTasks.keys()])) {
       const old = beforeTasks.get(id), next = currentTasks.get(id);
@@ -1539,7 +1222,6 @@ function checkStagedReviews(root) {
     }
     for (const task of tasks) if (task.status === 'merged' && beforeTasks.get(task.id)?.status !== 'merged'
         && (task.type === 'develop' || ITER_SOURCES.has(task.source) || ['bug', 'optimization', 'foundation'].includes(task.source))) { select(task.id, true); mustClose.add(task.id); }
-    for (const file of staged.filter(f => /^status-reviews\//.test(f))) inputs.add(file);
   }
   for (const version of iterations) for (const part of ['queue', 'sprint.md', 'prd.md', 'trd.md']) inputs.add(`iterations/${version}/${part}`);
   for (const [id] of selected) {
@@ -1554,18 +1236,23 @@ function checkStagedReviews(root) {
   if (dirty) throw new Error('提交审查相关产物有未暂存变化，不能用工作树替暂存版本背书：' + dirty);
   const untracked = gitOutput(root, ['ls-files', '--others', '--exclude-standard', '--', ...inputs]).trim();
   if (untracked) throw new Error('提交审查相关产物未加入暂存区：' + untracked);
-  if (staged.some(f => f === 'status.yml' || /^status-reviews\//.test(f))) loadCodeReviews(root); // index consistency only, not historical round re-audit
   for (const version of iterations) checkSprint(version, root, false);
   for (const [id, required] of selected) {
     const task = tasks.find(t => t.id === id);
     if (task?.status === 'merged' || mustClose.has(id)) {
-      checkReviewAudit(id, root);
+      checkReviewChain(id, root, false);
       // Candidate -> Accepted Project Truth is a blob binding, not merely a
       // self-consistent report. Governance tail files may be appended, but
       // every staged implementation byte must still be the final reviewed
       // implementation world.
-      const record = (loadCodeReviews(root) || []).find(value => value.task_id === id);
-      const reportDir = record && record.review_report_dir && path.resolve(root, record.review_report_dir);
+      const reportDirs = [];
+      const bReview = path.join(root, 'b-reviews', id);
+      if (exists(bReview)) reportDirs.push(bReview);
+      for (const t of tasks.filter(t => t.id === id && /^v\d+(?:\.\d+)*$/.test(t.iteration || ''))) {
+        const candidate = path.join(root, 'iterations', t.iteration, 'code-reviews', id);
+        if (exists(candidate)) reportDirs.push(candidate);
+      }
+      const reportDir = reportDirs.length === 1 ? reportDirs[0] : null;
       if (reportDir && fs.existsSync(reportDir)) {
         const rounds = fs.readdirSync(reportDir).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
         const last = rounds.at(-1) && parseFrontmatter(path.join(reportDir, rounds.at(-1)));
@@ -1626,7 +1313,7 @@ function main() {
   }
   try {
     if (stagedMode) checkStagedReviews(root);
-    else if (reviewMode) checkReviewAudit(subject, root);
+    else if (reviewMode) checkReviewChain(subject, root, false);
     else if (reviewChainMode) checkReviewChain(subject, root, args[3] === '--in-progress');
     else if (readyMode) checkReady(subject, root);
     else if (waveReadyMode) checkWaveReady(subject, root);
@@ -1658,6 +1345,6 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED, REVIEW_AUDIT_FIELDS,
+module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED,
   sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText,
   parseReportFindings, fixedDiffEvidence, findTaskPackages, governanceWritePath };

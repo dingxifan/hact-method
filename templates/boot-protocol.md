@@ -18,13 +18,11 @@ node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .
 node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 ```
 
-检查器和报告生成命令使用项目 `scripts/` 副本。旧规范中出现的 `../hact-method-lab/templates/scripts/` 命令前缀，在存量项目继续解释为项目自己的 `scripts/`，除非另有迁移决定。
+检查器和报告生成命令只使用项目当前 `scripts/` 副本。
 
-### Migration boundary
+### Current-schema boundary
 
-- vNext Core 只接受已完成 normalization 的项目；日常运行只走 vNext Task / Protocol / Runtime Contract。
-- 旧项目先由 `legacy-migration/normalize-legacy-project.cjs` 核对真实 Git 与历史状态、形成固定 baseline；它不补造 review/preflight 证据。
-- normalizer 未通过时不得把旧任务带入 vNext lifecycle；后续工作以新的 vNext task 引用历史事实，不 reopen 旧任务。
+- 项目必须满足当前 Method schema；缺失或不匹配时 fail closed，不进入兼容/normalization 路径。历史事实只作 Git reference，不进入当前 lifecycle。
 
 ## 2. 最小加载规则
 
@@ -49,7 +47,7 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 | Human Authority 判断 | `protocols/authority.md` |
 | 中断、恢复、重入 | `protocols/recovery.md` |
 | B 类 bug / optimization intake | `protocols/b-intake.md` |
-| 实际跨 Runtime dispatch / polling / recovery | `protocols/runtime-crossing.md` |
+| non-idempotent / production / effect-indeterminate action | `protocols/external-effect.md` |
 
 Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“可能会用到”而把全部 Protocol 当启动上下文。
 
@@ -62,7 +60,6 @@ Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“�
 - fixed Git snapshot
 - isolated review context
 - Git delivery
-- Discussion Persistence
 - context compaction 后的 Runtime 恢复
 
 纯 reasoning / document work 若 Task Contract 已足够，不必预加载整份 Runtime Adapter。
@@ -71,17 +68,17 @@ Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“�
 
 ### 2.4 Runtime Orchestration 按实际 crossing 加载
 
-Stay Local 是默认。只有当前 canonical Task 确实需要协议允许的 Runtime crossing 时，才在 Task Contract 和所需 Shared Protocol 之后加载：
+Stay Local 是默认。当前 canonical Task 确实需要 Runtime crossing 时加载 Runtime Orchestration Skill；只有操作可能 non-idempotent、effect-indeterminate 或必须恢复同一 execution identity 时才加载持久化协议：
 
-- `protocols/runtime-crossing.md`；
 - `.agents/skills/runtime-orchestration/SKILL.md`；
-- 当前 Runtime 对应的 adapter 小节。
+- 当前 Runtime 对应的 adapter 小节；
+- 命中上述 trigger 时的 `protocols/external-effect.md`。
 
-该 Skill 只实现既有 Task/Protocol 决定，不建立第二套 Task routing、state、Gate、Authority、Review 或 completion system。无 crossing 的 legacy / Stay Local flow 不要求 Runtime Crossing Record，也不触发 status、Gate 或 Task Package schema migration。加载 Runtime/skill 或发现 tool capability 都不能静默扩大 Authority。
+该 Skill 只实现既有 Task/Protocol 决定，不建立第二套 Task routing、state、Gate、Authority、Review 或 completion system。普通 handoff 不创建记录；只有 external effect 创建 receipt。加载 Runtime/skill 或发现 tool capability 都不能静默扩大 Authority。
 
 System-review artifacts 只在 canonical Task 已路由为 `integration-verify`，或恢复该 Task 时加载。Package develop、planning 与其他 Task 不预加载完整 system-review history。
 
-`review_architecture=system-verification/v1` 时，`integration-verify` 进入 `merged` 或 `manual-test` 路由前必须运行项目副本 `node scripts/check-system-review.js vN`；从 checker 返回的具体 open/escalated/rereview/revalidation 缺口继续，不从文件存在性推断完成。
+`integration-verify` 进入 `merged` 或 `manual-test` 前必须运行项目副本 `node scripts/check-system-review.js vN`；latest report 必须 `pass` 且无 open finding，不从文件存在性推断完成。
 
 ## 3. Canonical Task routing
 
@@ -102,58 +99,32 @@ vNext Core Task Catalog：
 | `deploy` | `tasks/deploy.md` |
 | `wrap-up-iteration` | `tasks/wrap-up-iteration.md` |
 
-Aliases: `draft-prd-vN` → `draft-prd`; `generate-integration-tests` →
-`integration-verify`. `draft-ux-external` is a runtime route that returns to
-canonical `draft-ux`; it is not a Task name.
-
 非 Core Task：
 
 - `dispatch-new` → `protocols/b-intake.md` → `develop(source=bug|optimization)`
 - `draft-ux-external` → `runtime/external-ux.md`，最终仍回 `draft-ux`
 - `harvest-notes` → `utilities/harvest-notes.md`，仅用户明确要求时运行
 
-## Step 0：确认工作基线
+## Step 0：Minimum Execution Preflight
 
-先核：
+普通执行开始前只核：
 
-- 当前 repository / branch / HEAD / upstream
-- working tree / index / stash
-- adopted Method SHA
-- 项目 `status.yml`
+- `Target`：正确 repository / worktree / 必要 baseline；
+- `Collision`：未知 local changes 不与本次 write set 冲突；
+- `Boundary`：允许/禁止范围与当前 Authority 清楚；
+- `Validation`：真实验证入口与停止条件已知。
 
-### R2.4 · Repository capability routing
+Method SHA 只在当前动作受 HACT Method 约束时核；upstream 只在 pull/push/PR/merge 时核；stash、全量 status/Gate/owner/dependency 与其他 worktree 只在当前动作实际依赖或改变它们时核。四项输入未变化时复用结论。
 
-仓库能力分三类，不能互相冒充：
-
-- **repository-read**：读取远端 ref、文件、commit、PR/issue 等仓库事实。
-- **repository-write**：通过当前运行时已授权的原生仓库连接器/API 直接创建或更新 branch、文件、commit、PR 等远端对象。
-- **repository-execution**：在真实 checkout 中执行 Git/Node/测试/build/hook/worktree 等命令并取得运行结果。
-
-选择最短可信路径：
-
-1. 当前远端存在已授权的 **native repository-write**，且本动作不依赖本地命令结果时，优先直接写远端 branch/commit/PR，并以返回的 Git SHA/PR 状态作为持久化事实。
-2. 任何结论依赖测试、hook、worktree、build、脚本或真实工作树时，必须使用 **repository-execution**；native write 不能替代执行证据。
-3. native repository-write 不可用时，使用已有本地 Git 执行环境完成 fetch/commit/push/PR 所需动作；不得因为过去某次会话缺能力，就假定当前仍缺，也不得因为当前能写远端，就假定拥有本地执行能力。
-4. native repository-write 必须保留当前仓既有的 branch/PR/protected-branch 与授权边界；不能因为 connector 能写就直接改稳定分支、force-push、删分支或绕过既有 review/merge 规则。
-5. 若变更已经在本地 execution worktree 中实现、测试或审查，则该 worktree 是本次 diff 的持久化来源：从它 commit/push，native connector 可继续处理远端 PR/metadata，但不得重新拼装同一批文件形成第二份未经同一证据链确认的远端 diff。
-6. `scripts/hact-watcher/` 的 Dropbox/Watcher 路径自 R2.4 起为 **dormant experimental asset**，不在日常执行选项中，不自动启动、配置或回退到它。重新启用须有新的显式方法决策。
-7. provider-specific 操作仍服从项目当前 remote 与项目规则；例如 Gitee 项目需要 Gitee API 时继续读 `gitee-ops.md`。native connector 只有在它确实对应当前 remote/provider 且已授权时才可使用。
-
-迁移项目的历史核对只在 normalizer 中进行；它通过后，日常 Core 不再对旧 Gate、旧任务或旧 schema 设置 runtime 特判。历史 Markdown 可保留，但不再作为当前进度真相。
-
-新任务建立基线前可 fetch 并在工作树干净、无活跃写入且当前分支有上游时快进同步；进行中任务先恢复已有基线，不因一次提问或 context compaction 重复 pull。
-
-不明来源的 local changes 保留并隔离，不擅自 restore / stash / force clean。
+需要真实测试/build/hook/worktree 证据时使用 repository execution；远端 connector 不能替代本地证据。Git delivery 只在用户授权和 repository policy 允许时执行，细节按 Runtime Adapter。
 
 ## Step 1：状态推断与 Task 选择
 
-1. 读取 `project.md`。
-2. 读取 `status.yml iterations.*.gates`；存在 `iterations/v0/` 时先判断 V0。
-3. 读取 `status.yml tasks[]` 判断当前 work item、Owner、source、依赖与状态。`review_architecture=system-verification/v1` 时，沿唯一 `type=integration-verify` 条目的 system-review/runtime pointers 判断 pending obligation；动态状态不从旧 Markdown 复选框或聊天总结推断。
-4. 用户已明确 canonical Task 时优先该 Task；用户给 legacy alias 时先 canonicalize。
-5. 用户只给 task-id 时，先在 `status.yml` 与对应 queue 找到该 Task Contract/source，再继续。
-6. B 类 task-id / bug / optimization 请求先做 B Intake；已有合法 Development Intake 且用户已授权实现时直接衔接 `develop`。
-7. 没有显式 Task 时，按下表推断。
+1. 用户已明确 canonical Task 时优先该 Task。当前动作不读取或改变 lifecycle truth 时，不为确认流程感预读全量 status/Gate/owner/dependencies。
+2. 用户只给 task-id 时，才在 `status.yml` 与对应 queue 找到该 Task Contract/source。
+3. 没有显式 Task，或当前动作会读取/改变 Task、Gate、owner、dependency 时，读取 `project.md` 与所需的 `status.yml` slice；存在 `iterations/v0/` 时按需判断 V0。动态状态不从旧 Markdown 或聊天总结推断。
+4. B 类 task-id / bug / optimization 请求先做 B Intake；已有合法 Development Intake 且用户已授权实现时直接衔接 `develop`。
+5. 需要推断 Task 时按下表判断。
 
 | 状态信号 | 推断 Task |
 |---|---|
@@ -187,12 +158,14 @@ canonical `draft-ux`; it is not a Task name.
 
 Task 确定后：
 
-1. 加载 `tasks/{task}.md`；
-2. 读取其 Authoritative Inputs；
-3. 按 §2 的触发规则加载实际需要的 Shared Protocol；
-4. 只有实际 crossing 才加载 Runtime Orchestration Skill；
-5. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
-6. 再开始正式修改 / review / verification。
+1. 加载 `tasks/{task}.md` 与本次动作需要的 Authoritative Inputs；
+2. 按 §2 的触发规则加载实际需要的 Shared Protocol；
+3. 只有实际 crossing 才加载 Runtime Orchestration Skill；
+4. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
+5. 做 Minimum Execution Preflight：`Target / Collision / Boundary / Validation`；
+6. 直接开始正式修改 / review / verification。
+
+未触发的 remote/upstream、Gate、ownership、deployment 或其他 lifecycle 状态不预查、不比较。preflight 输入未变化时不重复执行；只在边界变化或进入 commit/push/merge/external/deployment 等更高影响动作时增量检查。
 
 正常启动只输出当前 Task 范围和下一动作；异常时给出可查依据。任务途中不重复声明整套运行时。
 
@@ -204,4 +177,4 @@ Context compaction、session interruption 或跨 Runtime 恢复时，不重新�
 
 需要浏览器、远端、托管、部署或独审时才核对应 capability。缺必需 capability 时形成明确 gap，不把未执行的验证写成已完成。
 
-实际 crossing 的 dispatch、polling 与 recovery 使用 versioned Runtime Crossing receipt 和 append-only lifecycle；不从 job/thread 状态推断 HACT state 或 completion。`check-runtime-crossing` 只验证机械结构，不能替代 Authority、Review、Gate 或 Task completion 判断。
+non-idempotent / external action 使用 versioned External Effect Receipt；job/thread/revision/polling 只是 transient telemetry。`check-external-effect` 只验证 receipt 结构，不能替代 Authority、真实 effect observation、Review、Gate 或 Task completion。

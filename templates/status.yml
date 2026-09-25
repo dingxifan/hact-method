@@ -7,7 +7,6 @@
 project: {项目名}
 schema: 1
 generated_by: hact-method
-review_architecture: system-verification/v1
 
 iterations:
   v1:
@@ -54,8 +53,7 @@ tasks: []
 #    depends_on: []
 #    delivery: null
 #    urgency: null
-#    system_review_dir: iterations/v1/system-review
-#    current_system_review: iterations/v1/system-review/review-001.md
+#    latest_system_review: iterations/v1/system-review/review-001.md
 #    integration_result: integration-tests/result-{date}.md
 #    final_candidate: {40-char project commit SHA}
 
@@ -64,23 +62,9 @@ integration_tests: []
 #  - { iteration: v1, index: 1, description: ..., status: 待执行, failure_reason: null }
 #    # status: 待执行 / 执行中 / 通过 / 失败
 
-code_review_archives: []
-# 每个 key 一个文件，不重复；归档文件顶层只能有 code_reviews:，条目形状与下方完全一致：
-#  - iteration: v1
-#    file: status-reviews/v1.yml
-#    count: 18
-# 点号迭代把文件 key 中的 . 换成 -，如 iteration: v1.1 对应 status-reviews/v1-1.yml。
-# B 类使用 iteration: null，文件固定写 status-reviews/b.yml。
-
 code_reviews: []
-# 每条（develop 自审末端追加，替代旧 pr-review）：
-#  - iteration: v1
-#    task_id: {被审 develop 任务 id}
-#    conclusion: 需修订       # 通过 / 需修订
-#    rounds: 2               # 兼容总轮次 = code_rounds + spec_rounds
-#    code_rounds: 1          # 代码证据审查运行数，int >= 1
-#    spec_rounds: 1          # freshness/contract/claim 独立复核数，int >= 0
-#    freshness: revised      # pass / revised；写代码前是否命中过期并完成修订
-#    review_report_dir: iterations/v1/code-reviews/{task-id}  # B 类为 b-reviews/{task-id}
-#    review_evidence_version: develop-review-round/v2          # 新任务必填；存量缺失按 legacy/unknown
-#    # 问题与处置只在 review_report_dir 下逐轮报告维护；不另填 issues/comment。
+# 每个 develop task 只保留最新 review pointer；findings/轮次在 immutable report chain：
+#  - task_id: {develop task id}
+#    reviewed_candidate: {40-char commit/tree SHA}
+#    latest_review: iterations/v1/code-reviews/{task-id}/round-02.md  # B 类为 b-reviews/...
+#    conclusion: pass       # pass / blocked

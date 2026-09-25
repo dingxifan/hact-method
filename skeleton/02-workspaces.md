@@ -33,7 +33,7 @@
 |---|---|---|
 | 项目仓 | 方法论仓 | `../hact-method-lab/...` |
 | 项目仓 | 个人 notes 仓 | `../hact-notes-{username}/...` |
-| 方法论仓 | 自身模板 / 规范 | `templates/...`、`specs-execution/...`（仓根即 cwd） |
+| 方法论仓 | canonical Task / Protocol / template | `tasks/...`、`protocols/...`、`templates/...` |
 | 方法论仓 | 某个项目仓 | `../{项目名}/...` |
 | 方法论仓 | 成员 notes 仓 | `../hact-notes-{username}/...` |
 

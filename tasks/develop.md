@@ -1,9 +1,6 @@
 ---
 schema: hact-task/vnext
 task: develop
-legacy_aliases:
-  - dev-frontend
-  - dev-backend
 class: cross-cutting
 discipline: engineering
 gate: null
@@ -66,7 +63,7 @@ Task Contract 只定义 `develop` 独有规则。共同状态、Git truth、revi
 
 - `source=sprint`：G3 已 approved。
 - `source=foundation`：适用的 G2 / V0 Foundation authority 已完成。
-- `source=integration`：已有来自 `integration-verify` 的具体 system finding / runtime failure evidence、effective route、授权 locality 与 required semantic/runtime revalidation scope。
+- `source=integration`：已有具体 system finding / runtime failure evidence、授权 repair scope 与 required validation。
 - `source=manual-test`：已有来自 `manual-test` 的具体验收 finding 和修复边界。
 - `source=bug | optimization`：B Intake 已完成真实调查、问题界定、contract impact、scope 与实施授权；不运行 G1–G5。
 
@@ -104,9 +101,8 @@ Development Intake / Task Package 无论采用何种序列化，至少要能表�
 - 被前端消费的 API contract
 - migration / schema / queue / state-machine 定义
 - prior review report 与未关闭 finding
-- source system review/finding artifact、effective route 与 required revalidation scope（`source=integration` 且由 system finding 派生时）
+- source system review/finding artifact、repair scope 与 required validation（`source=integration` 时）
 - Shared Candidate snapshot
-- recovery pointer / progress evidence
 - 项目当前已有 checker、hook、test entry 与 review evidence schema
 
 ### User input
@@ -124,7 +120,6 @@ Owner 必须自己读取权威输入。上一 Runtime 的聊天总结、实现�
 | Implementation | 项目代码仓中的实际受控路径 | 代码、测试、必要配置 |
 | Review evidence | 项目当前 review evidence 位置 | 固定 snapshot、findings、结论与必要运行证据 |
 | Delivery record | 项目当前 Git / PR / merge 记录 | 指向 immutable candidate 与 Accepted Truth |
-| Recovery pointer | 项目当前约定位置 | 仅在长任务、跨 session 或高风险时需要 |
 
 ### State updates
 
@@ -271,25 +266,11 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 `source=integration` 来自 blocking system finding 时，现有 Development Intake / Task Package 必须用已有字段明确引用：
 
 - stable finding id 与 source review/finding artifact；
-- expected/effective route；
-- 已授权 local repair boundary；
-- required semantic revalidation scope；
-- required runtime revalidation scope或 not-required reason；
-- escalation conditions。
+- authorized repair scope；
+- required validation；
+- scope expansion / Authority escalation conditions。
 
-不为此增加第二套 repair task schema。`reference/context/acceptance-criteria/do-not/escalate-if` 足以承载 repair contract；finding/route 的 authoritative truth 留在 System Verification artifacts。
-
-若 route 为 `local-close`：
-
-1. 在授权 locality 内形成 fixed repair candidate；
-2. 运行 required target/regression tests；
-3. 使用未参与修复的 Fresh Isolated Local Review 核 finding 根因、修复增量、声明 semantic scope 与受影响调用链；
-4. 现有 package review 若明确引用 system finding 并覆盖上述 scope，可同时满足 Fresh Isolated Local Review，不重复派第二次同责任 review；
-5. 把 fixed candidate、local review 与已完成 revalidation evidence 交回 `integration-verify`；尚需真实 runtime 的部分由该 Task 继续完成并追加 closure event。
-
-若 repair 触及 shared contract、core state machine、authorization model、broad data model、unexpected multi-package redesign，或超出声明 scope，立即停止使用 local authority，记录具体越界证据并交回 `integration-verify` 追加 escalation event。不得扩大 do-not/scope 后继续声称 local-close。
-
-若 route 为 `system-rereview`，develop 只负责 fixed repair candidate、local prerequisites 与 evidence。即使 package/local review pass、测试全绿、repair 已 merged，也不能把 system finding 标 closed；closure 必须引用新的 System Reviewer event。
+不为此增加第二套 repair schema。`reference/context/acceptance-criteria/do-not/escalate-if` 足以承载 repair contract。develop 形成 fixed repair candidate、运行 required tests 并完成 package review；返回 `integration-verify` 后，由新的 targeted/full Fresh System Review report 关闭 finding。即使 repair merged、package review pass、测试全绿，也不能由 develop 宣布 system finding closed。
 
 ## 6. Verification
 
@@ -304,7 +285,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - 项目实际存在的 build / type / lint / test 入口已按适用范围运行
 - 当前 repo 已有 checker / hook 要求已满足
 - independent review chain 的结构、snapshot 与 finding closure 合法
-- `source=integration` system finding repair 的 source id、effective route、locality 与 revalidation evidence 可追溯
+- `source=integration` system finding repair 的 source id、repair scope 与 validation evidence 可追溯
 - secret / credential 不进入版本化 artifact
 - `supersedes` 非空时 retirement obligation 已结账
 - 最终 Accepted snapshot 与通过 review / verification 的世界一致
@@ -361,7 +342,7 @@ Reviewer 必须按 `protocols/review.md` 的 same-source projection，自行读�
 
 `full-local` 仍是包级审查：它对当前包触及的 sensitive boundary、受影响调用链、局部 shared contract 与必要证据做完整独立核对，但不因此冒充 System Full Independent Review。
 
-现有 `develop-review-round/v2` 保持兼容，不为 package effective mode 新增字段：`risk` 继续承载 classification，Reviewer 在报告正文明确本轮 effective mode 与升档依据。不得把历史 `mode=full` 回填解释为 target `full-local`，也不得据此声称历史 package 已执行新 policy。
+`develop-review-round/v2` 是当前唯一 package report schema。`risk` 承载 classification，Reviewer 在正文明确 effective mode 与升档依据。
 
 ### Finding routing
 
@@ -483,11 +464,3 @@ Task `merged` 与 G1–G5 approval 正交。develop 本身不创建新的 Gate�
 如果代码已经被接受/合并但 `status.yml` 尚未落定，先核真实 Git 结果再补 state；不得重复实现、重复 PR 或重开 review。
 
 如果 Local Working Truth 还没有 stable snapshot，只能由当前 Owner 谨慎恢复；需要跨 Runtime / session 时优先先形成 safe checkpoint，而不是传递完整聊天。
-
-## 10. Runtime Routing
-
-canonical Task 始终是 `develop`；实际 crossing 只允许 `Execution Task Runtime`、`Review Dispatch`、`Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。Runtime job creation 不产生 ownership transfer；owner/state 仍只按既有 status / owner policy 改变。crossing 只引用 Development Contract / Task Package 的 authoritative identity，不复制、重述或覆盖其语义。G3 与既有 Authority boundary 不变。
-
-每个 develop package 的 `Review Dispatch` **REQUIRED**：standard package 默认 `lightweight`；sensitive package 或 actual fixed diff 命中 sensitive boundary 时必须 `full-local`，完全沿用本 Task 既有升档与 bounded re-review 规则。Runtime/checker/job completion 不替代 Independent Review 或本 Task Completion & Handoff。
-
-只有 finding 表明 authoritative Contract truth 必须改变时，才可用 `Derived Child Task` 路由到 canonical `revise-doc`；child 必须先满足既有 registration、intake/package、status、readiness 与 ownership 要求。不得由 Runtime prompt 或 job 直接修改 Contract。

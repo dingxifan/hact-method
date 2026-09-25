@@ -46,6 +46,7 @@ function reportText({ taskId, round, mode, prior, targets, baseRef, base, head,
   assert.deepStrictEqual(evidence.names, [...changedFiles].sort(), 'fixture changed files must be real');
   return `---
 schema: develop-review-round/v2
+review_policy: bounded-v1
 task_id: ${taskId}
 round: ${round}
 mode: ${mode}
@@ -58,6 +59,8 @@ reviewed_head: ${head}
 diff_sha256: ${evidence.hash}
 changed_files:
 ${changedFiles.map(file => `  - ${file}`).join('\n')}
+evidence_only: false
+evidence_files: []
 started_at: ${started}
 completed_at: ${completed}
 escalate_to_full: false
@@ -173,10 +176,7 @@ result: pass
   write(`b-reviews/${TASK_ID}/round-01.md`, historicalRound);
   write('status.yml', historicalStatus);
   write('archived-profile.json', '{"selector_revision":1,"historical":true}\n');
-  assert.strictEqual(runAudit().status, 0, 'old profile and standards fields are inert; no retired files are needed');
-  assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), historicalRound, 'audit must not rewrite historical reports');
-  assert.strictEqual(fs.readFileSync(path.join(tempRoot, 'status.yml'), 'utf8'), historicalStatus);
-  assert.strictEqual(fs.readFileSync(path.join(tempRoot, 'archived-profile.json'), 'utf8'), '{"selector_revision":1,"historical":true}\n');
+  assert.match(runAudit().stdout, /retired field/, 'current report rejects retired profile/standards fields');
   write('status.yml', canonicalStatus);
   fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(`task_id: ${TASK_ID}`, 'task_id: another-task'), 'utf8');
   assert.match(runAudit().stdout, /task_id 不匹配/, 'report identity remains mandatory without profile');
@@ -213,7 +213,7 @@ result: pass
     taskId: TASK_ID, round: 1, mode: 'full', prior: null, targets: [],
     baseRef, base: baseTree, head: reviewedHead1, changedFiles,
     started: '2026-08-09T00:02:00Z', completed: '2026-08-09T00:03:00Z', conclusion: 'revise',
-    body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: open`,
+    body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: open\n    action: fix-code`,
   }));
   const priorReport = `b-reviews/${TASK_ID}/round-01.md`;
   write(`b-reviews/${TASK_ID}/round-02.md`, reportText({
@@ -252,8 +252,7 @@ result: pass
   const priorRound = fs.readFileSync(roundOnePath, 'utf8');
   const historicalPrior = priorRound.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json\nstandards_checked: [BE-OLD-01]');
   fs.writeFileSync(roundOnePath, historicalPrior, 'utf8');
-  assert.strictEqual(runAudit().status, 0, 'new targeted review can continue an old full report without profile');
-  assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), historicalPrior);
+  assert.match(runAudit().stdout, /retired field/, 'targeted review rejects retired prior-report fields');
   fs.writeFileSync(roundOnePath, priorRound, 'utf8');
   const currentTaskPath = path.join(tempRoot, `b-queue/${TASK_ID}.md`);
   const currentTask = fs.readFileSync(currentTaskPath, 'utf8');
@@ -271,20 +270,18 @@ result: pass
   assert.match(runAudit().stdout, /conclusion=pass 但仍有 open blocking/, 'local findings cannot be skipped to pass');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo, 'utf8');
 
-  // New policy is prospective: historical bytes remain untouched, including old verdicts.
-  const bounded = text => text.replace('schema: develop-review-round/v2',
-    'schema: develop-review-round/v2\nreview_policy: bounded-v1');
-  const evidenceFirst = bounded(priorRound)
+  const evidenceFirst = priorRound
     .replace('conclusion: revise', 'conclusion: evidence-needed')
-    .replace('status: open', 'status: open\n    action: request-evidence');
+    .replace('action: fix-code', 'action: request-evidence');
   const evidencePath = `b-reviews/${TASK_ID}/runtime.log`;
   write(evidencePath, 'fixed snapshot target run: PASS, exit 0\n');
-  const evidenceSecond = bounded(reportText({
+  const evidenceSecond = reportText({
     taskId: TASK_ID, round: 2, mode: 'targeted', prior: priorReport,
     targets: [`${TASK_ID}-F001`], baseRef, base: reviewedHead1, head: reviewedHead1,
     changedFiles: [], conclusion: 'pass',
     body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    action: request-evidence\n    status: verified-closed`,
-  })).replace('conclusion: pass', `evidence_only: true\nevidence_files: [${evidencePath}]\nconclusion: pass`);
+  }).replace('evidence_only: false', 'evidence_only: true')
+    .replace('evidence_files: []', `evidence_files: [${evidencePath}]`);
   fs.writeFileSync(roundOnePath, evidenceFirst);
   fs.writeFileSync(roundTwoPath, evidenceSecond);
   let result = runAudit();
@@ -305,11 +302,11 @@ result: pass
   rejectedSecond(evidenceSecond.replace(evidencePath, priorReport), /非空原始证据/);
   rejectedSecond(evidenceSecond.replace(evidencePath, '../outside.log'), /非空原始证据/);
   rejectedSecond(evidenceSecond.replace(`evidence_files: [${evidencePath}]`, 'evidence_files: []'), /缺 evidence_files/);
-  rejectedSecond(evidenceSecond.replace('review_policy: bounded-v1\n', ''), /不得退回旧策略/);
-  rejectedSecond(evidenceSecond.replace('review_policy: bounded-v1', 'review_policy: unknown'), /未知 review_policy/);
+  rejectedSecond(evidenceSecond.replace('review_policy: bounded-v1\n', ''), /review_policy 必须为 bounded-v1/);
+  rejectedSecond(evidenceSecond.replace('review_policy: bounded-v1', 'review_policy: unknown'), /review_policy 必须为 bounded-v1/);
   rejectedSecond(evidenceSecond.replace('status: verified-closed', 'status: open'), /open blocking/);
   rejectedSecond(evidenceSecond.replace(`target_finding_ids: [${TASK_ID}-F001]`, `target_finding_ids: [${TASK_ID}-F002]`), /此前开放|全部 open blocking/);
-  fs.writeFileSync(roundOnePath, bounded(priorRound).replace('status: open', 'status: open\n    action: fix-code'));
+  fs.writeFileSync(roundOnePath, priorRound);
   assert.match(runAudit().stdout, /此前开放的 request-evidence/, 'code repair cannot masquerade as evidence only');
 
   const advisoryFirst = evidenceFirst.replace('severity: blocking', 'severity: advisory').replace('status: open', 'status: advisory');
@@ -321,16 +318,12 @@ result: pass
   assert.match(runAudit().stdout, /evidence-needed 必须有开放/, 'a bug is not an evidence gap');
   fs.writeFileSync(roundOnePath, evidenceFirst.replace('action: request-evidence', 'action: backlog'));
   assert.match(runAudit().stdout, /必须有可执行 action/, 'backlog is not an unresolved blocking action');
-  fs.writeFileSync(roundOnePath, bounded(priorRound).replace('status: open', 'status: open\n    action: fix-code'));
-  fs.writeFileSync(roundTwoPath, bounded(canonicalRoundTwo));
+  fs.writeFileSync(roundOnePath, priorRound);
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo);
   assert.strictEqual(runAudit().status, 0, 'real blocking repair with code diff still passes');
 
-  // Opt in during an existing chain without rewriting its historical first round.
-  fs.writeFileSync(roundOnePath, priorRound);
-  assert.strictEqual(runAudit().status, 0, 'bounded targeted can continue an unchanged legacy round');
-  assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), priorRound);
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo);
-  fs.writeFileSync(roundTwoPath, bounded(canonicalRoundTwo).replace('status: verified-closed', 'status: verified-closed\n  - id: demo-b-101-F002\n    severity: advisory\n    status: advisory\n    action: backlog'));
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo.replace('status: verified-closed', 'status: verified-closed\n  - id: demo-b-101-F002\n    severity: advisory\n    status: advisory\n    action: backlog'));
   assert.strictEqual(runAudit().status, 0, 'advisory alongside closed blocker permits pass');
   fs.writeFileSync(roundTwoPath, canonicalRoundTwo);
 
@@ -410,9 +403,9 @@ result: pass
   assert.match(specDraft.text, /conclusion: pending/);
   assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, spec: true, base: baseTree, head: reviewedHead1 }), /含实现/);
   fs.writeFileSync(roundOnePath, evidenceFirst);
-  fs.writeFileSync(roundTwoPath, bounded(reportText({ taskId: TASK_ID, round: 2, mode: 'targeted', prior: priorReport,
+  fs.writeFileSync(roundTwoPath, reportText({ taskId: TASK_ID, round: 2, mode: 'targeted', prior: priorReport,
     targets: [`${TASK_ID}-F001`], baseRef, base: reviewedHead1, head: packageHead, changedFiles: [`b-queue/${TASK_ID}.md`],
-    conclusion: 'pass', body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: verified-closed` })));
+    conclusion: 'pass', body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: verified-closed` }));
   assert.strictEqual(runAudit().status, 0, 'task package does not need self registration');
   assert.strictEqual(generator.progress(tempRoot, reportDir, `b-queue/${TASK_ID}.md`).codeReviews, 1, 'registration does not use a code snapshot');
   write(`b-queue/${TASK_ID}.md`, currentTask);

@@ -126,7 +126,6 @@ Task Contract 只定义 deployment 语义。SSH、平台 CLI、进程管理器�
 
 - rollback record
 - incident / bug B Intake
-- recovery pointer：多环境、长发布或中断成本高时
 
 不得把 secret、token、完整生产日志或不必要的用户数据写进 durable artifact。
 
@@ -358,11 +357,3 @@ deploy 不阻断 `wrap-up-iteration` 形成 G5 readiness。
 - build 完成但尚未 restart → 核 artifact 仍有效后继续
 - snapshot 已变化 → 旧 deployment evidence 不自动适用
 - 是否已执行外部副作用不确定 → 先查询真实系统，不能盲目重做
-
-## 10. Runtime Routing
-
-canonical Task 始终是当前 `deploy` attempt；实际 crossing 只允许 `Execution Task Runtime`、`External Execution`、`Derived Child Task`、`Review Dispatch`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。crossing 不创建 deployment Gate/state，Runtime job 也不转移 ownership。
-
-`External Execution` 必须绑定 exact snapshot、target、current Effective Permission / Human Authority，以及可恢复 request identity 或明确 non-retry policy。effect 不确定时，只有 authoritative observation 证明 effect 未发生才可 retry；否则进入 reconciliation，并按 operation-specific idempotency/compensation contract 或 escalation 处理，禁止 blind retry。
-
-`Review Dispatch` **CONDITIONAL/OPTIONAL, NOT DEFAULT**：只在 high-risk deployment plan、migration 或 irreversible release 需要 independent/specialist check 时使用，且永不替代 Human Authority。发现真实 code defect 时可派生 canonical `develop` child，但必须先满足既有 registration/intake/package/status 要求；修复后形成新的 deploy attempt，不回写本 attempt 为成功。

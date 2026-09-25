@@ -62,14 +62,22 @@ const diffHash = crypto.createHash('sha256')
   .digest('hex');
 const report = 'iterations/v1/code-reviews/demo-v1-001/round-01.md';
 write(report, `---
+schema: develop-review-round/v2
+review_policy: bounded-v1
 task_id: demo-v1-001
 round: 1
 mode: full
+risk: standard
+base_ref: ${git(['rev-parse', 'HEAD'])}
 reviewed_base: ${baseTree}
 reviewed_head: ${reviewedHead}
 diff_sha256: ${diffHash}
 changed_files:
   - src/a.ts
+prior_report: null
+target_finding_ids: []
+evidence_only: false
+evidence_files: []
 escalate_to_full: false
 conclusion: pass
 ---
@@ -78,8 +86,18 @@ conclusion: pass
 findings: []
 \`\`\`
 `);
-write('iterations/v1/code-reviews/demo-v1-001/preflight.md', 'accepted audit\n');
-assert.strictEqual(check(report, 'demo-v1-001').status, 0, '前序 accepted 源码、审计目录与本轮 progress 应在白名单');
+write('iterations/v1/code-reviews/demo-v1-001/preflight.md', `---
+task_id: demo-v1-001
+timing: before-code
+base_ref: ${git(['rev-parse', 'HEAD'])}
+base_tree: ${baseTree}
+result: pass
+---
+`);
+{
+  const result = check(report, 'demo-v1-001');
+  assert.strictEqual(result.status, 0, `前序 accepted 源码、审计目录与本轮 progress 应在白名单\n${result.stdout}\n${result.stderr}`);
+}
 const validReport = fs.readFileSync(path.join(root, report), 'utf8');
 // 每次 check 都启动新进程；模拟摘要压缩后的恢复，不模拟模型内部 compaction。
 for (let restart = 0; restart < 3; restart += 1) {

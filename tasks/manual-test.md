@@ -51,13 +51,13 @@ review: none
 - 当前 HACT Method fixed SHA 已知。
 - `integration-verify` / System Verification 已 `merged`。
 - 当前 final system candidate 明确，Semantic / Holistic Independent Review 与 Runtime Integration Verification 均 satisfied。
-- 当前 Accepted system-review lineage 与 integration result 无未关闭 blocking finding、unresolved escalation、pending system-rereview 或缺失的 required revalidation。
+- latest Accepted System Review report `conclusion=pass`、`open_finding_ids=[]`，且 integration result satisfied。
 - 当前用于验收的 implementation snapshot 明确。
 - 测试环境可用或有明确建立方式。
 - 测试数据环境不是未获授权的生产数据环境。
 - 当前 PRD Product Contract 已进入 Accepted Project Truth。
 
-如果 integration-verify 只有“System Review 已出报告”“runtime tests 已绿”或“修复任务已派发”中的一部分，而另一 assurance lane、修复、closure 或 revalidation 尚未闭合，manual-test 不可进入 `可取`。
+如果 integration-verify 只有 System Review 或 runtime tests 中一条 lane 满足，或 latest report 仍有 open finding，manual-test 不可进入 `可取`。
 
 ## 3. Authoritative Inputs
 
@@ -75,7 +75,7 @@ review: none
 
 - `ux-flows.md`
 - `design.md`
-- system-review / closure / revalidation evidence
+- latest System Review report 与 runtime evidence
 - integration evidence
 - develop test / review evidence
 - `iterations/vN/trd.md` 的测试环境约定
@@ -102,7 +102,6 @@ review: none
 - `develop(source=manual-test)` Development Intake / Task Package
 - `revise-doc(target=prd)`
 - backlog 条目
-- recovery pointer / progress
 
 任何代码修改都必须通过 `develop(source=manual-test)`；manual-test 不保留旧版“简单问题直接改代码”的旁路。
 
@@ -240,7 +239,7 @@ G4 后新发现的问题：
 必须能够机械证明：
 
 - `integration-verify` 已 `merged`，且两条 assurance lane 对同一 final system candidate satisfied
-- 无 open blocking system finding、unresolved escalation、pending system-rereview 或缺失 revalidation
+- latest System Review report 无 open blocking finding
 - acceptance report 存在且覆盖当前 PRD 全部 AC
 - 每条 AC 有明确验证来源
 - 所有本期 `develop(source=manual-test)` Task 已 `merged`
@@ -348,9 +347,3 @@ Task `merged` 与 G4 approval 语义正交；本 Task 的正常路径中，它�
 - 先核 approved snapshot 与当前 Git world 是否仍一致
 - 一致则补持久化 report / state / G4 record
 - 不一致则重新验受影响部分，不能把旧 authority event强行绑定到新实现
-
-## 10. Runtime Routing
-
-`manual-test` 保持 human-led canonical acceptance Task，Stay Local 为默认；实际 crossing 只允许 `Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery Protocol 与 Runtime Orchestration Skill。human-led ownership、真实 user acceptance 与 G4 Human Authority boundary 不因 Runtime job 改变。
-
-本 Task **不默认增加 AI Independent Review**，normal/default routing 不允许 `Review Dispatch`。发现需要修复的真实缺口时，只能按既有规则建立 canonical `develop(source=manual-test)` Derived Child Task，并先满足 registration、intake/package、status、readiness 与 ownership 要求；child / Runtime completion 不能替代重新验收、G4 或本 Task Completion & Handoff。不得发明新的 crossing kind。

@@ -32,7 +32,7 @@ function parseFrontmatter(source) {
 function contractPathHits(files) {
   const patterns = [
     /(^|\/)iterations\/v[^/]+\/(prd|trd|gates)\.md$/i,
-    // 存量规则文件在项目迁移完成前仍受保护；不再生成或加载这些文件。
+    // Contract / migration paths 始终受保护，B task 不得借局部优化改写。
     /(^|\/)(standards-(shared|frontend|backend)|project|foundation|design|status)\.md$/i,
     /(^|\/)(migrations?|schema|openapi|swagger|contracts?|shared\/types?)(\/|\.|$)/i,
     /\.(proto|avsc)$/i,
@@ -58,7 +58,7 @@ function normalizeDeclaredFile(file) {
 function governancePath(file, taskId, taskPath = '') {
   const name = String(file || '').replace(/\\/g, '/').replace(/^\.\//, '');
   const normalizedTask = String(taskPath || '').replace(/\\/g, '/');
-  return name === 'status.yml' || name === normalizedTask || /^status-reviews\/[^/]+\.yml$/.test(name)
+  return name === 'status.yml' || name === normalizedTask
     || new RegExp(`^b-reviews/${String(taskId || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/`).test(name)
     || new RegExp(`^iterations/[^/]+/code-reviews/${String(taskId || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/`).test(name);
 }

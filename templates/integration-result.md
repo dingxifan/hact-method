@@ -6,12 +6,10 @@
   复测时在原条目「复测」列追加结论（通过 / 仍失败）。现象/复现步骤等正文留本文件、不进 YAML。
 -->
 ---
-schema: integration-result/v2
+schema: integration-result/v3
 iteration: vN
 candidate_head: <40-char commit SHA>
-system_review_dir: iterations/vN/system-review
-current_system_review: iterations/vN/system-review/review-001.md
-revalidation_of: []
+latest_system_review: iterations/vN/system-review/review-001.md
 runtime_scope: []
 result_status: satisfied | blocked
 evidence_state: sufficient | insufficient

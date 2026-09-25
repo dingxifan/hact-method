@@ -64,6 +64,7 @@ result: pass
   const diffHash = crypto.createHash('sha256').update(diff).digest('hex');
   write(root, 'iterations/v1/code-reviews/A/round-01.md', `---
 schema: develop-review-round/v2
+review_policy: bounded-v1
 task_id: A
 round: 1
 mode: full
@@ -75,6 +76,8 @@ reviewed_base: ${baseTree}
 reviewed_head: ${reviewedHead}
 diff_sha256: ${diffHash}
 changed_files: [src/a.ts]
+evidence_only: false
+evidence_files: []
 started_at: 2026-09-04T00:01:00Z
 completed_at: 2026-09-04T00:02:00Z
 escalate_to_full: false

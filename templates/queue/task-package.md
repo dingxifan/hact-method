@@ -1,9 +1,9 @@
 <!--
   任务包模板 · plan-sprint 产物 · 每个 develop 任务一个文件，存 iterations/vN/queue/{task-id}.md
-  序列化锁定：YAML frontmatter（check-sprint.js 据此 parse）。字段规范见 specs-structural/develop.md §字段规范。
+  序列化锁定：YAML frontmatter（check-sprint.js 据此 parse）。字段规范见 tasks/develop.md。
   填写规则：所有 <待填> 必须替换为实值；无依赖的 depends_on 填 []（不是 <待填>）；
            api-contract 仅 layers=[backend] 且接口被前端消费时填，否则整段删除（注释掉的不算填）。
-           design-reference-format 仅 frontend 必填：新结构填 sliced-v1；存量 design 无页面规格结构填 legacy-full；backend/shared 删除。
+           design-reference-format 仅 frontend 必填且固定 sliced-v1；backend/shared 删除。
   注：本文件 frontmatter 即任务包正文；--- 之后正文段可留空（字段均在 frontmatter）。
   视觉地基包：全局 reset + UI 库主题覆盖（设计主色等 token 映射）+ design.md token 全局接线（variables.scss + main/App 入口），
            不属任何业务页。在 frontmatter 加 `baseline: visual` 标记（仅此包加，其余包不加；check-sprint 据此机械核 v1 必有）；
@@ -14,7 +14,7 @@
   审查范围由独立审查员按契约与实际改动判断，不在任务包中另填审查维度。
 -->
 ---
-package-schema: 2          # 新任务固定 2；存量缺省按 legacy 兼容，不批量回填
+package-schema: 2          # 当前唯一 schema
 task-id: <待填>            # 唯一标识，命名 {项目缩写}-v{N}-{三位序号}，如 hact-v4-001；对应 status.yml task-id（A 类另有 sprint 规划行）
 module: <待填>             # TRD「模块拆分」中的稳定模块名；供预算分批与 global-summary 建最小索引，不从 context 猜
 sprint_id: <待填>          # 所属 Sprint 标识，如 v4-s1；由 plan-sprint 填
@@ -23,7 +23,7 @@ source: <待填>             # sprint / integration / manual-test / bug / optimi
 task_type: <待填>          # dev-frontend（layers=[frontend]）/ dev-backend（layers=[backend]）/ shared 时显式指定
 contract-impact: <待填>    # governed（只实现已确认 PRD/TRD/Foundation/project 技术约束）/ none（不触及共享契约）；B 类局部兼容 governed 见 dispatch-new
 # baseline: visual        # 仅「视觉地基包」加此行；普通任务包不写。见顶部说明 + plan-sprint Step 2
-# design-reference-format: sliced-v1  # frontend 必填；存量 design 无「八、页面规格」时填 legacy-full；backend/shared 删除
+# design-reference-format: sliced-v1  # frontend 必填；backend/shared 删除
 urgency: normal           # normal（默认）/ hotfix
 risk: standard            # standard（默认，普通审查档）/ sensitive（高能力审查档；触及权限/认证/数据隔离、不可逆数据操作、金额/计费计算、对外不可撤销副作用）；存疑即 sensitive（只升不降，develop 侧另按有效 risk + diff 独立预检兜底）
 risk-note:                # 可选。check-sprint 的启发词命中而你判定是误报时，理由写这里（如"命中『迁移』只因 files 含历史迁移文件路径，本包不改 schema"）。本字段不参与启发扫描，故解释文字不会再次自我触发
@@ -52,7 +52,7 @@ acceptance-criteria:
     golden: false
 reference:
   # 按本任务实际边界引用 project.md 技术选择、Foundation 不变量、共享契约与 check/test/config；不复制其正文。
-  - <待填>                # 仅列实现决策必需锚点。frontend sliced-v1 须含 `design.md § 全局视觉基线` + 相关页面标题；legacy-full 须明确写 `design.md 全文（存量）`
+  - <待填>                # 仅列实现决策必需锚点。frontend 须含 `design.md § 全局视觉基线` + 相关页面标题
   # 涉及用户任务时 reference 须含 ux-flows.md 的 U-id/S-id 锚；前端新格式必须给 U-id。保留任务完成/失败/恢复语义，不把功能列表当动线。
   # 后端任务：reference 须含 trd.md 错误码/服务流程对应章节锚
 context: <待填>           # 关键实现切入点，如 GoalList.vue L142 handleDelete()

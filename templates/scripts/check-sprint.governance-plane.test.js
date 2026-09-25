@@ -11,7 +11,6 @@ assert.ok(governanceWritePath('status.yml', task, review));
 assert.ok(governanceWritePath(task, task, review));
 assert.ok(governanceWritePath(`${review}/preflight.md`, task, review));
 assert.ok(governanceWritePath(`${review}/round-01.md`, task, review));
-assert.ok(governanceWritePath('status-reviews/b.yml', task, review));
 assert.ok(!governanceWritePath('src/service.ts', task, review));
 assert.ok(!governanceWritePath('b-reviews/other-task/round-01.md', task, review));
 

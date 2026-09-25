@@ -32,8 +32,7 @@ hact-method/
 ├── BRIEF.md              项目背景 / 目标 / 阶段 / 关键设计决策（32 条）
 ├── STATUS.md             当前状态
 ├── skeleton/             ← 本目录（骨架，第一阶段产物）
-├── specs-structural/     第二阶段：每个 task 的完整结构契约（继承 04）
-├── specs-execution/      第四阶段：每个 task 的执行规范 + 隔离单元协议（继承 03 密度声明）
+├── tasks/                当前 canonical Task Contracts
 ├── templates/            模板（项目模板、审查 brief 等）
 └── _meta/                研发过程产物（plans / input）
 ```
@@ -48,4 +47,4 @@ hact-method/
 
 ## 下游文档预期
 
-第二阶段将基于本骨架展开 `specs-structural/`：每个 task 一份独立 spec 文档，覆盖完整契约（含边界场景、错误处理、字段细节）。第三阶段由真实项目边用边补 `specs-execution/`：每个 task 的执行细则 + 高密度 discipline 的隔离单元协议。
+当前执行只读 `tasks/` 中的 canonical Task Contract；不维护结构/执行双份规范。

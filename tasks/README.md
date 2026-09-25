@@ -33,7 +33,7 @@ HACT 以 **Task** 为工作的基本单位。
 11. `deploy`
 12. `wrap-up-iteration`
 
-Core Task Catalog 固定为以上 12 个 Task。legacy task 名称若已被降级为 protocol / utility，不再重新加入 Catalog。
+Core Task Catalog 固定为以上 12 个 Task。protocol / utility 不加入 Catalog。
 
 ## B-class work
 

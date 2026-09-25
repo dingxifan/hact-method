@@ -1,79 +1,41 @@
-<!--
-System Reviewer event template. Copy to iterations/vN/system-review/review-NNN.md.
-Published events are immutable historical judgements. Do not edit an earlier event after repair;
-append closure evidence or a new targeted/full review event instead.
--->
 ---
-schema: system-review/v1
-iteration: vN
+schema: system-review/v2
 review_id: review-001
-review_type: full | targeted
-reviewer_isolation: fresh-isolated
-method_sha: <40-char commit SHA>
-candidate:
-  base: <40-char commit SHA>
-  head: <40-char commit SHA>
-predecessor: null
-revalidation_of: []
-scope:
-  - final-contract
-  - architecture
-  - cross-package-consistency
-  - evidence-sufficiency
-evidence: []
-result:
-  status: pass | blocked
-evidence_state:
-  status: sufficient | insufficient
-findings: []
-advisories: []
+review_type: full
+candidate: <git-commit-or-tree>
+prior_report: null
+target_finding_ids: []
+new_finding_ids: []
+closed_finding_ids: []
+open_finding_ids: []
+conclusion: pass
+evidence_refs: []
 created_at: <ISO-8601>
 ---
 
-## Judgement
+# System Review
 
-只写本次 fixed candidate、declared scope、关键证据与结论。不得把 Package Review 汇总冒充 System Review，也不得用 runtime tests 全绿替代 semantic judgement。
+## Scope
 
-## Blocking finding schema example
+- authoritative contracts:
+- architecture / shared boundaries:
+- runtime evidence:
+- allowed paths / call chains:
 
-实际 blocking finding objects 写入 frontmatter 的 `findings`，本段只展示 shape，不是第二份 truth。Non-blocking suggestion 写入 `advisories`，不创建 closure route/state。
+## Findings
 
-```yaml
-findings: []
-# - id: SV-F001
-#   origin: semantic-review | runtime-verification
-#   severity: blocking
-#   category: compatibility | shared-contract | architecture | authorization | state-machine | data-model | runtime | evidence
-#   summary: <current candidate 上的具体问题>
-#   evidence:
-#     - <Git/evidence pointer>
-#   required_action:
-#     type: fix-code | fix-mechanism | revise-doc | downgrade-claim | global-gap-review | request-evidence
-#     description: <required outcome>
-#   closure:
-#     route: local-close | system-rereview
-#   revalidation:
-#     semantic:
-#       required: true
-#       scope: []
-#     runtime:
-#       required: false
-#       not_required_reason: <非空理由；required=true 时删除本行>
-#       scope: []
-#   full_snapshot_invalidated: false
-#   invalidation_reason: null
-#   state: open
+每个新 blocking finding 使用稳定标题：
+
+```text
+### SYS-F001
+Severity: blocking
+Summary: <concise defect>
+Evidence: <specific immutable evidence>
+Required action: <exact correction>
 ```
 
-## Contract
+Targeted re-review 引用 prior report 与 open finding IDs，在新 fixed candidate 上写入 `closed_finding_ids`。影响无法限定时使用新的 `review_type: full` report；不创建 route、escalation、invalidation 或 closure artifact。
 
-- First event for a lineage is `review_type=full`, `predecessor=null`, `revalidation_of=[]`.
-- Targeted event names one existing predecessor, non-empty `revalidation_of`, and the complete affected scope. It does not claim another Full System Review.
-- A later Full System Re-review also names its predecessor and non-empty `revalidation_of`; it establishes a new full baseline rather than erasing prior history.
-- Every invocation creates a new `review-NNN.md`; sequence does not encode depth.
-- `result.status=pass` requires `evidence_state.status=sufficient` and `findings=[]`; advisories do not block.
-- A blocked full review can remain the assurance baseline after every finding gains valid additive closure lineage; a later full PASS is not mechanically required.
-- Finding origin/category does not determine closure route. Each blocking finding has exactly one route.
-- `local-close` requires bounded locality and declared revalidation. `system-rereview` requires a later System Reviewer event for closure.
-- `full_snapshot_invalidated=true` is valid only with non-empty `invalidation_reason` identifying invalidated system conclusions; diff size is insufficient.
-- Do not change a finding to closed in this file. Use additive closure events.
+## Conclusion
+
+`open_finding_ids` 非空时必须 `blocked`；为空时才能 `pass`。Reviewer 不能批准 Gate、Human Authority 或 Task completion。

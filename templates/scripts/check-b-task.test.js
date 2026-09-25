@@ -151,6 +151,8 @@ assert.strictEqual(runGitInHook(['init']).status, 0);
 assert.strictEqual(runGitInHook(['config', 'user.email', 'test@example.com']).status, 0);
 assert.strictEqual(runGitInHook(['config', 'user.name', 'Test']).status, 0);
 fs.copyFileSync(path.join(__dirname, 'check-b-task.js'), path.join(hookRepo, 'scripts', 'check-b-task.js'));
+fs.writeFileSync(path.join(hookRepo, 'scripts', 'check-sprint.js'), 'process.exit(0);\n');
+fs.writeFileSync(path.join(hookRepo, 'scripts', 'check-secrets.js'), 'process.exit(0);\n');
 fs.copyFileSync(path.join(__dirname, 'pre-commit-hook.sh'), path.join(hookRepo, '.git', 'hooks', 'pre-commit'));
 fs.chmodSync(path.join(hookRepo, '.git', 'hooks', 'pre-commit'), 0o755);
 const hookTask = path.join(hookRepo, 'b-queue', 'demo-b-002.md');

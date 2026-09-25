@@ -2,7 +2,7 @@
 
 本文只描述 Codex 如何实现 HACT capability。Task 语义属于 `tasks/`，共性纪律属于 `protocols/`；本文不得复制第二套 Task / Gate / Review / Recovery 规则。
 
-## 1. Natural Home
+## 1. Capability profile, not routing
 
 Codex 更适合：
 
@@ -15,6 +15,8 @@ Codex 更适合：
 - Git delivery 与长程 execution / repair
 
 Codex 不因为拥有 shell、Git 或更强执行能力而拥有更高 Authority。
+
+以上只是 capability 倾向，不是窗口切换规则。Codex 已接收一个 bounded repository operation 后，默认保持 Runtime affinity，连续完成必要 reasoning、修改、验证、机械整改和 review closure；不因出现推理段落就交回另一个窗口。
 
 ## 2. Capability Profile
 
@@ -42,13 +44,16 @@ Codex 不因为拥有 shell、Git 或更强执行能力而拥有更高 Authority
 3. 按实际触发条件加载 Shared Protocol；
 4. 只有需要 Codex-specific realization 时才加载本文对应小节。
 
-不要在 Runtime Adapter 重新维护 Task routing 表，也不要把旧 `specs-execution/` 恢复成 vNext 正常入口。
+不要在 Runtime Adapter 重新维护 Task routing 表；canonical Task 只读 `tasks/`。
 
-进入 repository mutation 前，额外核：
+进入普通 repository execution 前只做 Minimum Execution Preflight：
 
-- branch / HEAD / upstream
-- worktree / index / stash
-- 当前 Task 的实际写集
+- `Target`：正确 repository / worktree / baseline；
+- `Collision`：未知 local changes 不与本次 write set 冲突；
+- `Boundary`：允许/禁止范围与当前 Authority 清楚；
+- `Validation`：真实验证入口与停止条件已知。
+
+remote/upstream 只在 push/PR/merge 时检查；Gate/status/owner/dependencies 只在当前动作会读取或改变它们时检查；stash、其他 worktree、部署能力与 external-effect receipt 只在实际相关时检查。四项输入未变化时复用结论，不在每个文件修改、命令或机械整改前重新盘点。
 
 `init-project` 没有既有 `status.yml` 时按其 Task Contract 的 bootstrap exception 执行。
 
@@ -96,6 +101,23 @@ Task Contract 决定“必须证明什么”；Codex 负责调用项目真实入
 
 相同 snapshot、依赖、配置和环境上仍有效的结果可以复用。Task / Protocol 已经规定的 verification 不在本文重复列一遍。
 
+明确执行任务使用 bounded execution contract：
+
+```text
+Goal / Allowed / Forbidden / Execute / Validate / Stop / Return
+```
+
+Codex 在已授权范围内执行到 validation PASS 或明确 blocker，不把已知执行问题改写成新的开放式分析。失败尽早分类为：
+
+- `MECHANICAL`：格式、lint、deterministic checker、已知 schema/link/heading 等；
+- `SEMANTIC`：需要改变 Product/Technical/Contract/behavior meaning；
+- `AUTHORITY`：需要扩大 write set、commit/push/deploy/Gate/external authority；
+- `CAPABILITY`：必要工具、环境、权限或 recoverable identity 缺失。
+
+`MECHANICAL` 且语义与 scope 不变时，直接修正、重跑同一检查并持续到 PASS 或错误改变类别。修改、验证与同类纠正属于一个 bounded operation，不受“One Turn = One State Transition”限制。类别改变或即将越界时停止并返回 evidence-backed blocker。
+
+返回 evidence-first result：changed files、fixed artifact/candidate identity、实际 command/exit/result、validation evidence、blocker 分类与必要 next action。execution evidence 已完整时不等待 narrative completion；但在收敛前确认没有 command running、approval pending、validation in progress 或 unresolved external effect。
+
 ## 6. Fixed Git Snapshot Adapter
 
 当 Task / Review Protocol 要求 immutable candidate 时，Codex 优先用 Git object 固定：
@@ -114,7 +136,7 @@ Task Contract 决定“必须证明什么”；Codex 负责调用项目真实入
 
 ## 7. Independent Review Adapter
 
-Review 语义、projection、finding 与 bounded convergence 由 `protocols/review.md` 和当前 Task Contract 定义；本节只说明 Codex 如何实现隔离。
+Review 语义、finding 与 bounded convergence 由 `protocols/review.md` 和当前 Task Contract 定义；本节只说明 Codex 如何实现隔离。
 
 ### 7.1 Fresh isolation
 
@@ -122,11 +144,13 @@ Review 语义、projection、finding 与 bounded convergence 由 `protocols/revi
 
 可使用当前 Codex 提供的 fresh session、isolated subagent 或其他等价机制；不要把某个 API 参数、UI 按钮或固定模型名写成方法论前提。
 
+优先在同一用户可见 Codex interaction 内启动内部 fresh reviewer，并把 report 返回主执行上下文。Fresh Isolation 要求认知与输入隔离，不要求用户管理第二个窗口。
+
 若当前 Codex 无法形成可信隔离，记录 isolation gap，再按 Protocol 决定是否切 Runtime。
 
 ### 7.2 Reviewer input
 
-按 `protocols/review.md` 的 same-source reviewer projection 提供：
+Review brief 提供：
 
 - Method SHA
 - fixed candidate
@@ -153,38 +177,12 @@ Package classification 与 effective mode 由 `tasks/develop.md` 决定。Codex 
 
 ### 7.5 System Verification realization
 
-`integration-verify` 固定 final system candidate 后，Codex 在同一 Core Task 内实现两条 lane：
+`integration-verify` 固定 final system candidate 后，在同一 Core Task 内实现两条 lane：
 
 - Semantic / Holistic Independent Review 使用 Fresh Isolated Context，读取 final Contract、architecture、全部相关 package evidence 与 fixed system candidate；
 - Runtime Integration Verification 使用项目真实 command/browser/service/environment 入口产生原始 execution evidence。
 
-两条 lane 可以交错。System Reviewer 的 runtime evidence request 返回 runtime lane；runtime lane 新发现的问题进入同一 system finding lifecycle。不得把两者压成一次普通 package review，也不得因为一个 lane 已通过就跳过另一个。
-
-每次 System Reviewer invocation 都形成新的 immutable event。Targeted event 必须接 predecessor 与声明 scope；artifact contract 与 routing 读取 Phase 3 templates/Review Protocol，deterministic checker、hook 与 Gate wiring 留 Phase 4，Runtime Adapter 不发明临时格式。
-
-### 7.6 System finding routing realization
-
-Codex 处理 system finding 时先从 Git artifact 读取 source judgement、current route、required revalidation 与已有 event chain，不从聊天摘要重建状态。
-
-`local-close`：
-
-1. 派 `develop(source=integration)` 在声明 locality 内形成 fixed repair candidate；
-2. 复用该 develop Task 的 Fresh Isolated Package Review 作为 local review，只要它明确覆盖 source finding 与 required semantic scope；
-3. 回到 `integration-verify` 补齐仍 required 的 runtime/semantic revalidation；
-4. 所有条件满足后追加 `system-finding-closure/v1` event。
-
-修复越出 locality 时，不让实现者自行扩大 authority；持久化 escalation evidence，把 effective route 改为 `system-rereview`，再根据 `full_snapshot_invalidated` 选择 targeted/full System Reviewer invocation。
-
-`system-rereview`：Codex 可以完成 repair 与 local prerequisites，但只能把 fixed candidate 和 evidence 交给 Fresh Isolated System Reviewer。只有新的 System Reviewer event 可以支持 closed event；runtime executor、repair owner 或主线总结都不能替代该 authority。
-
-Event 写入规则：
-
-- source review/finding artifact immutable；
-- review、standalone runtime finding、closure/escalation 各写新文件；
-- sequence 不覆盖已有文件，不复用 id；
-- targeted review 指向 predecessor 和 revalidation scope；
-- `full_snapshot_invalidated=true` 必须同时持久化具体 invalidation reason；
-- status 只保留最小 pointer/obligation index，不能复制完整 finding chain。
+两条 lane 可以交换 evidence，但不能互相替代。每次 System Reviewer invocation 形成新的 immutable report。修复产生新 candidate 后，targeted Fresh Review 关闭 stable findings；影响无法限定时做 full review。Runtime Adapter 不维护 route、closure event 或平行 finding state。
 
 ## 8. Git Delivery Adapter
 
@@ -205,40 +203,17 @@ Task / Git Truth Protocol 决定何时允许 Candidate → Accepted Truth；Code
 
 不得用 force 或历史改写绕过保护，除非用户对该具体高影响操作另有明确授权。
 
-## 9. Discussion Persistence Adapter
+## 9. Recovery & Context Compaction Adapter
 
-Discussion Persistence 是 repo-local workflow skill，只用于把**已经冻结的讨论 / 设计 / 规范 artifact** 通过受控通道持久化；它不替代普通代码实现或 Codex 原生 Git delivery。
-
-当 fixed Method SHA 中存在：
-
-`.agents/skills/discussion-persistence/SKILL.md`
-
-且用户明确要求持久化时，按该 Skill 与其 `references/protocol.md` / `references/recovery.md` 执行。
-
-当前增量 candidate 的关键实现约束：
-
-- `base_branch == target_branch`
-- 提交前重新验证 remote candidate HEAD
-- `base_sha` 等于该 HEAD
-- branch 命中允许的 incremental prefix
-- 只提交本轮冻结文件
-- ordinary fast-forward append
-- 不 force push
-- 新 commit direct parent 必须等于 submitted `base_sha`
-
-native write 或 local execution 的不确定结果先以远端 Git truth 核实；不得自动换 transport、重建 artifact 或改变 branch。
-
-## 10. Recovery & Context Compaction Adapter
-
-Recovery 的事实顺序由 `protocols/recovery.md` 定义。Codex context compaction / session interruption 后，不尝试重建完整聊天，而是重新取得最小运行事实：
+Recovery 的事实顺序由 `protocols/recovery.md` 定义。Codex context compaction / session interruption 后，不尝试重建完整聊天、job/thread 连续性或 polling history，而是从最近 verified durable conclusion 取得下一动作需要的最小运行事实：
 
 - Method SHA
 - 当前 Task / status
 - Accepted Project Truth
-- fixed candidate / evidence pointer（若有）
+- fixed candidate / durable evidence pointer（若有）
 - 实际 branch / HEAD / worktree / PR / merge state
 
-然后从 Task Contract 第一个未满足 completion condition 继续。
+做最小 reality probe 后，从下一 bounded authorized action 继续。不要创建 Recovery Pointer、Runtime Resume Capsule 或为了表示进度写 heartbeat event。
 
 Runtime-specific 注意：
 
@@ -248,7 +223,7 @@ Runtime-specific 注意：
 - 已 merge 但 status 尚未落定时先核远端事实，再补 state；
 - 项目已有 wave / batch recovery schema 时继续用当前 schema，不在 vNext Runtime Adapter 发明第二套。
 
-## 11. External / Production Actions
+## 10. External / Production Actions
 
 Task Contract 与 `protocols/authority.md` 决定是否允许外部副作用；Codex 只负责执行已经授权的具体 mechanism 并采集 evidence。
 
@@ -261,7 +236,7 @@ Task Contract 与 `protocols/authority.md` 决定是否允许外部副作用；C
 
 更具体的 deploy / manual-test / wrap-up 语义只读对应 Task Contract，不在 Runtime Adapter 再维护副本。
 
-## 12. Cross-runtime Handoff
+## 11. Cross-runtime Handoff
 
 正常 handoff 使用 Git truth，而不是聊天摘要：
 
@@ -271,51 +246,30 @@ Task Contract 与 `protocols/authority.md` 决定是否允许外部副作用；C
 - fixed candidate（若有）
 - authoritative inputs
 - finding / evidence pointers
-- recovery pointer（需要时）
+- latest durable conclusion / evidence pointer（确有需要时）
 
 下一个 Runtime 自己重新读取这些事实。
 
+handoff 接收方执行到 durable conclusion，不为机械修正、测试补齐、验证重跑或 finding closure 往返交接。只有新的 semantic/Human Authority decision 或不可消解 capability/isolation gap 才允许返回。
+
 外部 UX 设计会话按 `runtime/external-ux.md`，最终仍回 `tasks/draft-ux.md`。
 
-## 13. Legacy Serialization Compatibility
+## 12. External Effect Adapter
 
-vNext 可以继续消费项目已经部署的：
+Codex job、thread、session 或 subagent 本身不是 canonical Task，也不构成 ownership transfer。普通 handoff 不建记录。
 
-- `status.yml` schema
-- task package schema
-- checker / hook
-- review evidence schema
-- connection / deployment config
-
-除非另有明确迁移 Task，不为 vNext 的组织方式重写这些可执行接口。
-
-旧 `specs-execution/`、`specs-structural/`、review brief 可作为 migration / serialization reference，但 adopted SHA 已提供 vNext Task Contract 时，它们不再是正常 Task 的第二套规范真相。
-
-发生冲突时：
-
-1. Task / Protocol 决定方法论语义；
-2. 当前项目 schema / checker 决定既有机器序列化约束；
-3. 若两者无法兼容，显式记录 compatibility gap 并创建迁移工作，不由 Runtime 静默猜测。
-
-Runtime Adapter 可以随 Codex capability 演进；Task Contract 与 Shared Protocol 不绑定某个 Codex 版本。
-
-## 14. Generic Runtime Crossing Adapter
-
-Codex job、thread、session 或 subagent 本身不是 canonical Task，也不构成 ownership transfer。实际 crossing 按 `.agents/skills/runtime-orchestration/SKILL.md` 与 `protocols/runtime-crossing.md` 执行；没有 crossing 的 Stay Local flow 不建记录。
-
-Codex 只消费 dispatcher 提供且可核验的：
+普通 dispatch 只消费完成 bounded operation 所需的 Task、artifact/candidate、allowed/forbidden scope 与 validation。External Effect 另外消费：
 
 - canonical Task / Method SHA；
-- authoritative Contract 与 status snapshot identity；
-- exact artifact / candidate / repository identity；
-- ownership / origin / return reference；
-- permission ceiling 与 current Authority references；
-- versioned dispatch receipt、durable `crossing_id` / `request_key`。
+- exact operation action / target / snapshot；
+- current Authority references；
+- durable `operation_id` / `request_key`；
+- `external-effect.md` 要求的 versioned intent receipt。
 
-permission ceiling 不是当前授权。每次 repository mutation、commit、push/shared transport、external action、retry、recovery continuation、deployment/promotion、Runtime/action dispatch 及 lifecycle boundary 前，Codex 都重新计算 Effective Permission；它不能因 tool capability 自行扩大 scope 或 Authority。
+Codex 在 operation 开始时计算 Effective Permission；边界未变化时连续修改、测试和机械整改。仅在 scope/target/snapshot/Authority/environment/tool capability/risk 变化，或进入 commit、push/merge、external/deployment、uncertain retry/recovery 时重算；它不能因 tool capability 自行扩大 scope 或 Authority。
 
-执行中把 `job_id`、revision、polling result、artifact/evidence/action receipt 与 terminal/recovery facts 返回为 append-only crossing lifecycle event，并提供可核验的 lifecycle-head identity。Codex 不直接把 Runtime result 写成 HACT state；只有既有 status contract 明确授权的 state mutation 才可执行。
+执行中的 `job_id`、thread/session、runtime revision、polling result、reasoning/composing 与 command progress 只是 transient telemetry。artifact/candidate、validation、review 和 external-effect evidence 进入各自权威对象。Codex 不直接把 Runtime result 写成 HACT state；只有既有 status contract 明确授权的 state mutation 才可执行。
 
 start 结果不确定时先按 durable request key lookup；backend 无 recoverable identity 时进入 `CAPABILITY_GAP` / reconciliation，禁止 blind retry。external effect 只有在 authoritative observation 证明未发生时才可 retry，否则按 operation-specific idempotency/compensation contract 或 escalation 处理。
 
-Codex 作为 reviewer 时必须使用 `protocols/review.md` 的 reviewer-specific projection 与 Fresh Isolated Context；实现叙事、Owner private reasoning 和 mutable-worktree narrative 不进入 reviewer input。checker PASS、job completion、review PASS 或 commit 都不能由 Codex 单独投射为 Gate、Human Authority 或 Task completion。
+Codex 作为 reviewer 时只读取 fixed candidate、review brief 与 brief 允许的 immutable paths；实现叙事、Owner private reasoning 和 mutable-worktree narrative 不进入 reviewer input。checker PASS、job completion、review PASS 或 commit 都不能由 Codex 单独投射为 Gate、Human Authority 或 Task completion。

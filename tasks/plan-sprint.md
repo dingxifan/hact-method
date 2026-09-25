@@ -165,7 +165,7 @@ G3 approval 时只记录 Gate authority event；不再新增、重写或重排 T
 
 ### 5.2 保留既有 Task Package schema
 
-新 package 继续使用当前序列化和 checker 兼容字段。
+新 package 必须使用当前唯一序列化和 checker schema。
 
 至少保留这些语义：
 
@@ -295,7 +295,7 @@ Independent Review 要核 source-of-truth 方向；checker 负责机械发现明
 
 - v1 需要 visual baseline package；
 - 走过 V0 的项目只补 `design.md` 真值到已建 framework，不重建框架；
-- 存量项目按现有规则补完整 visual baseline；
+- 当前项目必须具备完整 visual baseline；
 - vN+1 只在 design / Foundation 相关变更时创建 follow-up。
 
 Foundation 新增“待建”的 ≥机械级关注点必须拆对应地基跟进 package，其 AC 要能证明 enforcement 真正生效，而不是只写“加约束”。
@@ -459,9 +459,3 @@ G3 approved 后：
 - Owner 从 Git 读取自己的 Task Package、Accepted upstream truth 与 status；
 - 认领前运行 dependency/readiness 检查，依赖未满足则保持 `可取`，不进入 `taken-by`；
 - 正常 handoff 基于 Git snapshot，不传完整 planning conversation。
-
-## 9. Runtime Routing
-
-Stay Local 为默认；实际 crossing 只允许 `Reality Probe` 与 `Review Dispatch`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。`Reality Probe` 只提供 planning evidence / uncertainty，不创建 Task Package、status 或 scope truth。
-
-`Review Dispatch` **REQUIRED**，以 same-source reviewer projection 审查 fixed planning candidate，并保留既有 AC fidelity/completeness、intent/oracle/example、API derivation、baseline、risk、shared asset 与 queue/status consistency 语义。G3 始终是独立 Human Authority；Review Dispatch、checker PASS 或 Runtime completion 都不能批准 G3 或替代本 Task completion。

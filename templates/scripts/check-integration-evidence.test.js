@@ -34,12 +34,10 @@ assert.ok(validate(path.relative(root, result), root).length >= 2, '无证据和
 
 const sha = 'a'.repeat(40);
 const linked = `---
-schema: integration-result/v2
+schema: integration-result/v3
 iteration: v1
 candidate_head: ${sha}
-system_review_dir: iterations/v1/system-review
-current_system_review: iterations/v1/system-review/review-002.md
-revalidation_of: [SV-F001]
+latest_system_review: iterations/v1/system-review/review-002.md
 runtime_scope: [target-runtime-path]
 result_status: satisfied
 evidence_state: sufficient

@@ -7,7 +7,7 @@
 - 任务包：A 类 `iterations/vN/queue/{task-id}.md` 或 B 类 `b-queue/{task-id}.md` 的 normative core；历史 appendix 仅疑点需要时读。
 - 固定 diff、改动文件和必要调用链；本任务测试及运行结果。
 - 任务 `reference` 指向的项目技术约束、Foundation 与共享契约；必要的检查配置。
-- 前端：`design.md` 全局基线与任务 reference 点名的页面规格（存量无锚时全文），以及原型对应交互路径。
+- 前端：`design.md` 全局基线与任务 reference 点名的页面规格，以及原型对应交互路径。
 
 ## 检查内容
 

@@ -1,12 +1,12 @@
 # 04 — 任务全谱
 
-> vNext canonical Core Task Catalog 以 `tasks/README.md` 的 12 个 Task 为准。本文件同时保留 legacy structural 分类与非 Core utility/intake 条目，用于迁移和结构对照；不得据此重新增加 Core Task。
+> canonical Core Task Catalog 以 `tasks/README.md` 的 12 个 Task 为准。非 Core utility/intake 不得重新增加为 Core Task。
 
 > **本文回答**：v2 有哪些 task type？每个 task 的关键字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）？
 >
 > **不回答**：discipline 的概念（→ `03-disciplines.md`）；身份与授权规则（→ `01-identity.md`）；状态枚举与流转（→ `05-state-machine.md`）；Gate 详情（→ `06-gates.md`）。
 >
-> 04 给出**结构层契约的简表**——每个 task 的完整契约（含边界场景、错误处理、字段细节）由 `specs-structural/{task}.md` 在第二阶段补全；执行细节由 `specs-execution/{task}.md` 在第四阶段补全。
+> 04 给出简表；完整契约统一在 `tasks/{task}.md`，不维护结构/执行双份规范。
 
 ---
 
@@ -58,12 +58,12 @@
 > 立项：新建项目目录结构和初始配置文件。
 
 - **discipline**: `management`
-- **完成判据**: `../{项目}/` 仓目录结构创建完成；占位文件就位；git 初始化完成（详见 `specs-structural/init-project.md`）
+- **完成判据**: 项目仓目录结构、占位文件与 Git 初始化完成（见 `tasks/init-project.md`）
 - **主要产物**: `../{项目}/` 完整目录树（含 `iterations/`）
 - **关联 Gate**: —
 - **属性**: `project-name`（字符串）
 
-详见 `specs-structural/init-project.md`（第二阶段）。
+详见 `tasks/init-project.md`。
 
 ---
 
@@ -77,7 +77,7 @@
 - **关联 Gate**: **G1**（可选签于任务尾部）
 - **属性**: `version`（vN）
 
-详见 `specs-structural/draft-prd-vN.md`。
+详见 `tasks/draft-prd.md`。
 
 ---
 
@@ -92,7 +92,7 @@
 - **前置条件**: `draft-prd-vN` 已完成、G1 已签；纯数据管理类页面（标准增删改查、无分支流程）可跳过
 - **属性**: `version`（vN）
 
-详见 `specs-structural/draft-ux.md`。
+详见 `tasks/draft-ux.md`。
 
 ---
 
@@ -109,7 +109,7 @@
 - **前置条件**: G1 已签
 - **属性**: `version`（vN）
 
-详见 `specs-structural/draft-tech-design.md`。
+详见 `tasks/draft-tech-design.md`。
 
 ---
 
@@ -124,7 +124,7 @@
 - **前置条件**: G2 已签（TRD + 验证入口就位）
 - **属性**: 无
 
-详见 `specs-structural/plan-sprint.md`。
+详见 `tasks/plan-sprint.md`。
 
 ---
 
@@ -141,7 +141,7 @@
 - **关联 Gate**: 不签新 Gate（已签的不撤销，只记录变更）
 - **属性**: `target`（prd / trd / foundation / project）+ `reason`（字符串）
 
-详见 `specs-structural/revise-doc.md`。
+详见 `tasks/revise-doc.md`。
 
 ---
 
@@ -169,7 +169,7 @@
   - source=bug → 引用 bug 报告 + 复现步骤
   - source=optimization → 引用改进目标 + 基线指标
 
-详见 `specs-structural/develop.md`。
+详见 `tasks/develop.md`。
 
 ---
 
@@ -178,13 +178,13 @@
 > 对 final system candidate 做 Semantic / Holistic Independent Review 与 Runtime Integration Verification，并把 finding 路由到明确承接方。
 
 - **discipline**: `integration-testing`
-- **完成判据**: 两条 assurance lane 对同一 final candidate satisfied，无未关闭 blocking finding、unresolved escalation、pending system-rereview 或缺失 revalidation
-- **主要产物**: immutable system-review events + additive closure/revalidation evidence + `integration-tests/` runtime evidence + 必要修复任务包
+- **完成判据**: 两条 assurance lane 对同一 final candidate satisfied，latest System Review report pass 且无 open finding
+- **主要产物**: immutable system-review report chain + `integration-tests/` runtime evidence + 必要修复任务包
 - **关联 Gate**: —
 - **前置条件**: sprint 完成（所有 source=sprint 的 develop 任务 `[merged]`）——任务入口检查
 - **属性**: 无
 
-详见 canonical `tasks/integration-verify.md`；`specs-structural/generate-integration-tests.md` 仅为 legacy serialization reference。
+详见 canonical `tasks/integration-verify.md`。
 
 ---
 
@@ -199,7 +199,7 @@
 - **前置条件**: 联调通过（所有 source=integration 的 develop 任务 `[merged]`）——任务入口检查
 - **属性**: 无
 
-详见 `specs-structural/manual-test.md`。
+详见 `tasks/manual-test.md`。
 
 ---
 
@@ -211,10 +211,10 @@
 - **完成判据**: 服务器跑起来 + 验收通过（pm2 list / curl health 等）
 - **主要产物**: 服务器更新 + 部署日志
 - **关联 Gate**: —
-- **前置条件**: G4 已签（合并部署模式下也允许 hotfix 走快速通道，详见 `specs-structural/deploy.md`）
+- **前置条件**: G4 已签（具体例外见 `tasks/deploy.md`）
 - **属性**: `target`（环境标识，如 prod / staging）
 
-详见 `specs-structural/deploy.md`。
+详见 `tasks/deploy.md`。
 
 ---
 
@@ -231,7 +231,7 @@
 - **前置条件**: G4 已签（与 `deploy` 任务并行可执行，无依赖）
 - **属性**: `version`（vN）
 
-详见 `specs-structural/wrap-up-iteration.md`。
+详见 `tasks/wrap-up-iteration.md`。
 
 ---
 
@@ -245,9 +245,9 @@
 - **关联 Gate**: —
 - **属性**: `target-source`（bug / optimization）
 
-> dispatch-new 可先只读诊断；已授权开发则派短包后直接衔接 `develop(source=bug/optimization)`；既有手动 diff 仅在用户明确要求时走Codex的兼容审查入口，且仍须有 preflight 记录。
+> B Intake 可先只读诊断；已授权开发则形成短包后进入 `develop(source=bug/optimization)`。
 
-详见 `specs-structural/dispatch-new.md`。
+详见 `protocols/b-intake.md`。
 
 ---
 
@@ -266,7 +266,7 @@
 - **执行约束**: 可选整理、不回写来源、不自动批准规则；不访问未授权私人资料
 - **属性**: 无
 
-详见 `specs-structural/harvest-notes.md`。
+详见 `utilities/harvest-notes.md`。
 
 ---
 
@@ -281,7 +281,7 @@
 - **前置条件**: init-project 完成、`foundation.md` 已播种，且存在满足 V0 准入门槛的高改造成本约束（先于 V1 PRD）
 - **属性**: 无（迭代固定 v0）
 
-详见 `specs-structural/draft-foundation.md`。
+详见 `tasks/draft-foundation.md`。
 
 ---
 

@@ -1,0 +1,20 @@
+{
+  "schema": "hact-external-effect/v1",
+  "operation_id": null,
+  "task_ref": null,
+  "method_sha": null,
+  "action": null,
+  "target": null,
+  "snapshot": null,
+  "request_key": null,
+  "authority_refs": [],
+  "intent_receipt": {
+    "commit_sha": null,
+    "record_blob_sha": null,
+    "reachable_ref": null,
+    "verified_at": null
+  },
+  "outcome": "pending",
+  "observed_at": null,
+  "evidence_refs": []
+}

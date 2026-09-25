@@ -283,7 +283,7 @@ function checkCross(prdRes, trdRes, prdPath, trdPath) {
   // 2. PRD AC ↔ TRD `# 满足 AC：AC-nn` 回链（draft-tech-design 覆盖映射自检的机械化）
   //    逐条正向：每个 TRD 回链 id 在 PRD 存在（挡悬空/打错号）
   //    逐条反向：每个 PRD AC-nn 被 ≥1 TRD 载体回链承接（替代旧人工「覆盖映射」）
-  //    存量兜底：PRD 无 AC-nn 形式 id（旧 AC1 格式 / acBad）→ 退人工，不误报。
+  //    当前 schema 要求 AC-nn；缺失直接 FAIL。
   const trdRefSet = new Set(acRefs);
   // 正向：悬空回链（无论 PRD id 是否齐——打错号本身就该挡）
   if (acRefs.length) {
@@ -294,7 +294,7 @@ function checkCross(prdRes, trdRes, prdPath, trdPath) {
   }
   // 反向：PRD 每条 AC 被承接
   if (!acIds.length || acBad) {
-    human('交叉:AC逐条覆盖', `PRD 无可靠的 AC-nn id（存量旧格式或 id 校验未过）→ 逐条 AC 覆盖映射退人工兜底：由签字人核 PRD 每条 AC 是否都被 TRD 载体（接口/模块/交互场景）承接`);
+    fail('交叉:AC逐条覆盖', prdPath, '当前 Method 要求合法 AC-nn id');
   } else {
     const uncovered = acIds.filter(id => !trdRefSet.has(id));
     if (uncovered.length) fail('交叉:AC逐条覆盖', `${prdPath} → ${trdPath}`, `PRD AC 未被任何 TRD 载体「# 满足 AC」回链承接：${uncovered.join('、')}（补回链或列疑点向用户确认是范围调整还是设计遗漏，不静默丢）`);

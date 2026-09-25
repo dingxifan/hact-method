@@ -318,11 +318,3 @@ Review 只核受影响 slice 与 finding closure，不重审整份文档。
 - `wrap-up-iteration` 触发的 revision 完成后，收尾 Task 从 revision Git snapshot 恢复 deviation reconciliation
 
 所有下游 handoff 基于 Git snapshot，不继承完整 revision conversation。
-
-## 9. Runtime Routing
-
-Stay Local 为默认；实际 crossing 只允许 `Reality Probe`、`Review Dispatch`、`Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。每个 `revise-doc` 仍只 target 一个 authoritative layer；crossing 只引用既有 semantic truth，不在 Runtime prompt 中重定义 Contract。
-
-`Review Dispatch` **仅为 conditional targeted fresh-isolated review**，触发条件为：key PRD/TRD semantics 改变、high-risk Foundation invariant/enforcement 改变、多个 downstream Tasks / shared assets 受影响，或正在关闭一个要求 independent re-review 的 finding。trivial 且 uniquely determined correction 不触发 review。
-
-需要派生工作时，`Derived Child Task` 必须先满足既有 canonical registration、intake/package、readiness、status 与 ownership 要求。return 只使用 `resume-active-origin`、`cascade-new-task`、`create-new-work-for-merged-origin`、`no-return`；不得 reopen historical merged Task/Gate。Runtime job 不构成 child claim、Authority、state 或 completion。

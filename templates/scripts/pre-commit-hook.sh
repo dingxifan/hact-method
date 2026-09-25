@@ -13,24 +13,21 @@
 #   status.yml 新签 Gate / merged → check-gate.js --staged
 #   b-queue/*.md                  → check-b-task.js（B 类不得夹带共享契约修订）
 #   integration-tests/result-*.md → check-integration-evidence.js（已执行有证据、未运行有原因）
-#   iterations/vN/system-review/** → check-system-review.js --in-progress --staged（immutable event / finding / closure chain）
+#   iterations/vN/system-review/** → check-system-review.js --in-progress --staged（immutable report chain）
+#   _meta/external-effects/*.json → check-external-effect.js --staged
 #   reusables.md，或本次 commit 有文件删除/改名 → check-reusables.js（登记路径是否还在）
 #   connections.yml                 → check-conn.js（零机密 + 凭据引用完备 + 凭据落位安全）
 #   任何 staged 文件                → check-secrets.js（反查 ~/.hact/secrets.env 的真值）
 #
 # 状态签署/终态提交直接路由检查，不依赖重复更新 Markdown。
 #
-# 兼容（暗礁，见 hact-method HOOK 存档）：
-#   - 脚本缺失（存量仓未铺 scripts/check-*.js）→ 该检查 no-op 放行，绝不拦死。
-#   - node 不在 PATH → 警告并放行（不因环境差异 brick 提交）。
-#   - 护栏非密码锁：`git commit --no-verify` 可绕过，是范围限制非拦路石。
+# 当前 Method 要求 Node 与对应 checker 已安装；缺失即 fail closed。
 # ------------------------------------------------------------------
 set -u
 
-# node 缺失 → 放行（环境兜底）
 if ! command -v node >/dev/null 2>&1; then
-  echo "⚠️  pre-commit: 未找到 node，跳过结构检查（放行）" >&2
-  exit 0
+  echo "❌ pre-commit: 当前 Method 要求 Node，未找到" >&2
+  exit 1
 fi
 
 # core.quotepath 默认 true：非 ASCII 文件名会被转义并加引号输出，前导引号会让 ^ 锚定的
@@ -40,9 +37,13 @@ staged=$(git -c core.quotepath=false diff --cached --name-only)
 
 fail=0
 
-run() {  # run <脚本> <参数...>：脚本存在才跑；红则置 fail
+run() {
   script="$1"; shift
-  [ -f "$script" ] || return 0          # no-op：存量仓未铺脚本
+  if [ ! -f "$script" ]; then
+    echo "❌ pre-commit: 缺当前 Method checker $script" >&2
+    fail=1
+    return
+  fi
   echo "▶ pre-commit: node $script $*" >&2
   node "$script" "$@" || fail=1
 }
@@ -91,7 +92,7 @@ done
 # --- 单源状态：新签 Gate 与新 merged 任务 ---
 if echo "$staged" | grep -qE '^status\.yml$'; then
   run scripts/check-gate.js --staged
-elif echo "$staged" | grep -qE '^(iterations/v[0-9]+(\.[0-9]+)*/(sprint\.md|queue/.*\.md|code-reviews/)|b-queue/.*\.md$|b-reviews/|status-reviews/)'; then
+elif echo "$staged" | grep -qE '^(iterations/v[0-9]+(\.[0-9]+)*/(sprint\.md|queue/.*\.md|code-reviews/)|b-queue/.*\.md$|b-reviews/)'; then
   run scripts/check-sprint.js --staged
 fi
 
@@ -112,6 +113,10 @@ system_review_iters=$(echo "$staged" | sed -nE 's#^iterations/(v[0-9]+(\.[0-9]+)
 for version in $system_review_iters; do
   run scripts/check-system-review.js "$version" . --in-progress --staged
 done
+
+if echo "$staged" | grep -Eq '^_meta/external-effects/[^/]+\.json$'; then
+  run scripts/check-external-effect.js --root . --staged
+fi
 
 # --- reusables.md 登记表（check-reusables.js）---
 # 在迭代循环**外**：reusables.md 是项目根跨迭代活文档，不属于任何 vN。

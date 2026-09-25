@@ -32,8 +32,7 @@ const boot=fs.readFileSync(path.resolve(__dirname,'../boot-protocol.md'),'utf8')
 const expected=require('../../_meta/fixtures/codex-boot.json').cases;
 const routes=new Map(boot.split(/\r?\n/).map(line=>line.match(/^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`/)).filter(Boolean).map(m=>[m[1].replace(/\s+/g,''),m[2]]));
 assert.ok(!/^\| canonical task \| Task Contract \| legacy alias/m.test(boot), 'boot catalog stays canonical two-column');
-assert.match(boot, /draft-prd-vN[\s\S]*draft-prd/);
-assert.match(boot, /generate-integration-tests[\s\S]*integration-verify/);
-assert.match(boot, /review_architecture=system-verification\/v1[\s\S]*check-system-review\.js/);
+assert.doesNotMatch(boot, /draft-prd-vN|generate-integration-tests/, '旧 task alias 已退役');
+assert.match(boot, /integration-verify[\s\S]*check-system-review\.js/);
 for(const row of expected) assert.strictEqual(routes.get(row.signal),row.expected,'任务状态路由 '+row.signal);
 console.log('✅ Codex 初始化与角色配置正反例通过');

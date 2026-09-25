@@ -32,7 +32,7 @@
 
 ## 三、文件位置与生命周期
 
-- **位置**：项目根 `status.yml`，一个项目一份。它仍是机器侧**唯一数据源与入口**；归档文件只是由其中 `code_review_archives[]` 定位的数据分片，消费者不得绕过 status 自行枚举。
+- **位置**：项目根 `status.yml`，一个项目一份，是机器侧唯一动态状态入口。详细 review truth 留在 immutable report chain，status 只保留 latest pointer。
 - **创建**：`init-project` 从模板创建一次，含 `iterations.v1.gates`（全未签）+ 空 `tasks[]`。
 - **更新**：此后每个状态转移由所属 exec spec「做一个填一个」（见第五节）。
 - **健壮性**：任何更新步骤写入前若文件不存在（历史项目、断点等），先从 `templates/status.yml` 补建再写，不报错中断。
@@ -44,9 +44,8 @@
 
 ```yaml
 project: {项目名}                # string，项目名
-schema: 1                        # int，本契约 schema 版本号；字段演进靠它兼容
+schema: 1                        # 当前唯一 schema；不兼容旧形状
 generated_by: hact-method        # string，固定 hact-method（Codex）
-review_architecture: system-verification/v1 # 新采用 Review Architecture 的项目固定值；存量缺失表示 legacy，不补造 evidence
 
 iterations:                      # 按版本分块；每期一个 key
   v1:
@@ -90,8 +89,7 @@ tasks:
     depends_on: []
     delivery: null
     urgency: null
-    system_review_dir: iterations/v2/system-review
-    current_system_review: iterations/v2/system-review/review-001.md
+    latest_system_review: iterations/v2/system-review/review-001.md
     integration_result: integration-tests/result-2026-09-20.md
     final_candidate: <40-char project commit SHA>
   - id: hact-b-001              # B 类示例
@@ -116,29 +114,12 @@ integration_tests:               # 联调测试项；description 短，随行显
     status: 通过                 # enum，待执行 / 执行中 / 通过 / 失败
     failure_reason: null         # string，status=失败 时填，否则 null
 
-code_review_archives:            # 已搬出的 code_reviews[] 索引；为空时写 code_review_archives: []
-  - iteration: v1                # vN；B 类写 null
-    file: status-reviews/v1.yml  # 固定形状 status-reviews/{key}.yml
-    count: 18                    # 该文件内 code_reviews 条目数
-
-code_reviews:                    # 结论、报告索引与成本汇总；问题正文在逐轮报告
-  - iteration: v2
-    task_id: hact-v2-008         # string，被审 develop 任务 id
-    conclusion: 需修订           # enum，通过 / 需修订
-    rounds: 2                    # int ≥1，兼容总轮次 = code_rounds + spec_rounds
-    code_rounds: 1               # int ≥1，代码证据审查实际运行数
-    spec_rounds: 1               # int ≥0，freshness/contract/claim 独立复核数
-    freshness: revised           # enum，pass / revised
-    review_report_dir: iterations/v2/code-reviews/hact-v2-008  # B 类为 b-reviews/{task-id}
-    review_evidence_version: develop-review-round/v2   # 新任务 round 报告 schema；存量缺失按 legacy/unknown
+code_reviews:                    # 每个 task 的 latest immutable review pointer
+  - task_id: hact-v2-008
+    reviewed_candidate: {40-char commit/tree SHA}
+    latest_review: iterations/v2/code-reviews/hact-v2-008/round-02.md
+    conclusion: pass             # pass / blocked
 ```
-
-### 审查归档索引与文件约束
-
-- `code_review_archives[]` 每个 key 只对应一个文件，`file` 不重复且必须与 `iteration` 一一对应：A 类 key 取迭代号（如 `v1`）；点号迭代把 `.` 机械替换为 `-`（`v1.1` → `v1-1`）；B 类 `iteration: null` 固定用 `b`。对应路径分别为 `status-reviews/v1.yml`、`status-reviews/v1-1.yml`、`status-reviews/b.yml`。
-- `file` 是项目根相对路径，只允许 `status-reviews/[A-Za-z0-9][A-Za-z0-9-]*.yml`；消费者拒绝绝对路径、`..` 与符号链接。
-- 每个归档文件的顶层键必须且只能是 `code_reviews:`，其中条目 schema 与 `status.yml` 内 `code_reviews[]` 完全一致。归档文件不放 `tasks`、`gates` 或 `integration_tests`。
-- 归档是搬家：条目字段与内容原样保留，只把完整条目块移出主文件。`status.yml` 本身仍永久存在且保持机器侧唯一数据源地位——索引在其中，消费者仍从它进入。未归档不阻断任何 Gate 或交付。
 
 ### 枚举对齐
 
@@ -150,28 +131,19 @@ code_reviews:                    # 结论、报告索引与成本汇总；问题
 | `tasks[].delivery` | 串行 / 可并行 / null |
 | `tasks[].urgency` | hotfix / null |
 | `integration_tests[].status` | 待执行 / 执行中 / 通过 / 失败 |
-| `code_reviews[].conclusion` | 通过 / 需修订 |
-| `code_reviews[].rounds` | int ≥1（非枚举） |
-| `code_reviews[].code_rounds` | int ≥1（非枚举） |
-| `code_reviews[].spec_rounds` | int ≥0（非枚举） |
-| `code_reviews[].freshness` | pass / revised |
+| `code_reviews[].conclusion` | pass / blocked |
 
-> rounds/code_rounds/spec_rounds 为审查次数与恢复依据；时间戳/分钟成本字段可选且不阻断，不补估、不强制对齐。固定 Git 基线、审查范围、报告链与 finding 闭合仍必需。
->
-> 每个新完成任务在终态提交前运行 `node scripts/check-sprint.js --review {task-id}`。该校验按 task-id 工作，不依赖 iteration，因此 A/B 共用；显式校验核固定 diff、targeted 继承链与问题闭合，并对缺必要字段硬失败。只有迭代级兼容扫描才允许对旧条目留人签。
-
-> 问题、证据、严重程度与处置状态按 `templates/review-briefs/develop-review-round.md` 写入逐轮报告。`status.yml` 通过 `review_report_dir` 引用，读取问题时沿报告链按稳定 finding id 取最新处置，不另维护 issues/comment 副本。历史内联内容原样保留。
+> 每个任务终态前运行 `node scripts/check-sprint.js --review-chain {task-id}`。固定 Git 基线、review scope、report chain 与 finding closure 仍必需；status 不保存轮数或 findings 副本。
 
 ### System Verification 最小指针
 
-`review_architecture: system-verification/v1` 是前瞻采用标记，不是完成状态。采用后，每期必须有且仅有一个 `type=integration-verify` work item，并只在该条目存：
+每期必须有且仅有一个 `type=integration-verify` work item，并只在该条目存：
 
-- `system_review_dir`：固定为 `iterations/vN/system-review`；
-- `current_system_review`：当前最新 immutable reviewer event；
+- `latest_system_review`：当前最新 immutable reviewer report；
 - `integration_result`：当前 runtime result；
 - `final_candidate`：两条 lane 最终共同指向的 project commit。
 
-Findings、routes、revalidation 与 closure events 不复制进 status，由 checker 沿上述 pointer 读取 Git artifacts 推导。存量项目缺采用标记时继续按原 schema 解释；迁移不能自动添加标记并声称历史 System Verification 已发生。
+Findings 不复制进 status，由 checker 沿 latest report 读取。
 
 ### 不进 YAML（留在 markdown 里，供人阅读）
 任务包字段正文、`description`、`completion_report`、`output`、PRD/TRD/sprint/联调报告正文。
@@ -202,7 +174,6 @@ Findings、routes、revalidation 与 closure events 不复制进 status，由 ch
 | 签 G4 | `manual-test` | `gates.G4` |
 | B 类派发 | `dispatch-new` | 追加 task（`source=bug/optimization`, `iteration=null`） |
 | 签 G5 | `wrap-up-iteration` | `gates.G5` |
-| 签 G5 后归档本期 code_reviews | `wrap-up-iteration` | 移出本期 `code_reviews[]` 条目到 `status-reviews/{vN}.yml`（点号迭代使用连字符 key）+ 追加 `code_review_archives[]` 索引 |
 
 **写入纪律**：
 - 每次只改对应字段，保留其余内容不动。

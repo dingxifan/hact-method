@@ -39,8 +39,6 @@ const SECRETS_FILE = path.join(SECRETS_DIR, 'secrets.env');
 const SECRET_REF   = /\$\{secret:([A-Za-z_][A-Za-z0-9_]*)\}/g;
 const SECRET_ONLY  = /^\$\{secret:[A-Za-z_][A-Za-z0-9_]*\}$/;
 
-// 存量兼容：新 handle 取不到时回退这些历史环境变量名，让已配好的机器零改动继续能跑。
-const LEGACY_ALIAS = { HACT_GITEE_TOKEN: ['GITEE_ACCESS_TOKEN', 'GITEE_TOKEN'] };
 
 function exists(p) { try { return fs.statSync(p).isFile(); } catch { return false; } }
 function unquote(s) {
@@ -104,10 +102,8 @@ function redact(str) {
 }
 
 function resolveSecret(name, secrets) {
-  for (const n of [name, ...(LEGACY_ALIAS[name] || [])]) {
-    if (process.env[n] && process.env[n].trim()) return { value: remember(process.env[n].trim()), from: `环境变量 ${n}` };
-    if (secrets.map.get(n)) return { value: remember(secrets.map.get(n)), from: `~/.hact/secrets.env:${n}` };
-  }
+  if (process.env[name] && process.env[name].trim()) return { value: remember(process.env[name].trim()), from: `环境变量 ${name}` };
+  if (secrets.map.get(name)) return { value: remember(secrets.map.get(name)), from: `~/.hact/secrets.env:${name}` };
   return null;
 }
 

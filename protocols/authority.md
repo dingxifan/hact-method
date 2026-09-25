@@ -37,7 +37,7 @@ ChatGPT 能写 Git 不代表它可以批准产品需求；Codex 能部署不代�
 
 ## 5. Escalation
 
-遇到 capability gap、reasoning gap 或 independence gap 时可 escalation，但不自动转移 Task ownership。
+遇到 capability gap、reasoning gap 或 independence gap 时可 escalation，但不自动转移 Task ownership。reasoning gap 先在当前 Runtime 内提高 model/effort；只有不可消解的 capability / isolation gap 才触发跨 Runtime handoff。
 
 需要高级 reasoning 时优先传递 Decision Packet：
 - Decision Question
@@ -57,9 +57,9 @@ ChatGPT 能写 Git 不代表它可以批准产品需求；Codex 能部署不代�
 
 Contract drift 应通过明确 revision / escalation 处理。
 
-## 7. Runtime Crossing 的 Effective Permission
+## 7. Effective Permission 的检查时机
 
-Runtime Crossing Record 中的 `permission_ceiling` 只是该 crossing 的最大上限，不是当前授权。根据 `runtime-crossing.md`，在每一次 repository mutation、commit、push/shared transport、external action、retry、recovery continuation、deployment/promotion、Runtime/action dispatch，以及对应 lifecycle boundary 前，都必须紧邻动作重新计算：
+bounded operation 开始时确认一次 Effective Permission：
 
 ```text
 Effective Permission =
@@ -68,9 +68,19 @@ Task Contract authorization boundary
 ∩ current resource permissions
 ∩ environment protection
 ∩ tool capability
-∩ stored permission ceiling
 ```
 
-最窄限制胜出；先前计算、Runtime receipt 或 Git persistence receipt 都不能授权后续边界。Human Authority、环境策略或资源权限的收窄/撤销立即优先适用。
+最窄限制胜出；Runtime receipt 或 Git persistence receipt 都不能扩大 Authority。exact operation、target、snapshot 与 Authority references 只固定本次意图和证据，不创建第二套权限矩阵。
 
-权限扩张必须由新的、scoped、immutable Authority event 明确绑定 action/scope、snapshot/world、target/environment 和适用的 validity scope。Runtime Crossing 只能 append 对该事件的引用，不能自行创建 Authority、ownership 或 state。
+同一 bounded operation 内，只要 scope、target、snapshot、Human Authority、resource/environment protection、tool capability 与动作风险等级均未变化，读取、修改、测试和同类机械整改可以连续执行，不在每个 repository mutation 或 lifecycle append 前重复计算。
+
+仅在以下边界重新计算：
+
+- scope、target、snapshot、Authority、环境保护或 tool capability 发生变化；
+- 从本地工作进入 commit、push/shared transport、merge、deployment/promotion 或 external action；
+- retry / recovery continuation 涉及不确定 start/effect；
+- 原 bounded operation 的动作变为更高影响、不可逆或 non-idempotent。
+
+Human Authority、环境策略或资源权限的收窄/撤销立即优先适用。
+
+权限扩张必须由新的、scoped、immutable Authority event 明确绑定 action/scope、snapshot/world、target/environment 和适用的 validity scope。External Effect Receipt 只能引用该事件，不能自行创建 Authority、ownership 或 state。这里不创建 Approval Envelope 或第二套授权模型。

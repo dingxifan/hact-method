@@ -1,5 +1,3 @@
 .claude/
 !templates/.claude/
 !templates/.claude/**
-scripts/hact-watcher/config.json
-scripts/hact-watcher/adapter.config.json

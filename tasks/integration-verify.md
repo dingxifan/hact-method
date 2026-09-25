@@ -1,8 +1,6 @@
 ---
 schema: hact-task/vnext
 task: integration-verify
-legacy_aliases:
-  - generate-integration-tests
 class: A
 discipline: integration-testing
 gate: null
@@ -89,7 +87,7 @@ Task Contract 只定义整合验证的任务语义；具体脚本、浏览器工
 - `design.md` 中相关页面规格与视觉基线
 - 已有 integration scripts / scenario definitions
 - 已有 integration result / evidence
-- 已有 system-review event、未关闭 system finding、closure/revalidation evidence（存在时）
+- 已有 system-review reports 与未关闭 finding（存在时）
 - 外部边界配置、测试凭据入口和去敏样本说明
 - backlog / feedback 中与本期组合缺口有关的条目
 
@@ -103,17 +101,15 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 |---|---|---|
 | Backend verification flows | `integration-tests/backend/` 或项目等价位置 | 真实入口到终态的穿透流 |
 | Frontend verification scenarios | `integration-tests/frontend/` 或项目等价位置 | 仅在完整档适用 |
-| Integration result | `integration-tests/result-{date}.md` | `integration-result/v2`；绑定 final candidate、current System Review、runtime/revalidation scope 与场景证据 |
+| Integration result | `integration-tests/result-{date}.md` | 绑定 final candidate、current System Review 与场景证据 |
 | Integration evidence | `integration-tests/evidence/` 或项目等价位置 | 真实运行证据，按项目当前 schema |
-| System Review events | `iterations/vN/system-review/review-NNN.md` | `system-review/v1`；对 fixed candidate 的 immutable full/targeted historical judgement |
-| Post-publication runtime finding | `iterations/vN/system-review/findings/{finding-id}.md` | `system-finding/v1`；仅用于 review 发布后新建立的 runtime-origin finding |
-| System finding closure events | `iterations/vN/system-review/closures/{finding-id}/closure-NNN.md` | `system-finding-closure/v1` additive event；不改写 source judgement |
+| System Review reports | `iterations/vN/system-review/review-NNN.md` | `system-review/v2`；full/targeted report chain 与 stable findings |
 
 ### State updates
 
 - `status.yml`：每个 iteration 恰有一个 `type: integration-verify` 的 Core Task work item，沿用 `可取 → taken-by → done → merged`；`source` 为 `null`，详细 findings/evidence 不复制进 status
 - 必要 integration evidence / result pointer
-- 当前 `system_review_dir`、`current_system_review`、`integration_result`、`final_candidate` 最小 pointer；未解决 obligation 由 checker 沿 Git artifacts 推导，不复制进 status
+- 当前 `latest_system_review`、`integration_result`、`final_candidate` 最小 pointer；open findings 由 checker 沿 report chain 推导
 - 派生修复 Task 的状态由各自 `develop` Task 管理，不在本 Task 复制第二套状态
 
 ### Conditional outputs
@@ -121,7 +117,6 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 - `develop(source=integration)` Development Intake / Task Package
 - `revise-doc` 请求
 - backlog 条目：不阻断本期承诺但值得后续处理的问题
-- recovery pointer：长程、多轮修复或跨 session 时
 
 不保存完整运行日志、完整 conversation 或可廉价重跑的大量 stdout；保存足以证明结论的 evidence。
 
@@ -142,26 +137,15 @@ System Verification 包含：
 
 两条 lane 可以交换 evidence，不要求僵硬串行。Semantic Reviewer 可以请求 runtime evidence；Runtime Verification 可以建立新的 system finding。但两者不能互相替代，且必须对同一可追溯 candidate 成立。
 
-### 5.3 System Reviewer events and evidence state
+### 5.3 System Review reports
 
-首次 System Reviewer event 对 final candidate 做 `full` review。后续事件按前序 judgement 的失效范围为 `targeted` 或 `full`；每次 invocation 形成新的 immutable event，targeted event 声明 predecessor 与 revalidation scope。
+首次 report 对 final candidate 做 `full` review。后续 report 为 `targeted` 或 `full`；每次 invocation 形成新 immutable report，targeted report 引用 predecessor 与 open finding IDs。
 
-Review result 与 evidence state 是两条轴：evidence insufficient 不能建立 pass。事件与 closure contract 分别按 `templates/review-briefs/system-review.md`、`templates/review-briefs/system-finding-closure.md`；Phase 4 才实现 deterministic checker、hook 与 runtime wiring，不得先用临时枚举改写语义。
+Evidence insufficient 不能建立 pass。报告按 `templates/review-briefs/system-review.md`；`check-system-review.js` 机械核 report chain、candidate 与 finding closure。
 
-### 5.4 System finding routing and closure
+### 5.4 System finding closure
 
-System Review 与 Runtime Verification 建立的 blocking finding 共用 `protocols/review.md` 的 Finding Contract。
-
-Owner 必须为每个 finding 选择恰一个 effective route：
-
-- `local-close`：局部根因、局部影响、Contract/major architecture 不实质变化，且 semantic/runtime revalidation scope 可完整声明；
-- `system-rereview`：修复可能使 system-level semantic conclusion 失效，或 locality 不能可靠界定。
-
-`local-close` repair 通过 `develop(source=integration)` 形成 fixed candidate 和 Fresh Isolated Local Review evidence；返回本 Task 后完成仍 required 的 semantic/runtime revalidation，再追加 closure event。Local repair 超出授权 locality 时，追加 escalation event，把 effective route 改为 `system-rereview`，旧 local authority 失效。
-
-`system-rereview` repair 可以先完成 local prerequisites，但只有新的 System Reviewer event 有 closure authority。`full_snapshot_invalidated=false` 默认 targeted；`true` 必须有具体 invalidation reason 并进入 Full System Re-review。
-
-Finding origin/category 不决定 route，diff size 不决定 review depth。Local closure 不创建 system review event；System Reviewer 每次 invocation 都创建新 immutable event。
+System Review 与 Runtime Verification 建立的 blocking finding 都进入同一 report chain。修复通过 canonical `develop(source=integration)` / `revise-doc` 形成新 fixed candidate；只有新的 Fresh Independent Review report 可以关闭 finding。影响无法限定时 reviewer 要求 full review，否则 targeted re-review。
 
 ### 5.5 Only current impact, but include seams
 
@@ -254,7 +238,7 @@ Owner 必须识别本期新增或变化的真实外部边界，例如：
 - **必要 Evidence 不足** → 补真实 Evidence
 - **与本期承诺无关的未来改进** → backlog
 
-integration-verify 自身不直接修改业务逻辑。System finding 的 closure authority 不由 origin 决定；未有合法 route、required revalidation 与 additive closure event 前，不得仅因修复代码已 merged 就宣布 system finding 关闭。
+integration-verify 自身不直接修改业务逻辑。不得仅因修复代码已 merged 或测试 PASS 就宣布 finding 关闭；必须有新 candidate 上的 Fresh Review report。
 
 不得通过修改文档来取消已确认承诺，也不得让代码迁就错误 Contract。
 
@@ -291,9 +275,7 @@ Task 完成时，每个 required scenario 都必须有**对当前 Accepted imple
 - result 中每个已执行场景都有 evidence pointer
 - 每个未运行场景 / boundary 都有明确原因和承接点
 - blocking finding 均已关闭
-- 每个 blocking finding 在每个 lineage point 恰有一个 effective route
-- 每个 closed finding 都有满足其 closure authority 的 additive event；source judgement 未被改写
-- 无 unresolved escalation、pending system-rereview obligation 或缺失的 semantic/runtime revalidation scope
+- latest System Review report 对 final candidate 生效且无 open finding
 - 所有派生 `develop(source=integration)` 修复已 `merged`
 - 完整档适用时，required frontend scenario 与 visual smoke evidence 完整
 - 项目当前 integration checker / evidence checker（若存在）通过
@@ -310,11 +292,7 @@ Task 完成时，每个 required scenario 都必须有**对当前 Accepted imple
 - 穿透流确实经过要验证的真实接缝
 - required user task / terminal state 覆盖合理
 - 外部边界结论没有把未验证冒充通过
-- 当前所有 blocking 缺口已由真实修复 / revision / authority closure 解决
-- local-close finding 未越出其 locality assumptions；越界者已 escalated
-- system-rereview finding 仅由新的 System Reviewer event 关闭
-- `full_snapshot_invalidated` 判断有具体失效结论依据，不以 diff size 替代
-- 当前 system-level assurance 依赖有效 closure lineage，而不是机械要求“最后一次 full review 必须 pass”
+- 当前所有 blocking 缺口已由真实修复 / revision / Authority 处理，并由最新 Fresh Review report 关闭
 
 ## 7. Review & Human Authority
 
@@ -344,8 +322,7 @@ integration-verify 不产生 Gate approval。
 - required composition reconciliation 已完成
 - 当前所需 System Reviewer event 已形成 immutable Shared Candidate Truth
 - required scenarios 已执行或有合法、明确的未运行结论
-- blocking finding 已关闭；`open=0` 且 `escalated_unresolved=0`
-- 无 unresolved escalation、pending system-rereview obligation 或缺失的 required semantic/runtime revalidation
+- latest report `open_finding_ids=[]` 且 `conclusion=pass`
 - 派生 integration repair 已 `merged`
 - 当前 result / scripts / evidence 已形成稳定 Shared Candidate Truth
 - 没有未解决 Authority blocker
@@ -366,7 +343,7 @@ integration-verify 不产生 Gate approval。
 - deterministic 与 semantic verification 对同一最终世界成立
 - Semantic / Holistic Independent Review 与 Runtime Integration Verification 均对最终 candidate satisfied
 - integration result、必要 scripts / evidence 与 state 已进入 Accepted Project Truth
-- system review events 与 additive closure/revalidation evidence 已进入 Accepted Project Truth
+- system review report chain 已进入 Accepted Project Truth
 - `status.yml` 准确记录 Task `merged`
 - 当前无未关闭 blocking finding
 
@@ -374,9 +351,9 @@ integration-verify 不产生 Gate approval。
 
 ### Downstream
 
-`integration-verify` `merged` 后，且两条 lane 与全部 system finding obligations 对同一 final candidate satisfied，`manual-test` 可进入 `可取`。
+`integration-verify` `merged` 后，且两条 lane 与 latest passing System Review 对同一 final candidate satisfied，`manual-test` 可进入 `可取`。
 
-`manual-test` 必须重新读取 Accepted System Verification result（system-review lineage + integration result），不继承本 Task 的 conversation。
+`manual-test` 必须重新读取 latest accepted System Review report 与 integration result，不继承本 Task 的 conversation。
 
 ## 9. Recovery Notes
 
@@ -388,7 +365,7 @@ integration-verify 不产生 Gate approval。
 - required scenario 列表
 - 每个 scenario 的 result / evidence pointer
 - 未关闭 finding
-- 未解决 escalation / system-rereview / semantic or runtime revalidation obligation
+- latest report 的 open finding IDs
 - 派生 `develop(source=integration)` Task 状态
 - 未运行 boundary 的原因与后续承接点
 
@@ -396,10 +373,5 @@ integration-verify 不产生 Gate approval。
 
 不要因为 session 中断而重跑仍然有效的场景，也不要因为旧报告写着“pass”而跳过已经失效的 evidence。
 
-## 10. Runtime Routing
 
-canonical `integration-verify` 在全部 verification / repair-return 期间保持 active；实际 crossing 只允许 `Execution Task Runtime`、`Review Dispatch`、`Derived Child Task`，并遵循 Runtime Crossing / Authority / Recovery / Review Protocol 与 Runtime Orchestration Skill。Runtime job 不创建 ownership/state，也不替代本 Task 的 final candidate 或 completion truth。
-
-System Semantic / Holistic Independent Review 的 `Review Dispatch` **REQUIRED**，必须针对 fixed final system candidate 使用 reviewer-specific projection。Runtime Integration Verification 是独立 assurance lane；runtime PASS、checker PASS 或 execution completion 均不能替代 System Review。
-
-system finding 按既有 route 派生 canonical `develop(source=integration)` 或 `revise-doc` child；适用的 repair return 使用 `resume-active-origin`。完整链仍为 source finding → effective closure route → canonical child repair/revision → fixed candidate → required isolated review → semantic/runtime revalidation → required system re-review/escalation → additive closure event。`repair merged + test PASS` 单独不能关闭 finding，historical finding 不改写。
+system finding 派生 canonical `develop(source=integration)` 或 `revise-doc` child；形成新 fixed candidate 后做 targeted/full Fresh Review。`repair merged + test PASS` 单独不能关闭 finding，旧 report 不改写。
