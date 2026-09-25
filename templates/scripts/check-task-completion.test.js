@@ -70,8 +70,19 @@ write('status.yml', 'tasks:\n  - id: mail-v11-trd\n    iteration: v11\n    type:
 runGit(['add', 'status.yml']);
 result = runCheck(['--staged', temp]);
 assert.notStrictEqual(result.status, 0);
-assert.match(result.stdout, /immutable blob 不一致/);
+assert.match(result.stdout, /首次加入后仍被 Git 历史触及/);
 runGit(['reset', '--hard', 'HEAD~1']);
+
+write('iterations/v11/document-reviews/mail-v11-trd/round-01.md', fs.readFileSync(path.join(temp, 'iterations/v11/document-reviews/mail-v11-trd/round-01.md'), 'utf8').replace('findings: []', 'findings: temporary rewrite'));
+runGit(['add', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']); runGit(['commit', '-qm', 'temporarily rewrite historical review']);
+runGit(['checkout', 'HEAD~1', '--', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']);
+runGit(['add', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']); runGit(['commit', '-qm', 'restore historical review bytes']);
+write('status.yml', 'tasks:\n  - id: mail-v11-trd\n    iteration: v11\n    type: draft-tech-design\n    status: merged\n');
+runGit(['add', 'status.yml']);
+result = runCheck(['--staged', temp]);
+assert.notStrictEqual(result.status, 0);
+assert.match(result.stdout, /首次加入后仍被 Git 历史触及/);
+runGit(['reset', '--hard', 'HEAD~2']);
 
 runGit(['reset', '--hard', 'HEAD']);
 write('iterations/v11/trd.md', '# TRD changed after review\n');
