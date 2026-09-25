@@ -31,7 +31,7 @@
 - [x] duplicate Task ID fail-closed
 - [x] TRD carrier schema 与 checker/tests
 - [x] 全量机械验证
-- [ ] Fresh Independent Review
+- [x] Fresh Independent Review
 
 ## 完成边界
 

@@ -1,7 +1,7 @@
 # STATUS.md — hact-method
 
 ## 当前状态
-- 当前阶段：**存量接入与文档 Task 收口·实施验证**
+- 当前阶段：**存量接入与文档 Task 收口·已实现待真实项目试点**
 - 上次更新：2026-09-25
 - 当前计划：`_meta/plans/2026-09-25-legacy-adoption-and-document-closeout/task_plan.md`
 - 固定基线：commit `a9bcde43a5ce8b2ee95c63b0fabc1fe0ff563c58` / tree `620f36f83132c661f5a74cf6ca4c788af67257f8`
@@ -12,14 +12,14 @@
 |------|------|---------|
 | 方法基础 | ✅ 完成 | 2026-09-20 前 |
 | 当前版收敛 | ✅ 完成 | 2026-09-25 |
-| 存量接入与文档 Task 收口 | 🔄 实施验证中 | — |
+| 存量接入与文档 Task 收口 | ✅ 完成 | 2026-09-25 |
 | 真实项目试行 | ⏳ 待开始 | — |
 
 > 本文件后续较早日期内容是历史记录。与当前状态冲突时，不构成执行要求；当前执行只读取 `tasks/`、`protocols/`、模板和检查器。
 
 ## 本阶段进展
 
-- **存量接入与文档 Task 收口（2026-09-25）**：保持 current-only Core，不恢复运行时兼容层；在 Core 前增加一次性 legacy normalization、install manifest v2 与文件所有权策略。文档 Task 使用 task-specific completion checker，不再套 develop review-chain；TRD review brief 收缩为 Task/Protocol 的薄入口；重复 Task ID fail closed；TRD 支持非表技术承载。当前在独立 worktree 实施和验证，尚未 push 或向项目仓分发。
+- **存量接入与文档 Task 收口（2026-09-25）**：保持 current-only Core，不恢复运行时兼容层；在 Core 前增加一次性 legacy normalization、install manifest v2 与文件所有权策略。文档 Task 使用 task-specific completion checker，不再套 develop review-chain；review truth 改由 `document_review_commit + latest_document_review` 固定 Git snapshot 绑定；TRD review brief 收缩为 Task/Protocol 的薄入口；重复 Task ID fail closed；TRD 支持非表技术承载。最终 implementation candidate `4ec849f` 通过 23 个 fixture、45 个 JS/CJS syntax check、路径/入口/diff 检查及 Fresh Targeted Re-review（B001–B004 全部关闭、无新 blocker）。尚未 push、分发或运行真实项目试点。
 
 - **当前版彻底收敛（2026-09-25）**：不再考虑旧版兼容。`tasks/` 成为唯一任务契约；退役 structural/execution 双层 specs、runtime crossing、watcher、discussion persistence、legacy migration 和 review projection。默认同一运行时执行到结论，一个用户动作最多一次对外交接；机械错误直接修正复验。质量链保留固定候选、独立审查、真实联调、Gate 人签及 external-effect 收据；系统 finding 必须通过新候选关闭。安装器改为当前版覆盖和安全清理。当前候选正在跑完整回归与独立复审，尚未 commit、push 或分发。
 
@@ -56,9 +56,9 @@
 
 ## 下一个起点
 
-先完成当前候选的全量机械验证与 Fresh Independent Review；任何 blocking finding 都必须在新候选修复并复审。通过后仍不自动 commit、push 或分发，等待用户另行批准。
+下一步需由用户明确选择一个真实旧项目并授权试点。试点严格按 `guide/08-旧项目全面接入新版.md` 执行，先只读 inventory/plan，再单独授权应用、集成与可能的远端交付。
 
-随后选择一个真实项目整体采用当前版，重点记录：跨窗口交接次数、重复状态比对、人工介入、机械错误修正耗时、审查检出率和返工。只有真实端到端样本通过后，才能宣称流畅度改进已得到验证。
+试点重点记录：文件所有权冲突、历史重复 Task ID、跨窗口交接次数、重复状态比对、人工介入、机械错误修正耗时、审查检出率和返工。只有真实端到端样本通过后，才能宣称“旧项目全面适用”和流畅度改进已得到实证。
 
 ## 仓库拓扑
 
