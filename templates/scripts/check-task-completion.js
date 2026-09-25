@@ -19,6 +19,8 @@ function git(root, args, buffer = false) {
   return buffer ? result.stdout : result.stdout.trimEnd();
 }
 
+function clean(value) { return String(value || '').replace(/\s+#.*$/, '').trim().replace(/^['"]|['"]$/g, ''); }
+
 function parseTasks(source) {
   const tasks = [];
   let inTasks = false, current = null;
@@ -36,17 +38,14 @@ function parseTasks(source) {
   return tasks;
 }
 
-function clean(value) { return String(value || '').replace(/\s+#.*$/, '').trim().replace(/^['"]|['"]$/g, ''); }
-
 function duplicates(tasks) {
   const counts = new Map();
   for (const task of tasks) if (task.id) counts.set(task.id, (counts.get(task.id) || 0) + 1);
   return [...counts].filter(([, count]) => count > 1).map(([id]) => id);
 }
 
-function parseFrontmatter(file) {
-  const source = fs.readFileSync(file, 'utf8');
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+function parseFrontmatterSource(source) {
+  const match = String(source || '').match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
   if (!match) return null;
   const result = {};
   for (const raw of match[1].split(/\r?\n/)) {
@@ -61,31 +60,33 @@ function parseFrontmatter(file) {
 
 function reviewErrors(root, task) {
   const errors = [];
-  if (!/^v\d+(?:\.\d+)*$/.test(task.iteration || '')) return ['draft-tech-design 缺合法 iteration'];
-  const dir = path.join(root, 'iterations', task.iteration, 'document-reviews', task.id);
-  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) return [`缺 document review 目录：${path.relative(root, dir)}`];
-  const reports = fs.readdirSync(dir).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
-  if (!reports.length) return ['缺 document review round'];
+  const finish = finalReport => { errors.finalReport = finalReport || null; return errors; };
+  if (!/^v\d+(?:\.\d+)*$/.test(task.iteration || '')) { errors.push('draft-tech-design 缺合法 iteration'); return finish(); }
+  const reviewCommit = task.document_review_commit;
+  const latestReview = String(task.latest_document_review || '').replace(/\\/g, '/');
+  const dir = `iterations/${task.iteration}/document-reviews/${task.id}`;
+  if (!isSha40(reviewCommit)) errors.push('status 缺合法 document_review_commit');
+  if (!new RegExp(`^${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/round-\\d{2}\\.md$`).test(latestReview))
+    errors.push('status latest_document_review 不在本 Task 的 document review 目录');
+  if (errors.length) return finish();
+  try { git(root, ['merge-base', '--is-ancestor', reviewCommit, 'HEAD']); }
+  catch { errors.push('document_review_commit 不在当前 HEAD 历史中'); return finish(); }
+  let reports;
+  try {
+    reports = git(root, ['ls-tree', '-r', '--name-only', reviewCommit, '--', dir]).split(/\r?\n/)
+      .filter(name => new RegExp(`^${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/round-\\d{2}\\.md$`).test(name)).sort();
+  } catch (error) { errors.push(`无法读取 document review snapshot：${error.message.trim()}`); return finish(); }
+  if (!reports.length) { errors.push('document_review_commit 中缺 review round'); return finish(); }
+  if (reports.at(-1) !== latestReview) errors.push('latest_document_review 不是 review snapshot 的末轮');
+
   let previous = '', previousOpen = [], previousCandidate = '', finalReport = null;
   for (let index = 0; index < reports.length; index += 1) {
-    const file = path.join(dir, reports[index]);
-    const relativeFile = path.relative(root, file).replace(/\\/g, '/');
-    const fm = parseFrontmatter(file);
-    const label = reports[index];
-    if (!fm) { errors.push(`${label}: 缺 frontmatter`); continue; }
-    try {
-      git(root, ['cat-file', '-e', `HEAD:${relativeFile}`]);
-      const additions = git(root, ['log', '--format=%H', '--diff-filter=A', '--', relativeFile]).split(/\r?\n/).filter(Boolean);
-      const touches = git(root, ['log', '--full-history', '--format=%H', '--', relativeFile]).split(/\r?\n/).filter(Boolean);
-      if (additions.length !== 1) errors.push(`${label}: 无法证明唯一 immutable creation commit`);
-      else if (touches.length !== 1 || touches[0] !== additions[0]) errors.push(`${label}: immutable report 在首次加入后仍被 Git 历史触及`);
-      else {
-        const original = git(root, ['show', `${additions[0]}:${relativeFile}`], true);
-        if (!original.equals(fs.readFileSync(file))) errors.push(`${label}: 已提交 report 与首次加入 Git 的 immutable blob 不一致`);
-      }
-    } catch {
-      // New staged round is allowed; after commit its first blob becomes immutable.
-    }
+    const relativeFile = reports[index];
+    const label = path.posix.basename(relativeFile);
+    let fm;
+    try { fm = parseFrontmatterSource(git(root, ['show', `${reviewCommit}:${relativeFile}`])); }
+    catch { fm = null; }
+    if (!fm) { errors.push(`${label}: immutable snapshot 中缺合法 frontmatter`); continue; }
     if (fm.schema !== 'hact-document-review/v1') errors.push(`${label}: schema 非 hact-document-review/v1`);
     if (fm.task_id !== task.id || fm.task_type !== task.type) errors.push(`${label}: task identity 不匹配`);
     if (Number(fm.round) !== index + 1) errors.push(`${label}: round 与文件序号不符`);
@@ -93,21 +94,20 @@ function reviewErrors(root, task) {
     if (!['initial', 'targeted'].includes(fm.review_type)) errors.push(`${label}: review_type 非法`);
     if (index === 0 && fm.review_type !== 'initial') errors.push(`${label}: 首轮必须 initial`);
     if (index > 0 && fm.review_type !== 'targeted') errors.push(`${label}: 后续轮必须 targeted`);
-    const expectedPrior = previous ? path.relative(root, previous).replace(/\\/g, '/') : 'null';
-    if ((fm.prior_report || 'null') !== expectedPrior) errors.push(`${label}: prior_report 未指向紧邻上一轮`);
+    if ((fm.prior_report || 'null') !== (previous || 'null')) errors.push(`${label}: prior_report 未指向紧邻上一轮`);
     if (!isSha40(fm.candidate_commit) || !isSha40(fm.candidate_tree)) errors.push(`${label}: candidate commit/tree 非固定 40 位 SHA`);
     else {
       try {
-        const actualTree = git(root, ['rev-parse', `${fm.candidate_commit}^{tree}`]);
-        if (actualTree !== fm.candidate_tree) errors.push(`${label}: candidate_tree 与 commit 不一致`);
-      } catch { errors.push(`${label}: candidate commit/tree 不可解析`); }
+        if (git(root, ['rev-parse', `${fm.candidate_commit}^{tree}`]) !== fm.candidate_tree) errors.push(`${label}: candidate_tree 与 commit 不一致`);
+        git(root, ['merge-base', '--is-ancestor', fm.candidate_commit, reviewCommit]);
+      } catch { errors.push(`${label}: candidate 不在 document_review_commit 历史中或不可解析`); }
     }
     if (fm.artifact_path !== `iterations/${task.iteration}/trd.md`) errors.push(`${label}: artifact_path 必须指向本期 TRD`);
     if (!/^[0-9a-f]{64}$/.test(fm.artifact_sha256 || '')) errors.push(`${label}: artifact_sha256 非 64 位小写 hex`);
     else if (isSha40(fm.candidate_commit)) {
       try {
-        const bytes = git(root, ['show', `${fm.candidate_commit}:${fm.artifact_path}`], true);
-        if (sha256(bytes) !== fm.artifact_sha256) errors.push(`${label}: artifact_sha256 与 candidate blob 不一致`);
+        if (sha256(git(root, ['show', `${fm.candidate_commit}:${fm.artifact_path}`], true)) !== fm.artifact_sha256)
+          errors.push(`${label}: artifact_sha256 与 candidate blob 不一致`);
       } catch { errors.push(`${label}: candidate 中找不到 artifact`); }
     }
     const newIds = fm.blocking_finding_ids || [];
@@ -120,8 +120,7 @@ function reviewErrors(root, task) {
     if (index > 0 && JSON.stringify([...targets].sort()) !== JSON.stringify([...previousOpen].sort()))
       errors.push(`${label}: targeted 必须覆盖上一轮全部 open blocking findings`);
     if (closed.some(id => !previousOpen.includes(id))) errors.push(`${label}: closed finding 不在上一轮 open 集合`);
-    if (closed.length && fm.candidate_commit === previousCandidate)
-      errors.push(`${label}: 关闭 blocking finding 必须绑定新的 fixed candidate`);
+    if (closed.length && fm.candidate_commit === previousCandidate) errors.push(`${label}: 关闭 blocking finding 必须绑定新的 fixed candidate`);
     const computedOpen = [...new Set([...previousOpen.filter(id => !closed.includes(id)), ...newIds])].sort();
     if (JSON.stringify(computedOpen) !== JSON.stringify([...declaredOpen].sort())) errors.push(`${label}: open finding 集合与 lineage 不一致`);
     if (!['pass', 'revise'].includes(fm.conclusion)) errors.push(`${label}: conclusion 非法`);
@@ -129,13 +128,11 @@ function reviewErrors(root, task) {
     if (fm.conclusion === 'revise' && !computedOpen.length) errors.push(`${label}: revise 缺 open blocking finding`);
     previousOpen = computedOpen;
     previousCandidate = fm.candidate_commit;
-    previous = file;
+    previous = relativeFile;
     finalReport = fm;
   }
-  const last = parseFrontmatter(path.join(dir, reports.at(-1)));
-  if (!last || last.conclusion !== 'pass' || previousOpen.length) errors.push('末轮 document review 必须 pass 且无 open blocking finding');
-  errors.finalReport = finalReport;
-  return errors;
+  if (!finalReport || finalReport.conclusion !== 'pass' || previousOpen.length) errors.push('末轮 document review 必须 pass 且无 open blocking finding');
+  return finish(finalReport);
 }
 
 function checkTask(root, task, options = {}) {
@@ -143,31 +140,27 @@ function checkTask(root, task, options = {}) {
   const errors = reviewErrors(root, task);
   const final = errors.finalReport;
   if (final && isSha40(final.candidate_commit)) {
-    try { git(root, ['merge-base', '--is-ancestor', final.candidate_commit, 'HEAD']); }
-    catch { errors.push('final reviewed candidate 不在当前 HEAD 历史中'); }
     try {
       const artifact = `iterations/${task.iteration}/trd.md`;
       const acceptedBytes = options.staged ? git(root, ['show', `:${artifact}`], true) : fs.readFileSync(path.join(root, artifact));
-      if (sha256(acceptedBytes) !== final.artifact_sha256)
-        errors.push('当前接受的 TRD 与 final reviewed candidate artifact 不一致');
+      if (sha256(acceptedBytes) !== final.artifact_sha256) errors.push('当前接受的 TRD 与 final reviewed candidate artifact 不一致');
     } catch { errors.push('无法读取当前接受的 TRD artifact'); }
   }
   if (errors.length) errors.forEach(error => fail('document task completion', `${task.id}: ${error}`));
-  else pass('document task completion', `${task.id} 的 fixed candidate、Fresh Review 与 finding lineage 已闭合`);
+  else pass('document task completion', `${task.id} 的 immutable review snapshot、final candidate 与 finding lineage 已闭合`);
 }
 
 function ensureStagedWorld(root, task) {
   if (!DOCUMENT_TYPES.has(task.type) || !/^v\d+(?:\.\d+)*$/.test(task.iteration || '')) return false;
-  const inputs = ['status.yml', `iterations/${task.iteration}/trd.md`, `iterations/${task.iteration}/document-reviews/${task.id}`];
-  const dirty = git(root, ['diff', '--name-only', '--', ...inputs]);
-  const untracked = git(root, ['ls-files', '--others', '--exclude-standard', '--', ...inputs]);
+  const artifact = `iterations/${task.iteration}/trd.md`;
   const reportDir = `iterations/${task.iteration}/document-reviews/${task.id}`;
-  const stagedReports = git(root, ['diff', '--cached', '--name-status', '--', reportDir]);
+  const dirty = git(root, ['diff', '--name-only', '--', 'status.yml', artifact, reportDir]);
+  const untracked = git(root, ['ls-files', '--others', '--exclude-standard', '--', artifact, reportDir]);
+  const stagedReports = git(root, ['diff', '--cached', '--name-only', '--', reportDir]);
   if (dirty) fail('staged truth', `completion 相关文件有未暂存变化：${dirty.replace(/\r?\n/g, ', ')}`);
   if (untracked) fail('staged truth', `completion 相关文件未加入暂存区：${untracked.replace(/\r?\n/g, ', ')}`);
-  const rewritten = stagedReports.split(/\r?\n/).filter(Boolean).filter(line => !line.startsWith('A\t'));
-  if (rewritten.length) fail('immutable review', `已存在的 document review round 不得修改、删除或改名：${rewritten.join(', ')}`);
-  return !dirty && !untracked && !rewritten.length;
+  if (stagedReports) fail('immutable review', '收口提交不得同时修改 document review；先单独 commit report，再把其 commit/path 写入 status');
+  return !dirty && !untracked && !stagedReports;
 }
 
 function checkDuplicateTasks(tasks) {

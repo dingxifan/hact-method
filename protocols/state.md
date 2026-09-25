@@ -110,7 +110,7 @@ Runtime event、job status 或 terminal result 都不得自行推断或写入 `t
 任何 Task 进入 `merged` 前，以该 Task Contract 的 Completion & Handoff 为准。通用状态协议不把某一类 Task 的 checker 扩张成所有 Task 的完成判据。
 
 - `develop` 使用 package `review-chain`；
-- `draft-tech-design` 使用 `check-docs`、fixed candidate 与 `hact-document-review/v1` report chain，并运行 `node scripts/check-task-completion.js --task {task-id}`；
+- `draft-tech-design` 使用 `check-docs`、fixed candidate，以及由 `document_review_commit + latest_document_review` 绑定的 `hact-document-review/v1` report chain，并运行 `node scripts/check-task-completion.js --task {task-id}`；
 - `integration-verify` 使用 system review 与 runtime integration verification 双 lane；
 - 其他 Task 使用自身 Contract 声明的 deterministic completion profile。
 

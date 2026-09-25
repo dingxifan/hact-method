@@ -150,7 +150,7 @@ Targeted re-review 必须读取 prior report、open finding IDs、fixed repair c
 
 每次 reviewer invocation 形成新的 immutable report。旧 report 不改写；当前 open/closed finding 由报告链按 stable finding ID 推导。runtime verification 在 review 后发现 blocker 时，创建新的 review report/finding，而不是平行 finding schema。
 
-文档 Task 使用 `hact-document-review/v1`：首轮 `initial`，后续 `targeted`；每轮绑定 candidate commit/tree 与 artifact SHA-256。Targeted round 必须指向紧邻 prior report、覆盖上一轮全部 open blocking finding，并分别声明新建、关闭与仍开放的 stable finding IDs。文档 report 位于 Task Contract 声明的项目路径，由 task-specific completion checker 验证；不得套用 develop package 的 preflight/package-schema/review-chain。
+文档 Task 使用 `hact-document-review/v1`：首轮 `initial`，后续 `targeted`；每轮绑定 candidate commit/tree 与 artifact SHA-256。Targeted round 必须指向紧邻 prior report、覆盖上一轮全部 open blocking finding，并分别声明新建、关闭与仍开放的 stable finding IDs。末轮 report 先进入一个固定 `document_review_commit`，status 只保存该 commit 与 `latest_document_review` 路径；task-specific completion checker 从这个 Git snapshot 读取整条报告链。后续路径变化不改写已经接受的 review truth；新的 judgement 使用新 report/new pointer。不得套用 develop package 的 preflight/package-schema/review-chain。
 
 ## 11. Bounded convergence
 

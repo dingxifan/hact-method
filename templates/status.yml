@@ -38,6 +38,9 @@ tasks: []
 #    depends_on: []
 #    delivery: 可并行         # 串行 / 可并行 / null
 #    urgency: null           # hotfix / null
+# draft-tech-design 进入 merged 前再在其 task 条目补：
+#    document_review_commit: {包含末轮 report 的 40-char project commit SHA}
+#    latest_document_review: iterations/v1/document-reviews/{task-id}/round-01.md
 # System Verification 复用同一 tasks[]，每 iteration 恰有一条；Phase 4 接 checker/hook：
 #  - id: {项目缩写}-v1-integration-verify
 #    iteration: v1

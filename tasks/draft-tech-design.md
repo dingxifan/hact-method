@@ -300,7 +300,7 @@ Required。
 
 Reviewer 按 `protocols/review.md` 的 same-source projection 读取本 Task 必要 sections；不继承 Owner 的疑点处理叙事，也不替用户完成产品 / 业务取舍。
 
-每次 invocation 在 `iterations/vN/document-reviews/{task-id}/round-NN.md` 追加一个 `hact-document-review/v1` immutable report。报告绑定 candidate commit/tree、TRD path/SHA-256、Fresh Isolation、prior report 与 stable finding lineage；旧报告不得改写。`templates/review-briefs/trd-review.md` 只是指向本节与 Review Protocol 的薄入口，不复制审查规范。
+每次 invocation 在 `iterations/vN/document-reviews/{task-id}/round-NN.md` 追加一个 `hact-document-review/v1` report。报告绑定 candidate commit/tree、TRD path/SHA-256、Fresh Isolation、prior report 与 stable finding lineage。先单独 commit 新 report；收口时在本 Task 的 status 条目写 `document_review_commit` 与 `latest_document_review`，Accepted Truth 只从该 immutable Git snapshot 读取报告链，不依赖路径之后是否变化。`templates/review-briefs/trd-review.md` 只是指向本节与 Review Protocol 的薄入口，不复制审查规范。
 
 ### Human Authority
 

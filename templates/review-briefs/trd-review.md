@@ -48,3 +48,12 @@ conclusion: pass                     # pass | revise
 ```
 
 正文写 finding 的具体位置、依据、严重程度与 required action。无发现写 `findings: []`。`pass` 必须对应空的 `open_blocking_finding_ids`；Gate/G2 仍由用户独立批准。
+
+Reviewer 返回后先单独 commit 新 round。随后在 `status.yml` 的 draft-tech-design Task 条目写：
+
+```yaml
+document_review_commit: {包含末轮报告的 40-char commit SHA}
+latest_document_review: iterations/vN/document-reviews/{task-id}/round-NN.md
+```
+
+终态 checker 只从该 commit 读取报告链；收口提交不得同时新增或改写 report。
