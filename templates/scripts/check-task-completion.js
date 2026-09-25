@@ -69,9 +69,21 @@ function reviewErrors(root, task) {
   let previous = '', previousOpen = [], previousCandidate = '', finalReport = null;
   for (let index = 0; index < reports.length; index += 1) {
     const file = path.join(dir, reports[index]);
+    const relativeFile = path.relative(root, file).replace(/\\/g, '/');
     const fm = parseFrontmatter(file);
     const label = reports[index];
     if (!fm) { errors.push(`${label}: 缺 frontmatter`); continue; }
+    try {
+      git(root, ['cat-file', '-e', `HEAD:${relativeFile}`]);
+      const additions = git(root, ['log', '--format=%H', '--diff-filter=A', '--', relativeFile]).split(/\r?\n/).filter(Boolean);
+      if (additions.length !== 1) errors.push(`${label}: 无法证明唯一 immutable creation commit`);
+      else {
+        const original = git(root, ['show', `${additions[0]}:${relativeFile}`], true);
+        if (!original.equals(fs.readFileSync(file))) errors.push(`${label}: 已提交 report 与首次加入 Git 的 immutable blob 不一致`);
+      }
+    } catch {
+      // New staged round is allowed; after commit its first blob becomes immutable.
+    }
     if (fm.schema !== 'hact-document-review/v1') errors.push(`${label}: schema 非 hact-document-review/v1`);
     if (fm.task_id !== task.id || fm.task_type !== task.type) errors.push(`${label}: task identity 不匹配`);
     if (Number(fm.round) !== index + 1) errors.push(`${label}: round 与文件序号不符`);

@@ -64,6 +64,16 @@ runGit(['reset', 'HEAD', '--', 'iterations/v11/document-reviews/mail-v11-trd/rou
 runGit(['checkout', '--', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']);
 
 runGit(['reset', '--hard', 'HEAD']);
+write('iterations/v11/document-reviews/mail-v11-trd/round-01.md', fs.readFileSync(path.join(temp, 'iterations/v11/document-reviews/mail-v11-trd/round-01.md'), 'utf8').replace('findings: []', 'findings: committed rewrite'));
+runGit(['add', 'iterations/v11/document-reviews/mail-v11-trd/round-01.md']); runGit(['commit', '-qm', 'rewrite historical review']);
+write('status.yml', 'tasks:\n  - id: mail-v11-trd\n    iteration: v11\n    type: draft-tech-design\n    status: merged\n');
+runGit(['add', 'status.yml']);
+result = runCheck(['--staged', temp]);
+assert.notStrictEqual(result.status, 0);
+assert.match(result.stdout, /immutable blob 不一致/);
+runGit(['reset', '--hard', 'HEAD~1']);
+
+runGit(['reset', '--hard', 'HEAD']);
 write('iterations/v11/trd.md', '# TRD changed after review\n');
 runGit(['add', 'iterations/v11/trd.md']); runGit(['commit', '-qm', 'unreviewed trd change']);
 write('status.yml', 'tasks:\n  - id: mail-v11-trd\n    iteration: v11\n    type: draft-tech-design\n    status: merged\n');
