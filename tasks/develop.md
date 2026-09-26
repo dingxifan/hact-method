@@ -286,7 +286,7 @@ Wave 不是 Task、Gate、state、artifact、packet、approval、review object�
 
 编排时可以把 Task 简单识别为 ordinary 或 complex。跨多个核心模块、schema / migration / API / persistence 联动、存在实质实现路径选择、影响多个既有 contract、需要理解大范围存量实现、反复实现失败或先前 review 指向设计 / 策略根因，都是 complex 的典型信号；不建立 score、level、matrix、registry 或持久化复杂度字段。
 
-ordinary Task 按既有 Contract 直接执行。Codex 实际到达 complex Task 时，必须在 substantive implementation 前向 Human 直接说明其复杂性，并只询问：`analyze first` 还是 `continue directly`。`continue directly` 继续当前 Task；`analyze first` 只暂停当前 Task 的 substantive implementation，由 Human 在 ChatGPT 形成可选的详细实施分析后交回 Codex。该选择不是新 Gate 或签署流程，分析也不是 HACT mandatory artifact。Codex 可为真实 repository fact 调整机械实现细节；若分析的核心设计假设与事实冲突，必须停止受影响部分并指出冲突，不得静默改为实质不同的架构。模型、reasoning level 或模型路由始终由 Human 决定，不属于 Method。
+ordinary Task 按既有 Contract 直接执行。Codex 实际到达 complex Task 时，必须在 substantive implementation 前向 Human 直接说明其复杂性，并**只询问一次**：`analyze first` 还是 `continue directly`。同一 Task 在同一 execution window 不轮询、定时重问或重复提示；没有明确回复不等于任何选择，尤其不得自行推断为 `analyze first`、暂停、完成或 blocker。此时只保持当前 Goal 与现有 durable Git Truth，在用户下一条明确选择后继续同一 Task；这是一段临时对话边界，不创建 pause / waiting / decision state 或 Result 结论。`continue directly` 继续当前 Task；`analyze first` 只停止当前 Task 的 substantive implementation，由 Human 在 ChatGPT 形成可选的详细实施分析后交回 Codex。该选择不是新 Gate 或签署流程，分析也不是 HACT mandatory artifact。Codex 可为真实 repository fact 调整机械实现细节；若分析的核心设计假设与事实冲突，必须停止受影响部分并指出冲突，不得静默改为实质不同的架构。模型、reasoning level 或模型路由始终由 Human 决定，不属于 Method。
 
 ### 5.10 System finding repair
 
