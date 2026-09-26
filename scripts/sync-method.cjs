@@ -174,7 +174,7 @@ function install(projectRoot, source) {
     if (currentPaths.has(item.path)) continue;
     const actual = currentHash(result.root, item.path);
     if (!actual) continue;
-    if (actual !== item.installed_sha256) throw new Error(`retired Method path drifted; refuse cleanup: ${item.path}`);
+    if (actual !== item.installed_sha256) throw new Error(`retired/orphan Method path requires resolution; preserved because installed copy drifted: ${item.path}`);
     if (item.ownership === 'method-owned') retired.push(safe(result.root, item.path));
   }
   const files = [];

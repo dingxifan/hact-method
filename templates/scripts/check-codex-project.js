@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// 只核本方法论约定的 Codex 入口/角色文件形状，不证明工具或模型可调用。
+// 只核本方法论约定的 Codex 入口/角色文件形状；不校验模型或 reasoning 路由。
 const fs = require('fs');
 const path = require('path');
 const AGENTS = {
@@ -23,7 +23,7 @@ function validate(root) {
   for (const [file, name] of Object.entries(AGENTS)) {
     const rel = '.codex/agents/' + file, source = read(rel);
     const values = {};
-    for (const key of ['name', 'description', 'model', 'model_reasoning_effort', 'sandbox_mode']) {
+    for (const key of ['name', 'description', 'sandbox_mode']) {
       const lines = source.split(/\r?\n/).filter(line => new RegExp('^' + key + '\\s*=').test(line));
       const required = key === 'name' || key === 'description';
       if (!lines.length && !required) continue;
@@ -34,9 +34,6 @@ function validate(root) {
     if (values.name && values.name !== name) errors.push(rel + ': name 应为 ' + name);
     const blocks = [...source.matchAll(/^developer_instructions\s*=\s*"""([\s\S]*?)^"""\s*$/gm)];
     if (blocks.length !== 1 || !blocks[0][1].trim()) errors.push(rel + ': developer_instructions 缺失或重复');
-    if (values.model && /\s|[<>{}]/.test(values.model)) errors.push(rel + ': model 格式非法');
-    if (values.model_reasoning_effort && !['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'].includes(values.model_reasoning_effort))
-      errors.push(rel + ': effort 非法');
     if (values.sandbox_mode && !['read-only', 'workspace-write', 'danger-full-access'].includes(values.sandbox_mode))
       errors.push(rel + ': sandbox 非法');
     if (/<待填>|\bTODO\b/.test(source)) errors.push(rel + ': contains placeholder');

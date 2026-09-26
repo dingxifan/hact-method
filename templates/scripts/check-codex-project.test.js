@@ -14,12 +14,8 @@ try {
     '.codex/agents/reviewer.toml','.codex/agents/sensitive_reviewer.toml']) write(file,fs.readFileSync(path.join(templates,file),'utf8'));
   assert.deepStrictEqual(validate(root), [], '单 Codex 项目无 CC 文件或固定模型也能通过');
   const rel='.codex/agents/reviewer.toml', source=fs.readFileSync(path.join(root,rel),'utf8');
-  write(rel,source+'\nmodel = "gpt-6-astra"\nmodel_reasoning_effort = "high"\n');
-  assert.deepStrictEqual(validate(root), [], '合法模型覆盖不受旧型号白名单限制；不宣称可调用');
-  write(rel,source+'\nmodel = "x"\nmodel = "y"\n');
-  assert.ok(validate(root).some(e=>/model/.test(e)), '重复模型声明失败');
-  write(rel,source+'\nmodel_reasoning_effort = "banana"\n');
-  assert.ok(validate(root).some(e=>/effort/.test(e)));
+  write(rel,source+'\nmodel = "x"\nmodel = "y"\nmodel_reasoning_effort = "banana"\n');
+  assert.deepStrictEqual(validate(root), [], '模型和 reasoning 配置不属于 HACT Method validation');
   write(rel,source.replace(/^description[^\r\n]*(?:\r?\n|$)/m,''));
   assert.ok(validate(root).some(e=>/description/.test(e)));
   write(rel,source.replace('hact-reviewer','other'));

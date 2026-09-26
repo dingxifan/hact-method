@@ -50,19 +50,19 @@ Return:
 
 ### Sprint-level Develop handoff
 
-当 ChatGPT 为已 Accepted Sprint 生成 `source=sprint` 的 Develop handoff 时，输出顺序固定为两段，且不可合并：
+当 ChatGPT 为已 Accepted Sprint 生成 `source=sprint` 的 Develop handoff 时，先从当前 Git Truth 决定**下一个 bounded execution-window scope**，而非默认把整个 Sprint 交给一个 Codex interaction。它读取 `BASE_SHA`、已完成与剩余 package、dependency graph、development volume、已知复杂度和 verification / review boundary；只列出本窗口应完成的 Task Packages，不要求预先计划后续窗口。输出顺序固定为两段，且不可合并：
 
-1. **CODEX GOAL**：一条可直接粘贴到 Codex 对话框的 `/goal ...` 命令，用于在当前 Codex interaction 真正建立 Sprint-level Develop Goal；
-2. **DEVELOP EXECUTION PACKET**：只在 Goal 已建立后交付，包含 `Repository`、`BASE_SHA`、`Accepted Sprint`、`Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`。
+1. **CODEX GOAL**：一条可直接粘贴到 Codex 对话框的 `/goal ...` 命令，用于在当前 Codex interaction 真正建立 execution-window Goal；
+2. **DEVELOP EXECUTION PACKET**：只在 Goal 已建立后交付，包含 `Repository`、`BASE_SHA`、`Accepted Sprint`、明确的窗口 `Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`。
 
-只在 Packet 内填写 `Goal:` 字段不视为 Goal 已激活。Goal 命令应指向明确 `BASE_SHA`、已接受的 `source=sprint` Task Packages、既有 Task Contract / dependency graph、验证与最终 immutable Sprint Result Packet；不得借此扩大 Product / Technical / Sprint semantics、Authority 或 external-effect 范围。
+只在 Packet 内填写 `Goal:` 字段不视为 Goal 已激活。Goal 命令应指向明确 `BASE_SHA`、本窗口已接受的 `source=sprint` Task Packages、既有 Task Contract / dependency graph、验证与最终 immutable Result Packet；不得借此扩大 Product / Technical / Sprint semantics、Authority 或 external-effect 范围，也不得自动进入窗口外仍 eligible 的 Task。
 
-ChatGPT 必须从冻结 Sprint 自动设定这条 CODEX GOAL：Human 只负责把它激活到 Codex，不负责自行写 Goal、逐包排序或维护 Wave。Goal 和 Packet 必须明确指示 Codex 在开始实现前按 dependency、development volume 与 verification boundary 即时编排轻量 Wave；Wave 只是一段执行顺序，不是交接对象、Task、Gate、状态或持久化记录。对于实际到达的 complex Task，交接文本必须明确：在 substantive implementation 前只向 Human 询问 `analyze first` 或 `continue directly`；前者产生可选的 ChatGPT 实施分析，后者直接执行，二者均不创建 Gate。模型选择由 Human 决定，不写入 Goal 或 Packet 的 Method 规则。
+ChatGPT 必须从冻结 Sprint 自动设定这条 CODEX GOAL：Human 只负责把它激活到 Codex，不负责自行写 Goal、逐包排序或维护 Wave / window 过程。Goal 和 Packet 必须明确指示 Codex 在当前窗口内按 dependency、development volume、coupling 与 verification boundary 即时编排轻量 Wave；Wave 是窗口内执行顺序，window 是当前 interaction 的范围，二者都不是交接对象、Task、Gate、状态或持久化记录。对于实际到达的 complex Task，交接文本必须明确：在 substantive implementation 前只向 Human 询问 `analyze first` 或 `continue directly`；前者产生可选的 ChatGPT 实施分析，后者直接执行，二者均不创建 Gate。模型选择由 Human 决定，不写入 Goal 或 Packet 的 Method 规则。
 
 最小示例：
 
 ```text
-/goal Complete the frozen Sprint Develop Goal from BASE_SHA <sha>. Before substantive implementation, derive lightweight Waves from the accepted source=sprint Task Packages using their dependency graph, development volume, and verification boundaries; do not persist or govern Waves as Tasks, Gates, states, packets, or results. Execute every eligible package through its existing contract. When a complex Task is actually reached, before substantive implementation ask Human only whether to analyze first in ChatGPT or continue directly; analysis is optional supporting input, never a Gate or mandatory artifact, and model selection remains Human-owned. For every eligible package perform freshness, implementation, deterministic validation, immutable candidate, independent review, finding repair, targeted re-review, and authorized Git delivery. Preserve Product/Technical/Sprint semantics and all external-effect prohibitions. Continue autonomously through ordinary implementation choices, mechanical failures, test failures, checker failures, review findings, repairs, and eligible subsequent Tasks. When a genuine SEMANTIC or AUTHORITY decision requires Human Authority, ask the user directly in the current Codex interaction, then continue the same Goal after the decision. Pause only the affected Task and its dependents when possible; continue other independent eligible Tasks. Terminate only when all legally executable Sprint Tasks are complete, the user explicitly stops, or an unresolved blocker makes further execution unsafe or impossible. Finish with the final immutable Sprint Result Packet and RESULT_SHA.
+/goal Complete the next bounded Develop execution window for <Sprint> from BASE_SHA <sha>, covering only <explicit in-scope Task Packages>. Treat the accepted Sprint and dependency graph as the enclosing contract, but do not continue into out-of-scope Tasks in this interaction unless Human explicitly re-scopes it. Within this window, derive lightweight Waves from dependency, development volume, coupling, and verification boundaries; do not persist or govern Waves or the window as Tasks, Gates, states, packets, checkpoints, or results. Execute every in-scope package through its existing contract, deterministic validation, immutable candidate, independent review, finding repair, targeted re-review, and authorized Git delivery. When a complex Task is reached, before substantive implementation ask Human only whether to analyze first in ChatGPT or continue directly; analysis is optional supporting input, never a Gate or mandatory artifact, and model selection remains Human-owned. Continue autonomously through ordinary implementation choices, mechanical failures, tests, checker failures, review findings and repairs. Stop when the execution-window Goal is complete, Human explicitly stops, or a genuine unresolved SEMANTIC, AUTHORITY, or CAPABILITY blocker prevents safe continuation. Finish with the stable Result Packet and RESULT_SHA.
 ```
 
 Codex 返回后，用户人工复制最小 Result Packet：
@@ -91,7 +91,7 @@ Decision needed:
 ...
 ```
 
-ChatGPT 收到 Result Packet 后重新读取 `RESULT_SHA` 的本次 artifact / code / state，再根据 evidence 与 Git Truth 判断 PASS、继续执行，或是否需要 semantic / Human Authority decision；不要求用户搬运完整对话或 reasoning。一次 Packet 只传达一个 stable bounded operation，不改变既有 Task identity、state、ownership、Gate 或 Authority。
+ChatGPT 收到 Result Packet 后重新读取 `RESULT_SHA` 的本次 artifact / code / state，再根据 evidence 与 Git Truth 判断 PASS、是否需要 semantic / Human Authority decision，并在仍有 Sprint scope 时重新计算下一个 execution-window Goal；不要求用户搬运完整对话或 reasoning，也不保留先前 window plan。一次 Packet 只传达一个 stable bounded operation，不改变既有 Task identity、state、ownership、Gate 或 Authority。
 
 ## 4. Frozen artifact persistence
 

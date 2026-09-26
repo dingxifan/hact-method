@@ -13,6 +13,7 @@ const method = path.join(temp, 'method');
 const project = path.join(temp, 'project');
 const customProject = path.join(temp, 'custom-project');
 const forgedProject = path.join(temp, 'forged-project');
+const retiredDriftProject = path.join(temp, 'retired-drift-project');
 const run = (cwd, args) => childProcess.execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 function init(root) {
   fs.mkdirSync(root, { recursive: true }); run(root, ['init', '-q']);
@@ -33,8 +34,8 @@ function writeMethod() {
   commit(method, 'method');
 }
 
-init(method); init(project); init(customProject); init(forgedProject); writeMethod();
-for (const root of [project, customProject, forgedProject]) {
+init(method); init(project); init(customProject); init(forgedProject); init(retiredDriftProject); writeMethod();
+for (const root of [project, customProject, forgedProject, retiredDriftProject]) {
   fs.writeFileSync(path.join(root, 'README.md'), 'project\n'); commit(root, 'project');
 }
 fs.writeFileSync(path.join(customProject, 'AGENTS.md'), 'project rules\n'); commit(customProject, 'custom agents');
@@ -48,6 +49,11 @@ assert.strictEqual(sync.readAdopted(project, method, 'templates/AGENTS.md'), 'cu
 assert.throws(() => sync.install(customProject, source), /legacy normalization/);
 assert.strictEqual(fs.readFileSync(path.join(customProject, 'AGENTS.md'), 'utf8'), 'project rules\n');
 
+assert.strictEqual(sync.install(retiredDriftProject, source).state, 'verified');
+commit(retiredDriftProject, 'installed old method');
+fs.writeFileSync(path.join(retiredDriftProject, 'scripts', 'retired-check.js'), 'project customization\n');
+commit(retiredDriftProject, 'customized retired method file');
+
 commit(project, 'installed old method');
 fs.writeFileSync(path.join(project, 'project-owned.txt'), 'keep\n'); commit(project, 'project data');
 fs.rmSync(path.join(method, 'templates', 'scripts', 'retired-check.js'));
@@ -58,6 +64,8 @@ assert.strictEqual(sync.install(project, next).state, 'verified');
 assert.ok(!fs.existsSync(path.join(project, 'scripts', 'retired-check.js')), 'clean retired Method-owned file must be removed');
 assert.strictEqual(fs.readFileSync(path.join(project, 'project-owned.txt'), 'utf8'), 'keep\n');
 assert.strictEqual(fs.readFileSync(path.join(project, 'scripts', 'check-gate.js'), 'utf8'), 'console.log("gate-v2")\n');
+assert.throws(() => sync.install(retiredDriftProject, next), /retired\/orphan Method path requires resolution/);
+assert.strictEqual(fs.readFileSync(path.join(retiredDriftProject, 'scripts', 'retired-check.js'), 'utf8'), 'project customization\n');
 
 const forgedBytes = fs.readFileSync(path.join(forgedProject, 'README.md'));
 fs.mkdirSync(path.join(forgedProject, '_meta'), { recursive: true });

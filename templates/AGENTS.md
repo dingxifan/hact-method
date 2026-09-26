@@ -10,7 +10,7 @@ ChatGPT 可承担 reasoning、design、document authoring 与 acceptance；Codex
 
 已进入任务后按现有 Git truth、Task state 与 recovery evidence 接续；用户补充条件或询问进度不重跑启动、不清空已有授权。
 
-ChatGPT → Codex 使用用户人工复制、带明确 `BASE_SHA` 的 bounded Execution Packet；Codex → ChatGPT 返回带 `RESULT_SHA` 的最小 Result Packet，ChatGPT / Owner 重新读取 Git truth 后判断。Packet 不注册、编号或持久化为 HACT 对象，不改变 Task/Gate/state/Authority。长文档和多文件内容走文件，Packet 只保留控制信息。委派单元直接执行收到的具体任务与 brief，不重复项目同步、任务路由或认领，不修改 Gate/status。下列边界对主线与委派单元都适用。
+ChatGPT → Codex 使用用户人工复制、带明确 `BASE_SHA` 的 bounded Execution Packet；对 Sprint Develop，ChatGPT 先从最新 Git truth 确定下一个 execution-window Goal 和 in-scope packages，Codex 只在该窗口内执行并自行组织 Wave，结束后以 `RESULT_SHA` 返回，由 ChatGPT 重算下一窗口。Codex → ChatGPT 返回最小 Result Packet，ChatGPT / Owner 重新读取 Git truth 后判断。Packet、window、Wave 都不注册、编号或持久化为 HACT 对象，不改变 Task/Gate/state/Authority。长文档和多文件内容走文件，Packet 只保留控制信息。委派单元直接执行收到的具体任务与 brief，不重复项目同步、任务路由或认领，不修改 Gate/status。下列边界对主线与委派单元都适用。
 
 ## 自主执行与边界
 

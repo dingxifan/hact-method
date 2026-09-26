@@ -268,19 +268,21 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 跨会话接续基于 Git snapshot、Task Contract、status 与 evidence，不基于聊天历史。
 
-### 5.9.1 Sprint-level Develop Goal
+### 5.9.1 Sprint and execution-window Goal
 
-一个 Accepted Sprint 的 develop 可以由 ChatGPT 在明确 `BASE_SHA` 上**自动从已接受 Sprint 设定**一次 Sprint-level Develop Goal，再由用户交给 Codex 连续推进；这表示 ChatGPT 必须直接给出可激活的 Goal 内容，Human 不承担编写或拆分 Goal 的工作。标准人工交接是先激活 `/goal`，再提交 Develop Execution Packet；Goal activation 成功后，Codex 才开始连续执行 Task Packages。Goal 只提供整体目标、成功条件、自主范围、人类介入边界、依赖/共享写冲突约束与最终 `RESULT_SHA`；它不是 HACT 的新 Task、state、lifecycle、ledger 或第二套 Contract。
+Sprint 是完整 Accepted Develop scope；它决定最终必须完成什么，不要求一个 Codex interaction 完成全部 Sprint。ChatGPT 每次先读取当前 `BASE_SHA`、已 merged / remaining Task Packages、dependency graph、实际 development volume、已知复杂度和 verification / review boundary，再自动设定**下一个 bounded execution-window Goal**。Goal 只覆盖本次明确列出的 eligible Task Packages；ChatGPT 决定窗口在何处停止，并可让一个已知复杂 / 大型 Task 独占窗口。它不预先登记未来窗口，也不微计划窗口内的 Wave。
 
-每个 Task Package 仍是唯一正式执行单元，分别执行 freshness、implementation、verification、fixed candidate、Independent Review、repair 与 merge / Accepted Truth。Codex 可在 Goal、Task Contract 和 Authority 允许范围内决定顺序、机械修复、targeted re-review、Git delivery 及下一个 eligible Task；满足依赖且无 shared-write conflict 的 Task 可以并行，有真实 conflict 时串行。每个已 merged Task 形成新的 Accepted Project Truth，后续 Task 仍须重新做自身 freshness。
+标准人工交接是 ChatGPT 给出可激活的 `/goal`，用户激活后再提交 Develop Execution Packet；Human 不承担编写 Goal、逐包排序或维护窗口过程。Goal activation 成功后，Codex 只连续执行当前窗口内的 Task Packages，不能因为其他 Sprint Task 仍 eligible 就跨出当前 Goal。Goal 提供窗口范围、成功条件、自主范围、人类介入边界、依赖 / shared-write constraint 与 `RESULT_SHA`；它不是 HACT 的新 Task、state、lifecycle、ledger 或第二套 Contract，更不是 Window object、status、Gate、approval、checkpoint、receipt 或 registry。
 
-普通工程选择、lint/type/build/test/checker failure、review finding、bounded refactor、Task 顺序调整和下一个 eligible Task 选择不得中断 Goal 返回 ChatGPT。需要 Human Authority 时，Codex 在当前 interaction 直接向用户说明并在决定后继续原 Goal；这不创建 pause / waiting / decision state。局部 blocker 只暂停受影响 Task 及其依赖，其他无依赖、无 shared-write conflict 的 Task 继续；只有 Sprint Contract / shared contract 整体失效、继续会造成明显返工、必要 capability / permission 不可获得、用户终止或其他真正使 Goal 不可执行的情况才终止本轮 Goal。最终 Result 如实列 completed、blocked、因依赖跳过的 Task、未解决决定与 final `RESULT_SHA`。
+每个 Task Package 仍是唯一正式执行单元，分别执行 freshness、implementation、verification、fixed candidate、Independent Review、repair 与 merge / Accepted Truth。Codex 可在当前 Goal、Task Contract 和 Authority 允许范围内决定顺序、机械修复、targeted re-review 与 Git delivery；满足依赖且无 shared-write conflict 的**窗口内** Task 可以并行，有真实 conflict 时串行。每个已 merged Task 形成新的 Accepted Project Truth，后续 Task 仍须重新做自身 freshness。
+
+普通工程选择、lint/type/build/test/checker failure、review finding、bounded refactor、窗口内 Task 顺序调整和下一个 in-scope eligible Task 选择不得中断 Goal 返回 ChatGPT。需要 Human Authority 时，Codex 在当前 interaction 直接向用户说明并在决定后继续原 Goal；这不创建 pause / waiting / decision state。局部 blocker 只暂停受影响 Task 及其窗口内依赖；窗口结束、提前停止或中途被真实 blocker 打断时，Codex 返回 stable Result Packet / `RESULT_SHA` / blocker。ChatGPT 重新读取 Git Truth 后才决定下一个 execution-window Goal；不维护“前一窗口尚余几个 Wave”的额外过程状态。
 
 ### 5.9.2 Lightweight Wave execution
 
-在 active Sprint-level Develop Goal 下，Codex 在开始 substantive implementation 前，根据已接受的 Task Packages 的 dependency order、development volume 与可形成的 verification boundary，将当前可执行包划为若干轻量 Wave。Wave 只限制一次连续 Develop 的执行范围：强依赖或共同验证的包优先同 Wave 或相邻 Wave；明显复杂或大型的单个包可以独占一个 Wave；不得为凑包数打断真实依赖或把强耦合实现拆成半成品。
+在 active execution-window Goal 下，Codex 在开始 substantive implementation 前，只对当前窗口内已接受的 Task Packages，根据 dependency order、development volume、coupling 与可形成的 verification boundary 划为若干轻量 Wave。一个窗口包含一个或多个完整 Wave，Wave 正常应在同一窗口完成；强依赖或共同验证的包优先同 Wave 或相邻 Wave；明显复杂或大型的单个包可以独占一个 Wave；不得为凑包数打断真实依赖或把强耦合实现拆成半成品，也不故意计划一个 Wave 跨窗口。
 
-Wave 不是 Task、Gate、state、artifact、packet、approval、review object、registry 或 lifecycle。它不修改现有 Task Package、`status.yml`、delivery、review 或 Git Truth 规则，也不产生 Wave Goal、Wave Result 或 context checkpoint。一个 Wave 完成时，只按每个已完成 Task 的既有 implementation、deterministic validation、review / repair 与 Git delivery 规则形成稳定 Git Truth；下一 Wave 可以在新的 Codex execution context 继续。
+Wave 不是 Task、Gate、state、artifact、packet、approval、review object、registry 或 lifecycle。execution window 同样只是当前 Codex interaction 的 bounded runtime / context boundary，不产生 Window Goal 以外的 Window object、status、Gate、approval、checkpoint、receipt、ledger、registry 或 recovery system。二者均不修改现有 Task Package、`status.yml`、delivery、review 或 Git Truth 规则。一个 Wave 完成时，只按每个已完成 Task 的既有 implementation、deterministic validation、review / repair 与 Git delivery 规则形成稳定 Git Truth；窗口中断时也只依赖这些既有 durable truth 恢复下一次编排。
 
 编排时可以把 Task 简单识别为 ordinary 或 complex。跨多个核心模块、schema / migration / API / persistence 联动、存在实质实现路径选择、影响多个既有 contract、需要理解大范围存量实现、反复实现失败或先前 review 指向设计 / 策略根因，都是 complex 的典型信号；不建立 score、level、matrix、registry 或持久化复杂度字段。
 
