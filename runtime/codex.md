@@ -16,7 +16,7 @@ Codex 更适合：
 
 Codex 不因为拥有 shell、Git 或更强执行能力而拥有更高 Authority。
 
-以上只是 capability 倾向，不是窗口切换规则。Codex 已接收一个 bounded repository operation 后，默认保持 Runtime affinity，连续完成必要 reasoning、修改、验证、机械整改和 review closure；不因出现推理段落就交回另一个窗口。
+Codex 是 repository execution environment。接收到一个 bounded Execution Packet 后，应在已授权范围内连续执行必要 reasoning、修改、验证、机械整改和 review closure，直至 validation PASS 或明确 BLOCKED。
 
 ## 2. Capability Profile
 
@@ -31,7 +31,7 @@ Codex 不因为拥有 shell、Git 或更强执行能力而拥有更高 Authority
 - code-hosting operation
 - external / production action（仅在已授权时）
 
-缺少非必要 capability 不阻断；缺少当前 Task 必需 capability 时形成 capability gap，再决定切 Runtime 或请求处理。
+缺少非必要 capability 不阻断；缺少当前 Task 必需 capability 时形成 `CAPABILITY` blocker 并返回证据。
 
 模型名、reasoning tier、agent 数量不属于 Task Contract。
 
@@ -114,7 +114,7 @@ Codex 在已授权范围内执行到 validation PASS 或明确 blocker，不把�
 - `AUTHORITY`：需要扩大 write set、commit/push/deploy/Gate/external authority；
 - `CAPABILITY`：必要工具、环境、权限或 recoverable identity 缺失。
 
-`MECHANICAL` 且语义与 scope 不变时，直接修正、重跑同一检查并持续到 PASS 或错误改变类别。修改、验证与同类纠正属于一个 bounded operation，不受“One Turn = One State Transition”限制。类别改变或即将越界时停止并返回 evidence-backed blocker。
+`MECHANICAL` 问题不得仅因为需要格式、lint、schema、link、heading、regex 或 deterministic checker 修正而返回 ChatGPT。语义与 scope 不变时，直接修正、重跑同一检查并持续到 PASS 或错误改变类别。修改、验证与同类纠正属于一个 bounded operation，不受“One Turn = One State Transition”限制。类别改变或即将越界时停止并返回 evidence-backed blocker。
 
 返回 evidence-first result：changed files、fixed artifact/candidate identity、实际 command/exit/result、validation evidence、blocker 分类与必要 next action。execution evidence 已完整时不等待 narrative completion；但在收敛前确认没有 command running、approval pending、validation in progress 或 unresolved external effect。
 
@@ -146,7 +146,7 @@ Review 语义、finding 与 bounded convergence 由 `protocols/review.md` 和当
 
 优先在同一用户可见 Codex interaction 内启动内部 fresh reviewer，并把 report 返回主执行上下文。Fresh Isolation 要求认知与输入隔离，不要求用户管理第二个窗口。
 
-若当前 Codex 无法形成可信隔离，记录 isolation gap，再按 Protocol 决定是否切 Runtime。
+若当前 Codex 无法形成可信隔离，返回 `CAPABILITY` blocker 与已核事实。
 
 ### 7.2 Reviewer input
 
@@ -205,7 +205,7 @@ Task / Git Truth Protocol 决定何时允许 Candidate → Accepted Truth；Code
 
 ## 9. Recovery & Context Compaction Adapter
 
-Recovery 的事实顺序由 `protocols/recovery.md` 定义。Codex context compaction / session interruption 后，不尝试重建完整聊天、job/thread 连续性或 polling history，而是从最近 verified durable conclusion 取得下一动作需要的最小运行事实：
+Recovery 的事实顺序由 `protocols/recovery.md` 定义。Codex context compaction / session interruption 后，从最近 verified durable conclusion 取得下一动作需要的最小运行事实：
 
 - Method SHA
 - 当前 Task / status
@@ -236,27 +236,13 @@ Task Contract 与 `protocols/authority.md` 决定是否允许外部副作用；C
 
 更具体的 deploy / manual-test / wrap-up 语义只读对应 Task Contract，不在 Runtime Adapter 再维护副本。
 
-## 11. Cross-runtime Handoff
+## 11. Execution Packet and Result Packet
 
-正常 handoff 使用 Git truth，而不是聊天摘要：
+Codex 只消费用户人工复制的 bounded Execution Packet 中完成本次 operation 所需的 Task、artifact/candidate、allowed/forbidden scope、execute、validation、stop 与 return。它不是新的 Task 或 state，也不改变 ownership、Gate 或 Authority。
 
-- Method SHA
-- canonical Task
-- Accepted Project Truth
-- fixed candidate（若有）
-- authoritative inputs
-- finding / evidence pointers
-- latest durable conclusion / evidence pointer（确有需要时）
-
-下一个 Runtime 自己重新读取这些事实。
-
-handoff 接收方执行到 durable conclusion，不为机械修正、测试补齐、验证重跑或 finding closure 往返交接。只有新的 semantic/Human Authority decision 或不可消解 capability/isolation gap 才允许返回。
-
-外部 UX 设计会话按 `runtime/external-ux.md`，最终仍回 `tasks/draft-ux.md`。
+完成时返回最小 Result Packet：Task、PASS 或 BLOCKED、changed files、validation evidence、Git Truth、blocker 与必要 decision。只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止请求新的 Packet；不得因机械修正、测试补齐、验证重跑或 finding closure 往返。
 
 ## 12. External Effect Adapter
-
-Codex job、thread、session 或 subagent 本身不是 canonical Task，也不构成 ownership transfer。普通 handoff 不建记录。
 
 普通 dispatch 只消费完成 bounded operation 所需的 Task、artifact/candidate、allowed/forbidden scope 与 validation。External Effect 另外消费：
 
@@ -268,7 +254,7 @@ Codex job、thread、session 或 subagent 本身不是 canonical Task，也不�
 
 Codex 在 operation 开始时计算 Effective Permission；边界未变化时连续修改、测试和机械整改。仅在 scope/target/snapshot/Authority/environment/tool capability/risk 变化，或进入 commit、push/merge、external/deployment、uncertain retry/recovery 时重算；它不能因 tool capability 自行扩大 scope 或 Authority。
 
-执行中的 `job_id`、thread/session、runtime revision、polling result、reasoning/composing 与 command progress 只是 transient telemetry。artifact/candidate、validation、review 和 external-effect evidence 进入各自权威对象。Codex 不直接把 Runtime result 写成 HACT state；只有既有 status contract 明确授权的 state mutation 才可执行。
+artifact/candidate、validation、review 和 external-effect evidence 进入各自权威对象。Codex 不直接把 execution result 写成 HACT state；只有既有 status contract 明确授权的 state mutation 才可执行。
 
 start 结果不确定时先按 durable request key lookup；backend 无 recoverable identity 时进入 `CAPABILITY_GAP` / reconciliation，禁止 blind retry。external effect 只有在 authoritative observation 证明未发生时才可 retry，否则按 operation-specific idempotency/compensation contract 或 escalation 处理。
 

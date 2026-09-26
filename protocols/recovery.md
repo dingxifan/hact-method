@@ -25,7 +25,7 @@ HACT 假设任何 AI conversation、Runtime context 或本地 session 都可能�
 5. 找到下一项 bounded authorized action；
 6. 从该动作执行到新的 durable conclusion 或明确 blocker。
 
-不尝试重建原会话的完整思维过程、job/thread 连续性或 polling history。已通过且 snapshot/environment 未变化的验证不为形式重复运行。
+不尝试重建原会话的完整思维过程或临时执行过程。已通过且 snapshot/environment 未变化的验证不为形式重复运行。
 
 ## 3. Optionality
 

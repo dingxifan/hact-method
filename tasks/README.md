@@ -6,8 +6,8 @@ HACT 以 **Task** 为工作的基本单位。
 - Shared Protocol 定义跨 Task 的共同纪律。
 - Runtime Adapter 定义当前工具如何实现这些规则。
 - Task 不绑定具体模型、产品或厂商。
-- 当前 Runtime 能可靠完成工作时优先 **Stay Local**，只有 capability / reasoning / isolation gap 才切换 Runtime。
-- 正常跨 Task 交接基于 Git 中的 Accepted Project Truth，而不是上一 Runtime 的聊天历史。
+- ChatGPT 的 reasoning / design / content 与 Codex 的 repository execution 以用户人工搬运的 stable Packet 协作；Packet 不改变 Task Contract。
+- 正常跨 Task 交接基于 Git 中的 Accepted Project Truth，而不是聊天历史。
 
 ## Core Task Catalog
 

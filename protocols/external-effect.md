@@ -17,7 +17,7 @@
 _meta/external-effects/{operation_id}.json
 ```
 
-Receipt 固定：canonical Task、Method SHA、exact action、target、snapshot、request key、Authority references、intent Git receipt、outcome 与 evidence。它不保存 job/thread/polling/reasoning、Task state、Gate、ownership 或完整日志。
+Receipt 固定：canonical Task、Method SHA、exact action、target、snapshot、request key、Authority references、intent Git receipt、outcome 与 evidence。它不保存临时执行过程、Task state、Gate、ownership 或完整日志。
 
 ## 3. Before dispatch
 

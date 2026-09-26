@@ -256,10 +256,9 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - authorization 不因压缩扩大
 - attempts / review rounds 不因恢复清零
 - 已通过且 snapshot 未变化的验证不重复
-- 当前 Runtime 能完成时 Stay Local
-- capability / reasoning / isolation gap 才切 Runtime
+- ChatGPT 形成 stable bounded Execution Packet 后，由用户人工交给 Codex 连续执行；只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止。
 
-正常跨 Runtime 接续基于 Git snapshot、Task Contract、status 与 evidence，不基于聊天历史。
+跨会话接续基于 Git snapshot、Task Contract、status 与 evidence，不基于聊天历史。
 
 ### 5.10 System finding repair
 

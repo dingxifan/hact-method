@@ -68,16 +68,6 @@ Task Contract 明确引用其他 Protocol 时按引用加载。不要因为“�
 
 用户明确要求外部 UX 设计会话时才加载 `runtime/external-ux.md`。
 
-### 2.4 Runtime Orchestration 按实际 crossing 加载
-
-Stay Local 是默认。当前 canonical Task 确实需要 Runtime crossing 时加载 Runtime Orchestration Skill；只有操作可能 non-idempotent、effect-indeterminate 或必须恢复同一 execution identity 时才加载持久化协议：
-
-- `.agents/skills/runtime-orchestration/SKILL.md`；
-- 当前 Runtime 对应的 adapter 小节；
-- 命中上述 trigger 时的 `protocols/external-effect.md`。
-
-该 Skill 只实现既有 Task/Protocol 决定，不建立第二套 Task routing、state、Gate、Authority、Review 或 completion system。普通 handoff 不创建记录；只有 external effect 创建 receipt。加载 Runtime/skill 或发现 tool capability 都不能静默扩大 Authority。
-
 System-review artifacts 只在 canonical Task 已路由为 `integration-verify`，或恢复该 Task 时加载。Package develop、planning 与其他 Task 不预加载完整 system-review history。
 
 `integration-verify` 进入 `merged` 或 `manual-test` 前必须运行项目副本 `node scripts/check-system-review.js vN`；latest report 必须 `pass` 且无 open finding，不从文件存在性推断完成。
@@ -162,7 +152,7 @@ Task 确定后：
 
 1. 加载 `tasks/{task}.md` 与本次动作需要的 Authoritative Inputs；
 2. 按 §2 的触发规则加载实际需要的 Shared Protocol；
-3. 只有实际 crossing 才加载 Runtime Orchestration Skill；
+3. 需要 repository execution 时，将 stable bounded Execution Packet 人工交给 Codex；
 4. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
 5. 做 Minimum Execution Preflight：`Target / Collision / Boundary / Validation`；
 6. 直接开始正式修改 / review / verification。
@@ -175,8 +165,8 @@ Task 确定后：
 
 进入 Task 后以 Task Contract 的 Completion & Handoff 为准。
 
-Context compaction、session interruption 或跨 Runtime 恢复时，不重新执行整套任务路由；读取 fixed Method SHA、当前 Task、Accepted Truth、candidate/evidence 与实际 Git state，从第一个未满足 completion condition 继续。
+Context compaction 或 session interruption 后，不重新执行整套任务路由；读取 fixed Method SHA、当前 Task、Accepted Truth、candidate/evidence 与实际 Git state，从第一个未满足 completion condition 继续。
 
 需要浏览器、远端、托管、部署或独审时才核对应 capability。缺必需 capability 时形成明确 gap，不把未执行的验证写成已完成。
 
-non-idempotent / external action 使用 versioned External Effect Receipt；job/thread/revision/polling 只是 transient telemetry。`check-external-effect` 只验证 receipt 结构，不能替代 Authority、真实 effect observation、Review、Gate 或 Task completion。
+non-idempotent / external action 使用 versioned External Effect Receipt。`check-external-effect` 只验证 receipt 结构，不能替代 Authority、真实 effect observation、Review、Gate 或 Task completion。

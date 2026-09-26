@@ -1,12 +1,12 @@
 # External UX Runtime Adapter
 
-本文描述 `draft-ux` 在用户**明确要求外部设计会话**时的跨 Runtime 实现。它不是新的 Task，也不是独立 Gate。
+本文描述 `draft-ux` 在用户**明确要求外部设计会话**时的人工交接方式。它不是新的 Task，也不是独立 Gate。
 
-默认仍优先 Stay Local；只有用户明确选择外部设计会话，或当前 Runtime 存在 capability gap，才使用此路径。
+只有用户明确选择外部设计会话时才使用此路径。
 
-## 1. Outbound handoff
+## 1. Design Packet
 
-从当前 `draft-ux` Accepted / Candidate Truth 形成一个最小 design brief。
+从当前 `draft-ux` Accepted / Candidate Truth 形成一个最小 design brief，由用户人工交给外部设计会话。
 
 Brief 只包含或引用：
 
@@ -22,7 +22,7 @@ Brief 只包含或引用：
 
 ## 2. External design output
 
-外部设计 Runtime 可以产出：
+外部设计会话可以产出：
 
 - `prototype.html`
 - `prototype-map.md`
@@ -35,11 +35,11 @@ Brief 只包含或引用：
 - 不调用生产服务；
 - 不新增 PRD 没有的业务承诺。
 
-外部 Runtime 没有额外 Authority。
+外部设计会话没有额外 Authority。
 
-## 3. Return to owner
+## 3. Result Packet
 
-产物返回后，Owner 必须重新核：
+用户人工带回稳定结果后，Owner 必须重新核：
 
 - source / version / snapshot；
 - U/S 与 PRD AC mapping；
@@ -50,7 +50,7 @@ Brief 只包含或引用：
 
 ## 4. Required verification after return
 
-无论原型由哪个 Runtime 生成，都回到 `tasks/draft-ux.md` 的同一完成链：
+无论原型由哪个设计会话生成，都回到 `tasks/draft-ux.md` 的同一完成链：
 
 1. 当前版本 browser execution / evidence
 2. deterministic `check-ux` 或等价结构检查
@@ -61,10 +61,10 @@ Brief 只包含或引用：
 
 ## 5. Persistence
 
-正常 handoff 基于 versioned Git snapshot。
+正常交接基于 versioned Git snapshot。
 
 不是：
 
 `外部设计聊天总结 → Owner`
 
-如果外部 Runtime 不能直接写 Git，使用当前受控 Persistence Adapter 把已冻结 artifact 形成 Shared Candidate，再由 Owner 从 Git truth 继续。
+如果外部设计会话不能直接写 Git，用户将冻结 artifact 放入给 Codex 的 Execution Packet；Codex 落盘、验证并形成 Shared Candidate，再由 Owner 从 Git Truth 继续。

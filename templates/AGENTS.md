@@ -4,13 +4,13 @@
 
 ## 工作入口
 
-使用 Codex。主线首次处理任务先运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，再用该工具 `--read templates/boot-protocol.md --root .` 读取项目已采用 SHA 的入口。Task Contract、Shared Protocol、Runtime Adapter 与其他方法文件都必须从同一 adopted SHA 读取；检查器使用项目 `scripts/` 副本。
+ChatGPT 可承担 reasoning、design、document authoring 与 acceptance；Codex 是 repository execution environment。主线首次处理任务先由 Codex 运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，再用该工具 `--read templates/boot-protocol.md --root .` 读取项目已采用 SHA 的入口。Task Contract、Shared Protocol、Runtime Adapter 与其他方法文件都必须从同一 adopted SHA 读取；检查器使用项目 `scripts/` 副本。
 
 项目正常任务入口是 `tasks/`。项目必须完整采用当前 Method schema；缺失或不匹配时 fail closed，不混用旧入口、不添加兼容豁免。旧项目只在进入 Core 前按 Method `guide/08-旧项目全面接入新版.md` 完成一次性 normalization；完成后日常运行不再读取旧 schema。
 
 已进入任务后按现有 Git truth、Task state 与 recovery evidence 接续；用户补充条件或询问进度不重跑启动、不清空已有授权。
 
-委派单元直接执行收到的具体任务与 brief，不重复项目同步、任务路由或认领，不修改 Gate/status。下列边界对主线与委派单元都适用。
+ChatGPT → Codex 使用用户人工复制的 bounded Execution Packet；Codex → ChatGPT 返回最小 Result Packet。它们不注册、编号或持久化为 HACT 对象，不改变 Task/Gate/state/Authority。委派单元直接执行收到的具体任务与 brief，不重复项目同步、任务路由或认领，不修改 Gate/status。下列边界对主线与委派单元都适用。
 
 ## 自主执行与边界
 
