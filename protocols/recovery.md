@@ -1,6 +1,6 @@
 # Recovery Protocol
 
-HACT 假设任何 AI conversation、Runtime context 或本地 session 都可能丢失。
+HACT 假设任何 AI conversation、执行环境 context 或本地 session 都可能丢失。
 
 目标不是保护一个永不消失的上下文，而是保证项目工作可以从权威事实恢复。
 
@@ -37,7 +37,7 @@ Recoverability 是强要求，但不创建通用 Recovery Pointer 或 Runtime Re
 
 未形成 stable snapshot 的 Local Working Truth 默认只能由当前 Owner 自行恢复。
 
-若值得跨 session / Runtime继续，应尽量先形成 safe checkpoint、fixed candidate、evidence 或对应 durable conclusion。Decision Packet 只用于真实 decision escalation，不承担运行进度保存。
+若值得跨 session / 执行环境继续，应尽量先形成 safe checkpoint、fixed candidate、evidence 或对应 durable conclusion。最近一次人工 handoff 已有 remote `RESULT_SHA` 时，从该 durable snapshot 恢复，而非恢复 Packet conversation。Decision Packet 只用于真实 decision escalation，不承担运行进度保存。
 
 不能为了“可恢复”把 secrets、不完整危险状态或不适合版本化的临时数据强行提交 Git。
 

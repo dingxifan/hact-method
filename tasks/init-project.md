@@ -21,7 +21,7 @@ review: conditional
 
 ### Purpose
 
-把一个尚未进入 HACT 项目事实面的新项目初始化为独立、可恢复、可跨 Runtime 继续工作的 Git 项目，并播种最小但足够的长期项目事实、状态入口和地基蓝图。
+把一个尚未进入 HACT 项目事实面的新项目初始化为独立、可恢复、可跨会话 / 执行环境继续工作的 Git 项目，并播种最小但足够的长期项目事实、状态入口和地基蓝图。
 
 `init-project` 是项目 bootstrap Task。它创建后续 Task 依赖的项目级 Accepted Project Truth，但不提前替后续 PRD、TRD 或实现做决定。
 
@@ -119,7 +119,7 @@ Task Contract 只定义 `init-project` 的方法论承诺。具体目录命令�
 - V0 走 / 跳决定
 - remote / collaboration 范围中需要用户授权的部分
 
-上一 Runtime 的聊天摘要不是 Authoritative Input。若已有 Git / 文件事实，必须重新读取实际状态。
+上一会话或其他执行环境的聊天摘要不是 Authoritative Input。若已有 Git / 文件事实，必须重新读取实际状态。
 
 ## 4. Outputs
 

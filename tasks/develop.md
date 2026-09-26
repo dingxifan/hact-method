@@ -109,7 +109,7 @@ Development Intake / Task Package 无论采用何种序列化，至少要能表�
 
 只在出现 `protocols/authority.md` 定义的 Human Authority 边界时需要新的用户决定。
 
-Owner 必须自己读取权威输入。上一 Runtime 的聊天总结、实现者自评、口头“已验证”声明都不能替代 Authoritative Input 或 Evidence。
+Owner 必须自己读取权威输入。上一会话或其他执行环境的聊天总结、实现者自评、口头“已验证”声明都不能替代 Authoritative Input 或 Evidence。
 
 ## 4. Outputs
 
@@ -141,6 +141,8 @@ Owner 必须自己读取权威输入。上一 Runtime 的聊天总结、实现�
 ### 5.1 Freshness before code
 
 当前 Task 写第一处新的实现改动前，必须把 Development Intake 与**当前 Accepted Project Truth** 对齐，而不是默认相信写包时的世界仍然成立。
+
+若本次由人工 Execution Packet 发起，Packet 的 `BASE_SHA` 是该对账的明确起点；Codex 仍执行本节 freshness，但不另建第二套 freshness。Accepted remote 已移动并改变事实世界时，按 `protocols/git-truth.md` 停止为 snapshot mismatch，不自行重写旧 Task Package 的基线。
 
 至少核对：
 
@@ -256,7 +258,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - authorization 不因压缩扩大
 - attempts / review rounds 不因恢复清零
 - 已通过且 snapshot 未变化的验证不重复
-- ChatGPT 形成 stable bounded Execution Packet 后，由用户人工交给 Codex 连续执行；只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止。
+- ChatGPT 形成带 `BASE_SHA` 的 stable bounded Execution Packet 后，由用户人工交给 Codex 连续执行；完成后返回 immutable result identity。只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止。
 
 跨会话接续基于 Git snapshot、Task Contract、status 与 evidence，不基于聊天历史。
 
@@ -462,4 +464,4 @@ Task `merged` 与 G1–G5 approval 正交。develop 本身不创建新的 Gate�
 
 如果代码已经被接受/合并但 `status.yml` 尚未落定，先核真实 Git 结果再补 state；不得重复实现、重复 PR 或重开 review。
 
-如果 Local Working Truth 还没有 stable snapshot，只能由当前 Owner 谨慎恢复；需要跨 Runtime / session 时优先先形成 safe checkpoint，而不是传递完整聊天。
+如果 Local Working Truth 还没有 stable snapshot，只能由当前 Owner 谨慎恢复；需要跨会话 / 执行环境时优先先形成 safe checkpoint，而不是传递完整聊天。

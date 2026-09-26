@@ -84,7 +84,7 @@ Task Contract 只定义本 Task 独有规则。状态、Gate、Git Truth、Autho
 - 安全敏感关注点无法达到要求的构造级强制边
 - 其他 `protocols/authority.md` 定义的 Authority 边界
 
-上一 Runtime 的聊天总结不是权威输入。
+上一会话或其他执行环境的聊天总结不是权威输入。
 
 ## 4. Outputs
 

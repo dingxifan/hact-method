@@ -57,7 +57,7 @@ review: required
 - 当前 HACT Method fixed SHA 已知。
 - Owner 具备生成正式 artifact 的能力。
 
-要进入 `merged`，还必须具备可真实执行原型的 browser capability；若当前 Runtime 缺少该能力，Task 保持非终态并按 Runtime Adapter 做能力交接，不能伪造浏览器 evidence。
+要进入 `merged`，还必须具备可真实执行原型的 browser capability；若当前工作环境缺少该能力，形成 bounded Execution Packet，由用户交给具备能力的 Codex 执行，不能伪造浏览器 evidence。
 
 纯后端、无用户可见交互且 PRD 全部标记 `draft-ux: 不需要` 时，不创建本 Task。
 
@@ -91,7 +91,7 @@ review: required
 
 已有 Accepted 决定不重复访谈。
 
-上一 Runtime 的聊天总结不是权威输入；“用户已经接受”只能由可定位的真实用户回应与对应版本证明。
+上一会话或其他执行环境的聊天总结不是权威输入；“用户已经接受”只能由可定位的真实用户回应与对应版本证明。
 
 ## 4. Outputs
 

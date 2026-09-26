@@ -53,6 +53,8 @@ Codex 是 repository execution environment。接收到一个 bounded Execution P
 - `Boundary`：允许/禁止范围与当前 Authority 清楚；
 - `Validation`：真实验证入口与停止条件已知。
 
+Packet 携带 `BASE_SHA` 时，`Target` 还必须验证实际 execution base 对应该 SHA。若 Accepted remote 已移动且会改变本次事实世界，停止并返回 `snapshot mismatch`；不得自行将旧 Packet rebase 到新事实。此 stop reason 不改变既有 blocker 分类、Task state 或 Authority。`init-project` 只按 `protocols/git-truth.md` 的 bootstrap exception 执行。
+
 remote/upstream 只在 push/PR/merge 时检查；Gate/status/owner/dependencies 只在当前动作会读取或改变它们时检查；stash、其他 worktree、部署能力与 external-effect receipt 只在实际相关时检查。四项输入未变化时复用结论，不在每个文件修改、命令或机械整改前重新盘点。
 
 `init-project` 没有既有 `status.yml` 时按其 Task Contract 的 bootstrap exception 执行。
@@ -104,7 +106,7 @@ Task Contract 决定“必须证明什么”；Codex 负责调用项目真实入
 明确执行任务使用 bounded execution contract：
 
 ```text
-Goal / Allowed / Forbidden / Execute / Validate / Stop / Return
+Repository / Base SHA / Goal / Allowed / Forbidden / Execute / Validate / Stop / Return
 ```
 
 Codex 在已授权范围内执行到 validation PASS 或明确 blocker，不把已知执行问题改写成新的开放式分析。失败尽早分类为：
@@ -238,9 +240,9 @@ Task Contract 与 `protocols/authority.md` 决定是否允许外部副作用；C
 
 ## 11. Execution Packet and Result Packet
 
-Codex 只消费用户人工复制的 bounded Execution Packet 中完成本次 operation 所需的 Task、artifact/candidate、allowed/forbidden scope、execute、validation、stop 与 return。它不是新的 Task 或 state，也不改变 ownership、Gate 或 Authority。
+Codex 只消费用户人工复制的 bounded Execution Packet 中完成本次 operation 所需的 repository、`BASE_SHA`、Task、artifact/candidate、allowed/forbidden scope、execute、validation、stop 与 return。它先按 `protocols/git-truth.md` 验证 snapshot handshake；Packet 不是新的 Task 或 state，也不改变 ownership、Gate 或 Authority。
 
-完成时返回最小 Result Packet：Task、PASS 或 BLOCKED、changed files、validation evidence、Git Truth、blocker 与必要 decision。只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止请求新的 Packet；不得因机械修正、测试补齐、验证重跑或 finding closure 往返。
+需要返回 ChatGPT 验收时，完成后形成 immutable `RESULT_SHA`，并只在现有 Authority / Git policy 允许时使其成为远端可读取事实；Result Packet 返回 `BASE_SHA`、`RESULT_SHA`、remote ref/state、changed files、validation evidence、Git Truth、blocker 与必要 decision。若尚无 shared-write Authority，不伪装跨环境 handoff 已闭合。只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止请求新的 Packet；不得因机械修正、测试补齐、验证重跑或 finding closure 往返。
 
 ## 12. External Effect Adapter
 

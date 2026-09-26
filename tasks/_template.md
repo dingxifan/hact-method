@@ -44,7 +44,7 @@ Task Contract 只定义本 Task 独有规则。共性规则引用 `protocols/`�
 ### User input
 - …
 
-上一 Runtime 的聊天总结不是权威输入。Shared Protocol 是规则来源，但按当前动作的触发条件加载；不要因为出现在 Authoritative Inputs 中就预加载全部 `protocols/`。
+上一会话或其他执行环境的聊天总结不是权威输入。Shared Protocol 是规则来源，但按当前动作的触发条件加载；不要因为出现在 Authoritative Inputs 中就预加载全部 `protocols/`。
 
 ## 4. Outputs
 

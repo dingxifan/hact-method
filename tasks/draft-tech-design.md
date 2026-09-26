@@ -96,7 +96,7 @@ Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2
 
 已批准 PRD 不因技术实现困难而静默缩水。
 
-上一 Runtime 的聊天总结不是权威输入。
+上一会话或其他执行环境的聊天总结不是权威输入。
 
 ## 4. Outputs
 

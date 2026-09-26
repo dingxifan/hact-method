@@ -37,7 +37,7 @@ ChatGPT 能写 Git 不代表它可以批准产品需求；Codex 能部署不代�
 
 ## 5. Escalation
 
-遇到 capability gap、reasoning gap 或 independence gap 时可 escalation，但不自动转移 Task ownership。reasoning gap 先在当前 Runtime 内提高 model/effort；只有不可消解的 capability / isolation gap 才触发跨 Runtime handoff。
+遇到 capability gap、reasoning gap 或 independence gap 时可 escalation，但不自动转移 Task ownership。reasoning gap 先在当前执行环境内提高 model/effort；只有不可消解的 capability / isolation gap 才需要人工协作交接。
 
 需要高级 reasoning 时优先传递 Decision Packet：
 - Decision Question
@@ -83,4 +83,4 @@ Task Contract authorization boundary
 
 Human Authority、环境策略或资源权限的收窄/撤销立即优先适用。
 
-权限扩张必须由新的、scoped、immutable Authority event 明确绑定 action/scope、snapshot/world、target/environment 和适用的 validity scope。External Effect Receipt 只能引用该事件，不能自行创建 Authority、ownership 或 state。这里不创建 Approval Envelope 或第二套授权模型。
+权限扩张必须由新的、scoped、immutable Authority event 明确绑定 action/scope、snapshot/world、target/environment 和适用的 validity scope。External Effect Receipt 只能引用该事件，不能自行创建 Authority、ownership 或 state。将 `RESULT_SHA` 发布为远端可读事实若需要 shared-write Authority，仍须遵守本协议；snapshot handshake 本身不扩大权限。这里不创建 Approval Envelope 或第二套授权模型。

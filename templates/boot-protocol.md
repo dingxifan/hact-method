@@ -106,6 +106,8 @@ vNext Core Task Catalog：
 - `Boundary`：允许/禁止范围与当前 Authority 清楚；
 - `Validation`：真实验证入口与停止条件已知。
 
+当本次 repository execution 来自人工 Execution Packet 且携带 `BASE_SHA` 时，`Target` 必须先按 `protocols/git-truth.md` 验证 execution base；snapshot mismatch 时停止，不把旧 Packet 自行套用到新事实。该 preflight 不增加启动阶段或 Task state。
+
 Method SHA 只在当前动作受 HACT Method 约束时核；upstream 只在 pull/push/PR/merge 时核；stash、全量 status/Gate/owner/dependency 与其他 worktree 只在当前动作实际依赖或改变它们时核。四项输入未变化时复用结论。
 
 需要真实测试/build/hook/worktree 证据时使用 repository execution；远端 connector 不能替代本地证据。Git delivery 只在用户授权和 repository policy 允许时执行，细节按 Runtime Adapter。
@@ -152,7 +154,7 @@ Task 确定后：
 
 1. 加载 `tasks/{task}.md` 与本次动作需要的 Authoritative Inputs；
 2. 按 §2 的触发规则加载实际需要的 Shared Protocol；
-3. 需要 repository execution 时，将 stable bounded Execution Packet 人工交给 Codex；
+3. 需要 repository execution 时，将带 `BASE_SHA` 的 stable bounded Execution Packet 人工交给 Codex；
 4. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
 5. 做 Minimum Execution Preflight：`Target / Collision / Boundary / Validation`；
 6. 直接开始正式修改 / review / verification。

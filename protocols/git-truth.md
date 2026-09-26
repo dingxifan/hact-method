@@ -1,6 +1,6 @@
 # Git Truth Protocol
 
-HACT 使用版本化 Git Repository 作为跨 Runtime 的共享事实面。GitHub 是当前实现，不是方法论绑定。
+HACT 使用版本化 Git Repository 作为跨会话、跨执行环境的共享事实面。GitHub 是当前实现，不是方法论绑定。
 
 ## 1. 三层事实
 
@@ -35,9 +35,19 @@ Shared Candidate Truth 可以交 reviewer / escalation / specialist check，但�
 
 ## 3. Snapshot
 
-需要独立 review、authority approval 或跨 Runtime检查的重要候选，都应绑定 immutable snapshot，优先使用 Git commit SHA。
+需要独立 review、authority approval 或跨执行环境检查的重要候选，都应绑定 immutable snapshot，优先使用 Git commit SHA。
 
 禁止使用“当前最新版”“刚才那份”等模糊指代作为正式审查基线。
+
+### Manual collaboration snapshot handshake
+
+当 ChatGPT 基于 repository facts 形成判断、用户人工搬运、再由 Codex 在本地执行 repository operation 时，交接必须绑定明确的 `BASE_SHA`。ChatGPT 在该 immutable snapshot 上读取和判断；Codex 修改前验证实际 execution base 与 `BASE_SHA` 对应。不得以“当前 main”“最新代码”或本地应已同步代替 SHA。
+
+若 Accepted remote 已移动并改变本次事实世界，Codex 不得把旧 Packet 自行套用或 rebase 到新世界；停止并以 `snapshot mismatch` 报告。此为 preflight stop reason，不是新的 blocker 类型、Task state 或 Git Truth 层级。无关 dirty work 仍按现有 Working Tree Discipline 隔离，但不改变本次 base。
+
+需要返回 ChatGPT 验收的 operation 完成后，Codex 形成 immutable `RESULT_SHA`，并仅在既有 Authority / Git policy 允许时使其成为 ChatGPT 可读取的 remote Git truth；Result Packet 说明 `BASE_SHA`、`RESULT_SHA` 与实际 remote ref/state。ChatGPT 必须重新读取 `RESULT_SHA` 及本次涉及的 artifact / code / state，不能只根据 Result narrative 宣布完成。下一轮默认从已确认的 Accepted / Result snapshot 重新建立基线。
+
+`init-project` 没有既存项目 `BASE_SHA`：它以 fixed Method SHA、用户确认的 repository identity 与新仓初始事实 bootstrap；首个可验证 remote snapshot 建立后，其 commit SHA 成为后续正式共同基线。Packet 只是人工临时格式，不是 Git Truth。
 
 ## 4. Git 保存什么
 

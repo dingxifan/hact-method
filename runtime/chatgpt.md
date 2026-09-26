@@ -14,21 +14,24 @@ Git 是 Shared Project Truth。需要真实 repository write、command、test/ch
 
 开始正式 HACT Task 时，确认目标 repository、adopted Method SHA、当前 Task / state，加载 `tasks/{task}.md`、实际触发的 Shared Protocol 与 authoritative inputs，再开始工作。`init-project` 按其 bootstrap exception 执行；B 类请求按 `protocols/b-intake.md` 进入 `develop(source=bug|optimization)`。不要预加载全部 Task，也不因用户已明确 Task 而重新路由。
 
-读取 repository 时优先读取权威 Git 内容；完整 artifact 必须完整读取。优先绑定 default branch Accepted Truth、明确 candidate SHA 或 Gate approved snapshot。
+读取 repository 时优先读取权威 Git 内容；完整 artifact 必须完整读取。即将形成 Execution Packet 时，必须读取明确 SHA，而不是 floating default branch；具体人工协作 snapshot handshake 只遵循 `protocols/git-truth.md`。优先绑定 default branch Accepted Truth、明确 candidate SHA 或 Gate approved snapshot。
 
 ## 3. Minimal manual handoff
 
 ChatGPT 在边界、允许/禁止范围、验证和停止条件明确后，给 Codex 以下最小 Execution Packet：
 
 ```text
+Repository:
+Base SHA:
+
 Task:
 Goal:
 
 Allowed:
 Forbidden:
 
-Input / Artifact:
-...
+Input file(s):
+Target path(s):
 
 Execute:
 ...
@@ -43,13 +46,17 @@ Return:
 ...
 ```
 
-`Stop` 通常是 validation PASS，或出现 `SEMANTIC | AUTHORITY | CAPABILITY` blocker。Packet 只是临时复制格式：不编号、不注册进 status、不创建 lifecycle、receipt、registry、schema、checker 或持久化 packet object。
+无 Input file(s) / Target path(s) 时省略该字段。长文档、多文件 bundle、PRD / UX / TRD / prototype 或 planning 正文走独立文件；Packet 只携带控制信息和文件引用，不为搬运方便重复正文。`Stop` 通常是 validation PASS，或出现 `SEMANTIC | AUTHORITY | CAPABILITY` blocker。Packet 只是临时复制格式：不编号、不注册进 status、不创建 lifecycle、receipt、registry、schema、checker 或持久化 packet object。
 
 Codex 返回后，用户人工复制最小 Result Packet：
 
 ```yaml
 Task:
 Result: PASS | BLOCKED
+
+Base SHA:
+Result SHA:
+Remote ref/state:
 
 Changed:
 ...
@@ -67,7 +74,7 @@ Decision needed:
 ...
 ```
 
-ChatGPT 根据 evidence 与 Git Truth 判断 PASS、继续执行，或是否需要 semantic / Human Authority decision；不要求用户搬运完整对话或 reasoning。一次 Packet 只传达一个 stable bounded operation，不改变既有 Task identity、state、ownership、Gate 或 Authority。
+ChatGPT 收到 Result Packet 后重新读取 `RESULT_SHA` 的本次 artifact / code / state，再根据 evidence 与 Git Truth 判断 PASS、继续执行，或是否需要 semantic / Human Authority decision；不要求用户搬运完整对话或 reasoning。一次 Packet 只传达一个 stable bounded operation，不改变既有 Task identity、state、ownership、Gate 或 Authority。
 
 ## 4. Frozen artifact persistence
 

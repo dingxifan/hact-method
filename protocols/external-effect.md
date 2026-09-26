@@ -1,6 +1,6 @@
 # External Effect Protocol
 
-本文只治理 non-idempotent、production、paid、irreversible 或结果可能不确定的外部副作用。普通 repository execution、Runtime handoff 和 Independent Review 不创建 effect receipt。
+本文只治理 non-idempotent、production、paid、irreversible 或结果可能不确定的外部副作用。普通 repository execution、人工协作 snapshot handoff 和 Independent Review 不创建 effect receipt。
 
 ## 1. Trigger
 

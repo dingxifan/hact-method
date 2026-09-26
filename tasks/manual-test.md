@@ -81,7 +81,7 @@ review: none
 - `iterations/vN/trd.md` 的测试环境约定
 - 既有 acceptance report / prior round progress
 
-上一 Runtime 的总结不能替代 PRD、System Verification artifacts 或真实用户反馈。
+上一会话或其他执行环境的总结不能替代 PRD、System Verification artifacts 或真实用户反馈。
 
 ## 4. Outputs
 

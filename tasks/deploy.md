@@ -105,7 +105,7 @@ Task Contract 只定义 deployment 语义。SSH、平台 CLI、进程管理器�
 - environment-specific release policy
 - platform-specific health or smoke checks
 
-上一 Runtime 的“已经部署”“已经构建”总结不是权威输入。必须核真实 Git snapshot、目标环境和实际 evidence。
+上一会话或其他执行环境的“已经部署”“已经构建”总结不是权威输入。必须核真实 Git snapshot、目标环境和实际 evidence。
 
 ## 4. Outputs
 

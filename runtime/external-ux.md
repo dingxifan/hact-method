@@ -6,7 +6,7 @@
 
 ## 1. Design Packet
 
-从当前 `draft-ux` Accepted / Candidate Truth 形成一个最小 design brief，由用户人工交给外部设计会话。
+从当前 `draft-ux` Accepted / Candidate Truth 的明确 `BASE_SHA` 形成一个最小 design brief，由用户人工交给外部设计会话。
 
 Brief 只包含或引用：
 
@@ -61,10 +61,10 @@ Brief 只包含或引用：
 
 ## 5. Persistence
 
-正常交接基于 versioned Git snapshot。
+正常交接基于 versioned Git snapshot；若 Codex 落盘后需要回到 ChatGPT / Owner 判断，返回可读取的 `RESULT_SHA` 并重新读取。
 
 不是：
 
 `外部设计聊天总结 → Owner`
 
-如果外部设计会话不能直接写 Git，用户将冻结 artifact 放入给 Codex 的 Execution Packet；Codex 落盘、验证并形成 Shared Candidate，再由 Owner 从 Git Truth 继续。
+如果外部设计会话不能直接写 Git，用户将冻结 artifact 文件或 bundle 连同给 Codex 的短 Execution Packet 交付；Packet 只保留控制信息和文件引用。Codex 落盘、验证并形成 Shared Candidate，再由 Owner 从 Git Truth 继续。

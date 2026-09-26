@@ -75,7 +75,7 @@ review: none
 - prior project.md
 - unresolved incident / waiver / accepted defer evidence
 
-上一 Runtime 的总结不是 iteration closeout truth。必须重新读取 durable artifacts 和真实 deployment state。
+上一会话或其他执行环境的总结不是 iteration closeout truth。必须重新读取 durable artifacts 和真实 deployment state。
 
 ## 4. Outputs
 

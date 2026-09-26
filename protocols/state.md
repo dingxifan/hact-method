@@ -15,7 +15,7 @@ Task 已被正式登记到 Accepted Project Truth，当前没有 Owner，可以�
 - required Gate 是否 approved；
 - `depends_on` 是否已经满足；
 - required artifact / authorization 是否存在；
-- 当前 Runtime 是否具备必需 capability。
+- 当前执行环境是否具备必需 capability。
 
 若动态前置暂未满足，Task 保持 `可取`，但当前不得认领；不增加第五种 waiting / planned / blocked 状态。
 
@@ -81,7 +81,7 @@ Shared Candidate 中的状态变化只是候选，不得因为 candidate 文件�
 - Owner 主动放弃；
 - 需要重派；
 - 上游 contract 有阻断；
-- 当前 Runtime 缺少必要 capability。
+- 当前执行环境缺少必要 capability。
 
 原因写入 blocker / progress，不增加额外状态枚举。
 
@@ -99,11 +99,11 @@ Task 可以 `merged` 而 Gate 尚未批准。Gate 也不是第五种 Task state�
 
 对 sprint develop 而言，G3 通过 Preconditions 控制是否允许从 `可取` 认领；它不改变四态本身。
 
-## 9. Runtime 不产生第二套状态
+## 9. 执行环境不产生第二套状态
 
-跨 Runtime 执行不创建状态或 ownership 记录。恢复时直接重新读取 authoritative status。
+跨会话、跨执行环境执行不创建状态或 ownership 记录。Packet、`BASE_SHA` 与 `RESULT_SHA` 都不是新的 Task state。恢复时直接重新读取 authoritative status。
 
-Runtime event、job status 或 terminal result 都不得自行推断或写入 `taken-by`、`done`、`merged`，也不得创建或转移 ownership。child Task 必须先按现有规则成为 canonical registered Task；Runtime location 不改变这些事实。
+执行环境 event、job status 或 terminal result 都不得自行推断或写入 `taken-by`、`done`、`merged`，也不得创建或转移 ownership。child Task 必须先按现有规则成为 canonical registered Task；execution location 不改变这些事实。
 
 ## 10. 终态检查按 Task 类型路由
 
