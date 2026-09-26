@@ -270,11 +270,21 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 ### 5.9.1 Sprint-level Develop Goal
 
-一个 Accepted Sprint 的 develop 可以由 ChatGPT 在明确 `BASE_SHA` 上一次形成 Sprint-level Develop Goal，再由用户交给 Codex 连续推进。标准人工交接是先激活 `/goal`，再提交 Develop Execution Packet；Goal activation 成功后，Codex 才开始连续执行 Task Packages。Goal 只提供整体目标、成功条件、自主范围、人类介入边界、依赖/共享写冲突约束与最终 `RESULT_SHA`；它不是 HACT 的新 Task、state、lifecycle、ledger 或第二套 Contract。
+一个 Accepted Sprint 的 develop 可以由 ChatGPT 在明确 `BASE_SHA` 上**自动从已接受 Sprint 设定**一次 Sprint-level Develop Goal，再由用户交给 Codex 连续推进；这表示 ChatGPT 必须直接给出可激活的 Goal 内容，Human 不承担编写或拆分 Goal 的工作。标准人工交接是先激活 `/goal`，再提交 Develop Execution Packet；Goal activation 成功后，Codex 才开始连续执行 Task Packages。Goal 只提供整体目标、成功条件、自主范围、人类介入边界、依赖/共享写冲突约束与最终 `RESULT_SHA`；它不是 HACT 的新 Task、state、lifecycle、ledger 或第二套 Contract。
 
 每个 Task Package 仍是唯一正式执行单元，分别执行 freshness、implementation、verification、fixed candidate、Independent Review、repair 与 merge / Accepted Truth。Codex 可在 Goal、Task Contract 和 Authority 允许范围内决定顺序、机械修复、targeted re-review、Git delivery 及下一个 eligible Task；满足依赖且无 shared-write conflict 的 Task 可以并行，有真实 conflict 时串行。每个已 merged Task 形成新的 Accepted Project Truth，后续 Task 仍须重新做自身 freshness。
 
 普通工程选择、lint/type/build/test/checker failure、review finding、bounded refactor、Task 顺序调整和下一个 eligible Task 选择不得中断 Goal 返回 ChatGPT。需要 Human Authority 时，Codex 在当前 interaction 直接向用户说明并在决定后继续原 Goal；这不创建 pause / waiting / decision state。局部 blocker 只暂停受影响 Task 及其依赖，其他无依赖、无 shared-write conflict 的 Task 继续；只有 Sprint Contract / shared contract 整体失效、继续会造成明显返工、必要 capability / permission 不可获得、用户终止或其他真正使 Goal 不可执行的情况才终止本轮 Goal。最终 Result 如实列 completed、blocked、因依赖跳过的 Task、未解决决定与 final `RESULT_SHA`。
+
+### 5.9.2 Lightweight Wave execution
+
+在 active Sprint-level Develop Goal 下，Codex 在开始 substantive implementation 前，根据已接受的 Task Packages 的 dependency order、development volume 与可形成的 verification boundary，将当前可执行包划为若干轻量 Wave。Wave 只限制一次连续 Develop 的执行范围：强依赖或共同验证的包优先同 Wave 或相邻 Wave；明显复杂或大型的单个包可以独占一个 Wave；不得为凑包数打断真实依赖或把强耦合实现拆成半成品。
+
+Wave 不是 Task、Gate、state、artifact、packet、approval、review object、registry 或 lifecycle。它不修改现有 Task Package、`status.yml`、delivery、review 或 Git Truth 规则，也不产生 Wave Goal、Wave Result 或 context checkpoint。一个 Wave 完成时，只按每个已完成 Task 的既有 implementation、deterministic validation、review / repair 与 Git delivery 规则形成稳定 Git Truth；下一 Wave 可以在新的 Codex execution context 继续。
+
+编排时可以把 Task 简单识别为 ordinary 或 complex。跨多个核心模块、schema / migration / API / persistence 联动、存在实质实现路径选择、影响多个既有 contract、需要理解大范围存量实现、反复实现失败或先前 review 指向设计 / 策略根因，都是 complex 的典型信号；不建立 score、level、matrix、registry 或持久化复杂度字段。
+
+ordinary Task 按既有 Contract 直接执行。Codex 实际到达 complex Task 时，必须在 substantive implementation 前向 Human 直接说明其复杂性，并只询问：`analyze first` 还是 `continue directly`。`continue directly` 继续当前 Task；`analyze first` 只暂停当前 Task 的 substantive implementation，由 Human 在 ChatGPT 形成可选的详细实施分析后交回 Codex。该选择不是新 Gate 或签署流程，分析也不是 HACT mandatory artifact。Codex 可为真实 repository fact 调整机械实现细节；若分析的核心设计假设与事实冲突，必须停止受影响部分并指出冲突，不得静默改为实质不同的架构。模型、reasoning level 或模型路由始终由 Human 决定，不属于 Method。
 
 ### 5.10 System finding repair
 

@@ -18,7 +18,11 @@ Codex 不因为拥有 shell、Git 或更强执行能力而拥有更高 Authority
 
 Codex 是 repository execution environment。接收到一个 bounded Execution Packet 后，应在已授权范围内连续执行必要 reasoning、修改、验证、机械整改和 review closure，直至 validation PASS 或明确 BLOCKED。
 
-对已 Accepted Sprint 的 `source=sprint` Develop，开始前当前 Codex interaction 必须已有 active Goal。当前 Codex 支持 `/goal` 时，用户先以 `/goal ...` 建立 Sprint-level Develop Goal，再提交 Develop Execution Packet；Packet 内的 `Goal:` 字段不能代替 activation。该 Goal 是当前 interaction 持续自主推进整个 Sprint 的执行目标，不是 HACT 的新 Task、state、lifecycle、ledger 或 Bridge；Codex 产品本身的 Goal controls / budget 仍由 Codex 管理。
+对已 Accepted Sprint 的 `source=sprint` Develop，开始前当前 Codex interaction 必须已有 active Goal。ChatGPT 从冻结 Sprint 自动设定可激活的 `/goal ...` 内容；用户只把它激活到 Codex，再提交 Develop Execution Packet。Packet 内的 `Goal:` 字段不能代替 activation。该 Goal 是当前 interaction 持续自主推进整个 Sprint 的执行目标，不是 HACT 的新 Task、state、lifecycle、ledger 或 Bridge；Codex 产品本身的 Goal controls / budget 仍由 Codex 管理。
+
+Goal 激活后、开始 substantive implementation 前，Codex 从已接受的 Task Packages 即时形成轻量 Wave：先保持 dependency order，再按 development volume 和可验证的阶段结果限制连续执行范围；强耦合包不可为均分而拆开，复杂 / 大型 Task 可独占一个 Wave。Wave 只是一段执行编排，不写入 `status.yml`，不形成 Task、Gate、Goal、state、artifact、packet、approval、review、registry、checkpoint 或新 lifecycle。
+
+Codex 到达 ordinary Task 时直接按既有 Contract 执行。到达 complex Task 时，必须在 substantive implementation 前直接提示 Human 选择 `analyze first` 或 `continue directly`；不提前强制产生分析文档。`analyze first` 只暂停该 Task 的 substantive implementation，等待 Human 交回 ChatGPT 的可选实施分析；`continue directly` 继续现有执行。分析中的核心设计假设与真实 repository truth 冲突时，停止受影响部分并说明冲突，不能静默替换为实质不同的架构。此处不新增 Gate、state 或 Human approval object，且不推断或指定模型选择。
 
 ## 2. Capability Profile
 
@@ -242,7 +246,7 @@ Task Contract 与 `protocols/authority.md` 决定是否允许外部副作用；C
 
 ## 11. Execution Packet and Result Packet
 
-Codex 只消费用户人工复制的 bounded Execution Packet 中完成本次 operation 所需的 repository、`BASE_SHA`、Task、artifact/candidate、allowed/forbidden scope、execute、validation、stop 与 return。Sprint-level Develop Packet 还应包含 `Accepted Sprint`、`Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`，且只在 active Goal 已建立后执行。它先按 `protocols/git-truth.md` 验证 snapshot handshake；Packet 不是新的 Task 或 state，也不改变 ownership、Gate 或 Authority。
+Codex 只消费用户人工复制的 bounded Execution Packet 中完成本次 operation 所需的 repository、`BASE_SHA`、Task、artifact/candidate、allowed/forbidden scope、execute、validation、stop 与 return。Sprint-level Develop Packet 还应包含 `Accepted Sprint`、`Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`，并明确 Wave 由 Codex 从当前 accepted packages 即时编排、complex Task 到达时的二选一提示；它只在 active Goal 已建立后执行。Packet 不得把 Wave 写成需要用户维护的清单、状态或交接载体。它先按 `protocols/git-truth.md` 验证 snapshot handshake；Packet 不是新的 Task 或 state，也不改变 ownership、Gate 或 Authority。
 
 active Sprint-level Develop Goal 下，普通实现选择、mechanical / test / checker failure、review finding、repair 与 targeted re-review 不终止 Goal。需要 Human Authority 的 `SEMANTIC` 或 `AUTHORITY` 问题在当前 Codex interaction 直接询问用户；决定后继续同一 Goal。局部 blocker 只暂停受影响 Task 及其依赖，其他独立且 eligible 的 Task 继续。除用户明确终止、所有可合法执行 Task 完成，或 unresolved capability / authority / contract blocker 使继续不安全或不可能外，不把 Goal 作为完成的理由；最终返回 immutable Sprint Result Packet 和 `RESULT_SHA`。此规则不覆盖 Codex 自身的系统安全或预算控制。
 
