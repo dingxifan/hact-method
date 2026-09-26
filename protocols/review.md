@@ -164,6 +164,10 @@ Projection 只能减少无关加载，不能删掉当前 finding 所需的规范
 
 Standard Package 的 Lightweight Review 仍必须核 package intent/oracle、授权 scope、受影响兼容性、必要证据/测试和 escalation signal。Sensitive Package 的 Full Local Review 在此基础上深入实际触及的高影响边界。最终 cross-package consistency、整体 architecture 与 system-level evidence sufficiency 属于 System Review。
 
+### Reviewer 不为“更保险”自动加机制
+
+Reviewer 不得仅因更可观测、更可审计、更容易 debug / 恢复，或多一道 lock、generation、receipt、evidence 会更保险，而建立 blocking finding。若要求新增 durable state、evidence 或 control，必须指出当前 Contract 的具体未满足项、最终 invariant 的具体 failure path、明确 security / Authority risk、不可逆 / crash recovery 缺口、external compatibility obligation，或已有 evidence 证明当前机制不足。找不到依据时只能作为 advisory，不能成为 blocking requirement；本节不增加 finding type、severity 或 report schema。
+
 ## 13. Human Authority
 
 Reviewer 可以给出 pass、blocking finding、evidence insufficient，但不能替用户完成 Gate、真实体验验收或业务取舍。

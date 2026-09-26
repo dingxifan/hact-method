@@ -163,6 +163,12 @@ G3 approval 时只记录 Gate authority event；不再新增、重写或重排 T
 
 一个 package 可以只完成用户任务的一部分，但必须能指出其余部分由哪些 package 承接。
 
+### 5.1.1 按独立交付结果切包，不按技术对象数量切包
+
+Task Package 的边界由可独立交付结果、真实依赖、共享写冲突和独立验证价值决定。table、state、generation、receipt、module 或 file 的数量本身不是拆包依据；同一个 bounded implementation result 能安全完成的相关机制，不为了更容易管理、逐对象追踪或逐对象审查继续拆小，也不把 TRD 中每个中间控制对象自动变成独立 Task。
+
+真实 hard dependency 或 shared asset conflict 仍按现有规则拆分或串行；本节不改变 Task Package schema，也不设置包大小或数量指标。
+
 ### 5.2 保留既有 Task Package schema
 
 新 package 必须使用当前唯一序列化和 checker schema。
@@ -384,6 +390,7 @@ Reviewer 使用 `protocols/review.md` 的 same-source projection，不要求为�
 6. risk 标注
 7. shared asset source-of-truth 与依赖断边
 8. queue ↔ sprint ↔ status registration 是否表达同一个规划世界
+9. package 数量和依赖是否来自真实交付边界，而不是对技术对象逐一镜像
 
 当全部 normative core 超出单次有效审查范围时，可按业务模块切 module review，最后做 global-summary；global-summary 只核跨批 AC、shared assets、依赖与 registration，不重新全文审每个 package。
 

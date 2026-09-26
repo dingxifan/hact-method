@@ -155,6 +155,18 @@ PRD 的 `intent` 是外部可观察承诺，TRD 不重写其含义。
 
 普通 `example` 只帮助理解；除非上游已经明确成为 golden contract，否则不能因为 TRD 写了具体数字 / 字符串就自动升格为新承诺。
 
+### 5.2.1 最终不变量优先，最小机制实现
+
+技术设计先明确最终必须成立的事实、Contract 与 invariant，识别真正会破坏它们的 failure mode，再选择满足这些结果所需的最小 mechanism；最后才决定是否需要 table、state、lock、generation、receipt、log、checkpoint 或其他 durable object / control。不得从枚举所有中间过程、为每个过程建立状态和持久记录出发。
+
+新增 durable object / state / control 前只问三件事：
+
+1. 它保护哪个明确的最终不变量、Contract 或安全边界？无法指出时，默认不增加。
+2. 中间信息丢失后能否从现有权威事实重新推导、重新扫描、重新计算或廉价重建？能则优先保持 transient / derived。
+3. 它是否为用户可观察正确性、crash / 不可逆恢复、安全 / Authority 边界、外部兼容协议或无法重新获取的必要事实所必需？
+
+若均不满足，默认不持久化。仅为 debug、解释过程、完整审计、未来可能有用、更多保险、每一步可恢复或每个中间瞬间都有状态，不足以成为新增理由，除非已对应上述明确风险。
+
 ### 5.3 实体 → 技术承载 deterministic cross-check
 
 对 PRD 每个实体，TRD 必须有明确、与真实形态一致的技术承载。
@@ -278,6 +290,7 @@ TRD 可以定义：
 - 接口 / 数据 / 模块边界内部一致
 - 新 Foundation 关注点确实跨切面且 enforcement 声明可信
 - 技术设计没有静默改变产品范围
+- 新增 durable table/state/generation/receipt/action-log/checkpoint/immutable artifact 等都能说明必要性及其保护的最终不变量；不存在仅为过程可观测而新增的长期权威对象
 
 ## 7. Review & Human Authority
 
@@ -297,6 +310,7 @@ Required。
 4. 接口字段 / 状态足够支撑 UX 画面和用户任务
 5. PRD → TRD 覆盖完整
 6. 新 Foundation 关注点没有越权或空口升档
+7. 不存在多个机制重复保护同一风险、却不能证明各自独立必要性的 durable object / control
 
 Reviewer 按 `protocols/review.md` 的 same-source projection 读取本 Task 必要 sections；不继承 Owner 的疑点处理叙事，也不替用户完成产品 / 业务取舍。
 

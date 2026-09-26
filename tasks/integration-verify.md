@@ -155,6 +155,12 @@ System Review 与 Runtime Verification 建立的 blocking finding 都进入同�
 
 “全绿”只证明已执行测试的结果，不能替代 Contract reconciliation。
 
+### 5.5.1 Verify outcomes and invariants, not every internal moment
+
+System Verification 证明 Product / Technical Contract、final system invariant、真实组合边界、会改变最终结论的 failure / retry / recovery path，以及必要 external boundary 是否成立；不是穷举每个内部中间状态、为每次 transition 建独立 scenario，或保存完整 execution timeline。场景由不同业务终态、不同 Contract outcome、关键 security / Authority boundary、真实 cross-component seam 和必要 failure path 驱动，内部实现步骤数量本身不是 scenario 数量依据。
+
+能从 final snapshot、existing result 与 reproducible command 重新推导的中间执行细节，默认不升级为新的 durable evidence object。本节不削弱 System Review、Runtime Integration Verification、final candidate binding、blocking finding closure 或 external boundary verification。
+
 ### 5.6 Composition reconciliation
 
 执行场景前先核至少三类组合事实：

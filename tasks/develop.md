@@ -173,6 +173,12 @@ blocking freshness finding 未关闭前不得继续新增代码。
 
 允许 Owner 在**不改变业务/技术 Contract** 的前提下修正实际 implementation landing，例如真实文件位置与原预期不同；必须留下简短证据说明。
 
+### 5.2.1 Contract 内的最小实现
+
+在满足 Accepted Product / Technical Contract 的前提下，优先更少对象、更短状态链、更少 durable truth，并复用现有机制。不得主动新增 TRD 未要求、且没有明确 Contract / invariant / security / recovery / external compatibility 依据的 audit table、generation、receipt、lock、checkpoint、history log 或平行状态层。
+
+“最小实现”不是自行删除 Accepted Technical Contract 的授权。若判断已批准的 A + B + C 中 A 足以守住全部 Contract / invariant，必须停止相关语义收缩并返回 `SEMANTIC`：说明疑似多余的机制、仍能满足的不变量、简化理由及需修订的 Contract 条目。只有 `revise-doc(target=trd)` 或既有等价路径形成新的 Accepted Technical Contract 后才能按简化方案继续。此规则阻止继续扩张，不要求主动重构既有复杂设计。
+
 下列情况不属于普通 implementation adjustment：
 
 - 改变产品承诺
@@ -262,6 +268,14 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 跨会话接续基于 Git snapshot、Task Contract、status 与 evidence，不基于聊天历史。
 
+### 5.9.1 Sprint-level Develop Goal
+
+一个 Accepted Sprint 的 develop 可以由 ChatGPT 在明确 `BASE_SHA` 上一次形成 Sprint-level Develop Goal，再由用户交给 Codex 连续推进。Goal 只提供整体目标、成功条件、自主范围、人类介入边界、依赖/共享写冲突约束与最终 `RESULT_SHA`；它不是新的 Task、state、lifecycle、ledger 或第二套 Contract。
+
+每个 Task Package 仍是唯一正式执行单元，分别执行 freshness、implementation、verification、fixed candidate、Independent Review、repair 与 merge / Accepted Truth。Codex 可在 Goal、Task Contract 和 Authority 允许范围内决定顺序、机械修复、targeted re-review、Git delivery 及下一个 eligible Task；满足依赖且无 shared-write conflict 的 Task 可以并行，有真实 conflict 时串行。每个已 merged Task 形成新的 Accepted Project Truth，后续 Task 仍须重新做自身 freshness。
+
+普通工程选择、lint/type/build/test/checker failure、review finding、bounded refactor、Task 顺序调整和下一个 eligible Task 选择不得中断 Goal 返回 ChatGPT。需要 Human Authority 时，Codex 在当前 interaction 直接向用户说明并在决定后继续原 Goal；这不创建 pause / waiting / decision state。局部 blocker 只暂停受影响 Task 及其依赖，其他无依赖、无 shared-write conflict 的 Task 继续；只有 Sprint Contract / shared contract 整体失效、继续会造成明显返工、必要 capability / permission 不可获得、用户终止或其他真正使 Goal 不可执行的情况才终止本轮 Goal。最终 Result 如实列 completed、blocked、因依赖跳过的 Task、未解决决定与 final `RESULT_SHA`。
+
 ### 5.10 System finding repair
 
 `source=integration` 来自 blocking system finding 时，现有 Development Intake / Task Package 必须用已有字段明确引用：
@@ -305,6 +319,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - shared contract / dependency / ownership 没有明显错位
 - 受影响的并发、持久化、资源、隐私或外部副作用边界已按实际 diff 检查
 - frontend 改动遵守已接受的 design / interaction contract；只有出现真实设计缺口时才请求新的 Human Authority
+- 没有新增缺少上游 Contract / invariant 依据、仅为“更保险”而叠加的 durable object / control
 
 ## 7. Review & Human Authority
 
@@ -328,6 +343,7 @@ Package Review 的目的为 **Error Containment**，不是最终 System Assuranc
 1. **contract / scope**：本 Task 承诺是否兑现，是否越出授权边界
 2. **compatibility**：本次改动是否破坏受影响已有行为
 3. **test-evidence**：证据是否真的支持当前结论
+4. **mechanism necessity**：新增 durable object / control 是否有上游 Contract / invariant 依据，而非仅为过程可观测或额外保险
 
 按实际 diff 再触发专项：
 
