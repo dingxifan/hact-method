@@ -270,7 +270,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 ### 5.9.1 Sprint-level Develop Goal
 
-一个 Accepted Sprint 的 develop 可以由 ChatGPT 在明确 `BASE_SHA` 上一次形成 Sprint-level Develop Goal，再由用户交给 Codex 连续推进。Goal 只提供整体目标、成功条件、自主范围、人类介入边界、依赖/共享写冲突约束与最终 `RESULT_SHA`；它不是新的 Task、state、lifecycle、ledger 或第二套 Contract。
+一个 Accepted Sprint 的 develop 可以由 ChatGPT 在明确 `BASE_SHA` 上一次形成 Sprint-level Develop Goal，再由用户交给 Codex 连续推进。标准人工交接是先激活 `/goal`，再提交 Develop Execution Packet；Goal activation 成功后，Codex 才开始连续执行 Task Packages。Goal 只提供整体目标、成功条件、自主范围、人类介入边界、依赖/共享写冲突约束与最终 `RESULT_SHA`；它不是 HACT 的新 Task、state、lifecycle、ledger 或第二套 Contract。
 
 每个 Task Package 仍是唯一正式执行单元，分别执行 freshness、implementation、verification、fixed candidate、Independent Review、repair 与 merge / Accepted Truth。Codex 可在 Goal、Task Contract 和 Authority 允许范围内决定顺序、机械修复、targeted re-review、Git delivery 及下一个 eligible Task；满足依赖且无 shared-write conflict 的 Task 可以并行，有真实 conflict 时串行。每个已 merged Task 形成新的 Accepted Project Truth，后续 Task 仍须重新做自身 freshness。
 

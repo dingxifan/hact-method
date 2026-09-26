@@ -48,6 +48,21 @@ Return:
 
 无 Input file(s) / Target path(s) 时省略该字段。长文档、多文件 bundle、PRD / UX / TRD / prototype 或 planning 正文走独立文件；Packet 只携带控制信息和文件引用，不为搬运方便重复正文。`Stop` 通常是 validation PASS，或出现 `SEMANTIC | AUTHORITY | CAPABILITY` blocker。Packet 只是临时复制格式：不编号、不注册进 status、不创建 lifecycle、receipt、registry、schema、checker 或持久化 packet object。
 
+### Sprint-level Develop handoff
+
+当 ChatGPT 为已 Accepted Sprint 生成 `source=sprint` 的 Develop handoff 时，输出顺序固定为两段，且不可合并：
+
+1. **CODEX GOAL**：一条可直接粘贴到 Codex 对话框的 `/goal ...` 命令，用于在当前 Codex interaction 真正建立 Sprint-level Develop Goal；
+2. **DEVELOP EXECUTION PACKET**：只在 Goal 已建立后交付，包含 `Repository`、`BASE_SHA`、`Accepted Sprint`、`Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`。
+
+只在 Packet 内填写 `Goal:` 字段不视为 Goal 已激活。Goal 命令应指向明确 `BASE_SHA`、已接受的 `source=sprint` Task Packages、既有 Task Contract / dependency graph、验证与最终 immutable Sprint Result Packet；不得借此扩大 Product / Technical / Sprint semantics、Authority 或 external-effect 范围。
+
+最小示例：
+
+```text
+/goal Complete the frozen Sprint Develop Goal from BASE_SHA <sha>. Execute all accepted source=sprint Task Packages through their existing contracts and dependency graph. For every eligible package perform freshness, implementation, deterministic validation, immutable candidate, independent review, finding repair, targeted re-review, and authorized Git delivery. Preserve Product/Technical/Sprint semantics and all external-effect prohibitions. Continue autonomously through ordinary implementation choices, mechanical failures, test failures, checker failures, review findings, repairs, and eligible subsequent Tasks. When a genuine SEMANTIC or AUTHORITY decision requires Human Authority, ask the user directly in the current Codex interaction, then continue the same Goal after the decision. Pause only the affected Task and its dependents when possible; continue other independent eligible Tasks. Terminate only when all legally executable Sprint Tasks are complete, the user explicitly stops, or an unresolved blocker makes further execution unsafe or impossible. Finish with the final immutable Sprint Result Packet and RESULT_SHA.
+```
+
 Codex 返回后，用户人工复制最小 Result Packet：
 
 ```yaml
