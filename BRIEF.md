@@ -11,6 +11,8 @@ HACT 当前只支持一套任务模型：`tasks/` 是唯一任务执行契约，
 
 执行以“结论可恢复”而不是“过程可续接”为目标。默认保持同一运行时完成分析、修改和验证；一个用户动作最多产生一次对外执行交接。普通失败在当前执行窗口内继续修正，机械错误直接修正并复验。只有非幂等、高影响或结果不确定的外部动作需要 external-effect receipt。
 
+System / Holistic Independent Review 按 `protocols/review.md` 的 Runtime specialization 执行：适合且具备完整 immutable sources 时优先使用 Fresh ChatGPT reviewer context，Runtime Integration Verification 仍由 Codex 执行；上述 locality 与交接次数偏好不得阻止必要的 fresh review / re-review。两者仍属同一个 `integration-verify`，所有必要结论最终绑定同一个 fixed final candidate，不新增方法论对象。
+
 质量控制不做减法：权威输入、固定候选、独立审查、真实验证、Gate 人签和外部效果核验继续保留。系统级 finding 必须由新的固定候选关闭，不能在原候选上用文字宣告关闭。旧项目如需采用本版，必须先在 Core 外完成一次性 normalization、文件所有权归类和独立迁移审查，再整体进入 current schema；不提供日常旧 schema、旧入口或混合运行兼容。
 
 **结果严格，机制克制。** HACT 对 Contract、最终不变量、固定候选、独立审查、真实验证、Human Authority 与不可逆外部效果保持严格控制；过程完全可观测、可审计、可恢复不是默认目标。设计先确定最终必须成立的事实，再选择满足这些事实的最小机制。能从权威事实重新推导、重新计算或廉价重建的中间信息，默认不升级为 durable truth。新增长期状态、表、generation、receipt、action log、checkpoint、evidence object 或控制层，必须能明确指出其保护的 Contract、不变量、安全边界、不可逆恢复或外部兼容义务；在达到同等正确性的前提下，优先更少对象、更短状态链和更少持久事实。

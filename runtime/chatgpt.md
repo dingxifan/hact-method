@@ -105,6 +105,10 @@ Codex 的执行链是：
 
 ## 5. Review, interaction and recovery
 
+System / Holistic Independent Review 的 Runtime 选择遵循 `protocols/review.md`：在 reasoning 更适合且 immutable sources 完整可读时，优先由 Fresh ChatGPT reviewer context 承担 system semantic review、architecture / cross-package reasoning、PRD ↔ TRD contract reconciliation 与 evidence sufficiency 判断。当前 planner / designer / owner chat 不能兼任该 fresh reviewer；targeted re-review 也须另用 Fresh Isolated Context，仅接收 fixed facts、必要 prior report / finding IDs 与 evidence。
+
+这仍是同一个 `integration-verify` 的 semantic responsibility。Codex 保持 repository execution、runtime integration verification、repair implementation、evidence capture 与 Git persistence 职责；修复后的结论按 Task Contract 重新绑定同一个 fixed final candidate。人工传递文件、brief 与 immutable evidence pointers 只是通信，不增加状态或 transport object。
+
 Independent Review 仍按 `protocols/review.md`：固定 Git candidate、Fresh Isolated Context、同一 Method SHA、Task Contract、authoritative inputs 与 review brief；不以 Owner 聊天或 mutable-worktree narrative 替代这些输入。
 
 产品/业务范围变化、重要语义歧义、Gate approval、真实体验验收、授权扩大、破坏性或外部副作用时必须停下。已明确且已授权的 artifact authoring、确定性检查与 persistence 应连续推进。确定性失败先分类为 `MECHANICAL | SEMANTIC | AUTHORITY | CAPABILITY`；`MECHANICAL` 且语义/范围不变时，直接修正并重跑至 PASS 或类别变化。

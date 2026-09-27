@@ -341,7 +341,7 @@ ordinary Task 按既有 Contract 直接执行。Codex 实际到达 complex Task 
 
 默认采用 `protocols/review.md`：
 
-`Same Runtime + Fresh Isolated Context + Same Source of Truth`
+`Fresh Isolated Context + Same Immutable Source of Truth`；Same Runtime 保留为具备可信隔离与必要 capability 时的默认 locality preference，不是独立性条件。具体遵循 `protocols/review.md`。
 
 Package Review 的目的为 **Error Containment**，不是最终 System Assurance。分类与实际审查模式是两份不同的真相：
 

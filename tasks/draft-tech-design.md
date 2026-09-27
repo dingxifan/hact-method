@@ -300,7 +300,7 @@ Required。
 
 默认使用：
 
-`Same Runtime + Fresh Isolated Context + Same Source of Truth`
+`Fresh Isolated Context + Same Immutable Source of Truth`；Same Runtime 保留为具备可信隔离与必要 capability 时的默认 locality preference，不是独立性条件。具体遵循 `protocols/review.md`。
 
 本 Task 的 review focus：
 

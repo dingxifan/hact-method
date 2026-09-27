@@ -15,13 +15,19 @@ Package Review 不能宣称最终 System Assurance；System Review 也不能替�
 
 ## 1. 核心原则
 
-默认优先：
+独立性的主要来源：
 
-`Same Runtime + Fresh Isolated Context + Same Source of Truth`
+`Fresh Isolated Context + Same Immutable Source of Truth`
 
-独立性的首要来源是 cognitive isolation，而不是模型品牌不同。只有当前 Runtime 无法提供可信隔离或缺少必要 capability 时才切换 Runtime。
+Same Runtime 是普通 Independent Review 在具备可信隔离与必要 capability 时的默认 locality preference，不是 independence requirement。普通 Develop Package 仍优先在 Codex 内使用 fresh isolated reviewer；Runtime identity 或模型品牌本身不构成独立性。
 
-Fresh Isolated Context 不等于第二个用户可见窗口。默认由当前主 Runtime 内部启动不继承 Owner narrative 的 isolated reviewer，report 回到同一主 interaction；用户不负责在 reviewer/implementation 窗口之间搬运上下文。
+普通 review 默认由当前主 Runtime 内部启动不继承 Owner narrative 的 isolated reviewer，report 回到同一主 interaction；Fresh Isolation 不要求第二个用户可见窗口。System / Holistic Review 按下节选择适合的 Runtime；跨 Runtime 人工搬运仅为通信方式，不产生 handoff state 或其他方法论对象。
+
+### System / Holistic Review runtime specialization
+
+System Full Independent Review 及其 targeted re-review 应按 reasoning 与 capability fitness 选择 Runtime。当 ChatGPT 提供更适合的 semantic、architecture、cross-package 或 evidence-reconciliation reasoning 环境，且所需 immutable source material 完整可读时，SHOULD 使用 Fresh ChatGPT reviewer context。ChatGPT 缺少 repository visibility、可信隔离、必要 capability 或 source access 时，MAY 使用其他满足要求的 Runtime；不要求与实现或 Runtime Integration Verification 同一 Runtime。
+
+Planner Chat Context ≠ Fresh System Reviewer Context。当前 planner / designer / owner context 不得直接充当 independent reviewer，包括修复后的 targeted re-review。Fresh reviewer 仅接收 Method baseline SHA、fixed candidate SHA、PRD/TRD、相关 Task Packages、必要 package review/evidence pointers、immutable candidate contents 与 System Review brief；不得继承规划窗口历史讨论、implementation narrative、planner 主观看法、developer self-summary 或预先背书的结论。
 
 “Same Source of Truth” 不等于 Reviewer 每次都必须预加载整份长 Task Contract。Reviewer 应从同一 Task 文件按审查需要做 projection，避免为了独立性制造重复规范或无条件上下文膨胀。
 
@@ -140,7 +146,7 @@ fixed candidate
 → targeted fresh re-review closes findings
 ```
 
-Targeted re-review 必须读取 prior report、open finding IDs、fixed repair candidate、受影响完整调用链和必要 validation evidence。
+Targeted re-review 同样必须满足 Fresh Isolation，并读取 prior report、open finding IDs、fixed repair candidate、受影响完整调用链和必要 validation evidence。
 
 如果 fresh reviewer 判断影响无法可靠限定，或修复改变 shared contract、authorization、core state machine、broad data model、major architecture 或 material Product/Technical Contract，则直接要求 full review。无需 route、escalated state、invalidation flag 或 separate closure artifact。
 

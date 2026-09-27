@@ -148,11 +148,11 @@ Review 语义、finding 与 bounded convergence 由 `protocols/review.md` 和当
 
 ### 7.1 Fresh isolation
 
-首次 Independent Review 使用不继承实现叙事的 Fresh Isolated Context。
+每次 Independent Review（包括 targeted re-review）使用不继承实现叙事的 Fresh Isolated Context。
 
 可使用当前 Codex 提供的 fresh session、isolated subagent 或其他等价机制；不要把某个 API 参数、UI 按钮或固定模型名写成方法论前提。
 
-优先在同一用户可见 Codex interaction 内启动内部 fresh reviewer，并把 report 返回主执行上下文。Fresh Isolation 要求认知与输入隔离，不要求用户管理第二个窗口。
+普通 Package Review 优先在同一用户可见 Codex interaction 内启动内部 fresh reviewer，并把 report 返回主执行上下文。Same Runtime 是默认 locality preference，不是独立性条件；System / Holistic Review 按 §7.5 与 `protocols/review.md` 选择 Runtime。
 
 若当前 Codex 无法形成可信隔离，返回 `CAPABILITY` blocker 与已核事实。
 
@@ -187,10 +187,10 @@ Package classification 与 effective mode 由 `tasks/develop.md` 决定。Codex 
 
 `integration-verify` 固定 final system candidate 后，在同一 Core Task 内实现两条 lane：
 
-- Semantic / Holistic Independent Review 使用 Fresh Isolated Context，读取 final Contract、architecture、全部相关 package evidence 与 fixed system candidate；
-- Runtime Integration Verification 使用项目真实 command/browser/service/environment 入口产生原始 execution evidence。
+- Semantic / Holistic Independent Review 在 reasoning 更适合且 immutable sources 完整可读时优先使用 Fresh ChatGPT reviewer context，读取 final Contract、architecture、全部相关 package evidence 与 fixed system candidate；ChatGPT capability 不足时可使用其他满足要求的 Runtime，不能复用 planner context；
+- Runtime Integration Verification 必须由 Codex 使用项目真实 command/build/test/browser/service/database/environment 入口产生原始 execution evidence，并负责 deterministic validation、evidence capture 与 Git persistence。
 
-两条 lane 可以交换 evidence，但不能互相替代。每次 System Reviewer invocation 形成新的 immutable report。修复产生新 candidate 后，targeted Fresh Review 关闭 stable findings；影响无法限定时做 full review。Runtime Adapter 不维护 route、closure event 或平行 finding state。
+两条 lane 可以交换 evidence，但不能互相替代。每次 System Reviewer invocation 形成新的 immutable report。Codex 经 `develop(source=integration)` 实施修复与 deterministic validation；新 candidate 按 repair impact 重跑受影响 runtime verification，并由 targeted Fresh Review 关闭 stable findings，影响无法限定时做 full review。全部 required assurance conclusions 最终必须对同一个 fixed final candidate 有效，未受影响结论的复用须证明适用性，不能直接沿用旧 SHA 的 PASS。Runtime Adapter 不维护 route、closure event 或平行 finding state。
 
 ## 8. Git Delivery Adapter
 

@@ -24,6 +24,8 @@ review: required
 
 本 Task 继承旧 `generate-integration-tests` 的 runtime verification 职责，并扩展为 System Verification。`generate-integration-tests` 只保留为输入 alias；不得重新成为平行 Core Task。
 
+`integration-verify` 保持一个 Core Task；内部 assurance responsibilities MAY 按 capability fitness 跨 Runtime 执行，不拆 Task、Gate、state 或 lifecycle object。`preferred_runtime: execution` 表示 repository execution 的默认承接方，不将 System Semantic Review 限定在执行 Runtime。
+
 ### In scope
 
 - 核对本期多个 develop Task 合并后的组合关系
@@ -126,7 +128,9 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 
 System Verification 必须先固定 final system candidate。它不是“当前工作区”或“最新 master”的口头指代，而是可由 immutable Git object 重建、包含全部计划内 Accepted develop results 的明确 snapshot。
 
-Semantic Review 与 Runtime Verification 的结论都必须能对应到该 candidate。任一 lane 之后发生会影响其结论的实现、测试、Contract 或受版本控制配置变化，必须形成新 candidate 并按失效范围重新验证。
+所有 required assurance conclusions MUST 最终对同一个 fixed final candidate 有效。任一 lane 之后发生会影响其结论的实现、测试、Contract 或受版本控制配置变化，必须形成新 candidate 并按失效范围重新验证。
+
+例如 candidate A 的 Runtime PASS 后，System Review 发现 blocker，修复形成 candidate B：不得把 A 的 PASS 直接当作 B 的 closure。先确定 repair impact，再选择 targeted、affected-path 或 full runtime rerun，并由 fresh targeted semantic re-review（影响无法限定时 full review）确认 finding closure。未受影响的结论可在证明仍适用于 B 后复用；在既有 result/report 正文记录复用依据与复验范围，不改写旧 report，不要求每次机械全量重跑。最终所有 required PASS 必须共同适用于 B。
 
 ### 5.2 Two complementary lanes
 
@@ -134,6 +138,8 @@ System Verification 包含：
 
 1. **Semantic / Holistic Independent Review**：审整体 Contract、architecture、cross-package consistency、ownership、shared contract、compatibility、call chain、state/permission/lifecycle consistency 与 evidence sufficiency。
 2. **Runtime Integration Verification**：以真实执行证明 API、queue、database、state machine、frontend/backend seam、external boundary、terminal state、failure/retry/recovery 等适用路径。
+
+Semantic / Holistic System Independent Review SHOULD 按 `protocols/review.md` 优先使用适合且具备完整 immutable sources 的 Fresh ChatGPT reviewer context；capability 不足时可使用其他满足隔离与输入要求的 Runtime。Runtime Integration Verification MUST 在 Codex repository execution runtime 执行，负责 commands、build/tests、browser/service/database execution、runtime wiring、integration behavior、evidence capture、deterministic validation 与 Git persistence。
 
 两条 lane 可以交换 evidence，不要求僵硬串行。Semantic Reviewer 可以请求 runtime evidence；Runtime Verification 可以建立新的 system finding。但两者不能互相替代，且必须对同一可追溯 candidate 成立。
 
@@ -146,6 +152,8 @@ Evidence insufficient 不能建立 pass。报告按 `templates/review-briefs/sys
 ### 5.4 System finding closure
 
 System Review 与 Runtime Verification 建立的 blocking finding 都进入同一 report chain。修复通过 canonical `develop(source=integration)` / `revise-doc` 形成新 fixed candidate；只有新的 Fresh Independent Review report 可以关闭 finding。影响无法限定时 reviewer 要求 full review，否则 targeted re-review。
+
+实现修复由 Codex 经 `develop(source=integration)` 执行并完成 deterministic validation；相关修复 merged 后固定新 candidate，按 §5.1 复验。不得将修复确认交回原 planner context 冒充 Independent Re-review。
 
 ### 5.5 Only current impact, but include seams
 

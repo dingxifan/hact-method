@@ -222,7 +222,7 @@ Evidence 至少包含：
 
 Owner 自绿和浏览器 evidence 完成后，使用：
 
-`Same Runtime + Fresh Isolated Context + Same Source of Truth`
+`Fresh Isolated Context + Same Immutable Source of Truth`；Same Runtime 保留为具备可信隔离与必要 capability 时的默认 locality preference，不是独立性条件。具体遵循 `protocols/review.md`。
 
 Reviewer 按 `protocols/review.md` 的 same-source projection 读取本 Task 必要 sections，并自行读取 PRD、ux-flows、prototype、prototype-map、design 和 evidence；不能继承设计叙事。
 

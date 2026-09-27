@@ -20,6 +20,8 @@ created_at: <ISO-8601>
 
 组合核对：{基线 commit；相关契约/包间实现的证据锚或既有证据引用；结论及未完成项}。有问题时在此列证据、影响、修复/补缝任务或裁决与复核结论；无问题只写一段摘要，不另制覆盖表。静态核对不冒充场景执行通过。
 
+最终 candidate 核对：Semantic / Holistic Review 与 Codex Runtime Integration Verification 的所有必要 PASS 必须适用于本结果的 `candidate_head`。修复改变 candidate 时，在本段说明 repair impact、targeted / affected-path / full runtime rerun、fresh semantic re-review，以及未受影响结论仍适用的复用依据；旧 SHA 的 PASS 不能直接作为新 SHA 的 closure。沿用现有正文与 evidence pointers，不新增字段或状态。
+
 | # | 模块 | 场景描述 | 结果 | 证据（项目相对路径） | 未运行原因 | 现象（失败时填写） | 级别 | 复测 |
 |---|------|---------|------|----------------------|-----------|-----------------|------|------|
 | 1 | {模块名} | {场景描述} | ✅ | `integration-tests/evidence/vN/S-01/screenshot.png` | — | — | — | — |
