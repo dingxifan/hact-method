@@ -46,7 +46,7 @@ Return:
 ...
 ```
 
-无 Input file(s) / Target path(s) 时省略该字段。长文档、多文件 bundle、PRD / UX / TRD / prototype 或 planning 正文走独立文件；Packet 只携带控制信息和文件引用，不为搬运方便重复正文。`Stop` 通常是 validation PASS，或出现 `SEMANTIC | AUTHORITY | CAPABILITY` blocker。Packet 只是临时复制格式：不编号、不注册进 status、不创建 lifecycle、receipt、registry、schema、checker 或持久化 packet object。
+无 Input file(s) / Target path(s) 时省略该字段。长文档、多文件 bundle、PRD / UX / TRD / prototype 或 planning 正文走独立文件；Packet 只携带控制信息和文件引用，不为搬运方便重复正文。`Stop` 通常是 Goal 成功完成；完成前只因无法从 Accepted Project Truth 与适用 Contract 可靠确定必需行为，或经合理解决尝试及适用授权请求后 Goal 在当前条件下客观上无法完成而返回 originating ChatGPT conversation。明确动作的 Human Authority 在当前 Codex interaction 请求；分类本身不要求新 Packet，用户明确停止及运行环境强制中断仍优先适用。Packet 只是临时复制格式：不编号、不注册进 status、不创建 lifecycle、receipt、registry、schema、checker 或持久化 packet object。
 
 ### Sprint-level Develop handoff
 
@@ -55,43 +55,19 @@ Return:
 1. **CODEX GOAL**：一条可直接粘贴到 Codex 对话框的 `/goal ...` 命令，用于在当前 Codex interaction 真正建立 execution-window Goal；
 2. **DEVELOP EXECUTION PACKET**：只在 Goal 已建立后交付，包含 `Repository`、`BASE_SHA`、`Accepted Sprint`、明确的窗口 `Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`。
 
-只在 Packet 内填写 `Goal:` 字段不视为 Goal 已激活。Goal 命令应指向明确 `BASE_SHA`、本窗口已接受的 `source=sprint` Task Packages、既有 Task Contract / dependency graph、验证与最终 immutable Result Packet；不得借此扩大 Product / Technical / Sprint semantics、Authority 或 external-effect 范围，也不得自动进入窗口外仍 eligible 的 Task。
+只在 Packet 内填写 `Goal:` 字段不视为 Goal 已激活。Goal 命令应指向明确 `BASE_SHA`、本窗口已接受的 `source=sprint` Task Packages、既有 Task Contract / dependency graph、验证与最终 immutable `RESULT_SHA` 及清楚的结果说明；不得借此扩大 Product / Technical / Sprint semantics、Authority 或 external-effect 范围，也不得自动进入窗口外仍 eligible 的 Task。
 
-ChatGPT 必须从冻结 Sprint 自动设定这条 CODEX GOAL：Human 只负责把它激活到 Codex，不负责自行写 Goal、逐包排序或维护 Wave / window 过程。Goal 和 Packet 必须明确指示 Codex 在当前窗口内按 dependency、development volume、coupling 与 verification boundary 即时编排轻量 Wave；Wave 是窗口内执行顺序，window 是当前 interaction 的范围，二者都不是交接对象、Task、Gate、状态或持久化记录。对于实际到达的 complex Task，交接文本必须明确：在 substantive implementation 前只向 Human **一次**询问 `analyze first` 或 `continue directly`；不得轮询、重复提示或把无回复推断为暂停 / `analyze first` / blocker。前者产生可选的 ChatGPT 实施分析，后者直接执行，二者均不创建 Gate。模型选择由 Human 决定，不写入 Goal 或 Packet 的 Method 规则。
+ChatGPT 必须从冻结 Sprint 自动设定这条 CODEX GOAL：Human 只负责把它激活到 Codex，不负责自行写 Goal、逐包排序或维护 Wave / window 过程。Goal 和 Packet 必须明确指示 Codex 在当前窗口内按 dependency、development volume、coupling 与 verification boundary 即时编排轻量 Wave；Wave 是窗口内执行顺序，window 是当前 interaction 的范围，二者都不是交接对象、Task、Gate、状态或持久化记录。复杂 Task 也在语义已确定时自主执行，不要求实施前的人工二选一或返回 ChatGPT 分析。普通工程困难、测试 / checker 失败及 review finding 在原 Goal 内修复；明确动作的 Human Authority 直接在当前 interaction 请求。模型选择仍由 Human 决定，不写入 Goal 或 Packet 的 Method 规则。
 
 最小示例：
 
 ```text
-/goal Complete the next bounded Develop execution window for <Sprint> from BASE_SHA <sha>, covering only <explicit in-scope Task Packages>. Treat the accepted Sprint and dependency graph as the enclosing contract, but do not continue into out-of-scope Tasks in this interaction unless Human explicitly re-scopes it. Within this window, derive lightweight Waves from dependency, development volume, coupling, and verification boundaries; do not persist or govern Waves or the window as Tasks, Gates, states, packets, checkpoints, or results. Execute every in-scope package through its existing contract, deterministic validation, immutable candidate, independent review, finding repair, targeted re-review, and authorized Git delivery. When a complex Task is reached, before substantive implementation ask Human once whether to analyze first in ChatGPT or continue directly; never poll, repeat the prompt, or infer a decision / pause / blocker from no reply. Analysis is optional supporting input, never a Gate or mandatory artifact, and model selection remains Human-owned. Continue autonomously through ordinary implementation choices, mechanical failures, tests, checker failures, review findings and repairs. Stop when the execution-window Goal is complete, Human explicitly stops, or a genuine unresolved SEMANTIC, AUTHORITY, or CAPABILITY blocker prevents safe continuation. Finish with the stable Result Packet and RESULT_SHA.
+/goal Complete the next bounded Develop execution window for <Sprint> from BASE_SHA <sha>, covering only <explicit in-scope Task Packages>. Treat the accepted Sprint and dependency graph as the enclosing contract; do not continue into out-of-scope Tasks unless Human explicitly re-scopes the Goal. Derive lightweight Waves from dependency, development volume, coupling, and verification boundaries; do not persist Waves or the window as Method objects. Autonomously execute every in-scope package through analysis, implementation, tests, deterministic checks, immutable candidate, independent review, repair, targeted re-review, and authorized Git delivery. Ordinary engineering difficulty or complexity is not a reason to stop or return to ChatGPT. Make ordinary engineering decisions within Accepted Project Truth and the applicable Contract; do not invent undefined product behavior or core technical semantics. Request authorization for clearly defined actions directly in this Codex interaction. Before successful completion, return to the originating ChatGPT conversation only if correct required behavior cannot be reliably determined from project truth, or reasonable resolution attempts and applicable authorization requests establish that the Goal cannot be completed under current conditions. Human stop instructions and system safety or budget controls remain applicable. On successful completion, return the result with immutable RESULT_SHA and useful concise context; no formal Result Packet or required result schema.
 ```
 
-Codex 返回后，用户人工复制最小 Result Packet：
+Codex 成功完成后，用户人工带回清楚的结果说明、immutable `RESULT_SHA` 与实际有用的简短上下文。真实 blocker 按相同方式说明最近稳定 snapshot、未完成范围、原因与必要决定；不要求正式 Result Packet、固定字段或新的结果 schema。
 
-```yaml
-Task:
-Result: PASS | BLOCKED
-
-Base SHA:
-Result SHA:
-Remote ref/state:
-
-Changed:
-...
-
-Validation:
-...
-
-Git Truth:
-...
-
-Blocker:
-...
-
-Decision needed:
-...
-```
-
-ChatGPT 收到 Result Packet 后重新读取 `RESULT_SHA` 的本次 artifact / code / state，再根据 evidence 与 Git Truth 判断 PASS、是否需要 semantic / Human Authority decision，并在仍有 Sprint scope 时重新计算下一个 execution-window Goal；不要求用户搬运完整对话或 reasoning，也不保留先前 window plan。一次 Packet 只传达一个 stable bounded operation，不改变既有 Task identity、state、ownership、Gate 或 Authority。
+ChatGPT 重新读取 `RESULT_SHA` 的本次 artifact / code / state，再根据 evidence 与 Git Truth 判断结果并在仍有 Sprint scope 时重新计算下一窗口；需要澄清时重新读仓库，不要求用户搬运完整对话或 reasoning，也不保留先前 window plan。一次 Execution Packet 只传达一个 stable bounded operation，不改变既有 Task identity、state、ownership、Gate 或 Authority。
 
 ## 4. Frozen artifact persistence
 

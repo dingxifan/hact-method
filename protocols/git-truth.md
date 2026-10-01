@@ -45,7 +45,7 @@ Shared Candidate Truth 可以交 reviewer / escalation / specialist check，但�
 
 若 Accepted remote 已移动并改变本次事实世界，Codex 不得把旧 Packet 自行套用或 rebase 到新世界；停止并以 `snapshot mismatch` 报告。此为 preflight stop reason，不是新的 blocker 类型、Task state 或 Git Truth 层级。无关 dirty work 仍按现有 Working Tree Discipline 隔离，但不改变本次 base。
 
-需要返回 ChatGPT 验收的 operation 完成后，Codex 形成 immutable `RESULT_SHA`，并仅在既有 Authority / Git policy 允许时使其成为 ChatGPT 可读取的 remote Git truth；Result Packet 说明 `BASE_SHA`、`RESULT_SHA` 与实际 remote ref/state。ChatGPT 必须重新读取 `RESULT_SHA` 及本次涉及的 artifact / code / state，不能只根据 Result narrative 宣布完成。下一轮默认从已确认的 Accepted / Result snapshot 重新建立基线。
+需要返回 ChatGPT 的 operation 成功完成后，或因真实 blocker 返回时，Codex 提供最近稳定的 immutable `RESULT_SHA`，并仅在既有 Authority / Git policy 允许时使其成为 ChatGPT 可读取的 remote Git truth。返回消息只需清楚说明结果、`RESULT_SHA` 与实际有用的上下文；snapshot 的 remote ref/state 或仅本地可读等限制应如实说明。不要求正式 Result Packet 对象或固定结果 schema。ChatGPT 必须重新读取 `RESULT_SHA` 及本次涉及的 artifact / code / state，不能只根据消息宣布完成。snapshot handshake 保持 `BASE_SHA → Codex execution → RESULT_SHA → re-read Git truth`；下一轮从已确认的 Accepted / Result snapshot 重新建立基线。
 
 `init-project` 没有既存项目 `BASE_SHA`：它以 fixed Method SHA、用户确认的 repository identity 与新仓初始事实 bootstrap；首个可验证 remote snapshot 建立后，其 commit SHA 成为后续正式共同基线。Packet 只是人工临时格式，不是 Git Truth。
 

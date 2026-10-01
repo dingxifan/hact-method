@@ -177,7 +177,7 @@ blocking freshness finding 未关闭前不得继续新增代码。
 
 在满足 Accepted Product / Technical Contract 的前提下，优先更少对象、更短状态链、更少 durable truth，并复用现有机制。不得主动新增 TRD 未要求、且没有明确 Contract / invariant / security / recovery / external compatibility 依据的 audit table、generation、receipt、lock、checkpoint、history log 或平行状态层。
 
-“最小实现”不是自行删除 Accepted Technical Contract 的授权。若判断已批准的 A + B + C 中 A 足以守住全部 Contract / invariant，必须停止相关语义收缩并返回 `SEMANTIC`：说明疑似多余的机制、仍能满足的不变量、简化理由及需修订的 Contract 条目。只有 `revise-doc(target=trd)` 或既有等价路径形成新的 Accepted Technical Contract 后才能按简化方案继续。此规则阻止继续扩张，不要求主动重构既有复杂设计。
+“最小实现”不是自行删除 Accepted Technical Contract 的授权。若判断已批准的 A + B + C 中 A 足以守住全部 Contract / invariant，必须停止相关语义收缩并报告 `SEMANTIC`，在当前 Codex interaction 请求适用 Human Authority：说明疑似多余的机制、仍能满足的不变量、简化理由及需修订的 Contract 条目。只有 `revise-doc(target=trd)` 或既有等价路径形成新的 Accepted Technical Contract 后才能按简化方案继续。此规则阻止继续扩张，不要求主动重构既有复杂设计。
 
 下列情况不属于普通 implementation adjustment：
 
@@ -264,7 +264,7 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 - authorization 不因压缩扩大
 - attempts / review rounds 不因恢复清零
 - 已通过且 snapshot 未变化的验证不重复
-- ChatGPT 形成带 `BASE_SHA` 的 stable bounded Execution Packet 后，由用户人工交给 Codex 连续执行；完成后返回 immutable result identity。只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止。
+- ChatGPT 形成带 `BASE_SHA` 的 stable bounded Execution Packet 后，由用户人工交给 Codex 自主执行到 Goal 完成；明确动作所需的 Human Authority 在当前 interaction 请求。分类本身不终止 Goal；返回 originating ChatGPT conversation 只按 §5.9.1 的边界，用户明确停止或运行环境强制中断仍优先适用。
 
 跨会话接续基于 Git snapshot、Task Contract、status 与 evidence，不基于聊天历史。
 
@@ -276,7 +276,11 @@ Sprint 是完整 Accepted Develop scope；它决定最终必须完成什么，�
 
 每个 Task Package 仍是唯一正式执行单元，分别执行 freshness、implementation、verification、fixed candidate、Independent Review、repair 与 merge / Accepted Truth。Codex 可在当前 Goal、Task Contract 和 Authority 允许范围内决定顺序、机械修复、targeted re-review 与 Git delivery；满足依赖且无 shared-write conflict 的**窗口内** Task 可以并行，有真实 conflict 时串行。每个已 merged Task 形成新的 Accepted Project Truth，后续 Task 仍须重新做自身 freshness。
 
-普通工程选择、lint/type/build/test/checker failure、review finding、bounded refactor、窗口内 Task 顺序调整和下一个 in-scope eligible Task 选择不得中断 Goal 返回 ChatGPT。需要 Human Authority 时，Codex 在当前 interaction 直接向用户说明并在决定后继续原 Goal；这不创建 pause / waiting / decision state。局部 blocker 只暂停受影响 Task 及其窗口内依赖；窗口结束、提前停止或中途被真实 blocker 打断时，Codex 返回 stable Result Packet / `RESULT_SHA` / blocker。ChatGPT 重新读取 Git Truth 后才决定下一个 execution-window Goal；不维护“前一窗口尚余几个 Wave”的额外过程状态。
+普通工程选择、lint/type/build/test/checker failure、review finding、bounded refactor、窗口内 Task 顺序调整和下一个 in-scope eligible Task 选择不得中断 Goal 返回 ChatGPT。Codex 自主完成分析、实现、验证、独审、修复、targeted re-review 与已授权 Git delivery；必要分析在当前执行环境完成，不因困难或复杂度要求返回 ChatGPT。需要 Human Authority 时，在当前 interaction 请求具体授权，决定后按适用 Contract 继续；授权不替代 required review、revision 或 Gate，也不创建 pause / waiting / decision state。局部 blocker 只暂停受影响 Task 及其窗口内依赖，其他可安全完成的 in-scope Task 继续推进。
+
+成功完成前，只有以下两种情况才返回 originating ChatGPT conversation：无法从 Accepted Project Truth 与适用 Contract 可靠确定完成 Goal 所需的正确产品或核心技术语义；或经合理排查、修复尝试及适用授权请求后，Goal 在当前执行条件下客观上无法完成。明确动作所需的 Human Authority 直接在当前 Codex interaction 请求，授权本身不构成返回 ChatGPT 的理由。
+
+窗口成功完成时返回 originating ChatGPT conversation，提供 immutable `RESULT_SHA` 与清楚的结果说明；真实 blocker 返回时提供最近稳定的 `RESULT_SHA`、必要证据与未完成范围，不要求正式 Result Packet 或固定结果字段。ChatGPT 重新读取 Git Truth 后才决定下一窗口；不维护“前一窗口尚余几个 Wave”的额外过程状态。
 
 ### 5.9.2 Lightweight Wave execution
 
@@ -286,7 +290,7 @@ Wave 不是 Task、Gate、state、artifact、packet、approval、review object�
 
 编排时可以把 Task 简单识别为 ordinary 或 complex。跨多个核心模块、schema / migration / API / persistence 联动、存在实质实现路径选择、影响多个既有 contract、需要理解大范围存量实现、反复实现失败或先前 review 指向设计 / 策略根因，都是 complex 的典型信号；不建立 score、level、matrix、registry 或持久化复杂度字段。
 
-ordinary Task 按既有 Contract 直接执行。Codex 实际到达 complex Task 时，必须在 substantive implementation 前向 Human 直接说明其复杂性，并**只询问一次**：`analyze first` 还是 `continue directly`。同一 Task 在同一 execution window 不轮询、定时重问或重复提示；没有明确回复不等于任何选择，尤其不得自行推断为 `analyze first`、暂停、完成或 blocker。此时只保持当前 Goal 与现有 durable Git Truth，在用户下一条明确选择后继续同一 Task；这是一段临时对话边界，不创建 pause / waiting / decision state 或 Result 结论。`continue directly` 继续当前 Task；`analyze first` 只停止当前 Task 的 substantive implementation，由 Human 在 ChatGPT 形成可选的详细实施分析后交回 Codex。该选择不是新 Gate 或签署流程，分析也不是 HACT mandatory artifact。Codex 可为真实 repository fact 调整机械实现细节；若分析的核心设计假设与事实冲突，必须停止受影响部分并指出冲突，不得静默改为实质不同的架构。模型、reasoning level 或模型路由始终由 Human 决定，不属于 Method。
+ordinary 与 complex Task 都按既有 Contract 自主执行；复杂度只用于调整分析深度、实现顺序与验证范围，不触发实施前的人工二选一或强制 ChatGPT 分析。Codex 可以作完成 Goal 所需的普通工程决策，但不得自行发明无法从 Accepted Project Truth 与适用 Contract 可靠推导的新产品行为或核心技术语义。出现真实核心设计冲突时停止受影响部分并按 §5.9.1 处理，不静默替换架构。Human 提供的实施分析是可选支持输入，不是 mandatory artifact 或新 Gate；模型、reasoning level 或模型路由仍由 Human 决定，不属于 Method。
 
 ### 5.10 System finding repair
 

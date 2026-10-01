@@ -37,7 +37,7 @@ Brief 只包含或引用：
 
 外部设计会话没有额外 Authority。
 
-## 3. Result Packet
+## 3. Return and reconciliation
 
 用户人工带回稳定结果后，Owner 必须重新核：
 

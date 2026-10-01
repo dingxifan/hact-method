@@ -16,13 +16,13 @@ Codex 更适合：
 
 Codex 不因为拥有 shell、Git 或更强执行能力而拥有更高 Authority。
 
-Codex 是 repository execution environment。接收到一个 bounded Execution Packet 后，应在已授权范围内连续执行必要 reasoning、修改、验证、机械整改和 review closure，直至 validation PASS 或明确 BLOCKED。
+Codex 是 repository execution environment。接收到范围与成功条件充分明确的 bounded Goal / Execution Packet 后，应在适用 Contract 与已授权范围内自主完成必要分析、实现、测试、deterministic checks、Independent Review、repair、targeted re-review 与 Git delivery，直到 Goal 成功完成。普通工程困难、复杂度或可修复的验证 / review 失败不是停止或返回 ChatGPT 的理由。
 
 对已 Accepted Sprint 的 `source=sprint` Develop，开始前当前 Codex interaction 必须已有 active **execution-window Goal**。ChatGPT 从冻结 Sprint 与最新 Git Truth 自动设定可激活的 `/goal ...` 内容和明确 in-scope Task Packages；用户只把它激活到 Codex，再提交 Develop Execution Packet。Packet 内的 `Goal:` 字段不能代替 activation。Sprint 仍是最终完整 scope；Goal 只定义当前 Codex interaction 应完成的 bounded window，不能因为后续 Sprint Task eligible 就自动跨出其范围。Goal 不是 HACT 的新 Task、state、lifecycle、ledger 或 Bridge；Codex 产品本身的 Goal controls / budget 仍由 Codex 管理。
 
 Goal 激活后、开始 substantive implementation 前，Codex 只从当前窗口 in-scope 的已接受 Task Packages 即时形成一个或多个轻量 Wave：先保持 dependency order，再按 development volume、coupling 和可验证的阶段结果限制连续执行范围；强耦合包不可为均分而拆开，复杂 / 大型 Task 可独占一个 Wave。Wave 正常在同一窗口完成，不能为过程方便故意跨窗口。Wave 与 execution window 都只是一段执行编排，不写入 `status.yml`，不形成 Task、Gate、Goal、state、artifact、packet、approval、review、registry、checkpoint、receipt 或新 lifecycle / recovery system。
 
-Codex 到达 ordinary Task 时直接按既有 Contract 执行。到达 complex Task 时，必须在 substantive implementation 前直接提示 Human **一次**选择 `analyze first` 或 `continue directly`；不提前强制产生分析文档，也不轮询、按时间重发或重复询问。没有明确回复时，不得把沉默推断为 `analyze first`、暂停、Task 完成或 blocker；保留当前 Goal 和现有 Git Truth，等待用户下一条明确选择后继续同一 Task。这种暂时让出对话的行为不是 HACT pause / waiting / decision state，也不产生 Result 结论。`analyze first` 只停止该 Task 的 substantive implementation，等待 Human 交回 ChatGPT 的可选实施分析；`continue directly` 继续现有执行。分析中的核心设计假设与真实 repository truth 冲突时，停止受影响部分并说明冲突，不能静默替换为实质不同的架构。此处不新增 Gate、state 或 Human approval object，且不推断或指定模型选择。
+ordinary 与 complex Task 都按既有 Contract 自主执行。复杂度可影响分析深度、实现顺序和验证范围，但不要求实施前的人工二选一提示或 ChatGPT 分析。Codex 可自行作完成 Goal 所需的普通工程决策；不能可靠从 Accepted Project Truth 与适用 Contract 推导正确行为时，不得自行发明新的产品行为或核心技术语义。模型、reasoning level 与模型路由仍由 Human 决定，不属于 Method。
 
 ## 2. Capability Profile
 
@@ -37,7 +37,7 @@ Codex 到达 ordinary Task 时直接按既有 Contract 执行。到达 complex T
 - code-hosting operation
 - external / production action（仅在已授权时）
 
-缺少非必要 capability 不阻断；缺少当前 Task 必需 capability 时形成 `CAPABILITY` blocker 并返回证据。
+缺少非必要 capability 不阻断；当前 Task 必需 capability 缺失时，先在既有 scope、Authority 与恢复上限内排查并尝试解决，需要明确授权时在当前 interaction 请求。只有合理尝试后仍使 Goal 客观上无法完成，才以 `CAPABILITY` blocker 返回事实与证据。
 
 模型名、reasoning tier、agent 数量不属于 Task Contract。
 
@@ -115,16 +115,18 @@ Task Contract 决定“必须证明什么”；Codex 负责调用项目真实入
 Repository / Base SHA / Goal / Allowed / Forbidden / Execute / Validate / Stop / Return
 ```
 
-Codex 在已授权范围内执行到 validation PASS 或明确 blocker，不把已知执行问题改写成新的开放式分析。失败尽早分类为：
+Codex 在已授权范围内持续执行到 Goal 成功完成，不把已知执行问题改写成新的开放式分析。失败尽早分类以决定修复或授权动作，分类本身不是返回 ChatGPT 的触发器：
 
 - `MECHANICAL`：格式、lint、deterministic checker、已知 schema/link/heading 等；
 - `SEMANTIC`：需要改变 Product/Technical/Contract/behavior meaning；
 - `AUTHORITY`：需要扩大 write set、commit/push/deploy/Gate/external authority；
 - `CAPABILITY`：必要工具、环境、权限或 recoverable identity 缺失。
 
-`MECHANICAL` 问题不得仅因为需要格式、lint、schema、link、heading、regex 或 deterministic checker 修正而返回 ChatGPT。语义与 scope 不变时，直接修正、重跑同一检查并持续到 PASS 或错误改变类别。修改、验证与同类纠正属于一个 bounded operation，不受“One Turn = One State Transition”限制。类别改变或即将越界时停止并返回 evidence-backed blocker。
+`MECHANICAL` 问题与普通实现、测试或 review 失败，在语义与 scope 不变时直接修正、复验并继续。修改、验证与同类纠正属于一个 bounded operation，不受“One Turn = One State Transition”限制。类别改变或即将越界时停止受影响动作，按 Contract / Authority 处理；明确的授权动作在当前 interaction 请求，不能以分类变化自动要求新 Packet。
 
-返回 evidence-first result：changed files、fixed artifact/candidate identity、实际 command/exit/result、validation evidence、blocker 分类与必要 next action。execution evidence 已完整时不等待 narrative completion；但在收敛前确认没有 command running、approval pending、validation in progress 或 unresolved external effect。
+成功完成前，只有以下两种情况才返回 originating ChatGPT conversation：无法从 Accepted Project Truth 与适用 Contract 可靠确定完成 Goal 所需的正确产品或核心技术语义；或经合理排查、修复尝试及适用授权请求后，Goal 在当前执行条件下客观上无法完成。明确动作所需的 Human Authority 直接在当前 Codex interaction 请求，授权本身不构成返回 ChatGPT 的理由。
+
+完成或真实 blocker 的消息应清楚说明结果并提供 immutable `RESULT_SHA`，只补充实际有用的简短上下文，例如验证 / review 结论、远端可读性、未完成项及必要决定。不要求固定返回字段或正式结果 schema；Git 与既有 evidence 才是权威事实。收敛前确认没有应完成而仍在运行的命令、待决授权、验证或 unresolved external effect。
 
 ## 6. Fixed Git Snapshot Adapter
 
@@ -154,7 +156,7 @@ Review 语义、finding 与 bounded convergence 由 `protocols/review.md` 和当
 
 普通 Package Review 优先在同一用户可见 Codex interaction 内启动内部 fresh reviewer，并把 report 返回主执行上下文。Same Runtime 是默认 locality preference，不是独立性条件；System / Holistic Review 按 §7.5 与 `protocols/review.md` 选择 Runtime。
 
-若当前 Codex 无法形成可信隔离，返回 `CAPABILITY` blocker 与已核事实。
+若当前 Codex 无法形成可信隔离，先尝试符合 `protocols/review.md` 的可用隔离机制；合理尝试后仍无法满足必要独审时，按本文件的返回边界报告 `CAPABILITY` blocker，不以 Owner 自审替代。
 
 ### 7.2 Reviewer input
 
@@ -244,13 +246,13 @@ Task Contract 与 `protocols/authority.md` 决定是否允许外部副作用；C
 
 更具体的 deploy / manual-test / wrap-up 语义只读对应 Task Contract，不在 Runtime Adapter 再维护副本。
 
-## 11. Execution Packet and Result Packet
+## 11. Execution Packet and completion return
 
-Codex 只消费用户人工复制的 bounded Execution Packet 中完成本次 operation 所需的 repository、`BASE_SHA`、Task、artifact/candidate、allowed/forbidden scope、execute、validation、stop 与 return。Sprint Develop Packet 还应包含 `Accepted Sprint`、明确的 execution-window `Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`，并明确 Wave 由 Codex 从当前窗口 accepted packages 即时编排、complex Task 到达时的二选一提示；它只在 active Goal 已建立后执行。Packet 不得把 Wave / window 写成需要用户维护的清单、状态或交接载体。它先按 `protocols/git-truth.md` 验证 snapshot handshake；Packet 不是新的 Task 或 state，也不改变 ownership、Gate 或 Authority。
+Codex 只消费用户人工复制的 bounded Execution Packet 中完成本次 operation 所需的 repository、`BASE_SHA`、Task、artifact/candidate、allowed/forbidden scope、execute、validation、stop 与 return。Sprint Develop Packet 还应包含 `Accepted Sprint`、明确的 execution-window `Scope`、`Autonomy`、`Human Boundary`、`Success` 与 `Final Return`，明确 Wave 由 Codex 从当前窗口 accepted packages 即时编排；它只在 active Goal 已建立后执行。Packet 不得把 Wave / window 写成需要用户维护的清单、状态或交接载体。它先按 `protocols/git-truth.md` 验证 snapshot handshake；Packet 不是新的 Task 或 state，也不改变 ownership、Gate 或 Authority。
 
-active execution-window Goal 下，普通实现选择、mechanical / test / checker failure、review finding、repair 与 targeted re-review 不终止 Goal。需要 Human Authority 的 `SEMANTIC` 或 `AUTHORITY` 问题在当前 Codex interaction 直接询问用户；决定后继续同一 Goal。complex Task 的 `analyze first | continue directly` 是一次性的 scoped execution choice，不适用重试 / 轮询；未回复只等待下一条用户消息，不产生 blocker、暂停或 Result。局部 blocker 只暂停受影响 Task 及其窗口内依赖。Codex 在窗口内 Task 全部完成时停止，即使后续 Sprint Task 仍 eligible；中途出现 unresolved capability / authority / contract blocker 时也返回当前 stable Result / blocker。下一窗口只由 ChatGPT 在重新读取 Git Truth 后决定。最终返回 immutable Result Packet 和 `RESULT_SHA`。此规则不覆盖 Codex 自身的系统安全或预算控制。
+active execution-window Goal 下，Codex 按本文件 §1、§5 的自主执行与返回边界持续完成当前窗口。局部 blocker 只暂停受影响 Task 及其窗口内依赖；其他可安全完成的 in-scope Task 继续推进。窗口内 Task 全部完成后返回 originating ChatGPT conversation，即使后续 Sprint Task 仍 eligible 也不跨出当前 Goal；下一窗口只由 ChatGPT 在重新读取 Git Truth 后决定。用户明确停止以及 Codex 自身系统安全或预算控制仍优先适用，不得把这些中断称为成功完成。
 
-需要返回 ChatGPT 验收时，完成后形成 immutable `RESULT_SHA`，并只在现有 Authority / Git policy 允许时使其成为远端可读取事实；Result Packet 返回 `BASE_SHA`、`RESULT_SHA`、remote ref/state、changed files、validation evidence、Git Truth、blocker 与必要 decision。若尚无 shared-write Authority，不伪装跨环境 handoff 已闭合。只在 `SEMANTIC`、`AUTHORITY` 或 `CAPABILITY` blocker 时停止请求新的 Packet；不得因机械修正、测试补齐、验证重跑或 finding closure 往返。
+成功完成或按上述边界返回 blocker 时，提供最近稳定的 immutable `RESULT_SHA`；仅在现有 Authority / Git policy 允许时使其成为远端可读取事实。未获 shared-write Authority 时，在当前 interaction 请求所需具体授权，并如实说明 snapshot 是否仅在本地可读，不伪装跨环境 handoff 已闭合。完成 / blocker 消息只需清楚说明结果、`RESULT_SHA` 与有用上下文；不保留 Result Packet 作为正式 Method 对象或必需 schema。人工 snapshot handshake 仍为 `BASE_SHA → Codex execution → RESULT_SHA → re-read Git truth`。
 
 ## 12. External Effect Adapter
 
