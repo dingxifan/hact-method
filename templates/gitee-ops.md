@@ -1,15 +1,18 @@
 # Gitee 仓库操作
 
-本项目远端为 Gitee，**禁止使用 `gh` CLI**（不支持 Gitee）。
-所有仓库操作通过 PowerShell `Invoke-RestMethod` 调用 Gitee API v5。
+本文只适用于目标为 Gitee 的 provider-specific 操作，**禁止对 Gitee 使用 `gh` CLI**（不支持 Gitee）。其他 provider 按各自工具与项目规则处理。
+Gitee 的 PR、协作者等平台操作通过 PowerShell `Invoke-RestMethod` 调用 Gitee API v5。Git fetch / push / 同步使用 Git；多远端同步按 adopted Method 的 `protocols/git-truth.md` §8 枚举全部范围内远端，不能以本文的 Gitee 配置代替同步清单。
 
 ## 第一步：提取 owner / repo / token
 
 ```powershell
-# 从 git remote 获取 owner 和 repo
-git remote get-url origin
+# 从连接配置选择当前 Gitee 平台操作的 remote，再获取 owner 和 repo
+$giteeRemote = node scripts/check-conn.js get gitee.remote
+if (-not $giteeRemote) { throw "未配置 gitee.remote，不能默认使用 origin" }
+git remote get-url --all $giteeRemote
 # 示例输出：https://gitee.com/your-name/mail-ai.git
 # → owner = your-name，repo = mail-ai
+# 确认 URL 确实属于 Gitee；多个 URL 指向不同仓库时先确定本次平台操作目标
 
 # token 统一寻址：connections.yml → ~/.hact/secrets.env
 $GITEE_TOKEN = node scripts/check-conn.js get gitee.token
@@ -47,7 +50,7 @@ Invoke-RestMethod "https://gitee.com/api/v5/repos/{owner}/{repo}/pulls/{number}?
 
 ## 规则
 
-- owner/repo 从 `git remote get-url origin` 提取，不要硬编码
+- owner/repo 从 `connections.yml` 的 `gitee.remote` 对应 URL 提取，确认目标为 Gitee；不硬编码 remote 名或默认选择 origin。此映射只选择 Gitee 平台操作目标，不限制 Git 同步范围
 - token 走项目连接配置的统一寻址（`node scripts/check-conn.js get gitee.token`），**不读 `backend/.env`**——那是应用运行时配置，不是个人凭据的存放处
 - merge_method：`merge`（保留历史）/ `squash`（合并为单提交）/ `rebase`
 - 换 token 时只改机器本地 `~/.hact/secrets.env` 一处，本机所有项目同步生效
@@ -57,6 +60,6 @@ Invoke-RestMethod "https://gitee.com/api/v5/repos/{owner}/{repo}/pulls/{number}?
 | 错误 | 原因 | 处理 |
 |------|------|------|
 | 401 Unauthorized | token 无效或未读到 | `node scripts/check-conn.js check --live` 实打验一次，失效则重新生成并更新 `~/.hact/secrets.env` |
-| 404 Not Found | owner/repo 路径错误 | 用 `git remote get-url origin` 重新确认 |
+| 404 Not Found | owner/repo 路径错误 | 用 `git remote get-url --all $giteeRemote` 重新确认本次 Gitee 目标 |
 | 422 Unprocessable | head 分支不存在或已合并 | 先 `git branch -a` 确认分支名 |
 | PR 已存在 | 重复创建同 head 的 PR | 先查列表确认是否已有开放 PR |

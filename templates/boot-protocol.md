@@ -44,7 +44,7 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 |---|---|
 | 状态读取、认领、流转 | `protocols/state.md` |
 | Gate readiness / approval | `protocols/gates.md` |
-| candidate、merge、Accepted Truth、handoff | `protocols/git-truth.md` |
+| Git 同步、candidate、merge、Accepted Truth、handoff | `protocols/git-truth.md` |
 | Independent Review | `protocols/review.md` |
 | Human Authority 判断 | `protocols/authority.md` |
 | 中断、恢复、重入 | `protocols/recovery.md` |
@@ -108,7 +108,7 @@ vNext Core Task Catalog：
 
 当本次 repository execution 来自人工 Execution Packet 且携带 `BASE_SHA` 时，`Target` 必须先按 `protocols/git-truth.md` 验证 execution base；snapshot mismatch 时停止，不把旧 Packet 自行套用到新事实。该 preflight 不增加启动阶段或 Task state。
 
-Method SHA 只在当前动作受 HACT Method 约束时核；upstream 只在 pull/push/PR/merge 时核；stash、全量 status/Gate/owner/dependency 与其他 worktree 只在当前动作实际依赖或改变它们时核。四项输入未变化时复用结论。
+Method SHA 只在当前动作受 HACT Method 约束时核；remote/upstream 只在 fetch/pull/push/PR/merge 或用户要求 Git 同步时核；Git 同步按 `protocols/git-truth.md` §8 处理全部范围内远端；stash、全量 status/Gate/owner/dependency 与其他 worktree 只在当前动作实际依赖或改变它们时核。四项输入未变化时复用结论。
 
 需要真实测试/build/hook/worktree 证据时使用 repository execution；远端 connector 不能替代本地证据。Git delivery 只在用户授权和 repository policy 允许时执行，细节按 Runtime Adapter。
 
