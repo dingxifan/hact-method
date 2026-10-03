@@ -61,7 +61,7 @@ ordinary 与 complex Task 都按既有 Contract 自主执行。复杂度可影�
 
 Packet 携带 `BASE_SHA` 时，`Target` 还必须验证实际 execution base 对应该 SHA。若 Accepted remote 已移动且会改变本次事实世界，停止并返回 `snapshot mismatch`；不得自行将旧 Packet rebase 到新事实。此 stop reason 不改变既有 blocker 分类、Task state 或 Authority。`init-project` 只按 `protocols/git-truth.md` 的 bootstrap exception 执行。
 
-remote/upstream 只在 push/PR/merge 时检查；Gate/status/owner/dependencies 只在当前动作会读取或改变它们时检查；stash、其他 worktree、部署能力与 external-effect receipt 只在实际相关时检查。四项输入未变化时复用结论，不在每个文件修改、命令或机械整改前重新盘点。
+remote/upstream 只在 fetch/pull/push/PR/merge 或用户要求 Git 同步时检查；Git 同步按 `protocols/git-truth.md` §8 枚举并逐个处理全部范围内远端，不以默认 remote / upstream 代替清单；Gate/status/owner/dependencies 只在当前动作会读取或改变它们时检查；stash、其他 worktree、部署能力与 external-effect receipt 只在实际相关时检查。四项输入未变化时复用结论，不在每个文件修改、命令或机械整改前重新盘点。
 
 `init-project` 没有既有 `status.yml` 时按其 Task Contract 的 bootstrap exception 执行。
 

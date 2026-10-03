@@ -83,3 +83,12 @@ Task Contract 只要求正式 artifact 能形成 Shared Candidate / Accepted Pro
 non-idempotent / external action 前，exact action、target、snapshot、request key 与 Authority reference 必须进入 versioned Git intent receipt。Local Working Truth、dirty worktree path、可变 branch 或未验证写入不足以建立该边界。
 
 dispatch 后只更新 outcome 与 evidence。`indeterminate` 禁止 blind retry，先做 authoritative observation / reconciliation。Receipt 不是 semantic Contract、Task state、Gate 或第四层 Git Truth；Persistence Adapter 不获得额外 Authority。
+
+## 8. 多远端 Git 同步
+
+用户要求“同步仓库”“同步推送”而未限定远端时，默认覆盖当前 repository 的全部 Git remotes；以 `git remote` 枚举实际清单，并用 `git remote get-url --all <remote>` 与 `git remote get-url --push --all <remote>` 核对所有 fetch / push 目标。不得只选择 `origin`、第一个 remote、当前 upstream 或 `connections.yml` 中登记的 provider。用户明确限定目标时只处理指定范围；配置清单不扩大既有 Authority，禁止写入或仅供读取的远端必须明确列为未同步及其原因，不能静默跳过。
+
+- 读取同步：逐个 remote fetch 并核目标分支事实；fetch 不代表已将远端变更集成本地。只从当前分支的已确认 upstream / Accepted baseline 按项目规则集成，不依次 pull 多个远端；远端分歧不得自行 merge、rebase 或覆盖。
+- 推送同步：对全部范围内远端，使用同一个 fixed local commit 和明确的 source→target branch refspec 正常 push；不能因当前 upstream 只指向一个仓库就遗漏其余仓库。目标分支从用户指令、既有项目映射或已确认的分支关系确定，不能猜测不同远端的 main / master 映射；缺少映射时只暂停该目标并说明缺口。不使用 force / mirror，不顺带推其他分支或 tags。
+- 一个 remote 配置多个 push URL 时，每个实际 push 目标都要核验。推送后对每个实际目标执行 `git ls-remote`，确认目标 branch SHA 等于本次 fixed commit，不能只信 push 输出或本地 tracking ref。
+- 各远端独立记录完成、失败或未执行及其原因；一个远端失败不阻止其余已授权且可安全执行的目标。只有全部范围内目标都完成相应操作并通过核验，才能声明全部同步完成；否则报告部分完成，列出未完成目标。没有配置 remote 时如实说明，不能报告同步成功。

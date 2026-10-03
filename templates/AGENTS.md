@@ -33,3 +33,5 @@ Task 要求 Independent Review 时，按 `protocols/review.md` 执行：使用�
 只运行当前 Task Contract 要求的目标回归与必要集成验证；相同 snapshot、依赖、配置和环境上仍有效的结果可复用。有新改动、失败或具体疑点才扩大验证。未运行、未通过、已通过必须区分；独审、真实用户路径与必要安全验证不以声明代替。
 
 仓库操作先按 `boot-protocol.md` 的 repository capability routing 选择路径：当前 remote/provider 有已授权 native repository-write 时可直接使用；需要测试、hook、worktree、build 等证据时必须回真实本地执行环境。Gitee 项目的 provider-specific 操作仍读取项目根 `gitee-ops.md`；连接读取 `connections.yml` 与 `scripts/check-conn.js`。Dropbox/Watcher 不在当前执行选项中。开始需浏览器/SSH/托管/审查的动作时才核对应能力；工具失败先判断可恢复原因，达到既有恢复上限或确需用户取舍才暂停。
+
+用户要求 Git 同步而未限定目标时，按 adopted Method 的 `protocols/git-truth.md` §8 处理 `git remote` 枚举的全部远端及实际 push 目标，不只处理 origin 或 upstream；逐目标核验并报告未完成项，全部成功才声明全部同步完成。明确限定目标时遵循用户范围与既有 Authority。
