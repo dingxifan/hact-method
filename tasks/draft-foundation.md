@@ -200,11 +200,11 @@ Foundation 中至少区分：
 
 ### 5.8 Gate 与 Task 正交
 
-`draft-foundation merged` 只表示设计工作完成。
+`draft-foundation merged` 只表示设计工作完成；G2(v0) approval 是独立 Human Authority fact，二者不互相推导，也不要求固定成两次用户交互。
 
-其后：
-- G2(v0) 进入 ready；
-- 用户对明确 Accepted snapshot 批准后，形成独立 G2 authority event；
+- final Foundation fixed candidate 满足 completion / G2(v0) readiness 后，即可提交用户对该明确 snapshot 作一次 G2(v0) 决定；
+- 若用户批准且后续 delivery 无语义变化，可在同一机械收尾中持久化 Task `merged` 与 G2 record；
+- 若 Task 先行 `merged` 而尚未批准 G2(v0)，Gate 保持未签；
 - G2 approval 不能由模型、reviewer 或更强 Runtime 代替。
 
 ## 6. Verification
@@ -278,13 +278,11 @@ Foundation 中至少区分：
 - 必要技术 / 安全取舍已经获得所需 Human Authority
 - 正式 artifact 已进入 Accepted Project Truth
 
-此时 **G2(v0) 尚未因此自动批准**。
+Task `merged` 本身不推导 G2(v0) approval。
 
 ### G2(v0)
 
-Task `merged` 后 G2(v0) 进入 ready。
-
-用户对明确 Accepted snapshot 批准时，单独记录 G2 authority event 与 approved snapshot。
+当 final Foundation fixed candidate 已满足本 Task completion / G2(v0) readiness 时，用户对该明确 snapshot 的批准即可形成单一 G2(v0) Authority Event；不要求先把 Task `merged` 后再发起第二次确认。若批准后的 delivery 没有改变 Foundation 语义，可连续完成 Task `merged` 与 G2 record 持久化。若 Task 已先行 `merged` 而尚无 G2(v0) approval，则 Gate 保持未签，之后只需对该 Accepted snapshot 取得一次批准。
 
 ### Downstream
 

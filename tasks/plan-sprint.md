@@ -22,7 +22,7 @@ review: required
 
 把 G2 approved 的 Product / Technical / UX / Foundation Contract 转成一组可被 `develop` 直接消费的 durable Task Packages，明确 AC 覆盖、依赖、共享写集、风险、API contract 与交付边界，并形成 Sprint 规划。
 
-`plan-sprint merged` 表示规划产物、Task registration 与其机械一致性已经进入 Accepted Project Truth，并使 G3 进入 ready。**G3 approved 前，`source=sprint` 的 develop Task 即使已经登记为 `status: 可取`，也不得认领。**
+`plan-sprint merged` 表示规划产物、Task registration 与其机械一致性已经进入 Accepted Project Truth，但不自动产生 G3 approved。final planning fixed candidate 通过 checks / Independent Review 后即可形成 G3 readiness；**G3 approved 前，`source=sprint` 的 develop Task 即使已经登记为 `status: 可取`，也不得认领。**
 
 ### In scope
 
@@ -137,10 +137,11 @@ G3 approval 前：
 
 - queue / sprint / status registration 已经固定并通过 deterministic checks；
 - Independent Review 已闭合；
-- `plan-sprint` 可以进入 `merged`，G3 进入 ready；
+- final planning candidate 已形成 G3 readiness；
+- `plan-sprint` 可以先行进入 `merged`，但不是 G3 approval 的前置人工动作；
 - `source=sprint` develop Task 不得从 `可取` 进入 `taken-by`。
 
-G3 approval 时只记录 Gate authority event；不再新增、重写或重排 Task Package / sprint / status task 内容。
+G3 approval 只记录用户对明确 planning snapshot 的单一 Authority Event；不再新增、重写或重排 Task Package / sprint / status task 内容。若批准时 Task 尚未完成 Git delivery，只要 planning 语义未变，后续 merge / state persistence 直接继续。
 
 ### Conditional outputs
 
@@ -322,10 +323,9 @@ Foundation 新增“待建”的 ≥机械级关注点必须拆对应地基跟�
 
 - package、sprint 与 task registration 已完成；
 - deterministic verification / Independent Review 已通过；
-- planning world 已进入 Accepted Project Truth；
-- G3 进入 ready。
+- planning world 已进入 Accepted Project Truth。
 
-它不等于 G3 已 approved。
+G3 readiness 来自同一 fixed planning candidate 的 checks / review 结果；Task `merged` 与 G3 approved 是两个独立事实，不互相推导，也不要求两次用户确认。
 
 ### 5.13 G3 approved 才允许认领 sprint develop
 
@@ -445,18 +445,20 @@ Independent Review 或 checker 发现 blocking finding 时回 `taken-by`。
 - 必要 planning 取舍已经获得所需 Human Authority
 - Task Packages、`sprint.md` 与 task registration 已进入 Accepted Project Truth
 
-此时 G3 进入 ready，但尚未自动 approved。
+Task `merged` 本身不推导 G3 approval。
 
 ### G3
 
-用户针对明确的 Accepted planning snapshot 批准 G3 后：
+当 fixed planning candidate 已通过 `check-sprint` / Independent Review 并满足 G3 readiness 时，用户针对该明确 snapshot 批准即可形成单一 G3 Authority Event；不要求先把 plan-sprint `merged` 后再发起第二次确认。
+
+批准后：
 
 1. 只更新现有 Gate approval record（例如 `signed/date`）；
 2. 不新增或重写 sprint Task registration；
 3. planning artifacts 与 status task 内容无语义变化时，可复用刚通过的 `check-sprint` / Independent Review evidence；
-4. Gate record 进入 Accepted Project Truth 后，`source=sprint` develop 才满足 Gate 前置。
+4. 可连续完成 planning PR / merge、plan-sprint `merged` 与 Gate record 持久化；Gate record 进入 Accepted Project Truth 后，`source=sprint` develop 才满足 Gate 前置。
 
-若 approval 与持久化之间 planning content 发生变化，原 G3 approval 不自动覆盖新 snapshot。
+若 approval 与持久化之间 planning content 发生变化，原 G3 approval 不自动覆盖新 snapshot。若 plan-sprint 已先行 `merged` 而尚无 G3 approval，则 Gate 保持未签，之后只需对该 Accepted planning snapshot 取得一次批准。
 
 ### Downstream
 

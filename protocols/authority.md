@@ -15,9 +15,9 @@ Git author、Runtime 名称、模型能力、discipline 标签都不产生额外
 
 ## 2. Continuous execution
 
-在用户已明确授权的范围内，Owner 可以连续完成读取、分析、写入、测试、整改、review 闭环和必要收尾。
+在用户已明确授权的范围内，Owner 可以连续完成读取、分析、写入、测试、整改、review、Git delivery、state persistence 和必要收尾，直到新的 Human Authority 边界或明确 blocker。
 
-不要为了流程感在每个机械步骤重新询问。
+已经发生的 Human Authority 只要仍绑定同一 scope、target、snapshot/world 与风险边界，就继续有效。把该决定写入 Git、提交 PR、合并、更新 state 或放行下游，是执行既有决定，不是新的产品或治理决定；不要为了流程感在这些机械步骤重新询问。
 
 ## 3. 必须请求 Human Authority
 
@@ -80,6 +80,8 @@ Task Contract authorization boundary
 - 从本地工作进入 commit、push/shared transport、merge、deployment/promotion 或 external action；
 - retry / recovery continuation 涉及不确定 start/effect；
 - 原 bounded operation 的动作变为更高影响、不可逆或 non-idempotent。
+
+重新计算 Effective Permission 只是核对**已有**授权和保护是否仍覆盖当前动作，不等于自动请求一次新的 Human Authority。若 action、scope、target、snapshot/world、风险等级与适用保护均未发生实质变化，且既有 Authority 已覆盖该动作，则直接继续；只有现有 Authority 不足、事实世界变化或进入新的 §3 Authority 边界时才请求新的决定。
 
 Human Authority、环境策略或资源权限的收窄/撤销立即优先适用。
 

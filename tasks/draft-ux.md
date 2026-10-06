@@ -311,6 +311,8 @@ Blocking finding 必须给出 U/S、复现动作、实际 / 预期和影响。
 
 更强模型、独立 reviewer、浏览器通过都不能替代最后一项。
 
+用户对经过 Independent Review 的当前 fixed prototype / UX snapshot 明确接受后，该 Human Authority 条件即完成。只要后续没有改变 prototype / design 的语义、scope 或对应 Product Contract，PR / merge、Task state 与 Accepted Project Truth 的持久化连续完成，不再询问“是否合并”或“是否继续”；若接受后发生相关语义变化，原接受不自动覆盖新 snapshot。
+
 ## 8. Completion & Handoff
 
 ### `done`

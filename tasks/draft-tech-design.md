@@ -22,7 +22,7 @@ review: required
 
 把 G1 approved 的 Product Contract 与已完成的 UX 事实（如适用）转换为可实现、可验证、可追溯的 Technical Contract；用确定性交叉对账和独立语义审查证明 TRD 没有丢失 PRD 承诺、没有凭空新增产品承诺，并维护本期新出现的跨切面 Foundation 关注点。
 
-Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2 approval 是后续独立 Human Authority Event。
+Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2 approval 是独立 Human Authority Event。二者不互相推导，也不要求固定成“先 merged、再请求 G2”。
 
 ### In scope
 
@@ -117,9 +117,8 @@ Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2
 ### State updates
 
 - 当前 `draft-tech-design` Task：`可取 → taken-by → done → merged`
-- Task `merged` 后 G2 进入 ready
 - **不得因为 Task `merged` 自动写 G2 approved**
-- G2 approval 由单独 authority event 更新 `status.yml`
+- G2 approval 由单一 Human Authority Event 更新 `status.yml`；若该 event 已针对 final fixed candidate 发生且 delivery 无语义变化，可与 Task 的 PR / merge / state persistence 一起机械闭合
 
 聊天草稿、未落盘疑点清单或主线自评不是正式 Output。
 
@@ -258,12 +257,9 @@ TRD 可以定义：
 
 ### 5.10 Gate 与 Task 正交
 
-`draft-tech-design merged`：
+`draft-tech-design merged` 说明 TRD 已完成并进入 Accepted Project Truth，但不自动产生 G2 approved。
 
-- 说明 TRD 已完成并进入 Accepted Project Truth
-- 使 G2 进入 ready
-
-只有用户批准明确 Accepted snapshot，才形成 G2 approved。
+final TRD fixed candidate 通过 completion check / Independent Review 后即可形成 G2 readiness；只有用户对该明确 snapshot 的批准才产生 G2 approved。批准发生后，只要 delivery 没有改变 TRD / related project truth 的语义，后续 PR / merge、Task state 与 Gate record 不再产生新的用户确认。
 
 ## 6. Verification
 
@@ -354,13 +350,11 @@ deterministic check 或 Independent Review 出现 blocking finding 时回 `taken
 - TRD 与相关项目事实已进入 Accepted Project Truth
 - `node scripts/check-task-completion.js --task {task-id}` 对 final candidate/report chain 通过
 
-此时 **G2 尚未因此自动批准**。
+Task `merged` 本身不推导 G2 approval。
 
 ### G2
 
-Task `merged` 后 G2 进入 ready。
-
-用户批准明确 Accepted snapshot 后，按现有 `status.yml` Gate serialization 记录 G2 authority event；Git history 与 fixed candidate 提供 snapshot binding。
+当 final TRD fixed candidate 已通过 completion check / Independent Review 并满足 G2 readiness 时，用户对该明确 snapshot 的批准即可形成单一 G2 Authority Event；不要求先把 Task `merged` 后再发起第二次确认。若批准后的 delivery 没有改变 TRD / related project truth 的语义，可连续完成 PR / merge、Task `merged` 与 G2 record 持久化。若 Task 已先行 `merged` 而尚无 G2 approval，则 Gate 保持未签，之后只需对该 Accepted snapshot 取得一次批准。
 
 ### Downstream
 

@@ -22,10 +22,11 @@ HACT 假设任何 AI conversation、执行环境 context 或本地 session 都�
 2. 定位最近 verified durable conclusion，而不是最近 Runtime message/poll；
 3. 按需读取 authoritative status、Task Contract、candidate、open findings 与相关 evidence；
 4. 做最小 reality probe，确认 branch/head、candidate 或 external effect 没有与 durable conclusion 冲突；
-5. 找到下一项 bounded authorized action；
-6. 从该动作执行到新的 durable conclusion 或明确 blocker。
+5. 核对已有 Human Authority 是否仍覆盖下一项 bounded action；scope、target、snapshot/world 与风险边界未变时继续使用原决定，不重新询问；
+6. 找到下一项 bounded authorized action；
+7. 从该动作执行到新的 durable conclusion 或明确 blocker。
 
-不尝试重建原会话的完整思维过程或临时执行过程。已通过且 snapshot/environment 未变化的验证不为形式重复运行。
+不尝试重建原会话的完整思维过程或临时执行过程。已通过且 snapshot/environment 未变化的验证不为形式重复运行；已经发生且仍适用于同一世界的 Human Authority 也不因 session / Runtime 中断而重新获取。
 
 ## 3. Optionality
 
