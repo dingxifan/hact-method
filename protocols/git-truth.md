@@ -23,7 +23,7 @@ Task 进入 `done` 时通常应存在 Shared Candidate Truth。
 ### Accepted Project Truth
 已被 Task completion 接受并进入项目正式事实面的内容。默认分支上的当前有效 artifact、code、state 与 durable decision 属于这一层。
 
-Task `merged` 对应结果进入 Accepted Project Truth。
+Task `merged` 对应结果进入 Accepted Project Truth。对已经建立 remote Accepted branch 的项目，普通项目变更不得通过 direct push 到 Accepted/default branch 直接建立这一事实；候选先进入 source branch，再经 PR merge 进入 Accepted branch。`init-project` 首次 bootstrap 尚无可作为 PR base 的 Accepted branch 时例外。
 
 ## 2. Handoff
 
@@ -45,7 +45,7 @@ Shared Candidate Truth 可以交 reviewer / escalation / specialist check，但�
 
 若 Accepted remote 已移动并改变本次事实世界，Codex 不得把旧 Packet 自行套用或 rebase 到新世界；停止并以 `snapshot mismatch` 报告。此为 preflight stop reason，不是新的 blocker 类型、Task state 或 Git Truth 层级。无关 dirty work 仍按现有 Working Tree Discipline 隔离，但不改变本次 base。
 
-需要返回 ChatGPT 的 operation 成功完成后，或因真实 blocker 返回时，Codex 提供最近稳定的 immutable `RESULT_SHA`，并仅在既有 Authority / Git policy 允许时使其成为 ChatGPT 可读取的 remote Git truth。返回消息只需清楚说明结果、`RESULT_SHA` 与实际有用的上下文；snapshot 的 remote ref/state 或仅本地可读等限制应如实说明。不要求正式 Result Packet 对象或固定结果 schema。ChatGPT 必须重新读取 `RESULT_SHA` 及本次涉及的 artifact / code / state，不能只根据消息宣布完成。snapshot handshake 保持 `BASE_SHA → Codex execution → RESULT_SHA → re-read Git truth`；下一轮从已确认的 Accepted / Result snapshot 重新建立基线。
+需要返回 ChatGPT 的 operation 成功完成后，或因真实 blocker 返回时，Codex 提供最近稳定的 immutable `RESULT_SHA`，并仅在既有 Authority / Git policy 允许时使其成为 ChatGPT 可读取的 remote Git truth。普通项目变更若已完成 Candidate → Accepted Truth，`RESULT_SHA` 必须是 PR merge 后实际 Accepted branch 的 immutable SHA；source branch / candidate SHA 只能作为 candidate pointer，不能冒充最终 Accepted result。返回消息只需清楚说明结果、`RESULT_SHA` 与实际有用的上下文；snapshot 的 remote ref/state 或仅本地可读等限制应如实说明。不要求正式 Result Packet 对象或固定结果 schema。ChatGPT 必须重新读取 `RESULT_SHA` 及本次涉及的 artifact / code / state，不能只根据消息宣布完成。snapshot handshake 保持 `BASE_SHA → Codex execution → RESULT_SHA → re-read Git truth`；下一轮从已确认的 Accepted / Result snapshot 重新建立基线。
 
 `init-project` 没有既存项目 `BASE_SHA`：它以 fixed Method SHA、用户确认的 repository identity 与新仓初始事实 bootstrap；首个可验证 remote snapshot 建立后，其 commit SHA 成为后续正式共同基线。Packet 只是人工临时格式，不是 Git Truth。
 
@@ -89,6 +89,8 @@ dispatch 后只更新 outcome 与 evidence。`indeterminate` 禁止 blind retry�
 用户要求“同步仓库”“同步推送”而未限定远端时，默认覆盖当前 repository 的全部 Git remotes；以 `git remote` 枚举实际清单，并用 `git remote get-url --all <remote>` 与 `git remote get-url --push --all <remote>` 核对所有 fetch / push 目标。不得只选择 `origin`、第一个 remote、当前 upstream 或 `connections.yml` 中登记的 provider。用户明确限定目标时只处理指定范围；配置清单不扩大既有 Authority，禁止写入或仅供读取的远端必须明确列为未同步及其原因，不能静默跳过。
 
 - 读取同步：逐个 remote fetch 并核目标分支事实；fetch 不代表已将远端变更集成本地。只从当前分支的已确认 upstream / Accepted baseline 按项目规则集成，不依次 pull 多个远端；远端分歧不得自行 merge、rebase 或覆盖。
-- 推送同步：对全部范围内远端，使用同一个 fixed local commit 和明确的 source→target branch refspec 正常 push；不能因当前 upstream 只指向一个仓库就遗漏其余仓库。目标分支从用户指令、既有项目映射或已确认的分支关系确定，不能猜测不同远端的 main / master 映射；缺少映射时只暂停该目标并说明缺口。不使用 force / mirror，不顺带推其他分支或 tags。
-- 一个 remote 配置多个 push URL 时，每个实际 push 目标都要核验。推送后对每个实际目标执行 `git ls-remote`，确认目标 branch SHA 等于本次 fixed commit，不能只信 push 输出或本地 tracking ref。
+- Candidate 发布：普通项目变更可以把同一个 fixed candidate push 到已确认的 source / task branch，以建立 Shared Candidate Truth 并供 PR 使用；不得把“同步推送”解释为直接 push 到 Accepted/default branch。目标 branch 从用户指令、既有项目映射或已确认的分支关系确定，不能猜测不同远端的 main / master 映射。不使用 force / mirror，不顺带推其他分支或 tags。
+- Accepted 写入：普通项目变更进入 Accepted Project Truth 的默认且唯一日常路径是 `fixed candidate → source branch → PR → merge → Accepted branch verification`。PR 目标必须是已确认的 Accepted branch；review / verification / required Human Authority 必须对将被合并的 candidate 有效。不得以 direct push、快速推送或“已有 push Authority”为由绕过 PR。`init-project` 首次 bootstrap 尚无 Accepted branch 时按 §3 的 bootstrap exception 建立首个 remote snapshot。
+- 已接受结果的镜像同步：如果某个其他 remote 只是接收已经通过 PR merge 成为 Accepted Project Truth 的同一结果，可以在既有 Authority 与明确 branch mapping 下直接同步**该已接受 SHA**；这只是复制既有 Accepted Truth，不得被解释为在该步骤重新建立 acceptance，也不得用 candidate SHA 代替。
+- 核验：PR merge 后必须读取目标 Accepted branch 的远端 SHA，并把该 SHA 作为 Accepted result / `RESULT_SHA`。对仅同步已接受结果的其他 push 目标，执行 `git ls-remote` 或等价 authoritative observation，确认目标 branch SHA 等于该 Accepted SHA；不能只信 push/merge 输出或本地 tracking ref。
 - 各远端独立记录完成、失败或未执行及其原因；一个远端失败不阻止其余已授权且可安全执行的目标。只有全部范围内目标都完成相应操作并通过核验，才能声明全部同步完成；否则报告部分完成，列出未完成目标。没有配置 remote 时如实说明，不能报告同步成功。
