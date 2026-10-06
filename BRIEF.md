@@ -27,6 +27,8 @@ System / Holistic Independent Review 按 `protocols/review.md` 的 Runtime speci
 
 当前协作环境（2026-09-25）：ChatGPT 承担 reasoning、design、document authoring 与 acceptance；Codex 是 repository execution environment。两者以用户人工搬运的稳定 Packet 协作，Git 是 Shared Project Truth。历史决策中的双运行时和固定模型档位不再构成当前义务。质量以原始契约、固定改动、独立审查和实际验证为准，具体执行按已授权能力与用户授权。
 
+当前 Git acceptance 边界（2026-10-05）：普通项目变更进入 Accepted Project Truth 必须走 `source branch → PR → merge → Accepted branch SHA verification`；direct push 只用于发布 candidate/source branch，不能把普通 candidate 直接写入 Accepted/default branch。已经通过 PR merge 的 Accepted SHA 可按 `protocols/git-truth.md` 同步到其他授权镜像远端。`init-project` 首次 bootstrap 尚无 Accepted branch 时保留例外。历史决策 #24 的“merge-on-push”只保留“无独立 pr-review、develop 可自合并”的含义，不再表示可绕过 PR。
+
 当前约束载体（2026-09-08）：三个项目 Standards 及公共/栈候选库、生成/匹配/回填/收缩审计机制退役。PRD/TRD 承接业务与接口契约，Foundation 承接跨切面不变量，project.md 技术层承接项目特有选择与验证入口，任务 do-not 承接本任务禁区，check/test/config 承接可执行限制。模型自主选择等价实现，不再生成通用编码说明。下文决策 #17/#23/#25/#27 及相关 Standards 表述仅保留历史背景，执行以现行规范为准。
 
 项目采用本版时按 `templates/method-install-policy.json` 区分 Method-owned、merged 与 project-owned；旧项目执行 `guide/08-旧项目全面接入新版.md`，保留历史事实和项目专属规则。normalizer 只存在于 Core 前的一次性接入边界，不提供双入口或混合运行。项目自己的业务检查、类型与安全边界不因方法文件替换而删除。
