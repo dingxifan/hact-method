@@ -200,11 +200,11 @@ Foundation 中至少区分：
 
 ### 5.8 Gate 与 Task 正交
 
-`draft-foundation merged` 只表示设计工作完成。
+`draft-foundation merged` 只表示设计工作完成；G2(v0) approval 是独立 Human Authority fact，二者不互相推导，也不要求固定成两次用户交互。
 
-其后：
-- G2(v0) 进入 ready；
-- 用户对明确 Accepted snapshot 批准后，形成独立 G2 authority event；
+- final Foundation fixed candidate 满足 completion / G2(v0) readiness 后，即可提交用户对该明确 snapshot 作一次 G2(v0) 决定；
+- 若用户批准且后续 delivery 无语义变化，可在同一机械收尾中持久化 Task `merged` 与 G2 record；
+- 若 Task 先行 `merged` 而尚未批准 G2(v0)，Gate 保持未签；
 - G2 approval 不能由模型、reviewer 或更强 Runtime 代替。
 
 ## 6. Verification
