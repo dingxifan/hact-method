@@ -325,7 +325,7 @@ Runtime Integration Verification 是同一 Task 的另一条 assurance lane，�
 - 需要扩大授权范围
 - AI 无法合法判断某个未验证边界是否可接受
 
-integration-verify 不产生 Gate approval。
+integration-verify 不产生 Gate approval。上述 Authority 若已针对当前 exact boundary 明确取得，且 final system candidate、target 与风险边界未变化，后续 verification、结果持久化与 Task `merged` 连续完成，不再把“是否合并验证结果”当成新的用户决定。
 
 ## 8. Completion & Handoff
 
