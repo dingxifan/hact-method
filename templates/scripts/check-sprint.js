@@ -1276,7 +1276,8 @@ function checkStagedReviews(root) {
     const currentTasks = new Map(tasks.map(t => [t.id, t]));
     for (const id of new Set([...beforeTasks.keys(), ...currentTasks.keys()])) {
       const old = beforeTasks.get(id), next = currentTasks.get(id);
-      if (foundationFollowUp(next) && (!foundationFollowUp(old) || old.status !== next.status)) select(id);
+      if ((foundationFollowUp(old) || foundationFollowUp(next))
+          && ['type', 'source', 'iteration', 'status'].some(k => old?.[k] !== next?.[k])) select(id);
       if (['depends_on', 'iteration', 'layer', 'source', 'delivery'].some(k => old?.[k] !== next?.[k])) {
         for (const t of [old, next]) if (t && ITER_SOURCES.has(t.source) && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')) iterations.add(t.iteration);
       }
@@ -1321,11 +1322,20 @@ function checkStagedReviews(root) {
         const taskPath = findTaskPackages(root, id).map(file => path.relative(root, file).replace(/\\/g, '/'))[0] || '';
         const lifecycleGovernance = name => governanceWritePath(name, taskPath, path.relative(root, reportDir).replace(/\\/g, '/'))
           || /^iterations\/v\d+(?:\.\d+)*\/(?:sprint|prd|trd)\.md$/.test(name);
-        for (const file of staged.filter(name => !lifecycleGovernance(name))) {
+        for (const file of [...new Set([...staged, ...(accepted.names || [])])].filter(name => !lifecycleGovernance(name))) {
           if (accepted.error || !accepted.names.includes(file)) { fail('Accepted implementation binding', file, `${id}: staged implementation 不在 final reviewed implementation world`); continue; }
-          let stagedBlob = '', reviewedBlob = '';
-          try { stagedBlob = String(gitOutput(root, ['rev-parse', `:${file}`])).trim(); reviewedBlob = String(gitOutput(root, ['rev-parse', `${reviewedHead}:${file}`])).trim(); } catch {}
-          if (!stagedBlob || stagedBlob !== reviewedBlob) fail('Accepted implementation binding', file, `${id}: staged blob 与 final reviewed_head 不一致；须取得新审查证据`);
+          let matches = false;
+          try {
+            const indexEntries = gitOutput(root, ['ls-files', '--stage', '-z', '--', file]).split('\0').filter(Boolean);
+            const treeEntries = gitOutput(root, ['ls-tree', '-z', reviewedHead, '--', file]).split('\0').filter(Boolean);
+            // Absence on both sides is a reviewed deletion; mode/blob must match for present files.
+            const index = indexEntries[0]?.match(/^(\d+) ([0-9a-f]{40}) 0\t/);
+            const tree = treeEntries[0]?.match(/^(\d+) \w+ ([0-9a-f]{40})\t/);
+            matches = (!indexEntries.length && !treeEntries.length)
+              || (indexEntries.length === 1 && treeEntries.length === 1 && Boolean(index && tree)
+                && index[1] === tree[1] && index[2] === tree[2]);
+          } catch { /* Unreadable Git evidence fails closed. */ }
+          if (!matches) fail('Accepted implementation binding', file, `${id}: staged blob 与 final reviewed_head 不一致；须取得新审查证据`);
         }
       }
       continue;

@@ -60,10 +60,24 @@ try {
   write(`${reviews}/extra.md`, 'untracked\n'); expectFail(audit(), /未加入暂存区/); fs.unlinkSync(path.join(root, reviews, 'extra.md'));
   // Review-only staging is discovered even without a new merged status event.
   write('status.yml', state('foundation', 'null', 'taken-by')); git(['add', '.']); git(['commit', '-qm', 'review evidence']);
+  for (const [source, type, iteration] of [['integration', 'develop', 'null'], ['foundation', 'revise-doc', 'null'], ['foundation', 'develop', 'v0']]) {
+    write('status.yml', state(source, iteration, 'taken-by', type)); git(['add', 'status.yml']); expectFail(audit(), /docs\/tasks 仅支持/);
+  }
+  write('status.yml', state('foundation', 'null', 'taken-by')); git(['add', 'status.yml']);
   write(`${reviews}/round-01.md`, round.replace('task_id: ' + id, 'task_id: wrong')); git(['add', reviews]); expectFail(audit(), /task_id 不匹配/);
   write(`${reviews}/round-01.md`, round); write('status.yml', state()); git(['add', '.']);
   write('src/core.js', 'module.exports = 3;\n'); git(['add', 'src/core.js']); expectFail(audit(), /Accepted implementation binding/);
   write('src/core.js', 'module.exports = 2;\n'); git(['add', 'src/core.js']);
+  fs.unlinkSync(path.join(root, 'src/core.js')); git(['add', 'src/core.js']);
+  const deletionHead = git(['write-tree']);
+  const deletionBytes = cp.execFileSync('git', ['diff', '--binary', baseTree, deletionHead], { cwd: root });
+  const deletionFiles = git(['diff', '--name-only', baseTree, deletionHead]).split('\n');
+  const deletionRound = round.replace(head, deletionHead).replace(hash, crypto.createHash('sha256').update(deletionBytes).digest('hex'))
+    .replace('changed_files:\n  - src/core.js\n  - status.yml', 'changed_files:\n' + deletionFiles.map(file => '  - ' + file).join('\n'));
+  write(`${reviews}/round-01.md`, deletionRound); git(['add', reviews]);
+  result = audit(); assert.strictEqual(result.status, 0, 'reviewed deletion must pass: ' + result.stdout + result.stderr);
+  write('src/core.js', 'module.exports = 2;\n'); git(['add', 'src/core.js']); expectFail(audit(), /Accepted implementation binding/);
+  write(`${reviews}/round-01.md`, round); git(['add', reviews]);
   // docs is never a fallback for arbitrary null-iteration tasks or B tasks.
   for (const source of ['sprint', 'integration', 'manual-test', 'bug', 'optimization', 'other']) {
     write('status.yml', state(source)); git(['add', 'status.yml']); expectFail(audit(), /docs\/tasks 仅支持/);
