@@ -431,6 +431,8 @@ Runtime 切换、恢复、新 reviewer、finding id 变化都不能清零上述�
 
 这个裁决不是 G1–G5 的新增 Gate，也不能由更强模型替代。
 
+对该 fixed diff / risk boundary 的裁决一旦完成，只要后续没有改变实际 diff 的相关风险、target 或授权范围，source branch → PR → merge、Accepted SHA 核验和 state persistence 继续完成，不再把“是否合并”当成第二次 Human Authority。若裁决后又出现影响该风险边界的实现变化，按新 fixed diff 重新判断 Authority 是否仍适用。
+
 ## 8. Completion & Handoff
 
 ### `done`
