@@ -221,11 +221,11 @@ Independent Review 或 verification 出现 blocking finding 时回 `taken-by`，
 - 必要产品语义问题已由用户裁决
 - 最终 artifact 已进入 Accepted Project Truth
 
-此时 Task 为 `merged`，**G1 尚未因此自动批准**。
+Task `merged` 本身不推导 G1 approval。
 
 ### G1
 
-Task `merged` 后 G1 进入 ready。用户对明确 Accepted snapshot 最终批准时，形成单一 G1 Authority Event；按现有 `status.yml` Gate serialization 记录批准，Git history 与 fixed candidate 提供 snapshot binding。
+当 final PRD fixed candidate 已通过 completion checks / Independent Review 时，用户对该明确 snapshot 的最终批准即可形成单一 G1 Authority Event；不要求先把 Task `merged` 后再发起第二次确认。若批准后的 delivery 没有改变 PRD 语义，可连续完成 PR / merge、Task `merged` 与 G1 record 持久化。若 Task 已先行 `merged` 而尚无 G1 approval，则 G1 保持未签，之后只需对该 Accepted snapshot 取得一次批准。
 
 ### Downstream
 
