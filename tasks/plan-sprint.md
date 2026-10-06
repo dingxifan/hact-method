@@ -445,18 +445,20 @@ Independent Review 或 checker 发现 blocking finding 时回 `taken-by`。
 - 必要 planning 取舍已经获得所需 Human Authority
 - Task Packages、`sprint.md` 与 task registration 已进入 Accepted Project Truth
 
-此时 G3 进入 ready，但尚未自动 approved。
+Task `merged` 本身不推导 G3 approval。
 
 ### G3
 
-用户针对明确的 Accepted planning snapshot 批准 G3 后：
+当 fixed planning candidate 已通过 `check-sprint` / Independent Review 并满足 G3 readiness 时，用户针对该明确 snapshot 批准即可形成单一 G3 Authority Event；不要求先把 plan-sprint `merged` 后再发起第二次确认。
+
+批准后：
 
 1. 只更新现有 Gate approval record（例如 `signed/date`）；
 2. 不新增或重写 sprint Task registration；
 3. planning artifacts 与 status task 内容无语义变化时，可复用刚通过的 `check-sprint` / Independent Review evidence；
-4. Gate record 进入 Accepted Project Truth 后，`source=sprint` develop 才满足 Gate 前置。
+4. 可连续完成 planning PR / merge、plan-sprint `merged` 与 Gate record 持久化；Gate record 进入 Accepted Project Truth 后，`source=sprint` develop 才满足 Gate 前置。
 
-若 approval 与持久化之间 planning content 发生变化，原 G3 approval 不自动覆盖新 snapshot。
+若 approval 与持久化之间 planning content 发生变化，原 G3 approval 不自动覆盖新 snapshot。若 plan-sprint 已先行 `merged` 而尚无 G3 approval，则 Gate 保持未签，之后只需对该 Accepted planning snapshot 取得一次批准。
 
 ### Downstream
 
