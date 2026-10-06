@@ -23,7 +23,7 @@ Gate approval 是独立 Human Authority Event。
 - Task `merged`：工作本身完成并进入 Accepted Project Truth。
 - Gate approved：用户允许项目基于该成熟度结果继续前进。
 
-两者正交，避免把 Task lifecycle 和阶段授权绑成同一状态机。
+两者正交，表示它们不能互相推导；**不表示必须发生两次用户确认，也不要求固定成“先 merged、再询问 Gate”**。当一个 fixed final candidate 已满足相应 Task completion / Gate readiness，用户对该明确 snapshot 的批准就可以产生 Gate Authority Event；只要后续 delivery 没有改变其语义，同一次决定可随 Task 的机械收尾一起持久化。若没有发生 Gate approval，Task 仍可按自身完成条件进入 `merged`，Gate 保持未签。
 
 ## 4. Snapshot-bound approval
 
@@ -48,7 +48,7 @@ Gx: { signed: true, date: YYYY-MM-DD }
 
 同一语义决定不重复确认。
 
-例如用户对最终 PRD 明确批准即可构成 G1；用户在 manual-test 明确验收通过即可构成 G4。持久化 approval record 是记录该决定，不是再向用户询问一次。
+例如用户对最终 PRD 明确批准即可构成 G1；用户在 manual-test 明确验收通过即可构成 G4。只要被批准 snapshot 的语义没有变化，后续 PR / merge、Task state、Gate record 与下游 eligibility 的持久化都是记录和执行该决定，不再询问“是否合并”“是否继续”或“是否再签一次 Gate”。
 
 ## 6. Deterministic 与 Semantic
 
