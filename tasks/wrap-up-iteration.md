@@ -19,7 +19,7 @@ review: none
 
 ### Purpose
 
-在 G4 之后把本期已经发生的真实结果、偏离、退役、欠账、长期项目事实和最终质量证据对账闭合，形成稳定 iteration closeout；Task 自身完成后，G5 进入 ready，由用户对明确 Accepted snapshot 做最终 Iteration Closed authority approval。
+在 G4 之后把本期已经发生的真实结果、偏离、退役、欠账、长期项目事实和最终质量证据对账闭合，形成稳定 iteration closeout；final closeout fixed candidate 满足 readiness 后，由用户对该明确 snapshot 做一次最终 Iteration Closed / G5 authority approval。Task lifecycle 与 G5 分开记录，但不要求先完成一次 Task 人工确认、再做一次 Gate 人工确认。
 
 ### In scope
 
@@ -31,7 +31,7 @@ review: none
 - 准确记录 deployment state
 - 确认当前 System Review 结论、最终候选和联调结果指针一致
 - 形成 G5 readiness
-- 在 Task `merged` 后记录用户 G5 approval
+- 记录用户对明确 closeout snapshot 的单一 G5 approval；若批准发生在 Task 持久化前，后续机械收尾不再重复确认
 
 ### Out of scope
 
@@ -89,8 +89,8 @@ review: none
 ### State updates
 
 - `status.yml`：wrap-up-iteration Task lifecycle
-- Task `merged` 后，G5 readiness 可计算为 ready
-- 用户 G5 approval 后按现有 `status.yml` Gate serialization 记录 authority event；Git history 与 fixed closeout snapshot 提供 snapshot binding
+- G5 readiness 由 fixed closeout candidate 的 reconciliation / checks 计算，不以“Task 已 merged”作为再次询问用户的时序门
+- 用户 G5 approval 后按现有 `status.yml` Gate serialization 记录 authority event；若 delivery 无语义变化，可与 Task `merged` 的持久化连续完成；Git history 与 fixed closeout snapshot 提供 snapshot binding
 
 ### Conditional outputs
 
