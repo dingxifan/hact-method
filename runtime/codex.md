@@ -196,22 +196,31 @@ Package classification 与 effective mode 由 `tasks/develop.md` 决定。Codex 
 
 ## 8. Git Delivery Adapter
 
-Task / Git Truth Protocol 决定何时允许 Candidate → Accepted Truth；Codex 负责实现当前 repository 的 Git policy，例如：
+Task / Git Truth Protocol 决定何时允许 Candidate → Accepted Truth；Codex 负责实现当前 repository 的 Git policy。
 
-- branch / commit / push
-- PR
-- merge
-- status reconciliation
+对已经建立 remote Accepted branch 的普通项目变更，默认 delivery 顺序固定为：
+
+1. 从已验证的 Accepted baseline 建立 source / task branch；
+2. commit 固定 candidate；
+3. push source branch，使 candidate 成为远端可引用的 Shared Candidate Truth；
+4. 创建 PR，目标为项目已确认的 Accepted branch；
+5. 确认 required review、deterministic verification 与必要 Human Authority 对将被合并的 candidate 有效；
+6. 按 repository policy merge PR；
+7. 重新读取 remote Accepted branch，核验 merge 后 immutable SHA，并以该 SHA 作为 Accepted result / `RESULT_SHA`；
+8. reconcile status 与必要 delivery pointer。
+
+direct push 可以发布 source/candidate branch，但普通项目变更不得 direct push 到 Accepted/default branch 来替代 PR merge。若其他 remote 只是同步已经通过 PR merge 的 Accepted 结果，按 `protocols/git-truth.md` §8 复制同一 Accepted SHA；该镜像同步不重新建立 acceptance。`init-project` 首次 bootstrap 尚无 Accepted branch 时使用 Git Truth Protocol 的 bootstrap exception。
 
 普通已授权 Git delivery 可连续执行。以下情况暂停对应动作：
 
 - branch protection / permission 不允许
+- PR capability / repository policy 无法完成 required acceptance path
 - merge conflict 无法安全解决
 - required Human Authority 尚未完成
 - production / external side effect 需要额外授权
 - 将被接受的 snapshot 与通过 review / verification 的 snapshot 不一致
 
-不得用 force 或历史改写绕过保护，除非用户对该具体高影响操作另有明确授权。
+不得用 force、direct push 到 Accepted/default branch 或历史改写绕过保护；也不得把“快速同步”当作普通 Candidate → Accepted Truth 的替代路径。
 
 ## 9. Recovery & Context Compaction Adapter
 
