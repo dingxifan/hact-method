@@ -278,13 +278,11 @@ Foundation 中至少区分：
 - 必要技术 / 安全取舍已经获得所需 Human Authority
 - 正式 artifact 已进入 Accepted Project Truth
 
-此时 **G2(v0) 尚未因此自动批准**。
+Task `merged` 本身不推导 G2(v0) approval。
 
 ### G2(v0)
 
-Task `merged` 后 G2(v0) 进入 ready。
-
-用户对明确 Accepted snapshot 批准时，单独记录 G2 authority event 与 approved snapshot。
+当 final Foundation fixed candidate 已满足本 Task completion / G2(v0) readiness 时，用户对该明确 snapshot 的批准即可形成单一 G2(v0) Authority Event；不要求先把 Task `merged` 后再发起第二次确认。若批准后的 delivery 没有改变 Foundation 语义，可连续完成 Task `merged` 与 G2 record 持久化。若 Task 已先行 `merged` 而尚无 G2(v0) approval，则 Gate 保持未签，之后只需对该 Accepted snapshot 取得一次批准。
 
 ### Downstream
 
