@@ -119,7 +119,7 @@ Owner 必须自己读取权威输入。上一会话或其他执行环境的聊�
 |---|---|---|
 | Implementation | 项目代码仓中的实际受控路径 | 代码、测试、必要配置 |
 | Review evidence | 项目当前 review evidence 位置 | 固定 snapshot、findings、结论与必要运行证据 |
-| Delivery record | 项目当前 Git / PR / merge 记录 | 指向 immutable candidate 与 Accepted Truth |
+| Delivery record | 项目当前 Git / PR / merge 记录 | 指向 source candidate、PR 与 merge 后 Accepted SHA |
 
 ### State updates
 
