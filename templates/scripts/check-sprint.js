@@ -424,6 +424,9 @@ function resolveProjectFile(root, rel) {
 
 function findTaskPackages(root, id) {
   const matches = [];
+  // Discover all carriers before routing so duplicates cannot silently win.
+  const foundationTask = path.join(root, 'docs', 'tasks', `${id}.md`);
+  if (exists(foundationTask)) matches.push(foundationTask);
   const bTask = path.join(root, 'b-queue', `${id}.md`);
   if (exists(bTask)) matches.push(bTask);
   const iterationsDir = path.join(root, 'iterations');
@@ -436,6 +439,25 @@ function findTaskPackages(root, id) {
   return matches;
 }
 
+function foundationFollowUp(task) {
+  return task?.type === 'develop' && task.source === 'foundation' && task.iteration === 'null';
+}
+
+function taskCarrierErrors(root, id, packages, reviewDir = '') {
+  const tasks = parseStatusTasks(path.join(root, 'status.yml')) || [];
+  const task = tasks.find(t => t.id === id);
+  const expectedPackage = `docs/tasks/${id}.md`;
+  const paths = packages.map(file => path.relative(root, file).replace(/\\/g, '/'));
+  const errors = [];
+  if (paths.includes(expectedPackage) && (tasks.filter(t => t.id === id).length !== 1 || !foundationFollowUp(task)))
+    errors.push('docs/tasks 仅支持 type=develop/source=foundation/iteration=null');
+  if (foundationFollowUp(task)) {
+    if (paths.length !== 1 || paths[0] !== expectedPackage) errors.push(`Foundation 后续实现须唯一使用 ${expectedPackage}`);
+    if (reviewDir && reviewDir !== `docs/code-reviews/${id}`) errors.push(`Foundation 后续实现须使用 docs/code-reviews/${id}`);
+  } else if (reviewDir === `docs/code-reviews/${id}`) errors.push('docs/code-reviews 仅支持 Foundation 跨迭代 develop');
+  return errors;
+}
+
 function governanceWritePath(name, taskPackagePath, reviewReportDir) {
   const file = String(name || '').replace(/\\/g, '/').replace(/^\.\//, '');
   const task = String(taskPackagePath || '').replace(/\\/g, '/');
@@ -446,7 +468,7 @@ function governanceWritePath(name, taskPackagePath, reviewReportDir) {
 
 function reviewAuditErrors(root, id, cr, options = {}) {
   const errors = [];
-  const foundationReview = id === 'foundation';
+  const foundationReview = id === 'foundation' && cr.review_report_dir === 'iterations/v0/code-reviews/foundation';
   const relDir = cr.review_report_dir || '';
   const absRoot = path.resolve(root);
   const absDir = path.resolve(root, relDir);
@@ -488,8 +510,9 @@ function reviewAuditErrors(root, id, cr, options = {}) {
   let declaredTaskFiles = [];
   let taskPackagePath = '';
   let taskPackageSchema = '';
+  const taskPackages = findTaskPackages(root, id);
+  errors.push(...taskCarrierErrors(root, id, taskPackages, relDir));
   if (!foundationReview) {
-    const taskPackages = findTaskPackages(root, id);
     if (taskPackages.length !== 1) errors.push(taskPackages.length
       ? `找到 ${taskPackages.length} 个同 id 任务包，审查输入必须唯一`
       : '找不到 A/B 权威任务包，无法核对固定 diff 范围');
@@ -628,12 +651,10 @@ function reviewAuditErrors(root, id, cr, options = {}) {
 
 /* A/B 共用的单任务 review 审计。显式调用代表当前任务正在走新流程，
  * 缺字段直接 FAIL。 */
-function checkReviewChain(taskId, root, inProgress = false) {
-  if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
-    fail('review chain', 'task-id', 'task-id 只允许字母、数字和连字符');
-    return;
-  }
+function findReviewDirectories(root, taskId) {
   const candidates = [];
+  const foundationDir = path.join(root, 'docs', 'code-reviews', taskId);
+  if (fs.existsSync(foundationDir) && fs.statSync(foundationDir).isDirectory()) candidates.push(foundationDir);
   const bDir = path.join(root, 'b-reviews', taskId);
   if (fs.existsSync(bDir) && fs.statSync(bDir).isDirectory()) candidates.push(bDir);
   const iterations = path.join(root, 'iterations');
@@ -641,6 +662,15 @@ function checkReviewChain(taskId, root, inProgress = false) {
     const dir = path.join(iterations, version, 'code-reviews', taskId);
     if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) candidates.push(dir);
   }
+  return candidates;
+}
+
+function checkReviewChain(taskId, root, inProgress = false) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(taskId || '')) {
+    fail('review chain', 'task-id', 'task-id 只允许字母、数字和连字符');
+    return;
+  }
+  const candidates = findReviewDirectories(root, taskId);
   if (candidates.length !== 1) {
     fail('review chain', taskId, `须唯一定位 review 目录，当前 ${candidates.length} 个`);
     return;
@@ -665,6 +695,8 @@ function checkReady(subject, root) {
       continue;
     }
     const fm = parseFrontmatter(matches[0]);
+    const carrierErrors = taskCarrierErrors(root, id, matches);
+    if (carrierErrors.length) { carrierErrors.forEach(message => fail('任务载体', id, message)); continue; }
     packages.push({ id, deps: listItems(fm && fm.depends_on), fm, file: matches[0] });
   }
   const statusTasks = parseStatusTasks(path.join(root, 'status.yml'));
@@ -697,6 +729,8 @@ function checkWaveReady(subject, root) {
       continue;
     }
     const fm = parseFrontmatter(matches[0]);
+    const carrierErrors = taskCarrierErrors(root, id, matches);
+    if (carrierErrors.length) { carrierErrors.forEach(message => fail('任务载体', id, message)); continue; }
     const layers = listItems(fm && fm.layers).map(value => value.toLowerCase());
     packages.push({
       id,
@@ -1233,13 +1267,17 @@ function checkStagedReviews(root) {
     if (queue) { iterations.add(queue[1]); if (queue[2]) select(queue[2]); }
     const b = file.match(/^b-queue\/([^/]+)\.md$/);
     if (b) select(b[1]);
-    const review = file.match(/^(?:iterations\/v\d+(?:\.\d+)*\/code-reviews|b-reviews)\/([^/]+)\/(.+)$/);
+    const foundationPackage = file.match(/^docs\/tasks\/([^/]+)\.md$/);
+    if (foundationPackage) select(foundationPackage[1]);
+    const review = file.match(/^(?:iterations\/v\d+(?:\.\d+)*\/code-reviews|b-reviews|docs\/code-reviews)\/([^/]+)\/(.+)$/);
     if (review) select(review[1], /^round-\d+\.md$/.test(review[2]));
   }
   if (staged.includes('status.yml')) {
     const currentTasks = new Map(tasks.map(t => [t.id, t]));
     for (const id of new Set([...beforeTasks.keys(), ...currentTasks.keys()])) {
       const old = beforeTasks.get(id), next = currentTasks.get(id);
+      if ((foundationFollowUp(old) || foundationFollowUp(next))
+          && ['type', 'source', 'iteration', 'status'].some(k => old?.[k] !== next?.[k])) select(id);
       if (['depends_on', 'iteration', 'layer', 'source', 'delivery'].some(k => old?.[k] !== next?.[k])) {
         for (const t of [old, next]) if (t && ITER_SOURCES.has(t.source) && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')) iterations.add(t.iteration);
       }
@@ -1252,6 +1290,8 @@ function checkStagedReviews(root) {
     if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id || '')) throw new Error('审查 task-id 非法');
     for (const file of findTaskPackages(root, id)) inputs.add(path.relative(root, file));
     inputs.add(`b-reviews/${id}`);
+    inputs.add(`docs/tasks/${id}.md`);
+    inputs.add(`docs/code-reviews/${id}`);
     for (const t of tasks.filter(t => t.id === id && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')))
       inputs.add(`iterations/${t.iteration}/code-reviews/${id}`);
     for (const file of staged.filter(f => f.includes(`/code-reviews/${id}/`))) inputs.add(file.slice(0, file.indexOf(`/code-reviews/${id}/`)) + `/code-reviews/${id}`);
@@ -1263,19 +1303,14 @@ function checkStagedReviews(root) {
   for (const version of iterations) checkSprint(version, root, false);
   for (const [id, required] of selected) {
     const task = tasks.find(t => t.id === id);
+    taskCarrierErrors(root, id, findTaskPackages(root, id)).forEach(message => fail('任务载体', id, message));
     if (task?.status === 'merged' || mustClose.has(id)) {
       checkReviewChain(id, root, false);
       // Candidate -> Accepted Project Truth is a blob binding, not merely a
       // self-consistent report. Governance tail files may be appended, but
       // every staged implementation byte must still be the final reviewed
       // implementation world.
-      const reportDirs = [];
-      const bReview = path.join(root, 'b-reviews', id);
-      if (exists(bReview)) reportDirs.push(bReview);
-      for (const t of tasks.filter(t => t.id === id && /^v\d+(?:\.\d+)*$/.test(t.iteration || ''))) {
-        const candidate = path.join(root, 'iterations', t.iteration, 'code-reviews', id);
-        if (exists(candidate)) reportDirs.push(candidate);
-      }
+      const reportDirs = findReviewDirectories(root, id);
       const reportDir = reportDirs.length === 1 ? reportDirs[0] : null;
       if (reportDir && fs.existsSync(reportDir)) {
         const rounds = fs.readdirSync(reportDir).filter(name => /^round-\d{2}\.md$/.test(name)).sort();
@@ -1287,17 +1322,27 @@ function checkStagedReviews(root) {
         const taskPath = findTaskPackages(root, id).map(file => path.relative(root, file).replace(/\\/g, '/'))[0] || '';
         const lifecycleGovernance = name => governanceWritePath(name, taskPath, path.relative(root, reportDir).replace(/\\/g, '/'))
           || /^iterations\/v\d+(?:\.\d+)*\/(?:sprint|prd|trd)\.md$/.test(name);
-        for (const file of staged.filter(name => !lifecycleGovernance(name))) {
+        for (const file of [...new Set([...staged, ...(accepted.names || [])])].filter(name => !lifecycleGovernance(name))) {
           if (accepted.error || !accepted.names.includes(file)) { fail('Accepted implementation binding', file, `${id}: staged implementation 不在 final reviewed implementation world`); continue; }
-          let stagedBlob = '', reviewedBlob = '';
-          try { stagedBlob = String(gitOutput(root, ['rev-parse', `:${file}`])).trim(); reviewedBlob = String(gitOutput(root, ['rev-parse', `${reviewedHead}:${file}`])).trim(); } catch {}
-          if (!stagedBlob || stagedBlob !== reviewedBlob) fail('Accepted implementation binding', file, `${id}: staged blob 与 final reviewed_head 不一致；须取得新审查证据`);
+          let matches = false;
+          try {
+            const indexEntries = gitOutput(root, ['ls-files', '--stage', '-z', '--', file]).split('\0').filter(Boolean);
+            const treeEntries = gitOutput(root, ['ls-tree', '-z', reviewedHead, '--', file]).split('\0').filter(Boolean);
+            // Absence on both sides is a reviewed deletion; mode/blob must match for present files.
+            const index = indexEntries[0]?.match(/^(\d+) ([0-9a-f]{40}) 0\t/);
+            const tree = treeEntries[0]?.match(/^(\d+) \w+ ([0-9a-f]{40})\t/);
+            matches = (!indexEntries.length && !treeEntries.length)
+              || (indexEntries.length === 1 && treeEntries.length === 1 && Boolean(index && tree)
+                && index[1] === tree[1] && index[2] === tree[2]);
+          } catch { /* Unreadable Git evidence fails closed. */ }
+          if (!matches) fail('Accepted implementation binding', file, `${id}: staged blob 与 final reviewed_head 不一致；须取得新审查证据`);
         }
       }
       continue;
     }
     const dirs = [...inputs].filter(f => f.endsWith(`/code-reviews/${id}`) || f === `b-reviews/${id}`);
-    const hasRounds = dirs.some(dir => exists(path.join(root, dir)) && fs.readdirSync(path.join(root, dir)).some(n => /^round-\d{2}\.md$/.test(n)));
+    const hasRounds = dirs.some(dir => fs.existsSync(path.join(root, dir)) && fs.statSync(path.join(root, dir)).isDirectory()
+      && fs.readdirSync(path.join(root, dir)).some(n => /^round-\d{2}\.md$/.test(n)));
     if (required || hasRounds) checkReviewChain(id, root, true);
   }
   if (!selected.size && !iterations.size) pass('提交审计', '没有本次新增或修改的任务审查，无须重扫历史');
@@ -1371,4 +1416,4 @@ function main() {
 if (require.main === module) main();
 module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED,
   sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText,
-  parseReportFindings, fixedDiffEvidence, findTaskPackages, governanceWritePath };
+  parseReportFindings, fixedDiffEvidence, findTaskPackages, taskCarrierErrors, governanceWritePath };

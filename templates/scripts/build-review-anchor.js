@@ -2,7 +2,7 @@
 'use strict';
 // Generate facts and drafts, never approvals or finding closures.
 const cp = require('child_process'), crypto = require('crypto'), fs = require('fs'), path = require('path');
-const { parseFrontmatter, scalarText, listItems, parseReportFindings, findTaskPackages } = require('./check-sprint.js');
+const { parseFrontmatter, scalarText, listItems, parseReportFindings, findTaskPackages, taskCarrierErrors } = require('./check-sprint.js');
 const slash = value => value.replace(/\\/g, '/');
 function git(root, args) { return cp.execFileSync('git', args, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] }); }
 function anchor(root, base, head) {
@@ -17,11 +17,14 @@ function fields(a) {
 }
 function locate(root, task) {
   if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(task || '')) throw new Error('Invalid task id');
-  if (task === 'foundation') return { packagePath: '', dir: 'iterations/v0/code-reviews/foundation', fm: { risk: 'sensitive' } };
   const packages = findTaskPackages(root, task);
+  if (task === 'foundation' && packages.length === 0) return { packagePath: '', dir: 'iterations/v0/code-reviews/foundation', fm: { risk: 'sensitive' } };
   if (packages.length !== 1) throw new Error('须唯一定位任务包');
+  const carrierErrors = taskCarrierErrors(root, task, packages);
+  if (carrierErrors.length) throw new Error(carrierErrors.join('；'));
   const relative = slash(path.relative(root, packages[0]));
-  const dir = relative.startsWith('b-queue/') ? `b-reviews/${task}` : `${relative.split('/').slice(0, 2).join('/')}/code-reviews/${task}`;
+  const dir = relative.startsWith('docs/tasks/') ? `docs/code-reviews/${task}`
+    : relative.startsWith('b-queue/') ? `b-reviews/${task}` : `${relative.split('/').slice(0, 2).join('/')}/code-reviews/${task}`;
   return { packagePath: relative, dir, fm: parseFrontmatter(packages[0]) };
 }
 function progress(root, dir, packagePath) {
