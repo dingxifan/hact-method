@@ -90,7 +90,7 @@ review: none
 | Artifact | Authoritative path | Notes |
 |---|---|---|
 | Acceptance report | `iterations/vN/acceptance-report.md` | 全量 AC 对账、用户反馈、处理结论、验证来源 |
-| G4 authority record | `status.yml` | 按 Gate Protocol 记录批准人、时间与 approved snapshot |
+| G4 authority record | `status.yml` | 按 Gate Protocol 记录 `signed/date`；Git history 与用户实际验收的 fixed implementation snapshot 提供 binding |
 
 ### State updates
 
