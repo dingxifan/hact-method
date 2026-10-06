@@ -354,13 +354,11 @@ deterministic check 或 Independent Review 出现 blocking finding 时回 `taken
 - TRD 与相关项目事实已进入 Accepted Project Truth
 - `node scripts/check-task-completion.js --task {task-id}` 对 final candidate/report chain 通过
 
-此时 **G2 尚未因此自动批准**。
+Task `merged` 本身不推导 G2 approval。
 
 ### G2
 
-Task `merged` 后 G2 进入 ready。
-
-用户批准明确 Accepted snapshot 后，按现有 `status.yml` Gate serialization 记录 G2 authority event；Git history 与 fixed candidate 提供 snapshot binding。
+当 final TRD fixed candidate 已通过 completion check / Independent Review 并满足 G2 readiness 时，用户对该明确 snapshot 的批准即可形成单一 G2 Authority Event；不要求先把 Task `merged` 后再发起第二次确认。若批准后的 delivery 没有改变 TRD / related project truth 的语义，可连续完成 PR / merge、Task `merged` 与 G2 record 持久化。若 Task 已先行 `merged` 而尚无 G2 approval，则 Gate 保持未签，之后只需对该 Accepted snapshot 取得一次批准。
 
 ### Downstream
 
