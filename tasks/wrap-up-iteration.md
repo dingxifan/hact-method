@@ -196,25 +196,17 @@ feedback 可以：
 
 ### 5.8 G5 single authority event
 
-当 wrap-up Task 已 `merged` 后：
-
-- closeout artifacts 已进入 Accepted Project Truth
-- deterministic closeout checks 通过
-- G5 readiness 为 ready
-
-此时向用户呈现：
+当 closeout fixed candidate 已完成必要 reconciliation 与 deterministic checks、足以形成 G5 readiness 时，向用户呈现：
 
 - 本期最终事实
 - 重要偏离 / defer
 - deployment state
 - 仍未完成事项
-- G5 approved snapshot
+- 被批准的明确 closeout snapshot
 
-用户明确批准“本期关闭 / G5”或等价语义，即形成单一 G5 Human Authority Event。
+用户明确批准“本期关闭 / G5”或等价语义，即形成单一 G5 Human Authority Event。若批准发生在 Task / Gate 持久化之前，只要后续 delivery 没有改变 closeout 语义，就连续完成 wrap-up `merged`、G5 record 与 iteration closed 的机械收尾，不要求先 merge 后再确认一次。
 
-已经对同一 snapshot 明确批准时不重复确认。
-
-如果用户不批准，G5 保持未 approved；已 `merged` Task 不回退。需要修正 closeout truth 时创建明确 revision / correction Task，再形成新的 Accepted snapshot。
+若没有 G5 approval，wrap-up Task 仍可按自身 completion conditions 进入 `merged`，Gate 保持未签。需要修正 closeout truth 时创建明确 revision / correction Task，再形成新的 fixed snapshot。
 
 ## 6. Verification
 
@@ -298,15 +290,17 @@ G5 必须绑定明确 Accepted Project Truth snapshot。
 - project.md、必要 revision / review result / state 已进入 Accepted Project Truth
 - `status.yml` 准确记录 wrap-up-iteration `merged`
 
-此时 **G5 进入 ready，但不会因为 Task `merged` 自动 approved**。
+Task `merged` 本身不推导 G5 approval。
 
 ### G5
 
-用户对明确 Accepted closeout snapshot 批准后：
+对明确 fixed / Accepted closeout snapshot 的 G5 approval 一旦发生且 snapshot 语义未变化：
 
 - 记录 G5 authority event
 - G5 = approved
 - iteration 在治理意义上 closed
+
+上述持久化不再产生新的 Human Authority 请求。
 
 ### Downstream
 
