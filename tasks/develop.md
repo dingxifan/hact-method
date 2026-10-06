@@ -464,6 +464,8 @@ Runtime 切换、恢复、新 reviewer、finding id 变化都不能清零上述�
 - independent review 无未关闭 blocking finding
 - `source=integration` repair 只声明本 develop Task 完成，不越权声明 system finding 已关闭
 - 必要 sensitive Human Authority 已完成
+- fixed candidate 已通过 source branch → PR → merge 进入项目已确认的 Accepted branch；普通项目变更没有以 direct push 绕过 PR
+- PR merge 后已重新读取并核验 Accepted branch 的 immutable SHA；该 SHA 是本 Task 的 Accepted result / `RESULT_SHA`，candidate/head SHA 不得代替
 - 实现、测试与必要 evidence 已进入 Accepted Project Truth
 - `status.yml` 已准确记录 Task `merged` 与必要 pointer
 - 没有把本 Task 必须完成的动作留在未接收的后台单元或未固定 Local Working Truth 中
