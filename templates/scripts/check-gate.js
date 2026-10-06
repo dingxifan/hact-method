@@ -220,6 +220,9 @@ function checkStaged(root) {
     } else if (['bug', 'optimization'].includes(task.source)) {
       inputs.add('b-queue/' + task.id + '.md');
       inputs.add('b-reviews/' + task.id);
+    } else if (task.type === 'develop' && task.source === 'foundation' && task.iteration === 'null') {
+      inputs.add('docs/tasks/' + task.id + '.md');
+      inputs.add('docs/code-reviews/' + task.id);
     } else {
       if (!/^v\d+(?:\.\d+)*$/.test(task.iteration || '')) throw new Error('A 类任务缺合法 iteration');
       inputs.add('iterations/' + task.iteration + '/queue/' + task.id + '.md');

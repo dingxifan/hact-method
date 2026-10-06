@@ -29,7 +29,7 @@ review: required
 ### In scope
 
 - `source=sprint` 的计划内功能实现
-- `source=foundation` 的 V0 地基/标杆切片实现
+- `source=foundation` 的 V0 地基/标杆切片或 Accepted Foundation 修订后续实现
 - `source=integration` 的联调缺口修复
 - `source=manual-test` 的验收缺口修复
 - `source=bug | optimization` 的 B Intake 后开发
@@ -62,12 +62,16 @@ Task Contract 只定义 `develop` 独有规则。共同状态、Git truth、revi
 按 `source` 的附加前置：
 
 - `source=sprint`：G3 已 approved。
-- `source=foundation`：适用的 G2 / V0 Foundation authority 已完成。
+- `source=foundation`：适用的 G2 / V0 Foundation authority 或 Accepted Foundation / 项目修订已完成，且本次实施已明确授权。
 - `source=integration`：已有具体 system finding / runtime failure evidence、授权 repair scope 与 required validation。
 - `source=manual-test`：已有来自 `manual-test` 的具体验收 finding 和修复边界。
 - `source=bug | optimization`：B Intake 已完成真实调查、问题界定、contract impact、scope 与实施授权；不运行 G1–G5。
 
 已经批准且仍适用的设计/范围决定不重复询问。只有出现真实缺口、冲突或 Authority 边界时才重新请求 Human Authority。
+
+### Foundation 后续实现载体
+
+由 Accepted Foundation / 项目修订生成的跨迭代后续实现使用 `type=develop`、`source=foundation`、`iteration=null`，Task Package 为 `docs/tasks/<task-id>.md`，独立代码审查证据为 `docs/code-reviews/<task-id>/`。此载体不进入 B Intake，不因后续实现本身要求 G1–G5；Accepted authority 与明确实施授权仍是前置，freshness、fixed diff、独审、验证及正常 develop 状态生命周期不变。V0 / 迭代内 Foundation 实现保留 `iterations/vN/queue/<task-id>.md` 与 `iterations/vN/code-reviews/<task-id>/`，不改其适用 authority。
 
 ## 3. Authoritative Inputs
 
