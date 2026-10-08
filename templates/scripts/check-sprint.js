@@ -1048,8 +1048,16 @@ function checkSprint(iteration, root, audit = true, scope = null) {
   const prdIds = prdAcIds(prdPath);   // Set | null
 
   // All packages still contribute identity, dependencies, assets and AC coverage.
-  // Only touched tasks are re-entering Core schema/completion validation.
-  const checkedPackages = scope ? packages.filter(p => scope.taskIds.has(p.id)) : packages;
+  // Only unchanged, already-completed history stays outside schema recertification.
+  // An untouched active package still belongs to the current-only Core.
+  const checkedPackages = scope ? packages.filter(p => !scope.historicalTaskIds.has(p.id)) : packages;
+  const checkedIds = new Set(checkedPackages.map(p => p.id));
+  const consumedByCheckedFE = new Set(checkedPackages.filter(p => /frontend/.test(p.layersStr)).flatMap(p => p.deps));
+  // A new/active frontend consumer creates a current interface obligation even
+  // when the backend package itself is unchanged completed history.
+  for (const p of packages) if (/backend/.test(p.layersStr) && consumedByFE.has(p.id)
+      && (checkedIds.has(p.id) || consumedByCheckedFE.has(p.id)) && valEmpty('api-contract', p.fm['api-contract']))
+    fail('api-contract 必填', p.file, `${p.id}：backend 且被前端任务 depends_on 消费，api-contract 须填（当前缺/占位/仍注释）`);
   for (const p of packages) for (const ac of listItems(p.fm['acceptance-criteria']))
     for (const id of acRefIds(ac)) {
       referencedAcIds.add(id);
@@ -1079,11 +1087,6 @@ function checkSprint(iteration, root, audit = true, scope = null) {
     for (const asset of listItems(p.fm['asset-writes'])) {
       if (!/^[a-z][a-z0-9_-]*:\S/i.test(asset))
         fail('共享写集格式', where, `${p.id}：asset-writes「${asset}」须使用 kind:value 稳定键`);
-    }
-    // 1b. api-contract 条件必填
-    if (/backend/.test(p.layersStr) && consumedByFE.has(p.id)) {
-      if (valEmpty('api-contract', p.fm['api-contract']))
-        fail('api-contract 必填', where, `${p.id}：backend 且被前端任务 depends_on 消费，api-contract 须填（当前缺/占位/仍注释）`);
     }
     // 2. reference 稳定锚 + ux-flows/trd 链
     const refs = listItems(p.fm['reference']);
@@ -1291,6 +1294,9 @@ function checkSprint(iteration, root, audit = true, scope = null) {
 // Commit scope comes from Git, not from a waiver list. Global relationships remain.
 function checkStagedReviews(root) {
   const staged = gitOutput(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean);
+  // Rename detection emits only the destination for --name-only. Coverage needs
+  // every preimage, including the original path of a renamed package.
+  const coveragePreimages = gitOutput(root, ['diff', '--cached', '--no-renames', '--diff-filter=MD', '--name-only', '-z']).split('\0').filter(Boolean);
   const readAt = (ref, file) => { try { return gitOutput(root, ['show', `${ref}:${file}`]); } catch { return ''; } };
   const iterations = new Set(), selected = new Map(), mustClose = new Set(), inputs = new Set(['status.yml']);
   const tasks = parseStatusTasksSource(readAt('', 'status.yml'));
@@ -1349,10 +1355,13 @@ function checkStagedReviews(root) {
     const beforePrd = readAt('HEAD', prd), afterPrd = readAt('', prd);
     const currentAcIds = new Set(prdAcDefinitions(afterPrd).keys());
     const removedAcIds = new Set([...prdAcDefinitions(beforePrd).keys()].filter(id => !currentAcIds.has(id)));
-    const removedCoverageIds = new Set(staged.filter(file => file.startsWith(`iterations/${version}/queue/`))
+    const removedCoverageIds = new Set(coveragePreimages.filter(file => file.startsWith(`iterations/${version}/queue/`))
       .flatMap(file => sourceAcRefIds(readAt('HEAD', file))));
+    const historicalTaskIds = new Set(tasks.filter(task => task.iteration === version && task.status === 'merged'
+      && beforeTasks.get(task.id)?.status === 'merged' && !selected.has(task.id)
+      && JSON.stringify(task) === JSON.stringify(beforeTasks.get(task.id))).map(task => task.id));
     checkSprint(version, root, false, {
-      taskIds: new Set(selected.keys()), changedAcIds: changedPrdAcIds(beforePrd, afterPrd), removedAcIds, removedCoverageIds,
+      historicalTaskIds, changedAcIds: changedPrdAcIds(beforePrd, afterPrd), removedAcIds, removedCoverageIds,
     });
   }
   for (const [id, required] of selected) {

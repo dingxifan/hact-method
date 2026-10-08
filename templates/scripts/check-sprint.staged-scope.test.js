@@ -18,12 +18,13 @@ function pkg(id, options = {}) {
     'task_type: dev-backend', 'contract-impact: governed', 'urgency: normal', 'risk: standard',
     'title: 演示', 'description: 验证提交检查范围', `depends_on: [${options.dep || ''}]`,
     `files: [src/${options.file || id}.js]`, 'asset-writes: []', 'supersedes: []',
+    ...(options.apiContract ? ['api-contract: GET /demo 返回演示结果'] : []),
     'ac-format: intent-oracle-v1', 'acceptance-criteria:',
     `  - (源：PRD ${options.ac || 'AC-01'}) intent: 正常运行 oracle: 返回结果`,
     'reference:', '  - iterations/v2/trd.md § 演示', 'context: 当前任务',
     'known-risks: []', 'do-not: []', 'escalate-if: []', '---', ''].join('\n');
 }
-function state(ids, oldStatus = '可取') {
+function state(ids, oldStatus = 'merged') {
   return 'tasks:\n' + ids.map(id => `  - id: ${id}\n    type: develop\n    source: manual-test\n    iteration: v2\n    layer: backend\n    status: ${id === oldId ? oldStatus : '可取'}\n    depends_on: []\n`).join('');
 }
 function sprint(ids) { return '| task-id | title |\n| --- | --- |\n' + ids.map(id => `| ${id} | 演示 |\n`).join(''); }
@@ -41,19 +42,19 @@ function scenario(name, action, options = {}) {
     return result;
   };
   git(['init', '-q']); git(['config', 'user.email', 'test@example.com']); git(['config', 'user.name', 'Test']);
-  write(packagePath(oldId), pkg(oldId, { legacy: !options.currentOld }));
-  write('status.yml', state([oldId])); write('iterations/v2/sprint.md', sprint([oldId]));
+  write(packagePath(oldId), pkg(oldId, { legacy: !options.currentOld, apiContract: options.apiContract }));
+  write('status.yml', state([oldId], options.oldStatus)); write('iterations/v2/sprint.md', sprint([oldId]));
   write('iterations/v2/prd.md', prd); write('iterations/v2/trd.md', '## 演示\n');
   git(['add', '.']); git(['commit', '-qm', 'baseline']);
   const addNew = (settings = {}) => {
     write(packagePath(newId), pkg(newId, settings));
-    write('status.yml', state([oldId, newId])); write('iterations/v2/sprint.md', sprint([oldId, newId]));
+    write('status.yml', state([oldId, newId], options.oldStatus)); write('iterations/v2/sprint.md', sprint([oldId, newId]));
     git(['add', '.']);
   };
   action({ root, git, write, read, expect, addNew });
 }
 try {
-  scenario('unchanged legacy is outside schema scope, full planning remains strict', ({ addNew, expect }) => {
+  scenario('unchanged completed legacy is outside schema scope, full planning remains strict', ({ addNew, expect }) => {
     addNew(); expect(0); expect(1, /任务包 schema/, 'v2');
   });
   scenario('new legacy package rejected', ({ addNew, expect }) => { addNew({ legacy: true }); expect(1, /任务包 schema/); });
@@ -66,7 +67,7 @@ try {
   scenario('status merged cannot avoid schema or review', ({ write, git, expect }) => {
     write('status.yml', state([oldId], 'merged')); git(['add', '.']);
     const result = expect(1, /任务包 schema/); assert.match(result.stdout, /review chain/);
-  });
+  }, { oldStatus: '可取' });
   scenario('status identity changes select legacy schema', ({ write, git, read, expect }) => {
     write('status.yml', read('status.yml').replace('layer: backend', 'layer: frontend')); git(['add', '.']); expect(1, /任务包 schema/);
   });
@@ -112,6 +113,32 @@ try {
   scenario('queue sprint registration stays global', ({ addNew, write, git, expect }) => {
     addNew(); write('iterations/v2/sprint.md', sprint([newId])); git(['add', '.']); expect(1, /queue 有但 sprint.md 无/);
   });
+  scenario('METHOD-SCOPE-F001 active legacy cannot hide behind unchanged bytes', ({ addNew, write, git, expect }) => {
+    addNew({ file: oldId }); expect(1, /任务包 schema/);
+    write(packagePath(oldId), pkg(oldId)); git(['add', '.']); expect(1, /共享写集冲突/);
+    write(packagePath(newId), pkg(newId, { file: oldId, dep: oldId })); git(['add', '.']); expect(0);
+  }, { oldStatus: '可取' });
+  scenario('METHOD-SCOPE-F002 rename retains source coverage obligations', ({ root, git, write, expect }) => {
+    git(['mv', packagePath(oldId), packagePath(newId)]);
+    write(packagePath(newId), pkg(newId, { ac: 'AC-99', file: oldId }));
+    write('status.yml', state([newId])); write('iterations/v2/sprint.md', sprint([newId])); git(['add', '.']);
+    assert.match(git(['-c', 'diff.renames=true', 'diff', '--cached', '--name-status']), /^R\d+\s/m, 'fixture must be a real Git rename');
+    expect(1, /PRD AC 未被任何任务包引用：AC-01/);
+    write(packagePath(newId), pkg(newId, { file: oldId })); git(['add', '.']); expect(0);
+  }, { currentOld: true, oldStatus: '可取' });
+  function addFrontend({ addNew, write, read, git }) {
+    addNew({ dep: oldId });
+    write(packagePath(newId), read(packagePath(newId)).replace('layers: [backend]', 'layers: [frontend]')
+      .replace('task_type: dev-backend', 'task_type: dev-frontend')
+      .replace('reference:\n', 'design-reference-format: sliced-v1\nreference:\n  - design.md § 全局视觉基线\n  - design.md § 演示页面\n'));
+    write('design.md', '## 全局视觉基线\n## 页面规格\n### 演示页面\n'); git(['add', '.']);
+  }
+  scenario('METHOD-SCOPE-F003 new consumer imposes API contract on completed backend', context => {
+    addFrontend(context); context.expect(1, /api-contract 必填/);
+  }, { currentOld: true });
+  scenario('METHOD-SCOPE-F003 valid historical API passes without whole-package recertification', context => {
+    addFrontend(context); context.expect(0);
+  }, { apiContract: true });
   console.log(`✅ staged scope ${count} 个 Git 正反夹具通过`);
 } finally {
   if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('temp escaped');
