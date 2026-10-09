@@ -212,7 +212,12 @@ function checkHandleNamespace(conn, root) {
 }
 
 function gitToplevel(dir) {
-  try { return execFileSync('git', ['-C', dir, 'rev-parse', '--show-toplevel'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); }
+  // Hooks export the invoking repository's path selectors. Foreign-directory safety checks must
+  // discover that directory's own repository, rather than inheriting the caller's .git/index.
+  const env = { ...process.env };
+  for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE',
+    'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES', 'GIT_PREFIX']) delete env[key];
+  try { return execFileSync('git', ['-C', dir, 'rev-parse', '--show-toplevel'], { env, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); }
   catch { return null; }
 }
 
