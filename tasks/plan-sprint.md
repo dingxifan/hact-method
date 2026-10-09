@@ -360,6 +360,10 @@ G3 approval 后，Owner 仍需核 `depends_on` 与其他 develop Preconditions�
 
 上述机械检查必须在请求 G3 approval 前完成。
 
+全量 `check-sprint.js <vN>` 仍检查整期当前 schema 与完整 PRD AC 覆盖，G3 不以提交检查替代。`--staged` 从 Git HEAD/index 推导任务范围：新增/修改任务包、身份/依赖/生命周期变化任务，以及仍未完成的任务均检查当前 schema。只有 HEAD 与 index 均为 `merged` 且包和任务记录未变的已完成历史不重新认证；它们仍参与身份、三方一致与既有共享资产/依赖关系检查，不按单侧 `merged` 状态豁免触达包。新增或活跃 frontend 消费历史 backend 时，后者的条件 `api-contract` 仍必须检查，不因此重认证整份历史包。
+
+提交同时进入迭代任务检查时，PRD 反向覆盖限于本次新增/变更的 AC 定义（含缩进的 intent/oracle/example）及修改/删除/重命名前任务包原来覆盖的 AC；本次包的正向回链始终校验，删除 AC 后留下的历史回链也报错。单独 `revise-doc` 的 PRD 提交仍先走文档检查、随后级联规划，不要求同一提交完成所有任务包；AC 标识沿用现有 `AC-数字` 规则。本范围只由 Git 推导，不增加历史豁免清单、旧 schema 兼容分支或状态对象。
+
 ### Semantic
 
 必须确认：
