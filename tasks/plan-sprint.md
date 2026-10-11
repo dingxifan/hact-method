@@ -112,6 +112,22 @@ G2 未 approved 时，本 Task 不能进入 `可取`。
 | Sprint plan | `iterations/vN/sprint.md` | 人类可读的任务、依赖与交付视图 |
 | Task registration | `status.yml tasks[]` | 与 queue / sprint 同步登记；初始 `status: 可取` |
 
+### 工作段与一次性交付
+
+本 Task 按以下三个大的工作段组织执行。工作段只是同一个 `plan-sprint` 内的内容组织，不新增 Task、流程、状态、独立审查轮次或人工确认点；不编号登记，也不增加独立产物路径。
+
+| 工作段 | 段内连续完成的工作 | 本段必须一次性交付的结果 |
+|---|---|---|
+| 整体拆包 | 读取本 Task 的权威输入，从用户闭环确定实施边界、package 划分、需求承接、真实依赖和共享资产归属 | 完整拆包方案：每包的交付结果、PRD AC / 技术约束来源、独立验证方式、依赖与共享写集归属；不能只交主题清单或下一步计划 |
+| 任务包成稿 | 按既有 schema 写全任务包及其 `files`、`asset-writes`、`intent / oracle`、风险和必要 `api-contract`，同步准备 Sprint 与 registration 内容 | 全部完整 Task Package 正文、`sprint.md` 草稿及对应 `status.yml tasks[]` 内容；不把必填字段、AC 映射或接口契约留待下一轮补齐 |
+| 全局收口与交付 | 对账 AC 双向覆盖、依赖、写集冲突及 queue ↔ sprint ↔ status 一致性，修正问题，按下文 Verification / Review / Completion 要求完成候选与执行收尾 | 实际文件中的完整固定候选，以及实际完成的检查、审查结果和未完成项；需 Codex 执行时交付文件与简短 Execution Brief，明确基线、目标路径及剩余检查、独审、修复和 Git delivery，不以聊天提纲代替候选，也不提前宣称 G3 readiness |
+
+每段以表中结果完整交付为结束条件。读取、分析、写作、自查和普通修正都在段内连续完成，不以“已开始”“下一步将……”或内部 Draft 版本结束并等待用户催促。后续工作段直接消费已有结果，不重读无变化的输入、不重新讨论已确定的取舍；发现实质矛盾时只回改受影响内容。
+
+工作段之间不请求“是否继续”或逐段批准；当前运行环境能够接续且授权未变时直接推进。若普通聊天需要新的用户消息才能启动下一段，接续时沿用原目标与授权，不将该消息解释为新的确认要求。只有本 Task 的 User input / Human Authority 边界、必要输入或能力缺口及运行环境强制中断才允许未交齐本段结果时停下，并须说明具体缺口、影响和已完成内容。
+
+任务包正文超出一次有效处理容量时，可按业务闭环分组完整成稿；每组仍一次交齐完整 package 及相关 Sprint / registration 内容，不退化为逐字段或逐动作交互。分组不新增 Task 或确认点，不改变原有检查、独审与 G3 边界。
+
 ### State updates
 
 当前 `plan-sprint` Task：
