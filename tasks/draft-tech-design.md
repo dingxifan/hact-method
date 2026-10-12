@@ -114,6 +114,14 @@ Task `merged` 只表示 Technical Contract 已进入 Accepted Project Truth；G2
 |---|---|---|
 | Foundation update | `foundation.md` | 本期识别出新的稳定跨切面关注点时原地维护 |
 
+### 固定分工与一次性交接
+
+ChatGPT 连续完成技术设计与自查，一次交付完整技术设计意图文件及简短 Execution Brief：PRD AC / UX 行为承接、架构方向、职责边界、核心数据模型与接口行为、关键状态 / 并发 / 恢复语义、最终不变量和必要技术取舍。文件必须足以约束技术成稿，不能只交原则或把未决定的核心语义留给 Codex 猜测；不逐字段、逐接口或逐文件往返。
+
+Codex 在同一窗口核真实源码、schema、消费者与验证入口，在上述设计和 Accepted Truth 内细化字段、类型、接口及机制落点，形成符合既有 schema 的完整 `trd.md` 和必要 `project.md` / `decisions.md` / `foundation.md` 修改；关闭技术引用与 AC / 实体 / UX 承接缺口，固定 Git candidate，连续完成本 Task 的检查、独审、整改复核和已授权 Git delivery，统一回传结果。普通可推导技术问题在 Codex 内解决；不得改变 Product Contract、已确定核心技术语义或绕过 §3 / §7 的技术取舍，也不得提前拆 Sprint 或实现业务代码。
+
+Execution Brief 复用 `runtime/chatgpt.md` 的既有格式，绑定 repository、`BASE_SHA`、同一 adopted Method SHA、实际文件、目标路径、允许范围、验证与停止条件。冻结的是架构与核心语义约束，不是已完成的结构化 TRD；Brief 明确授权技术成稿与验证，不将其误写为仅原样落盘的 persistence 请求。交接沿用同一 Task 与已有 Authority，不新增 Task、状态、认领或设计确认；正常执行只有一次 ChatGPT → Codex 交接和一次统一回传。Contract 缺口、必要 Human Authority、能力缺口及强制中断按既有规则处理，不为减少往返而编造语义或绕过 revision。
+
 ### State updates
 
 - 当前 `draft-tech-design` Task：`可取 → taken-by → done → merged`
@@ -324,6 +332,8 @@ Reviewer 按 `protocols/review.md` 的 same-source projection 读取本 Task 必
 不要求用户机械批准每个字段、接口或普通技术选择。
 
 ## 8. Completion & Handoff
+
+ChatGPT 交出技术设计意图不表示 TRD 已完整成稿、本 Task 已 `done`、`merged` 或满足 G2 readiness。Codex 返回 immutable `RESULT_SHA`、实际检查与审查结论及必要 evidence pointers / 未完成项；ChatGPT 回读该 snapshot 的 TRD、相关项目事实、state 和独审链后呈现既有 G2 决定，不追加“技术设计内容确认”。G2 在回传后批准时，仅传递绑定该 snapshot 的 Authority 并按下文完成 Gate record 与 Git 收尾，不重新成稿或重复批准；检查与独审证据仍须满足现有完成条件。
 
 ### `done`
 
