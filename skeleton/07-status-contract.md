@@ -1,44 +1,24 @@
 # 07 · status.yml 状态契约
 
-> 本文件定义**项目根** `status.yml` 的字段、类型、枚举与取值，是**人与检查器共同的单一事实**。
-> 机器侧消费者（`check-sprint.js` / `check-system-review.js` / `check-gate.js`，以及任何后续取数工具）都从 `status.yml` 进入，不解析任何叙述性 markdown；具体消费者只按本契约读取自己需要的字段。
-> 设计依据：`_meta/plans/2026-05-31-status-contract/design.md`。
+本文件定义项目根 `status.yml` 的字段、类型、枚举和指针；生命周期、readiness、Gate 与接受边界分别按 `protocols/state.md`、`protocols/gates.md`、`protocols/git-truth.md` 及当前 Task Contract。
 
----
+## 一、状态与证据
 
-## 一、为什么有这份契约
+Task/Gate 动态状态只维护在 `status.yml`，sprint 是规划、任务包是契约，不另存可变状态副本。详细 findings、轮次与验证进入既有 immutable report/evidence，status 只保留所需指针，不因可计数就新增字段或成本记录。检查器按当前结构读取各自所需事实，不以 Markdown 总结代替正式状态；任务包字段和规划覆盖仍由对应检查器核验。
 
-机器侧取数如果靠解析 `queue/*.md` frontmatter、`sprint.md` 表格、`status.yml` 复选框，就是在读「为人写的叙述性 markdown」——运行时每次生成时排版会漂移，取数持续出错。
+## 二、项目级位置与任务载体
 
-**解法**：把「机器要的结构化状态」从「人看的叙述文档」里彻底分离，单独落到一份 schema 锁死的 `status.yml`。
+一个项目共用根 `status.yml`，按 iterations/task-id 区分迭代与项目级工作，不每期重建。任务包路径按来源判断，不能只看 iteration 是否为 null：
 
-**核心原则（判定一个数据进不进 YAML）：**
-> 凡是**要被机械核对或计数**的（状态、Gate 签署、任务归属、轮次、耗时）→ 进 `status.yml`；
-> 凡是以「文档正文」出现、只供人阅读的 → 不进 YAML，留在 markdown 里。
+- 迭代内工作：`iterations/vN/queue/{task-id}.md`。
+- B 类 bug/optimization：`iteration:null`，`b-queue/{task-id}.md`，按 `protocols/b-intake.md`。
+- 跨迭代 Foundation 后续实现：`source:foundation`、`iteration:null`，`docs/tasks/{task-id}.md`，按 `tasks/develop.md` 的既有载体规则。
 
----
+## 三、创建与更新边界
 
-## 二、为什么是项目级单文件（不是每迭代一份）
+初始化由 `tasks/init-project.md` 创建模板状态；存量接入先走 Core 外 normalization。工作中缺失状态不能用空模板静默重建来证明就绪或已完成，应先按当前 Contract/Recovery 核权威事实；不取消合法 bootstrap。
 
-`status.yml` 放在**项目根**，一个项目一份并永久保留，覆盖或索引全部迭代 + 全部 B 类任务。原因：
-
-- **B 类是项目级的**：B 类任务（bug / optimization）跨迭代、不归任何一期 Gate 流，其状态在项目根 status.yml。两个迭代之间（vN 已签 G5、vN+1 未起）没有「活跃迭代」，迭代级文件无处安放 B 类——项目级文件永远在。
-- **创建只一次**：随 `init-project` 建一次，此后永远存在，不必每期重建。
-- **多迭代并行天然支持**：`iterations` 按版本分块，`tasks[]` 带 `iteration` 字段区分归属。
-- A 类任务包按 `iterations/vN/queue/` 物理隔离，B 类任务包在项目根 `b-queue/`——契约按目录隔离，动态状态独立集中在 status.yml，不是从 Markdown 派生。
-- **任务包路径派生规则**：`iteration: null`（B 类）→ `b-queue/{task-id}.md`；`iteration: vN`（A 类）→ `iterations/vN/queue/{task-id}.md`。
-
----
-
-## 三、文件位置与生命周期
-
-- **位置**：项目根 `status.yml`，一个项目一份，是机器侧唯一动态状态入口。详细 review truth 留在 immutable report chain，status 只保留 latest pointer。
-- **创建**：`init-project` 从模板创建一次，含 `iterations.v1.gates`（全未签）+ 空 `tasks[]`。
-- **更新**：此后每个状态转移由所属 exec spec「做一个填一个」（见第五节）。
-- **健壮性**：任何更新步骤写入前若文件不存在（历史项目、断点等），先从 `templates/status.yml` 补建再写，不报错中断。
-- **动态状态只写 status**：任务状态/负责人/分支/PR 与 Gate 签署只在此维护。任务包是契约、sprint 是规划，不维护实时状态副本；旧 gates/b-tasks 仅历史参考，不生成新文件。queue↔sprint↔status 检查保留任务登记与规划覆盖，不要求重复可变状态。
-
----
+每个正式任务包同步准备其 status registration；具体认领/完成由对应 Task 核前置及证据。G3 approval 前可以登记已接受 planning 中的“可取”任务，但不得认领 source=sprint；Gate 批准独立记录，不在签 G3 时重写已批准任务内容。旧 gates/b-tasks 只作历史参考，不生成新动态副本。
 
 ## 四、字段契约
 
@@ -66,10 +46,10 @@ tasks:
     sprint: 1                    # int sprint 编号；B 类 / 修复任务为 null
     source: sprint               # enum，见下
     title: 用户表与权限          # string，列表显示用
-    type: develop               # enum，14 种 task type
+    type: develop               # enum，canonical Core Task type，见 tasks/README.md
     layer: backend              # enum，frontend / backend / shared / null
     status: merged              # enum，可取 / taken-by / done / merged
-    assigned_to: zhangsan       # string Gitee login，未认领为 null
+    assigned_to: zhangsan       # string，负责人标识，未认领为 null
     pr: 12                      # int PR 号，无为 null
     parent_id: null             # string 父任务 id，无为 null
     depends_on: []              # string[]，依赖的 task-id 列表
@@ -152,32 +132,11 @@ Findings 不复制进 status，由 checker 沿 latest report 读取。
 
 ---
 
-## 五、写入协议：做一个填一个
+## 五、写入协议
 
-**总规则**：
-> 凡是写一个任务包的地方（A 类写 `iterations/vN/queue/`，B 类写 `b-queue/`），就同步往 `tasks[]` 追加一条（带 `source` / `iteration`）；状态流转（认领 / done / merged）按 `task-id` 改，对所有 `source` 一视同仁。
+- 按 task-id 更新对应状态，保留其他内容；显式写 `null`，不省略现有契约要求的键。status 与相关产物随既有 Git delivery 一起提交。
+- 四态、done 的稳定 Candidate 含义及 merged 的接受条件按 State/Task，不把“提 PR”或“同会话完成”当作状态定义；Gate approval 不从状态推导。
+- 每个 develop Task 只更新自己的最新 review pointer，完整报告链保持 immutable，不按每次 CR 重复追加同一 Task 记录。
+- System Verification 使用上文三个最小指针及项目现有 `check-system-review`/completion 入口；B 类经 B Intake 登记 develop，不创建 dispatch-new Core Task。
 
-| 事件 | 归属 spec | 更新内容 |
-|---|---|---|
-| 项目初始化 | `init-project` | **创建 status.yml**（模板 + `iterations.v1.gates` 全未签 + 空 tasks） |
-| V0 地基设计 + 签 G2(v0) | `draft-foundation` | 建 `iterations.v0` 块（仅 G2）+ `gates.G2` |
-| V0 走骨架 认领→建→合并 | `develop`(source=foundation) | 追加 task（`source=foundation`, `iteration=v0`）+ `taken-by`→`merged` + `code_reviews[]` |
-| 签 G1 | `draft-prd-vN` | 确保 `iterations.vN.gates` 块存在（v2+ 新建）+ `gates.G1` |
-| 签 G2 | `draft-tech-design` | `gates.G2` |
-| 签 G3 + 灌 sprint 任务 | `plan-sprint` | 批量追加 sprint 任务（`source=sprint`, `iteration=vN`）+ `gates.G3` |
-| 认领任务 | `develop` | 对应 task `status: taken-by` + `assigned_to` |
-| 提 PR（瞬态 done）| `develop` | 对应 task `status: done` + `pr`（同会话内即审即合并，done 不停留）|
-| 独立审查通过 + 自合并 | `develop` | 对应 task `status: merged` |
-| CR 结论（审计留痕）| `develop` | `code_reviews[]` 追加一条 |
-| System Verification 生命周期 | `integration-verify` | 复用 `tasks[]`，每 iteration 一个 `type=integration-verify` work item；具体 schema wiring 在 Review Architecture Phase 4 落实 |
-| 联调修复任务派发 | `integration-verify` | 追加 task（`source=integration`, `iteration=vN`） |
-| 联调项创建 / 跑通 / 失败 / 复测 | `integration-verify` | `integration_tests[]` |
-| 验收修复任务派发 | `manual-test` | 追加 task（`source=manual-test`, `iteration=vN`） |
-| 签 G4 | `manual-test` | `gates.G4` |
-| B 类派发 | `dispatch-new` | 追加 task（`source=bug/optimization`, `iteration=null`） |
-| 签 G5 | `wrap-up-iteration` | `gates.G5` |
-
-**写入纪律**：
-- 每次只改对应字段，保留其余内容不动。
-- 显式写 `null`，不省略键。
-- 写入后随当步既有的 `git commit` 一并提交（status.yml 与既有产物同 commit）。
+各 Task 特有的产物、状态更新、required verification 与 Human Authority 只读其 canonical Contract，不在本页重复维护事件流程表。

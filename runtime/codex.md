@@ -144,17 +144,7 @@ Review 语义、finding 与 bounded convergence 由 `protocols/review.md` 和当
 
 ### 7.2 Reviewer input
 
-Review brief 提供：
-
-- Method SHA
-- fixed candidate
-- Task Contract 的必要 sections
-- authoritative inputs
-- 当前 finding 真正需要的 Shared Protocol
-- 原始 evidence
-- targeted re-review 时的 prior report / finding ids
-
-默认不传 Owner 完整聊天、私有推理或辩护性总结。
+Brief 的固定输入与允许范围按同一 Method SHA 的 `protocols/review.md` §3/§14，Task sections 按同源 projection。Codex 将这些来源交给 fresh reviewer，不转交 Owner narrative；targeted review 带必要 prior report/finding IDs。
 
 ### 7.3 Review writes
 
