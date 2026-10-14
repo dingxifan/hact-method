@@ -1,141 +1,29 @@
 # STATUS.md — hact-method
 
 ## 当前状态
-- 当前阶段：**存量接入与文档 Task 收口·已实现待真实项目试点**
-- 上次更新：2026-09-25
-- 当前计划：`_meta/plans/2026-09-25-legacy-adoption-and-document-closeout/task_plan.md`
-- 固定基线：commit `a9bcde43a5ce8b2ee95c63b0fabc1fe0ff563c58` / tree `620f36f83132c661f5a74cf6ca4c788af67257f8`
 
-## 各阶段完成情况
+以下状态记录截至 2026-09-25，不由本次文档整理推导新的项目验收结论。
 
-| 阶段 | 状态 | 完成日期 |
-|------|------|---------|
-| 方法基础 | ✅ 完成 | 2026-09-20 前 |
-| 当前版收敛 | ✅ 完成 | 2026-09-25 |
-| 存量接入与文档 Task 收口 | ✅ 完成 | 2026-09-25 |
-| 真实项目试行 | ⏳ 待开始 | — |
+- 当前阶段：**存量接入与文档 Task 收口·已实现待真实项目试点**。
+- 原状态更新：2026-09-25。
+- 当前计划：`_meta/plans/2026-09-25-legacy-adoption-and-document-closeout/task_plan.md`，与 `_meta/.current_plan` 保持一致。
+- 该阶段固定基线：commit `a9bcde43a5ce8b2ee95c63b0fabc1fe0ff563c58` / tree `620f36f83132c661f5a74cf6ca4c788af67257f8`，不是当前仓库 HEAD 的声明。
 
-> 本文件后续较早日期内容是历史记录。与当前状态冲突时，不构成执行要求；当前执行只读取 `tasks/`、`protocols/`、模板和检查器。
+## 已有结果与限制
 
-## 本阶段进展
+方法基础、当前版收敛、存量接入与文档 Task 收口在原状态中记为完成；真实项目试行仍待开始。
 
-- **存量接入与文档 Task 收口（2026-09-25）**：保持 current-only Core，不恢复运行时兼容层；在 Core 前增加一次性 legacy normalization、install manifest v2 与文件所有权策略。文档 Task 使用 task-specific completion checker，不再套 develop review-chain；review truth 改由 `document_review_commit + latest_document_review` 固定 Git snapshot 绑定；TRD review brief 收缩为 Task/Protocol 的薄入口；重复 Task ID fail closed；TRD 支持非表技术承载。最终 implementation candidate `4ec849f` 通过 23 个 fixture、45 个 JS/CJS syntax check、路径/入口/diff 检查及 Fresh Targeted Re-review（B001–B004 全部关闭、无新 blocker）。尚未 push、分发或运行真实项目试点。
+存量接入保持 current-only Core：一次性 normalization、文件所有权策略及独立迁移审查置于 Core 前；文档 Task 使用 task-specific completion checker 与 immutable document review chain；重复 Task ID fail closed，TRD 支持非表技术载体。原阶段候选 `4ec849f` 的记录为 23 fixtures、45 JS/CJS syntax checks、路径/入口/diff 检查通过，Fresh Targeted Re-review 关闭 B001–B004、无新阻断；这些是当时的验证结论，不代表后续任意候选或项目采用通过。
 
-- **当前版彻底收敛（2026-09-25）**：不再考虑旧版兼容。`tasks/` 成为唯一任务契约；退役 structural/execution 双层 specs、runtime crossing、watcher、discussion persistence、legacy migration 和 review projection。默认同一运行时执行到结论，一个用户动作最多一次对外交接；机械错误直接修正复验。质量链保留固定候选、独立审查、真实联调、Gate 人签及 external-effect 收据；系统 finding 必须通过新候选关闭。安装器改为当前版覆盖和安全清理。当前候选正在跑完整回归与独立复审，尚未 commit、push 或分发。
+原阶段记录“尚未 push、分发或运行真实项目试点”只描述当时状态；后续 repository delivery 以实际 Git 为准，不据此改写历史。当前入口只使用 `tasks/`、`protocols/`、模板及项目检查器，不从旧 specs、旧模型档位或迁移故事推导执行要求。
 
-- **011/012 反馈后的提交审计减法（2026-09-16）**：仅方法论仓修订。提交按 Git 暂存差异核本次任务审计，保留全局依赖/共享资产检查；状态事件与普通审计在 hook 中只路由一次。review-chain 增加中间轮校验，合法 revise/evidence-needed 不再被当成格式失败，最终合并仍要求闭合。末轮 round 取代重复 final-review 要求，preflight 核实际控制位置，静态规则复用真实消费样本；不加映射表或豁免账。file-extract 未改动、未分发，自动接续实验不在本轮范围。
+## 未完成工作与下一步
 
-- **007 反馈后的审查减法修订（2026-09-16）**：复用 method-sync 记录固定规范读取和项目脚本来源；取消本任务包自登记，files 仅维护当前落点；现有 anchor 工具直接生成 pending 草稿并带入开放问题。历史计数保留，三个实质代码审查额度按 Git 增量推导，同快照同问题集中补证一次；定向复审核完整相关调用链。相关真实 Git 正反例和接续回归通过。用户已授权提交推送到 codex/context-reduction，不分发项目；项目须整体采用对应版本，实际节时未验证。
+- 真实旧项目试点：由用户明确选择项目并授权；按 `guide/08-旧项目全面接入新版.md` 先只读 inventory/plan，再分别处理应用、集成和远端交付授权。其他项目不自动升级。
+- 试点需核文件所有权冲突、历史重复 Task ID、跨窗口交接、重复比对、人工介入、机械修正、审查检出与返工；只有真实端到端样本才能支持“旧项目全面适用”及流畅度改善结论。
+- Codex 长程、压缩恢复、UX 与跨环境协作的真实项目效果仍需实际样本；结构、Git 恢复和虚构原型不能替代。
+- 原状态中的 check-conn/门卫存量仓分发仍为用户押后的事项，未在本次整理中执行；实际采用前逐仓核现状，不依赖旧机器的 hook 或副本清单。
 
-- **独立审查范围与收敛（2026-09-16）**：开发首审三个核心问题、专项独立触发、原审查员定向接续；统一证据复用与建议不阻断口径，同步敏感角色模板和结构契约。bounded-v1 报告支持同快照补证，仍计 code_rounds；旧报告保留。检查器核结论一致性、补证前提与证据文件，工作树接续从整包已审实现恢复。计划见 `_meta/plans/2026-09-16-bounded-review/task_plan.md`。本仓落地，用户已授权提交推送到 `codex/context-reduction`，不分发项目仓；真实节时未验证。
+以下保留各批历史记录的追溯入口，不作为当前工作必读内容。
 
-- **用户动线到界面位置补格（2026-09-13）**：file-extract 的真实对话证明“先用户任务、再页面”仍可能被跳过。`ux-flows.md` 在场景与流程图之间新增动线—界面地图，先定页面/弹层/抽屉/内联位置、主辅分支、作用对象、打开来源及完成/返回位置；关键业务/信息架构取舍关闭前不画原型。对象创建、全失败/部分成功、重试保留或自动选择等新增业务语义必须回写 PRD AC。结构检查加入缺地图、漏场景和悬空落点反例；不新增 task/Gate/产物文件，不修改 file-extract。当前计划见 `_meta/plans/2026-09-13-ux-surface-map/task_plan.md`。
-
-- **管理减法与 B 类轻量化（2026-09-08）**：A 类整体重构暂缓，规格前置与 G1–G5 顺序保留。B 类改为只读调查后短包；有依据的局部兼容 API/type 变化可 governed，独审仍核真实语义。notes/收割、学科准入、成本计时、反馈清空及数量归档退出必经链；任务/Gate 状态统一 status，status-only 提交接对应检查。删除仅涉及方法论模板，不操作项目或私人仓。计划与验证见 `_meta/plans/2026-09-08-management-lite/task_plan.md`；本批仅本地提交，不分发。
-
-- **Codex 专用化与用户任务 UX（2026-09-08）**：单 AGENTS 入口、默认继承模型，CC/中立适配及专属比较夹具退役；主线可直接实现并跨压缩持续推进已授权任务集，独审显式空历史，恢复以原始契约/Git/报告为准。UX 先设计用户任务再页面，允许多对多承接，AI 浏览器走查与用户体验确认分开；U/S 动线贯穿 TRD、开发与集成验收。13 组回归及虚构原型真实浏览器正反例通过；实际项目的长程保持率/节时仍待验证。当前计划见 `_meta/plans/2026-09-08-codex-native/task_plan.md`。
-
-以下保留各批历史记录；旧 CC 兼容、Standards 和固定模型描述不作为当前执行要求。
-
-- **Standards 退役（2026-09-08）**：删除三层及栈候选模板、规则 schema/迁移表、retention 脚本与专属测试；取消生成、任务匹配、审查回填及 G2 三份文件要求。项目选择与验证入口回 project.md，测试环境回 TRD，不变量回 Foundation，任务 reference/do-not 引用现有权威对象。新旧审查接续保留固定 diff/finding 闭合；项目仓尚未迁移，本批仅方法论仓，真实节时与检出率待试点。
-
-- **V0 减重（2026-09-08）**：V0 从“除微型项目外默认走”改为证据触发、不默认走；只纳入稳定、跨切面、晚建代价高且能由一根薄切片证明的承重项。预置关注点未入选则留 V1+，V0 只写实际命中的最小 Standards，禁止运行器/黄金样本/基线等“V1 会用”内容成为额外交付；范围超过一个正常中型 develop 任务则继续删或跳过。独立 foundation-review、真实强制边证据与安全项构造级要求保留，但只覆盖获准 V0 行。真实节时待新项目样本验证。
-- **审查全局重审·首批减法（2026-09-06）**：按工作约定重新盘点质量职责。退役强制 review profile 的产物、生成器及校验；问题只在逐轮报告维护，不再抄进 `status.yml`；各阶段取消逐类空结论和重复覆盖表。固定审查对象、独立核实、有限契约完整性、定向复审与恢复链保留。仅本仓修改，完整处置与验证边界见当前计划中的 `全局重审工作约定.md` 和 `审查机制处置表.md`；真实节时未验证。
-- **第二批·接缝审查并入联调（2026-09-06）**：删除末端独立接缝派审/brief/专用报告；联调准备核归属、共享定义与退役，实际执行验调用路径与终态，证据写现有结果记录并定向复用。组合缺口未解决不能进入验收。历史样本仅做职责对照，真实节时与检出率未验证；发现时点后移到合并后联调，逐任务代码独审不变。
-
-- **develop 主线接续（2026-09-06）**：已授权任务集内实现返回后自动派审、finding 自动分流整改、进度询问后继续；blocked 由主线先补证分类，保留现有重试上限与人工门。完成声明移至必要收尾后，复用原 progress 记录恢复阶段/单元/下一动作，并为工作树检查增加精确的未暂存 progress 参数。代码审计与 wave 恢复回归通过；真实长程行为仍待项目样本验证。未启用跨批清空队列。
-- **第三阶段（执行层规范）**：不再由单一项目驱动。执行规范由真实项目边用边补——mail-ai / doc-extract / file-extract / JHH-Nortion / org-krm-v2 / awuchi 等仓均按本方法运行，每轮收关把发现回灌 `_meta/plans/方法论待议.md` 与本仓规范。
-- **第四阶段（团队引入）**：8 名成员已获 `hact-method-lab` 开发者权限（2026-07-11，见决策#21 权限口径调整），master 为保护分支、贡献走 PR。完成标志＝至少一名开发者独立完成一个 task 全流程（拉包 → develop → 独立审查 → 合并）。
-- **双运行时适配（2026-09-04）**：方法论正文已改为 Claude Code / Codex 共用协议，两个薄入口、运行时能力协商、Codex 5.6 角色模板与四场景自动交接演练已完成；真实团队试点尚需在非生产项目完成至少一次跨运行时交接。
-- **强模型纯减法（2026-09-04）**：能力预检后移到任务路由之后并只核实际所需能力；freshness 正常路径压成一行摘要；implementation/review/round 的派生分钟字段退场、统一由事件时间戳按需计算，跨多段累计的 `spec_minutes` 保留。V0、Gate、独立审查和最终验证未改。
-- **双运行时全面独审修复（2026-09-04）**：首次全面独审结论 `block`（1×S0、7×S1、4×S2）；经五轮“修复→独立复核”收敛为 `pass`，仓内启动/路由/审查证据/并发边界/兼容诊断与静态 handoff 契约已闭合。真实项目试点仍未执行。
-- **G4 低重复执行与 Standards 收缩（2026-09-04）**：单人且无外部消费者时，用户可把同 layer 的标准风险串行包选为一个 wave（逐包独审不变、末端一次）；小型复用表不再强制另派调查单元；design.md 改为全局基线加页面规格切片；Standards 按真实引用和 enforcement 做两期收缩审计。模型降档与检测并行仍待真实项目对照。
-- **G1–G3 低风险上下文减法（2026-09-04）**：四份主规范取消机械步骤播报；G1 方向+骨架一次确认并按风险条件分组；draft-ux 完整 PRD 只问缺口、本地原型默认、外部简报按需加载；G2 仅有 standards-candidate 时展开对应 layer；G3 从“>4 包分批”改为无 compact 预算内一次联合审查，超限按业务模块切并做全局总核。Gate、产物 schema 与独立审查保留。
-- **上下文减法四轮独立复审闭合（2026-09-04）**：两轮减法首审 `block` 后连续修复 wave split/recovery、design/schema 存量兼容、G3 最小索引、Standards retention 与 review evidence；四轮结论依次 `4S1+4S2 → 3S1+6S2 → 2S1+1S2 → pass`，最终 15 组正反夹具及中立/路径检查全绿。
-- **仓内 skill 层退场（2026-09-05）**：移除已被共同执行规范、项目命令、连接脚本和用户指南替代的四个仓内 skill（含 B 类手动 diff 的兼容入口）。新 B 任务唯一入口保持为 `develop`；连接、代码托管和验证分别由 `check-conn.js`、项目 `.claude/commands/gitee-ops.md` 与共同 `develop` 规范承载。
-
-## 下一个起点
-
-下一步需由用户明确选择一个真实旧项目并授权试点。试点严格按 `guide/08-旧项目全面接入新版.md` 执行，先只读 inventory/plan，再单独授权应用、集成与可能的远端交付。
-
-试点重点记录：文件所有权冲突、历史重复 Task ID、跨窗口交接次数、重复状态比对、人工介入、机械错误修正耗时、审查检出率和返工。只有真实端到端样本通过后，才能宣称“旧项目全面适用”和流畅度改进已得到实证。
-
-## 仓库拓扑
-
-`hact-method-lab` 自 2026-07-06 起是**独立 git 仓库**（`gitee.com/dingxifan/hact-method-lab`），不再与 `hact-method` 共享对象库。此前两者是同一仓库（`gitee.com/dingxifan/hact-method`）的两个 worktree，检出不同分支，用于新旧方法并行对比测试；对比阶段结束、新方法（`method-lab` 分支的全部演进）确认为主线后，独立成仓：
-
-| 仓库 | 路径 | 分支 | 角色 |
-|------|------|------|------|
-| **hact-method-lab**（本仓，独立） | `{工作区根}/hact-method-lab/` | `master` | 当前唯一在用的方法论主线，独立仓库、独立历史 |
-| hact-method（旧版基线，未受影响） | 工作区外的独立检出（本机在 `E:\group-code\hact-method\`） | `master` | **旧方法**对照基线，原样冻结保留，仓库本身未删除、未改动 |
-| 各项目仓 | `{工作区根}/{项目名}/` | `master` | 按本方法运行的真实项目（mail-ai / doc-extract / file-extract / JHH-Nortion / org-krm-v2 / awuchi），远端均在 `gitee.com/dingxifan/` |
-| hact-notes-{姓名}（可选） | `{工作区根}/hact-notes-{姓名}/`（已有的保留，不新建） | `master` | 个人积累（私有）。2026-09-08 起不要求建仓、不由 init-project 创建、不是任何 Gate 或开发的前置；决策#21 的强制口径仅为历史 |
-| human-ai-col | 本机已无本地检出（远端 `gitee.com/dingxifan/human-ai-col`） | — | v1 方法论（冻结，与上面两者是不同世代）。CLAUDE.md / BRIEF.md 里指向 `../human-ai-col/` 的设计依据链接因此是悬空指针，需要时重新 clone |
-
-> 迁移记录（2026-07-06）：把 `method-lab` 分支（含继承自旧 `hact-method` master 的全部历史 + 之后的全部独立演进，共 261 commit，tip `15971c3`）完整推送到新建的空仓 `gitee.com/dingxifan/hact-method-lab` 的 `master` 分支。随后把本地 `hact-method-lab` 目录从旧仓库的 linked worktree 转成该新仓库的独立 clone（原 worktree 目录整体重命名为 `hact-method-lab.oldworktree` 暂留几天做安全网，未提交的 `_meta/sessions/` 已手动搬入新目录），并清理了旧仓库 `.git/worktrees/` 里失效的 worktree 登记。旧仓库 `hact-method` 里的 `method-lab` 分支未删除（历史遗留，无害，不再更新）。
->
-> 历史备注（迁移前，供追溯）：`method-lab` 曾完整包含旧 master 的 51 个 commit（领先 17）；reset 前的本地 master tip `8304136` 曾用 tag `master-pre-reset-8304136` 钉住。`hact-method-lab` worktree 曾于 2026-07-05 从 `E:\Group-code-lab\hact-method-lab\` 迁到 WSL 原生路径——这次（2026-07-06）是在那次路径迁移基础上做的仓库独立化，两次是不同性质的操作（前者只挪路径，后者切断了与旧仓库的对象库依赖）。此后本仓又从 WSL 原生路径搬回 Windows 侧 `E:\projects\hact-method-lab\`（当前位置，2026-08-30 核实；该次搬迁此前未记录）。
-
-## 已知风险
-
-| 风险 | 可能性 | 影响 | 应对 |
-|------|--------|------|------|
-| 真实项目跑动中发现骨架/规范有结构性缺陷 | 中 | 高 | 在跑的 8 个项目即持续压力测试，每轮收关把发现回灌待议清单与规范 |
-| 连接层（`check-conn.js` + `connections.yml`）尚未分发到存量仓 | 高 | 中 | 已知且刻意押后（并发项目在跑，动门卫有中断风险）；待用户通知后与门卫分发同批做 |
-| Codex 长程与 UX 新流程缺真实项目样本 | 中 | 中 | 本仓已验结构、Git 恢复与虚构原型；项目升级后核多次压缩的约束保持和真实任务结果，不宣称模拟验证等于模型实测 |
-| exec spec 覆盖不完整（仅写了主线5份） | ✅ 已解决 | — | 13/13 全部完成，已通过评审和一致性检查 |
-
-## 历史里程碑（索引，全文见 [`_meta/status-history.md`](_meta/status-history.md)）
-
-> 本节以下不再保留全文——新增里程碑的完整记录直接写入 `_meta/status-history.md`，本文件只加一行索引。
-
-- 2026-09-04 Claude Code + Codex 双运行时适配 — 共同能力接口/预检/启动协议 + 双薄入口 + Codex 5.6 四角色模板；执行规范全面中立化；同步补齐 B 类契约升级、V0 证据账本、共享写集冲突与门卫漂移信号；A/B/C/D 四场景协议演练哈希一致，真实跨运行时项目试点待做
-- 2026-09-04 强模型时代编排纯减法 — 能力预检改为任务路由后按需检查；freshness 无漂移只留紧凑摘要；删除可由事件时间戳计算的 implementation/review/round 派生分钟，保留累计 spec 墙钟；V0/Gate/独审/最终验证不动
-- 2026-09-04 双运行时全面独审与内部闭合 — 首轮 `block`（12 findings）→ 五轮独立复核后 `pass`；补齐中立命令、全状态路由、真实 Git diff/finding 闭合、任务依赖/工作树白名单、B 契约、V0 ledger、联调证据、hook、初始化诊断及 schema-complete handoff 变异测试；外部实机试点仍待做
-- 2026-08-30 hact-app（看板应用）全面退场 + 路径漂移治理 + 阶段表压缩 — 三问炸出三件事：CC_TOKEN 查清即判死（hact-app 仓本机已不存在、最后提交 2026-06-03），看板机制从 init-project Step 5 起全面移除（109 行整段删、Step 重编号、明文 CC_TOKEN 出库、status.yml 消费者改判为 check-*.js）；`E:\Group-code-lab\` **这个目录根本不存在**，31 处硬编码全是死路径，活文档 62 处全量校正（human-ai-col 亦无本地检出，设计依据指针悬空已标注）；阶段表压缩为四阶段（原第三阶段「开发看板应用」取消、编号顺延），团队引入由「未开始」改判「进行中」。顺带修掉 hact-conn 自身的 handle 撞名缺口（mail-ai 与 org-krm-v2 同名 DB_PASSWORD 会静默覆盖，实证反例）。盘出两条实况：**SSH MCP 在本机从未配过**（规范列为必备、deploy 一直靠 ssh CLI）；file-extract 的 deployment.config 自己写过「本文件进 git，不放任何密钥」——独立发明了同一条规则。纯减法，冻结相容
-- 2026-08-29 连接与凭据统一寻址（hact-conn）— 补一个从未有过单一真相源的层：Gitee PAT / SSH / DB / 第三方 key 散在五处，其中**项目↔SSH alias 的映射根本无处登记**、换机不可复现。按机密性劈两层（`connections.yml` 入库零机密 + `~/.hact/secrets.env` 机器本地永不入库），`deployment.config` 并存分工保留命令侧。载体＝`skills/hact-conn` + `templates/scripts/check-conn.js`，随 init-project 铺进项目仓、接进 pre-commit 门卫；三条 FAIL + 两条 🧑（含 MCP alias 在场性——换机唯一不随凭据文件走的东西）。解析链认历史 `GITEE_ACCESS_TOKEN`，零打断迁移。13 组用例以负向为主全部亲手撞过，门卫三态实测。看板 CC_TOKEN 明文入库本版未纳入；存量仓待分发。判与机制冻结相容（无新 task type / Gate / discipline / subagent）
-- 2026-08-03 扇出条按数据关闭 + 审计留痕机械化 + 门卫首次真部署 — file-extract v2 首批 `rounds` 数据驱动：扇出条按它自己写死的判据（3:3，不满足"绝大多数 rounds=1"）**降级为不做**；同时撞出**仪器装了没响**——`rounds` 07-30 落地、v2 十一包全在其后合并却 0/11 记录、两包连 `code_reviews[]` 条目都没有、无任何机械检查发现。落地＝`check-sprint.js` 第 9 项审计留痕完备性（9 仓 dry-run 18 条砍到 8 条真命中，撞出两处解析缺陷）+ 级联抑制（一个格式代差曾放大成 ~50 条假漂移）+ 反向上游 `isExplicitNone`。**最大发现是门卫本身没在跑**：8 仓中 4 仓无 hook、`check-reusables` 零仓接入；已给 file-extract / doc-extract / JHH-Nortion / mail-ai 四仓真部署并做真触发测试（一放行一拦下）。wave 批量提案判否（回退决策#24），拆出的两条成立项另记待议。清单 29→32 条。全部改动冻结相容
-- 2026-07-30 file-extract V1 收关复核：待议清单全量重判 + 四处落地 — 第二个完整 V0→V1 项目收关驱动：28 条未结全过一遍，减法 28→23（#13「质量模型转向可测试性」判为已实质落地、#14「develop 拆分」判为不做、两条 GIT 条目取数窗口用完即关、hact-app 三条合一）；四处落地＝v1 就地收割（`rounds` 仪器 / PRD 核 as-built / `risk-note`）、GIT 三处措辞 +「全绿也要契约对账」可达性闸、`check-reusables.js`（6 仓扫描 0 误报 1 真命中）、#29 三条 checklist。**穿透流的产出主类型判明为契约漂移而非缺陷**（两栈两阶段一致，code bug 各 0）。两处原判经核实推翻并记档。全部改动冻结相容；#30 押后至 file-extract v2；harvest 专项（317 条）本期未做
-- 2026-07-28 减法纪律跨过项目边界（注释受众分离 + 退役账）— doc-extract v1–v6 代码审查驱动（源码 4.2x / 测试 11.7x / 注释率 40% / lint 877 行零退役 / 旧引擎零路由仍注册）：诊断修正为「减法纪律只停在本仓边界内」，把「注释受众分离」（本仓 CLAUDE.md 已对自己立过）与「退役账」（`supersedes` → PR 逐条结账 → G5 核对）推给项目侧；顺带清掉「任务包 18 字段」这个 8 文件 11 处的脆性计数；4 条挂在 doc-extract 上的待议重启条件重挂（两条取数窗口＝v6 联调，一次性）；地基关注点自洽复核留设计稿待新项目验证。均属扩面、冻结相容
-- 2026-07-21 归属真空检查 + feedback 载体分池（A1–A3）— doc-extract v4/v5 经验总结驱动：`check-sprint.js` 加第 8 项归属真空（点名不存在的包/两包互推=FAIL，未点名=🧑；4 期实测抓到报告点名的两个头号实例、7 项目回归 0 误报）+ feedback 分池建成 `develop → backlog [欠账] → manual-test G4 前定夺 → 下期 PRD 过账` 链路 + post-V0 地基增补继承 foundation-review 探针纪律；核对中修正报告三处（B2 槽位不空/GIT 未跑、返工包账算错）；三项均修既有机制缺格、非新增，冻结相容
-- 2026-07-18 codex-adapter 草案实验区从 master 移除 — CC+Codex 混合执行草案（2026-07-01 建）不再在 master 维护；Codex runtime-adaptation 战略仍在独立分支，本次不涉及。方法论 master 回归纯 CC 运行时
-- 2026-07-17 Kimi Code + Kimi3 1M 适配分析落盘 — 评估 hact-method 在 Kimi Code + Kimi3 1M 下的可行性：核心骨架适用但需"引擎移植"（subagent 调用层/工具链/成本模型重估）；关键修正：Claude 已支持 1M，上下文非差异化变量；落盘 `_meta/plans/2026-07-17-kimi-code-kimi3-1m-adaptation-analysis.md`
-- 2026-07-14 独立审查 subagent 降档目标 haiku → Sonnet 5（决策#26 参数回调）— doc-extract 实测 haiku 独审系统性误报、返工成本抵消降档收益：仅审查/一致性核对类升 sonnet（develop 独审 standard 档 + 4 个 review-brief 派发点），Explore 读文件与 GIT 执行 subagent 仍留 haiku；sensitive/foundation 档不变；非新增机制、冻结相容
-- 2026-07-12 GIT-API 改造 land（穿透 + 边界，替场景矩阵）— doc-extract v1 GIT 31/31 全绿 0 命中 + harvest 2/118 实证"瞄错靶"：穿透流替按接口枚举（每终态一条·禁 fixture 抄近路·撞 de-v1-004 类接缝）+ 失败 ⚖️ 双路由 + 边界闸 opt-in（桩点即边界·🚫 真调）；改造非新增、下次 GIT 运行即自验证；web 侧不动
-- 2026-07-12 foundation-review 证据化收紧（G1 探针通用化 + G2 自绿复现化）— doc-extract V0 二轮独审实证驱动：构造级/机械级声明须以亲手撞过的反例为证、自绿须干净环境复现；证 brief 严苛度 > 模型大小；G3（机械级接自动门）记待议、收紧非新增机制（冻结相容）
-- 2026-07-08 实证回收（empirical harvest）— 回收 mail-ai v5–v8 + JHH v7 全量实测记录判定复杂度收益：已部署机制死重极少（独审 ≈70 阻断/安全裁决 2 触发/manual-test ≈19 拦截），疑点集中在未部署库存（#25–#29）→ 冻结新增至库存过一轮真实迭代；加投方向收窄为「真实外部边界冒烟 + 生产静默失败告警」
-- 2026-07-08 安全敏感判定多层化（决策#29）— risk 不信自报、只升不降：五层防线堵"漏标 sensitive → haiku 审 → 自动合并"链（check-sprint 启发词 + Step3.5 第⑥类 + develop 有效 risk + 末端 diff 独立预检）
-- 2026-07-08 exec spec 受众分离 — 运行时文本历史注解清扫（exec/skeleton06§7/structural 三层）+ CLAUDE.md 写作纪律防回潮；全局评审落盘 `_meta/plans/2026-07-08-method-review/findings.md`
-- 2026-07-08 技术栈剥离 + 确认点分级（决策#27/#28）— standards 栈子模板层建成（frontend-vue3 / backend-nestjs）+ 播种三源；步骤协议引入 ⚖️ 默认判定档，准备段硬阻断收敛
-- 2026-07-06 hact-method-lab 独立成仓 — 从 hact-method 的 worktree 切断为独立 Gitee 仓库，完整历史带过，旧基线原样保留
-- 2026-07-02 Codex 适配层成本立论修订 — 立论改为"控成本"而非"上下文更小"+ 补合并权归属说明/长短卡同步检查/人工交接操作细节
-- 2026-07-01 新建 codex-adapter/ 实验区 — CC+Codex 混合执行草案，不改动正式方法论
-- 2026-06-29 地基层 + V0 走骨架（主管线重构，决策#25）— 两轮独审收敛，已推送 origin/method-lab
-- 2026-06-29 hact-app 概念脱钩（方法独立性）+ WIP 归档 — 3 commit 已推送
-- 2026-06-28 视觉地基三件套 — 补「跨切面地基」结构盲区，并入前端一致性框架
-- 2026-06-20 develop 站「展开」四连改 — 执行模型翻转（独立审查 loop）+ 砍除 pr-review（merge-on-push）
-- 2026-06-20 develop 站：撤销 sub7 家族拆分 — 单文件 develop.md 复位
-- 2026-06-20 review-briefs/ pattern 推广到 PRD + tech-design — 三个末端审查 brief 全部外置
-- 2026-06-20 plan-sprint 站致密化（340→275/−19%）— Step3 折叠 + 门卫散文收薄
-- 2026-06-20 draft-tech-design 致密化 + standards 归位 + 步骤重排
-- 2026-06-20 门卫（HOOK）样本建成 + 单环节致密化方法成稿
-- 2026-06-20 HOOK/DRY 量账后双 park + 单环节 loop 试点（PRD 致密化）
-- 2026-06-20 pipeline-reshape 开启 + 测试脊柱前置（乙-1+乙-2）
-- 2026-06-19 sub7：develop 拆分（loop 第二层 park）— 471 行 → core+3 壳（后于 2026-06-20 撤销）
-- 2026-06-19 sub6：TRD↔PRD AC 覆盖机械化
-- 2026-06-19 sub5：PRD AC 稳定 id
-- 2026-06-19 结构性审查收官：子计划 3b/3c/4 完成 + §7 冷核协议整段退场
-- 2026-06-19 方法论方向转变：质量模型从"规范遵循"转向"输出可测试性"
-- 2026-06-19 draft-ux 整体重构（角色姿态反转）
-- 2026-06-18 Gate 签署前完成判据冷核（B 软版）+ draft-ux 回退修复
-- 2026-06-18 draft-ux 交互质量（②造前探选 + ③subagent 冷审 + ①行为化清单）
-- 2026-06-18 前端设计保真（design.md 必读 + pr-review 保真维度）
-- 2026-06-18（续）prototype.html 接入链路（fix 3）+ fix 2 口径收口
-- 2026-06-16 集成测试脚本移至 generate-integration-tests 阶段生成
-- 2026-06-08 移除全部 Dynamic Workflow（计费口径对齐）
-- 2026-05-31 status.yml 状态契约（hact-app 取数稳定化）
-- 2026-05-31 个人积累与 pull 上提
-- 2026-06-03 新增 draft-ux 交互原型任务
-- 2026-05-08 第二阶段完成 + 第三阶段启动
-- 2026-05-07 第一阶段·搭骨架 完成
-- 2026-05-07 仓库初始化
+完整历史见 `_meta/status-history.md`；本次移出的批次、拓扑、风险旧快照及里程碑可按需查[固定基线 STATUS](https://github.com/dingxifan/hact-method/blob/9d6bc0ae8dbfdd34fa5cd4e7d759e3ee90f83c5c/STATUS.md)。不重写旧记录，不要求每轮续写历史索引。

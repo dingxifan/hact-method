@@ -1,142 +1,61 @@
-# BRIEF.md — hact-method（AI 与人协作工作方法 v2）
+# BRIEF.md — hact-method
 
-## 项目背景
-human-ai-col（v1 方法论）已完成第二阶段单人验证（simple-auth v1 hact 端到端演练 2026-05-06 收关）。在准备第三阶段团队引入时，对整体方法做了一轮深度重构（讨论原稿见 `../human-ai-col/_meta/plans/2026-05-06-method-optimization/`）。重构后的核心变化是从"角色扮演"转向"任务驱动"，与 v1 方法论的差异已大到无法在原仓库内并行演进，因此另起新仓 hact-method。
+## 项目用途与目标
 
-## 核心目标
+本仓是 AI 与人协作方法及项目模板的单一来源，不保存具体项目代码或数据。以任务驱动协作：Task 定义工作契约，模型在有效授权内完成分析、设计、执行与验证。没有固定 deadline，以验证可用为先；管理者主导方法设计，团队在真实项目试行中引入。
 
-### 当前唯一执行基线（2026-09-25）
+## 当前唯一执行基线
 
-HACT 当前只支持一套任务模型：`tasks/` 是唯一任务执行契约，`protocols/` 定义跨任务不变量，检查器和真实运行证据负责质量控制。旧版本兼容层、双层 specs、自动运行时中转、轮询账、恢复胶囊、投影清单和 watcher 均不再是执行要求。
+- `tasks/` 是唯一任务执行契约，`protocols/` 定义跨任务不变量，`runtime/` 只实现运行时能力；检查器与真实证据负责质量控制。旧 specs 双层、自动中转、watcher、轮询账、恢复胶囊和兼容入口已退役。
+- ChatGPT 承担 reasoning、design、document authoring 与 acceptance judgement；Codex 是 repository execution environment。人工交接使用稳定文件与短 Packet，Git 是 Shared Project Truth；执行按已采用的 fixed Method SHA，不静默混入工作树最新版。
+- 以结论可恢复为目标，默认同一运行时完成有界工作；一个用户动作最多一次对外交接的偏好不阻止必要 fresh review/re-review。普通失败与机械错误在既定范围内修正复验，外部效果收据只按 `protocols/external-effect.md` 的触发条件使用。
+- 权威输入、固定候选、独立审查、真实验证、Gate 人签与外部效果核验保留。系统语义独审适合且 immutable sources 完整时优先 Fresh ChatGPT reviewer；runtime integration verification 由 Codex 执行。两条 lane 同属 `integration-verify`，必要结论最终对同一 fixed final candidate 有效；系统 finding 须在新候选经 fresh review 关闭。
+- **结果严格，机制克制。** 先确定 Contract、最终不变量、安全/Authority 边界、不可逆恢复与外部兼容义务，再选择最小充分机制。可从权威事实重推、重算或廉价重建的中间信息默认不持久化；仅为完整过程审计、可观测或更多保险，不足以增加长期状态、记录或控制层。
+- A 类 PRD→TRD→任务规划和 G1–G5 不变，整体滚动规格重构暂缓。B 类先真实调查、短 Intake，再按既有边界 develop；有已确认依据的局部兼容共享契约实现可 governed，不夹带已签规格修订、业务/权限重定义、破坏兼容或迁移。诊断不等于实施授权。
+- 动态 Task/Gate 状态只写 `status.yml`。个人积累、学科准入、重复总账、成本计时、反馈清空与数量归档退出必经链；私人仓与旧记录不自动删除。仍有效的既有决定不因换会话重复确认，Human Authority 边界见 `protocols/authority.md`。
+- 普通 Candidate→Accepted Truth 必须 `source branch → PR → merge → Accepted branch SHA verification`，direct push 只发布 candidate/source branch；已通过 PR merge 的 Accepted SHA 可按 Git Truth 同步授权镜像。首次 bootstrap 尚无 Accepted branch 时使用既有例外。
+- 约束由 PRD/TRD、Foundation、`project.md` 技术层、任务 do-not 与 check/test/config 各自承载；Standards 及公共/栈候选库、生成/匹配/回填/收缩机制退役，模型自主选择等价实现，不生成通用编码说明。
+- 项目采用本版按 `templates/method-install-policy.json` 区分 Method-owned、merged、project-owned；存量项目逐仓确认，经 `guide/08-旧项目全面接入新版.md` 的一次性 normalization、所有权归类、隔离候选和独立迁移审查后整体进入 current schema，不维护日常兼容层，不删除项目原有业务/类型/安全检查，不补造历史 Task/Gate/review。
+- 开发方可信但会犯错；审查聚焦规范、错误及实际外部风险，不要求抵抗开发者恶意绕过。审查范围以 `templates/review-briefs/review-scope.md` 为准。建议不隐式阻断，必要证据与固定候选质量链不缩减。
+- 提交只核本次涉及的任务证据，保留全局依赖与共享资产检查；未变历史 round 不反复重审。末轮 round 即最终独审结论，不再重复 final-review。复用固定 Method 来源与项目脚本，files 只维护当前落点、不自登记任务包；原审查员接续、三次实质代码审查额度从 Git 增量推导，同快照同问题集中补证一次，历史报告和计数保留，不增加轮次账/写集字段或审查阶段。实际节时尚待项目验证。
 
-执行以“结论可恢复”而不是“过程可续接”为目标。默认保持同一运行时完成分析、修改和验证；一个用户动作最多产生一次对外执行交接。普通失败在当前执行窗口内继续修正，机械错误直接修正并复验。只有非幂等、高影响或结果不确定的外部动作需要 external-effect receipt。
+## 关键设计决策
 
-System / Holistic Independent Review 按 `protocols/review.md` 的 Runtime specialization 执行：适合且具备完整 immutable sources 时优先使用 Fresh ChatGPT reviewer context，Runtime Integration Verification 仍由 Codex 执行；上述 locality 与交接次数偏好不得阻止必要的 fresh review / re-review。两者仍属同一个 `integration-verify`，所有必要结论最终绑定同一个 fixed final candidate，不新增方法论对象。
+保留原编号供现有引用定位；以下为已确认的当前口径，旧版本操作不因引用编号恢复有效。长篇论证与原文按需查[固定历史基线](https://github.com/dingxifan/hact-method/blob/9d6bc0ae8dbfdd34fa5cd4e7d759e3ee90f83c5c/BRIEF.md)，正常执行无需通读历史。
 
-质量控制不做减法：权威输入、固定候选、独立审查、真实验证、Gate 人签和外部效果核验继续保留。系统级 finding 必须由新的固定候选关闭，不能在原候选上用文字宣告关闭。旧项目如需采用本版，必须先在 Core 外完成一次性 normalization、文件所有权归类和独立迁移审查，再整体进入 current schema；不提供日常旧 schema、旧入口或混合运行兼容。
+1. discipline 是知识聚类，不是角色身份、路由或授权来源。
+2. 方法论仓与项目仓各自独立；个人积累仓仅可选，不由初始化自动创建。
+3. 任务驱动：按当前 Task 加载工作契约。
+4. B 类无 G1–G5；动态状态统一 `status.yml`，旧 b-tasks 总账退役。
+5. B 类 bug/optimization 入口按 `protocols/b-intake.md`，不再注册 dispatch-new Core Task。
+6. B 类无额外起/关仪式；历史“恒定两会期”不构成执行要求。
+7. hotfix 是 urgency 属性，不独立建 Task 类型；部署仍需指定 snapshot/target 授权。
+8. 默认合并部署已验证的结果；只能包含获适用接受/授权的变更，不由代码合并自动取得部署权。
+9. 部署在项目范围按 `tasks/deploy.md` 处理，A/B/迭代共用边界。
+10. 联调以真实穿透流、外部边界和浏览器场景验证，不以 mock 或静态声明冒充；具体执行器由 Runtime 实现。
+11. 修订在项目事实与 `tasks/revise-doc.md` 边界内完成。
+12. 用户已明确 Task 时直接加载该契约；否则按权威状态推断，不在迭代文件另写运行时标记。
+13. Task lifecycle 与 Gate 正交；Gate readiness 聚合底层事实，approval 仍是独立 Human Authority，不能由任务完成推导。
+14. task.type 决定 canonical Task Contract；当前 Catalog 见 `tasks/README.md`。
+15. 正常全流程使用现有 Core Tasks；不为运行时编排增 Task。
+16. 用户身份/资源写权限不等于产品、Gate 或其他 Human Authority。
+17. 项目独立仓根保留跨迭代事实，迭代产物在 `iterations/vN/`；V0 可无 PRD，仅使用 G2(v0)，标准功能迭代仍 G1–G5。看板、Standards 与旧总账机制已退役。
+18. Task 的知识分类不扩展成授权或模型路由机制。
+19. 权限按 `protocols/authority.md`，旧 user-discipline 准入表不再参与执行。
+20. 低频、复杂、发散的方法论调整不强行预定义 Task 类型；获用户明确授权后在本仓直接处理。
+21. 私人积累可保留，非任何 Task/Gate 前置；方法论贡献遵守实际仓库保护与 Git acceptance，不自动拥有 default branch 写权。
+22. harvest-notes 是用户显式触发的可选 utility，不是 Core Task，不自动读取或写入成员仓。
+23. 个人 notes 双源规范注入随强制积累与 Standards 机制退役，不重新启用。
+24. Package 独审内化进 develop，取消独立 pr-review；按仓库策略自合并仍必须走 PR，敏感 Human Authority 不省略；Package Review 不代替最终 System Assurance。
+25. V0 证据触发、不默认走：跨切面、稳定、晚建代价高且薄切片可证明才准入；过大则继续缩减或跳过。不提前建设仅 V1 会用的能力，未入选项不阻断 G2(v0)。develop 不拆类型，foundation 作为 source。强制边声明须真撞反例，审查员干净环境复现；安全项构造级要求保留，仓库不可移植与审查环境限制分开判。
+26. 减少无关活文档和重复调用负担；不强制数量归档、成本计时或固定模型降档，模型选择由 Human 决定。
+27. 方法论保持栈无关，项目特有技术选择与验证入口由 project/TRD/Foundation/实际检查承载；不恢复 Standards 栈模板。
+28. 可从权威事实推导的普通工程与机械动作自主继续，不逐步问“继续”；范围取舍、Gate、体验验收、安全/外部效果及授权扩大仍由 Human 决定。
+29. risk 不信自报：审查按包内容与实际 diff 独立判断，存疑升档、不能因 standard 标签漏掉敏感边界；机械启发词只作提示，词表在 checker 单一维护，语义判断不复制词表。当前 mode 与 Human Authority 按 develop 契约，不沿用历史模型档位。
+30. ChatGPT/Codex 共享同一 Method/Task/事实基线；Runtime location 不创建 state 或 ownership，必要独审缺少可信隔离时不能用自审替代，共享写冲突串行。
+31. 能力只核当前任务实际需要的部分；freshness 无漂移保持紧凑，有漂移才展开。V0 走/跳、Gate、独审、固定 diff、共享写冲突与最终验证保留；历史计时字段不恢复。
+32. 检查与模拟证据只证明对应内部契约，不能冒充真实跨环境或项目试点已通过；实际边界须由实际证据证明。
 
-**结果严格，机制克制。** HACT 对 Contract、最终不变量、固定候选、独立审查、真实验证、Human Authority 与不可逆外部效果保持严格控制；过程完全可观测、可审计、可恢复不是默认目标。设计先确定最终必须成立的事实，再选择满足这些事实的最小机制。能从权威事实重新推导、重新计算或廉价重建的中间信息，默认不升级为 durable truth。新增长期状态、表、generation、receipt、action log、checkpoint、evidence object 或控制层，必须能明确指出其保护的 Contract、不变量、安全边界、不可逆恢复或外部兼容义务；在达到同等正确性的前提下，优先更少对象、更短状态链和更少持久事实。
+## 执行入口与工具
 
-下文较早日期的决策与阶段记录只用于解释历史；与本节冲突时，以本节和当前 `tasks/`、`protocols/`、`templates/scripts/` 为准。
-
-011/012 反馈补充（2026-09-16）：提交只审本次涉及的任务证据，未变化的历史 round 不反复阻断；全局依赖和共享资产检查保留。逐轮记录合法与最终可合并分开校验，末轮 round 即最终独审结论，不另交重复 final-review。不增前置映射表、证据表或历史豁免账；具体项目采用另行处理。
-
-审查收敛补充（2026-09-16，007 反馈后修订）：保留各阶段职责与逐包独审，开发核本包兑现、受影响行为与有效证据，专项按真实改动触发。复用固定方法 SHA 读取规范和项目脚本；files 只维护当前落点，取消任务自登记；现有工具直接生成审查草稿。原审查员接续，三次实质代码审查额度从 Git 增量推导，同快照同问题集中补证一次；历史报告和计数保留。优化以减少人工步骤为准，不新增写集字段、轮次账或审查阶段；真实节时尚待项目试行。
-
-管理与 B 类口径（2026-09-08）：A 类 PRD→TRD→任务规划及 G1–G5 不变，整体滚动规格重构暂缓。B 类允许先查代码、写问题/预期/验证短包；局部兼容且有已确认依据的共享契约实现可 governed，不夹带已签规格修订、业务/权限重定义、破坏兼容或迁移。动态任务/Gate 状态只写 status.yml；个人积累、学科授权表、重复总账、成本计时和强制清空/按数量归档退出必经链。实际授权、独立审查、固定 Git 证据、缺口闭合与人签保留。下方 #4/#18–22/#26 等相冲突部分仅为历史，不构成当前义务。存量项目须逐仓确认升级，旧记录与私人仓不自动删除。
-
-当前协作环境（2026-09-25）：ChatGPT 承担 reasoning、design、document authoring 与 acceptance；Codex 是 repository execution environment。两者以用户人工搬运的稳定 Packet 协作，Git 是 Shared Project Truth。历史决策中的双运行时和固定模型档位不再构成当前义务。质量以原始契约、固定改动、独立审查和实际验证为准，具体执行按已授权能力与用户授权。
-
-当前 Git acceptance 边界（2026-10-05）：普通项目变更进入 Accepted Project Truth 必须走 `source branch → PR → merge → Accepted branch SHA verification`；direct push 只用于发布 candidate/source branch，不能把普通 candidate 直接写入 Accepted/default branch。已经通过 PR merge 的 Accepted SHA 可按 `protocols/git-truth.md` 同步到其他授权镜像远端。`init-project` 首次 bootstrap 尚无 Accepted branch 时保留例外。历史决策 #24 的“merge-on-push”只保留“无独立 pr-review、develop 可自合并”的含义，不再表示可绕过 PR。
-
-当前约束载体（2026-09-08）：三个项目 Standards 及公共/栈候选库、生成/匹配/回填/收缩审计机制退役。PRD/TRD 承接业务与接口契约，Foundation 承接跨切面不变量，project.md 技术层承接项目特有选择与验证入口，任务 do-not 承接本任务禁区，check/test/config 承接可执行限制。模型自主选择等价实现，不再生成通用编码说明。下文决策 #17/#23/#25/#27 及相关 Standards 表述仅保留历史背景，执行以现行规范为准。
-
-项目采用本版时按 `templates/method-install-policy.json` 区分 Method-owned、merged 与 project-owned；旧项目执行 `guide/08-旧项目全面接入新版.md`，保留历史事实和项目专属规则。normalizer 只存在于 Core 前的一次性接入边界，不提供双入口或混合运行。项目自己的业务检查、类型与安全边界不因方法文件替换而删除。
-
-审查信任前提（2026-09-06）：开发人员（含实现 AI）可信但会犯错，审查聚焦规范、错误与外部风险，不要求抵抗开发人员恶意或有意绕过。此口径收窄决策#25 等历史文字中的无界“不可绕过”表述；独立证据验证与实际外部安全边界继续成立。执行判据单一来源为 `templates/review-briefs/review-scope.md`。
-构建一套以"任务驱动 + 多工作区 + 多迭代并行"为底层模型的 AI 与人协作开发操作系统。用户登录无需扮演角色，task.type 决定加载哪份规范——角色文件成为任务的工具书，不再是身份的定义。
-
-## 关键变化（vs human-ai-col v1）
-
-| 维度 | v1 方法论 | hact-method |
-|---|---|---|
-| 模型基底 | 角色 → 任务（先有身份，身份决定能做什么） | 用户 + 任务 → 规范（先有任务，task.type 决定加载哪份规范） |
-| 角色/学科 | 6 个角色（技术总监/PM/架构师/devmgr/前后端开发） | 废弃角色身份（决策#1/#16），改用 8 个 discipline（management/product/architecture/dispatch/integration-testing/dev-frontend/dev-backend/deploy）；G5 收尾归 management（即旧 devmgr 职责）。〔原 review 于决策#24 砍除——代码审查内化进 develop〕 |
-| 工作区切割 | 协调仓 + 代码仓（按 git repo 切） | 引入「项目根（编排）/ dispatch（循环）/ 父级（方法调整）」三种工作心态 |
-| Gate | 1-4 + Gate 2.5 后期升 5 关 | 5 关固定；A/B 类有/无 Gate 区分 |
-| dispatch | devmgr 写 pending-{layer}.md（推送式） | queue/*.md 拉取池（开发者自取） |
-| B 类 | 走简化 4 关 | 无 Gate；恒定 2 会期（BUG 处理 + 功能优化） |
-| 多迭代 | 串行（vN+1 不早于 vN G3） | 并行（A 类约束放宽，B 类不受限） |
-| 部署 | 按迭代分散触发 | 默认合并部署（master 上"已验过"commit 一次性部署） |
-| 联调 | 人工跑清单 | AI 驱动穿透流 + 浏览器场景；具体执行器由运行时映射选择 |
-
-## 关键干系人
-
-| 角色 | 描述 | 利益诉求 | 态度 |
-|------|------|---------|------|
-| 管理者 | 项目发起人，非技术背景 | 团队协同有序、质量可管理、过程可见 | 主导 |
-| 开发团队 | 5-8 名成熟程序员 | 减少返工、任务边界清晰、AI 辅助提效 | 待引入 |
-| 外部产品/业务方 | 需求来源 | 需求被准确理解和实现 | 外部输入 |
-
-## 设计依据
-本次重构的完整讨论沉淀在 `../human-ai-col/_meta/plans/2026-05-06-method-optimization/`，含 4 份 flow-redesign 文档（A 类线性段 / A 类 Gate 4 / B 类 / 多迭代并行）+ 草案集 + 关键决策清单。讨论原稿留旧仓不搬迁，本仓写作时按需引用。
-
-## 阶段划分
-
-| 阶段 | 目标 | 完成标志 | 状态 |
-|---|---|---|---|
-| 方法基础 | 任务、协议、Gate 与检查器形成完整闭环 | 当前版契约和机械检查齐备 | ✅ 完成 |
-| 当前版收敛 | 退役并行规范、过程治理和兼容分支 | 单一任务契约、最少交接、固定候选质量链通过独审 | 🔄 最终验证中 |
-| 真实项目试行 | 在一个真实项目整体采用当前版 | 完成一次端到端任务并记录人工介入、重复检查和返工 | ⏳ 待开始 |
-
-> 旧阶段编号与旧 specs 目录只存在于历史记录中，不是当前入口，也不应被运行时加载。
-
-## 约束条件
-- 时间：无固定 deadline，验证可用为第一目标
-- 资源：管理者主导设计，开发团队在真实项目试行阶段引入
-- 前置：human-ai-col v1 方法论已成熟（旧仓为基础参考）
-
-## 关键设计决策（继承自重构讨论，不要绕回）
-
-1. **摒弃角色身份模型，改用 discipline 知识聚类**：discipline 不是身份、不是路由，只是任务知识的聚类维度。具体 discipline 清单不预设，由 04 任务全谱自然涌现（详见 skeleton/03 + 04）
-2. **工作区 3 个**：hact-method / 项目根 / hact-notes（个人积累；2026-05-31 因决策#21 增设，原为 2 个，见 `skeleton/02-workspaces.md`）
-3. **任务驱动**：人无身份，AI 运行时加载工作规范靠任务声明
-4. **B 类没 Gate**：只有任务流 + b-tasks.md 总账
-5. **B 类入口**：项目根"派新 BUG / 派新优化"
-6. **B 类恒定 2 会期**：BUG 处理 + 功能优化，不需要起/关
-7. **hotfix 不独立**：是任务包 urgency 属性，归 BUG 会期
-8. **部署默认合并**：master 上所有"已验过"commit 一次性部署
-9. **部署归项目根**：原则不破，所有迭代/B 类都遵循
-10. **联调自动化**：后端穿透流 + 浏览器场景，失败按证据写修复任务；具体驱动只住运行时映射
-11. **修订归项目根**：编排心态归编排区
-12. **共同启动协议状态推断**：从文件状态推断子阶段，不在 iteration 文件加显式运行时标记
-13. **任务是一等公民，Gate 退为聚合视图**：Gate N = 所属 task 集合的状态聚合
-14. **task.type 是路由键**：决定加载哪份 standards、所属 Gate、完成判据
-15. **任务范围扩到全流程**：PRD 起草、TRD 起草、standards 写作、联调脚本、修复任务、部署任务全部 task 化
-16. **users.role 退化为权限标记**：只管"能不能写"，与流程角色解绑
-17. **迭代是项目下一等公民**：目录结构 `projects/{项目}/iterations/vN/` 反映这一层级——跨迭代产物（decisions / reusables / design / backlog / feedback / b-tasks / **standards**）留项目根，迭代内产物（prd / trd / iteration Gate 状态 / sprint）入迭代目录。目录与未来看板应用数据模型 `projects → iterations → sprints/tasks` 同构。取消 v1 沿用的 product/ tech/ 角色风目录（与任务驱动模型冲突）
-   > 落地修正（2026-05-08）：hact-method 改为纯方法论仓，仓内 `projects/` 目录移除；每个项目改为 `../{项目}/` 下的独立仓，协调文件合并进项目仓根。本决策的层级模型（projects → iterations → sprints/tasks）不变，仅物理路径由 `projects/{项目}/iterations/vN/` 调整为项目仓根的 `iterations/vN/`。
-   > standards 归位（2026-06-20）：`standards-{shared,frontend,backend}.md` 由「迭代内产物」改为「跨迭代项目级活文档」，物理路径从 `iterations/vN/standards-*.md` 移到项目根。理由：standards 是代码库级编码约定、本质跨迭代，per-iteration 重生成产生副本链 + 真相源含糊 + 并行迭代约定漂移；改为单一源（v1 播种、vN+1 原地增补），与 decisions/reusables/design 同级，历史基线靠 git。所有消费者（plan-sprint/develop/manual-test/revise-doc）改读项目根。
-   > v0 例外（2026-06-29，决策#25）：迭代不再隐含绑 PRD/G1——**v0 走骨架是合法的无 PRD 迭代**（仅签 G2(v0)、无 G1/G3-5）。projects→iterations→sprints/tasks 层级模型不变，只是 v0 这一期不含功能侧 Gate；标准功能迭代（v1+）仍 G1→G5。
-   > 看板应用退场（2026-08-30）：原文「与未来看板应用数据模型同构」的那个消费者已不存在（应用停更、链路失效，相关机制已从方法论移除）。**层级模型 projects → iterations → sprints/tasks 不变**——它现在的机器侧消费者是项目根 `status.yml` 与 `check-sprint.js` / `check-gate.js`。
-18. **task → discipline 是 1:N；user → discipline 是 M:N**（路径 X）：每个 task 挂**单一**主 discipline（schema 上 `tasks.discipline` 是单值字段）；每个用户可被授权多个 discipline（schema 上 `user_disciplines` 是 junction 表）。跨学科辅助知识由 spec 文本跨引用相邻子规范来补，不在 schema 表达。理由：27 个 task 里真跨学科的极少（≤2），M:N 的 schema 复杂度对实际场景投资回报低；wrap-up-iteration 这种"看似跨学科"的任务实际是机械化分流，1 分钟内可完成，无需拆子任务
-19. **权限模型 = user-discipline 关联（废弃 user.role）**：新增 `user_disciplines (user_id, discipline_id)` junction 表达"用户被授权做哪类 discipline 的任务"。拉取准入 = `task.discipline ∈ user.disciplines`（task 侧 1:N，user 侧 M:N）；任务级写权限由 taken-by 决定。管理性操作不另开后门——立项是独立 task `init-project`(management)；Gate 签字合并入最近前置任务（G1 在 draft-prd-vN/product，G2 在 draft-tech-design/architecture，G3 在 plan-sprint/dispatch，G4 在 manual-test/product，G5 在 wrap-up-iteration/management），通过 user 授权决定谁能拉
-20. **复杂工作不强行预定义为 task type**：任务驱动模型不要求"所有动作都是任务"，只要求"被反复执行的、有清晰 spec 的动作是任务"。例：方法论调整本身是发散性工作，没清晰 spec——由有 `management` discipline 授权的 user 在 hact-method 工作区按需直接做，无固定任务包。本原则适用于所有低频+复杂+难标准化的活动
-21. **个人积累跟人、私有（pull 上提）**：新增"个人积累仓" `hact-notes-{姓名}`（每人一个私有仓，建在团队 Gitee 组织下、由 init-project 自动创建、只加本人为 push 协作者——本人 push、别人无读权限、管理者作为 org admin 只读收割）。开发者随手记 `[规范]`/`[checklist]`/`[方法论]`/`[心得]` 四类标签条目。可上提的三类由管理者跑 `harvest-notes`(management) 只读收割、去重择优、上提到公共层（templates/standards、templates/checklists、方法论待议）；`[心得]` 永不上提。收割用游标避免重复、不回写成员仓。开发者全程不需要、也无权 push hact-method——积累从"推送"改为"拉取"，与 dispatch 拉取池哲学一致。这是兼得"保持 hact-method 干净（锁开发者写权限）"与"人人能积累"两个目标的方案。
-   > 落地说明（2026-05-31）：上文"团队 Gitee 组织 / org admin"在实际落地中为 **Gitee 企业版（enterprise）**，命名空间 `dingxifan`（"苏州立刻电子商务有限公司"），非普通组织。建仓接口用 `/enterprises/{notes-org}/repos`，管理者为企业 admin 天然只读。配置见 `_meta/hact-config.md`，操作见 `guide/05-个人积累仓管理.md`。
-   > 权限口径调整（2026-07-11）：`hact-method-lab` 已对团队 8 名成员开放**开发者**权限（管理者决定，允许直接贡献方法论改动），原文"开发者全程不需要、也无权 push hact-method"收窄为"**无权写 master**"——master 设 Gitee 保护分支（开发者不可直推/force-push/删除，PR 合并权在管理员），成员贡献走 feature 分支 + PR、管理者合并把关。notes + harvest-notes 仍是个人积累上提的主路径不变，PR 是方法论文档的直接贡献通道，两者并存。
-22. **个人 notes 写入是权限模型的有限例外**：notes 写入不走"拉取准入 = task.discipline ∈ user.disciplines"——它是个人资产，权限绑 user 身份（本人写、管理者只读）。一旦经 harvest-notes 上提进公共层，后续修改回归常规 `management` 模型。harvest-notes 本身是固定 task（机械化收割），与决策#20"方法论调整是发散性工作、无固定 task"边界分清：harvest 只搬运/提炼，方法论的实质改动仍在发散性会话里做
-23. **双源规范（设计甲）**：`draft-tech-design` 维护项目 standards（v1 播种 / vN+1 增补）时，除公共 `templates/standards` 外，再并入执行人本人 hact-notes 的 `[规范]`（对照公共模板 / 项目根现有 standards 去重），让本人尚未上提的规范当期即生效。理由：当前架构与开发高度重叠，生成端执行人≈真实开发者。团队分化后是否扩展到 develop 加载端（设计乙）+ checklist 对称（O1），留方法论待议
-24. **砍除独立 pr-review，代码审查内化进 develop（merge-on-push）**（2026-06-20）：废除 `pr-review` task type + `review` discipline（discipline 9→8、task 13→12）。理由：develop 执行模型翻转后已内置 **per-task 独立对抗审查 subagent**（自读权威原文=任务包/diff/standards/测试，绝不收执行体自评），把原 pr-review 的内容复审（standards 合规 / 测试保真 / AC 忠实 / 设计保真）全部接管且更早（per-task vs 末端批量）——独立审查现做完即由 develop **自合并到 master**（提交 PR 后立即 merge），状态 `[done]` 退为瞬态、终态 `[merged]` 由 develop 自身落定。**治理代价明确接受**：master 写入无第二人工门，仅**安全敏感改动**（权限/认证/数据隔离）保留一道 `architecture` discipline 人工裁决（develop 末端 escape-hatch）。审计留痕 `code_reviews[]` 改由 develop 末端写（写入 `status.yml`，字段见 skeleton/07）；跨 PR 共性 feedback 并入 wrap-up。审查知识落 `templates/review-briefs/develop-review.md`。团队引入期（第五阶段）若需恢复独立人工 merge 门可再评估
-
-25. **地基层 + V0 走骨架（A 类项目 init 后、V1 前先建跨切面地基）**（2026-06-29）：补一个被「按页/按功能切包」天然漏掉的**结构盲区**——EP 主题覆盖 / 全局 reset / 错误信封 / 数据隔离这类**跨切面公共件不属于任何业务页**（视觉地基 2026-06-28 是其第一个被打疼的实例）。模型：**地基的形式由"业务代码怎么碰它"决定**（说它=共享类型 / 穿过它=单例瓶颈 / 住进它=外壳 / 被它笼罩=环境基线 / 往里填=脚手架）；**强制边三档**（构造上不可能 > 机械探测 > 人审）是同一件事的背面——命门「**一个图省事的人顺手写出来，多大概率合规？**」；两进料口（**技术内生**=跨项目复发、可清单化 / **领域涌现**=从早期探讨摸）；准入门槛=已证明跨切面 + 稳定。**新管线**：`init-project`（加共识讨论步 → 播种 `foundation.md` 地基蓝图）→ **V0 走骨架**（`draft-foundation` 设计·签 G2(v0) + `develop(source=foundation)` 建——穿透前端→API→DB 的最小空壳 + 一根标杆切片）→ V1（PRD 挂领域地图 / draft-ux 填 token 真值进 V0 框架 / draft-tech-design 瘦身：读栈+standards 增补 / plan-sprint 视觉地基包按「框架(V0)/值(V1)」二分）。**关键判断**：① **新建 `draft-foundation` 不拆 draft-tech-design**（两者身子不相交：V0 无 PRD/AC）；② **develop 不拆、`source=foundation` 做成一味**（与 develop 共享执行+独审+合并核心、只差进料口 = sub7 拆了又撤的格，与①相反）；③ Gate 复用 **G2(v0)**、不加新 Gate；④ **代码生成机制删**（本环境 CC 即生成器，劳动已消，确定性一致由 ②③④ 兜——标杆模块因此升为 CC 漂移主防线）；⑤ standards/reusables **载荷重分配**（地基吸走强边「必须」，二者降为人审残量 + 可选复用 + 标杆指针）。task 12→13（draft-foundation；discipline 仍 8）。**存量兼容**：tech-design 的首期簇（栈/standards 首播/测试基建/视觉地基约定）保留为「未走 V0 的存量项目」兜底。审查知识落 `templates/review-briefs/foundation-review.md`（逐关注点穷举验实际档≥应有档 + 命门）。设计沉淀见 `_meta/plans/2026-06-29-foundation-walking-skeleton/`
-   > V0 减重（2026-09-08）：V0 从“除微型项目外默认走”改为**证据触发、不默认走**。只有已证明跨切面、约束稳定、晚建会横切多层/数据或扩大安全风险、且一根薄切片可证明的项才进入 V0；预置关注点只是候选，未入选项标 V1+，不阻断 G2(v0)。V0 只写实际命中的最小 Standards，不做三层全量首播；“V1 会用”的运行器、黄金样本、基线和业务能力不得作为 V0 额外交付。若范围超过一个正常中型 develop 任务，删到最难后补的约束，仍超出则跳过 V0。独立 foundation-review、真实强制边证据和安全项构造级要求保留，但只覆盖获准 V0 行。
-   > 审查收紧（2026-07-12，foundation-review 证据化）：构造级/机械级声明须以**亲手撞过的反例**为证（判构造级前写绕过代码跑检查、必须真被挡，原只绑安全项 → 通用到每个 ≥机械级声明），自绿须**审查员在干净环境亲自复现**（区分仓库不可移植=阻断 / 审查环境特性=不阻断）——**收紧现有 foundation-review 门、非新增机制**（与 2026-07-08 机制冻结相容，正是冻结在等的"库存过一轮真实迭代"驱动）。实证：doc-extract V0 二轮独审——一轮默认模型"读代码判断"漏五类非安全构造级洞、二轮"必须撞反例"抓住，证 brief 严苛度 > 模型大小。G3（机械级是否强制接自动门/CI）记方法论待议、随第五阶段真人 push 重评。设计沉淀见 `_meta/plans/2026-07-12-foundation-review-probe-tightening/`
-
-26. **按 token 计费后的运行成本原则**（2026-07-01）：从 Claude 包月转为 Claude Code/API 按量后，方法论的主成本不再只是 spec 行数，而是「每次会话读入的活文档」与「每个任务倍增的 subagent 调用」。保留决策#17 的项目级活文档单一源，但给 `decisions.md` / `reusables.md` 加归档约定，避免项目寿命越长越贵；保留决策#24 的 per-task 独立审查，但给任务包新增 `risk` 字段，并把纯审查/一致性核对类 subagent 默认降为 `model: "haiku"`，安全敏感任务与生成/写代码类 subagent 继续使用默认模型。**降档范围按"任务性质"而非"所属阶段"判断**——同一原则同步覆盖 `generate-integration-tests` 的按模块/场景并行执行 subagent（纯执行脚本+结果上报，天然倍增）与各阶段会话启动的 Explore 并行读文件 fan-out（纯读取+摘要）；生成类/写代码类/含判断取舍的 subagent（如 standards 生成、任务包撰写）不降档。同步把本仓 `STATUS.md` 历史正文只留索引，完整记录归 `_meta/status-history.md`。
-   > 审查档位上调（2026-07-14）：**纯审查/一致性核对类 subagent 的降档目标从 `haiku` 改为 `model: "sonnet"`（Sonnet 5）**——doc-extract 实测 haiku 在独立审查里**系统性误报**（把合规写法判成问题、把不存在的缺口列出来），误报的返工成本抵消了降档省的钱，且污染 loop 收敛。**只动"审查/一致性核对"这一类**（develop per-task 独审 standard 档 / prd-review / trd-review / prototype-review / task-package-review）；**纯读取+摘要的 Explore fan-out 与 `generate-integration-tests` 纯执行+上报 subagent 仍留 `haiku`**（无审查判断、误报语义不适用，成本敏感）。sensitive / `source=foundation` 仍不降档、继承会话默认模型（Sonnet 5 是 standard 档，不是 sensitive 档）。决策#29 五层防线结构不变，只是其中"standard 降档"档位由 haiku 变 sonnet。此为决策#26 参数按实证回调，非新增机制（与机制冻结相容）。
-
-27. **技术栈剥离（骨架/规范栈无关，栈内容住 standards 栈子模板）**（2026-07-08）：方法论名义项目无关，但栈词汇（Vue/NestJS/Element Plus 变量名）曾渗进 skeleton 与 specs——换栈项目要动骨架，违背分层。修正：**skeleton 与 specs-execution 只说约束类型**（"前端组件实现""UI 库主题变量""type-check 命令按项目栈"），**栈特定写法下沉 `templates/standards/{layer}-{栈}.md` 栈子模板**（首批 `frontend-vue3.md` / `backend-nestjs.md`，即原通用模板中迁出的 Vue/EP/Pinia/Vite 与 TypeORM/class-validator/NestJS 细则）；通用模板 `frontend.md` / `backend.md` 瘦身为栈无关原则。**路由键 = `project.md` 技术层**（V0 `draft-foundation` 确立）：standards 播种从双源升三源（通用模板 + 栈子模板 + 个人 notes `[规范]`），项目栈无对应子模板 → 退回通用模板、栈特定约定直接写项目 standards。工具依赖层（Gitee/pinchtab/pm2/nginx）保留声明式引用不属此列；checklist 栈拆分暂缓（记方法论待议）。
-
-28. **人工确认点分级（🚫 只留人拍板，可推导判定 ⚖️ 默认判定+可推翻）**（2026-07-08）：准备段一期主线累计 20+ 次人工确认，混着"必须人拍板"（范围/取舍/验收/Gate 签字/安全）与"可从既有信息推导"（交付方式、执行层、可逆目录创建）两类——后者是把 develop 已实现的"全自动 loop + 少数人工门"哲学在准备段的欠账。分级：**🚫 硬阻断**（必须停下等回应）只留人拍板项；**⚖️ 默认判定**——CC 按既定规则自判、输出结论+理由后直接继续，用户可随时推翻（推翻则修正再继续）；步骤协议同步改为非 🚫 步骤**不再问"继续？"**、直接续跑。首批落地：plan-sprint Step 2.5 交付方式并入 Step 2（规则不变、不再单独阻断）；develop 第零步执行层自动判定（仅两层都有可取任务才问）；draft-prd v2+ 建目录不等确认、vN+1 继承/继承·微调功能批量确认（新增/重构/简化仍逐个）；四个会话启动选项列表在用户开场已明确主线意图时跳过。不动清单：疑点清单、骨架方向、TRD 内容确认、五个 Gate 签字、前端设计门、manual-test 验收循环、draft-ux 全部（共创类）、init-project 信息收集。
-
-29. **安全敏感判定多层化（risk 不信自报，只升不降）**（2026-07-08）：决策#24（develop 自审自合并）+ #26（`risk: standard` 独审降档 haiku）+ `risk` 由 plan-sprint/dispatch-new 自报且 check-sprint 不校验，三者叠加出一条无机械拦截的合并链——漏标 sensitive 的任务包 → haiku 审 → 自动进 master；B 类连 G3 检查器都没有。修正为**五层防线**，`risk` 自报不再是安全档位的单点输入：① 填包规则「存疑即 sensitive」（plan-sprint / dispatch-new / 任务包模板）；② plan-sprint Step 3.5 独审 brief 增第⑥类「risk 标注核对」（包内容触及四类而标 standard = 阻断，改标即修）；③ `check-sprint.js` 敏感启发词核对（词面命中而未标 sensitive → `🧑` 段提示；启发式有误报，不做 FAIL）；④ develop 阶段 B 按**有效 risk**定模型档位（自报 sensitive ∨ 主线按四类语义扫任务包命中 → 不降档 + 回改字段）；⑤ 末端安全敏感预检**基于 diff 独立判定、不读 risk 自报**+ 漏标闭环（判定触及但曾被降档审过 → 先重派默认模型独审，再进 architecture 裁决）。①②③ 住 A 类 G3 链，④⑤ source 无关、同时兜 B 类。误报代价 = 多花一次默认模型独审，相对 #26 的降档收益可接受；启发词表单一来源住 `check-sprint.js`（机械层），develop 侧用四类语义判断、不复制词表。
-
-30. **Claude Code + Codex 双运行时，共享一份方法论正文**（2026-09-04）：`CLAUDE.md` / `AGENTS.md` 是薄入口，共同启动、任务路由、任务包、`status.yml`、Gate、固定审查证据和检查器不分叉；专属模型、代理、浏览器和代码托管实现只住 `templates/runtime/{cc,codex}.md`。运行时属于会话能力，不进入任务状态。隔离审查缺失时不得同会话自审替代；共享写集重叠默认串行。GPT-5.6 长上下文用于跨文档收敛与证据账本，不把整仓预加载或长输出当目标。决策#24/#26/#28/#29 中的具体模型与代理词只保留历史背景，当前执行以本决策及运行时映射为准。
-
-31. **强模型时代只删重复编排，不删治理边界**（2026-09-04）：运行时能力协商后移到 `task.type` 推断与单份规范加载之后，只检查当前任务实际命中的能力；freshness 无漂移时只留固定锚与一行摘要，发生漂移才展开证据与路由；事件时间戳是 implementation / review / round 耗时的单一真相源，不再持久化可计算的派生分钟，只有跨多段累计的 `spec_minutes` 保留。V0 仍由人类在 init-project 中自主决定走或跳；Gate、首次独立完整审查、固定 diff、共享资产冲突约束与最终全量验证不变。
-
-32. **双运行时内部闭合必须由真实证据而非同源声明证明**（2026-09-04）：独立审查发现双入口虽已共用正文，但 develop 专属命令残留、G1→G3 路由断层、TRD 独审冲突、假 Git SHA 可过和同源 handoff canonical 等问题，首轮结论 `block`。修复后：启动以机器可核状态矩阵覆盖；代码托管/模型词只住映射；任务认领核依赖已 merged；每任务取独立 base tree，前序 accepted 文件以 blob 防二次污染；B 类在固定 diff 上核契约；V0 异常须 closed + 闭合锚且未知不可冒充关闭；review 审计要求当前仓真实 Git 对象并重算 hash/files/finding 闭合；四场景使用 schema-complete 独立夹具并做变异测试；hook、初始化和前后端联调证据均有负向检查。五轮独立复审最终结论 `pass`。自动夹具只证明内部契约，不替代真实 CC↔Codex 试点。
-
-## 工具依赖
-
-使用 hact-method 前需配置 Git、Node.js 与项目技术栈所需工具。Codex 负责 repository execution：隔离单元、浏览器场景、远端命令和代码托管操作的具体配置不在本 Brief 复制，以项目入口 `templates/AGENTS.md` 与 `templates/.codex/agents/` 为准（原 `templates/runtime/{cc,codex,preflight}.md` 映射层已随 CC 入口一并退役）；任务路由确定后只对当前任务实际命中的能力实测，不因配置文件存在就声称可用。
-
-项目共同要求：`connections.yml` 只保存坐标与 `${secret:NAME}` 引用，真凭据留机器本地；浏览器或远端能力缺失时必须记录未运行原因，不能伪造通过。
-
-### 服务器端工具
-
-| 工具 | 用途 |
-|------|------|
-| **pm2** | 后端进程管理，deploy 阶段重启服务 |
-| **nginx** | 前端静态文件服务 |
+项目入口为 `templates/AGENTS.md`；当前状态与下一工作见 `STATUS.md` 及 `_meta/.current_plan` 指向的计划。Git、Node.js 和项目技术栈工具按需使用；浏览器、远端、隔离单元与托管能力只在当前动作需要时实测，不因配置存在宣称可用。`connections.yml` 仅保存坐标及 `${secret:NAME}`，凭据留机器本地；缺能力如实说明未运行原因。pm2/nginx 等按项目实际部署配置使用。
