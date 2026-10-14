@@ -1,50 +1,13 @@
-# Skeleton — hact-method 骨架
+# Skeleton — 独有基础约定
 
-本目录是 hact-method 方法论的骨架——定义"是什么"层面的核心模型：身份、工作区、知识聚类、任务清单、状态机、Gate。
+任务清单与各任务契约见 [tasks/README.md](../tasks/README.md)，生命周期见 [State Protocol](../protocols/state.md)，Gate 定义与批准见 [Gate Protocol](../protocols/gates.md)。本目录不再复制这三套定义。
 
-## 阅读顺序
+按当前问题读取：
 
-按层级递进：
+- [身份与责任](01-identity.md)：身份、负责人和实际授权的区别。
+- [工作区与相对路径](02-workspaces.md)：仓库布局及跨仓读写边界。
+- [知识聚类](03-disciplines.md)：discipline 的用途。
+- [多迭代边界](06-gates.md)：原有跨迭代执行限制。
+- [status 字段契约](07-status-contract.md)：字段、枚举和机器消费者所需指针。
 
-1. **[`01-identity.md`](01-identity.md)** — 身份模型：谁是谁？提交归属与实际授权分开，任务负责人登记在 status
-2. **[`02-workspaces.md`](02-workspaces.md)** — 三个工作区按"心态"切割：hact-method（方法论）/ 项目根（项目）/ hact-notes（个人积累）
-3. **[`03-disciplines.md`](03-disciplines.md)** — 8 个 discipline = 任务知识的聚类（不参与授权或模型分配）
-4. **[`04-task-catalog.md`](04-task-catalog.md)** — 14 个 task type 完整字段（discipline / 完成判据 / 产物 / 关联 Gate / 属性）
-5. **[`05-state-machine.md`](05-state-machine.md)** — 4 个状态（可取 / taken-by / done / merged）+ 流转 + 软锁 + 异常转移
-6. **[`06-gates.md`](06-gates.md)** — 5 个 Gate + 子状态聚合 + A 类 vs B 类 + 多迭代展示
-7. **[`07-status-contract.md`](07-status-contract.md)** — 项目根 `status.yml` 状态契约：机器侧（`check-sprint.js` / `check-gate.js`）取数的单一事实，项目级单文件、状态与文件分离（2026-05-31 增补）
-
-## 核心设计原则
-
-- **任务驱动，不是身份驱动**——用户登录就是自己，task.type 决定加载哪份规范
-- **discipline 不是身份**——是任务知识的聚类维度，只供查找知识，不参与准入
-- **早期保持简单**——异常情况（暂停 / 召回 / 放弃）靠人沟通，不形式化（详见 05 §4 异常转移）
-- **复杂工作不预定义**——方法论调整等发散性工作不强行做 task type
-- **签字归属内容**——Gate 签字合并到最近前置任务，不另立 sign-gate task
-
-完整 32 条决策见 [`../BRIEF.md`](../BRIEF.md) "关键设计决策" 段。开头三段「当前口径」声明了哪些历史决策已不构成当前义务，先读它再读决策正文。
-
-## 跟其他文档的关系
-
-```
-hact-method/
-├── AGENTS.md             方法论仓 Codex 薄入口
-├── BRIEF.md              项目背景 / 目标 / 阶段 / 关键设计决策（32 条）
-├── STATUS.md             当前状态
-├── skeleton/             ← 本目录（骨架，第一阶段产物）
-├── tasks/                当前 canonical Task Contracts
-├── templates/            模板（项目模板、审查 brief 等）
-└── _meta/                研发过程产物（plans / input）
-```
-
-## 第一阶段（搭骨架）完成标志
-
-- [x] 骨架 6 份文档完稿（01-06）
-- [x] README.md 入口导读完成
-- [x] 骨架自检通过——覆盖度（8 完成标志）+ 互引一致性
-
-第一阶段完成后进入第二阶段·结构层规范。详见 [`../STATUS.md`](../STATUS.md) 阶段划分段。
-
-## 下游文档预期
-
-当前执行只读 `tasks/` 中的 canonical Task Contract；不维护结构/执行双份规范。
+当前目标、有效决定及进展分别见 [BRIEF](../BRIEF.md)、[STATUS](../STATUS.md)；正常项目启动使用 `templates/AGENTS.md`，无需按历史建仓阶段逐份通读骨架。
