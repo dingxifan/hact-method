@@ -28,6 +28,8 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 
 ## 2. 最小加载规则
 
+以下规定加载入口与触发条件；信息相关性、读取与采信、必要历史/证据及事实变化后的补读按 `protocols/runtime-context.md`。该引用不改变 Task 必需输入或下列触发条件，不要求递归预加载全部 Protocol；统一目标与职责见 Method `BRIEF.md`。
+
 ### 2.1 先加载一个 Task Contract
 
 用户已经明确 Task 时，直接加载对应 `tasks/{task}.md`，由 Task 自身检查 Preconditions；不要先根据 Gate 猜另一个 Task。
