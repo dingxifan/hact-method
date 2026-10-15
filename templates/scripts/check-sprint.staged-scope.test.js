@@ -139,6 +139,31 @@ try {
   scenario('METHOD-SCOPE-F003 valid historical API passes without whole-package recertification', context => {
     addFrontend(context); context.expect(0);
   }, { apiContract: true });
+  scenario('UCR-F001 non-normative appendix does not create formal coverage', ({ write, read, git, expect }) => {
+    const file = packagePath(oldId);
+    const appendix = '\n## Non-normative appendix\n历史讨论：(源：PRD AC-99)，不属于当前验收。\n';
+    write(file, read(file) + appendix); git(['add', '.']); git(['commit', '-qm', 'historical appendix']);
+    write(file, read(file).replace('description: 验证提交检查范围', 'description: 修改描述')); git(['add', '.']);
+    expect(0);
+    write(file, read(file).replace(appendix, '')); git(['add', '.']); expect(0);
+  }, { currentOld: true, oldStatus: '可取' });
+  scenario('UCR-F001 other fields and comments do not create formal coverage', ({ write, read, git, expect }) => {
+    const file = packagePath(oldId);
+    write(file, read(file).replace('context: 当前任务', 'context: 历史提及 (源：PRD AC-99)\n# (源：PRD AC-99)'));
+    git(['add', '.']); git(['commit', '-qm', 'non-acceptance reference']);
+    write(file, read(file).replace('description: 验证提交检查范围', 'description: 修改描述')); git(['add', '.']); expect(0);
+  }, { currentOld: true, oldStatus: '可取' });
+  scenario('UCR-F001 touched completed package still needs review, not appendix coverage', ({ write, read, git, expect }) => {
+    const file = packagePath(oldId);
+    const appendix = '\n## Non-normative appendix\n历史讨论：(源：PRD AC-99)。\n';
+    write(file, read(file) + appendix); git(['add', '.']); git(['commit', '-qm', 'completed historical appendix']);
+    const reviewGapOnly = () => {
+      const result = expect(1, /review chain/);
+      assert.doesNotMatch(result.stdout + result.stderr, /PRD AC 未被任何任务包引用：AC-99/);
+    };
+    write(file, read(file).replace('description: 验证提交检查范围', 'description: 修改描述')); git(['add', '.']); reviewGapOnly();
+    write(file, read(file).replace(appendix, '')); git(['add', '.']); reviewGapOnly();
+  }, { currentOld: true });
   console.log(`✅ staged scope ${count} 个 Git 正反夹具通过`);
 } finally {
   if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('temp escaped');

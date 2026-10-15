@@ -55,8 +55,8 @@ const REQUIRED = ['task-id', 'sprint_id', 'layers', 'source', 'task_type', 'cont
  *   标量 `key: v` / 块标量 `key: >`|`|` / 块列表（后续 `  - item`）/ 行内列表 `key: [a, b]` / 空列表 `[]`
  * 返回 { key: {type, text, items} }。列表项的多行续行（更深缩进、非 `-`）并入上一项。
  */
-function parseFrontmatter(p) {
-  const raw = readLines(p);
+function parseFrontmatter(p) { return parseFrontmatterLines(readLines(p)); }
+function parseFrontmatterLines(raw) {
   let s = raw.findIndex(l => /^---\s*$/.test(l));
   if (s < 0) return null;
   let e = raw.findIndex((l, i) => i > s && /^---\s*$/.test(l));
@@ -335,8 +335,8 @@ function changedPrdAcIds(before, after) {
 }
 
 function sourceAcRefIds(source) {
-  return [...source.matchAll(/[（(]\s*源\s*[:：]\s*PRD([^)）]*)[)）]/g)]
-    .flatMap(match => match[1].match(/AC-\d+/g) || []);
+  const fm = parseFrontmatterLines(source.split(/\r?\n/));
+  return listItems(fm?.['acceptance-criteria']).flatMap(acRefIds);
 }
 
 /* ---------- sprint.md：抽表格首列 task-id ---------- */
