@@ -309,6 +309,36 @@ function prdAcIds(prdPath) {
   return ids;
 }
 
+// AC definitions include indented intent/oracle/example lines, not just their IDs.
+// This is derived from HEAD/index on each commit; no durable coverage waiver exists.
+function prdAcDefinitions(source) {
+  const definitions = new Map();
+  let inCore = false, current = null, indent = 0;
+  for (const line of source.split(/\r?\n/)) {
+    if (/^##\s/.test(line)) inCore = /^##\s*核心功能/.test(line);
+    if (!inCore) { current = null; continue; }
+    const match = line.match(/^(\s*)[-*]\s+(AC-\d+)\s*[:：]/);
+    if (match) {
+      current = match[2]; indent = match[1].length;
+      const prior = definitions.get(current) || '';
+      definitions.set(current, prior + line.trimEnd());
+    } else if (current && line.trim() && line.match(/^\s*/)[0].length > indent) {
+      definitions.set(current, definitions.get(current) + '\n' + line.trimEnd());
+    } else if (line.trim()) current = null;
+  }
+  return definitions;
+}
+
+function changedPrdAcIds(before, after) {
+  const previous = prdAcDefinitions(before);
+  return new Set([...prdAcDefinitions(after)].filter(([id, text]) => previous.get(id) !== text).map(([id]) => id));
+}
+
+function sourceAcRefIds(source) {
+  return [...source.matchAll(/[（(]\s*源\s*[:：]\s*PRD([^)）]*)[)）]/g)]
+    .flatMap(match => match[1].match(/AC-\d+/g) || []);
+}
+
 /* ---------- sprint.md：抽表格首列 task-id ---------- */
 function sprintIds(sprintPath) {
   if (!exists(sprintPath)) return null;
@@ -973,7 +1003,7 @@ function checkWorktreeFromReports(subject, root, progressIds = '') {
 }
 
 /* ====================== 主校验 ====================== */
-function checkSprint(iteration, root, audit = true) {
+function checkSprint(iteration, root, audit = true, scope = null) {
   const iterDir = path.join(root, 'iterations', iteration);
   const queueDir = path.join(iterDir, 'queue');
   if (!fs.existsSync(queueDir)) {
@@ -1017,7 +1047,24 @@ function checkSprint(iteration, root, audit = true) {
   const prdPath = path.join(iterDir, 'prd.md');
   const prdIds = prdAcIds(prdPath);   // Set | null
 
-  for (const p of packages) {
+  // All packages still contribute identity, dependencies, assets and AC coverage.
+  // Only unchanged, already-completed history stays outside schema recertification.
+  // An untouched active package still belongs to the current-only Core.
+  const checkedPackages = scope ? packages.filter(p => !scope.historicalTaskIds.has(p.id)) : packages;
+  const checkedIds = new Set(checkedPackages.map(p => p.id));
+  const consumedByCheckedFE = new Set(checkedPackages.filter(p => /frontend/.test(p.layersStr)).flatMap(p => p.deps));
+  // A new/active frontend consumer creates a current interface obligation even
+  // when the backend package itself is unchanged completed history.
+  for (const p of packages) if (/backend/.test(p.layersStr) && consumedByFE.has(p.id)
+      && (checkedIds.has(p.id) || consumedByCheckedFE.has(p.id)) && valEmpty('api-contract', p.fm['api-contract']))
+    fail('api-contract 必填', p.file, `${p.id}：backend 且被前端任务 depends_on 消费，api-contract 须填（当前缺/占位/仍注释）`);
+  for (const p of packages) for (const ac of listItems(p.fm['acceptance-criteria']))
+    for (const id of acRefIds(ac)) {
+      referencedAcIds.add(id);
+      if (scope?.removedAcIds.has(id)) fail('AC 正向:悬空', p.file, `${p.id}：AC 回链 ${id} 在本次 PRD 变更中被移除`);
+    }
+
+  for (const p of checkedPackages) {
     const where = p.file;
     const packageSchema = scalarText(p.fm['package-schema']);
     // Core lifecycle accepts only the current schema.
@@ -1040,11 +1087,6 @@ function checkSprint(iteration, root, audit = true) {
     for (const asset of listItems(p.fm['asset-writes'])) {
       if (!/^[a-z][a-z0-9_-]*:\S/i.test(asset))
         fail('共享写集格式', where, `${p.id}：asset-writes「${asset}」须使用 kind:value 稳定键`);
-    }
-    // 1b. api-contract 条件必填
-    if (/backend/.test(p.layersStr) && consumedByFE.has(p.id)) {
-      if (valEmpty('api-contract', p.fm['api-contract']))
-        fail('api-contract 必填', where, `${p.id}：backend 且被前端任务 depends_on 消费，api-contract 须填（当前缺/占位/仍注释）`);
     }
     // 2. reference 稳定锚 + ux-flows/trd 链
     const refs = listItems(p.fm['reference']);
@@ -1124,7 +1166,7 @@ function checkSprint(iteration, root, audit = true) {
       }
     }
   }
-  if (findings.filter(f => f.level === 'fail').length === 0) pass('任务包字段/AC/reference', `${packages.length} 个任务包字段完备、reference 含稳定锚、AC 回链与新格式合法`);
+  if (findings.filter(f => f.level === 'fail').length === 0) pass('任务包字段/AC/reference', `${checkedPackages.length} 个本次检查任务包字段完备、reference 含稳定锚、AC 回链与新格式合法`);
 
   // 3b. 共享写集：同文件或同资产的两个任务必须存在任一方向的依赖路径，默认串行。
   const assetConflicts = sharedAssetConflicts(packages.filter(p => p.strictSchema));
@@ -1139,9 +1181,10 @@ function checkSprint(iteration, root, audit = true) {
   } else if (prdIds.size === 0) {
     fail('AC 逐条覆盖', prdPath, 'PRD 未发现 AC-nn 形式的 id');
   } else {
-    const uncovered = [...prdIds].filter(id => !referencedAcIds.has(id));
+    const coverageIds = scope ? new Set([...scope.changedAcIds, ...scope.removedCoverageIds].filter(id => prdIds.has(id))) : prdIds;
+    const uncovered = [...coverageIds].filter(id => !referencedAcIds.has(id));
     if (uncovered.length) fail('AC 逐条覆盖', prdPath, `PRD AC 未被任何任务包引用：${uncovered.join('、')}`);
-    else pass('AC 逐条覆盖', `PRD ${prdIds.size} 条 AC 均被任务包 AC 引用（逐条）`);
+    else pass('AC 逐条覆盖', `本次范围内 PRD ${coverageIds.size} 条 AC 均被任务包 AC 引用（逐条）`);
   }
 
   // 5. 三方一致：queue ↔ sprint.md ↔ status.yml
@@ -1248,9 +1291,12 @@ function checkSprint(iteration, root, audit = true) {
   human('G3:人签','疑点清单已逐条确认 / TRD 每模块都有任务包 / Step3.5 独审无遗留阻断 / 任务包 AC 逐条忠实于其回链的 PRD AC（内容真覆盖，非仅 id 在场）—— 语义判断，由签字人确认');
 }
 
-// Commit scope comes from Git, not from a waiver list. Global planning checks remain.
+// Commit scope comes from Git, not from a waiver list. Global relationships remain.
 function checkStagedReviews(root) {
   const staged = gitOutput(root, ['diff', '--cached', '--name-only', '-z']).split('\0').filter(Boolean);
+  // Rename detection emits only the destination for --name-only. Coverage needs
+  // every preimage, including the original path of a renamed package.
+  const coveragePreimages = gitOutput(root, ['diff', '--cached', '--no-renames', '--diff-filter=MD', '--name-only', '-z']).split('\0').filter(Boolean);
   const readAt = (ref, file) => { try { return gitOutput(root, ['show', `${ref}:${file}`]); } catch { return ''; } };
   const iterations = new Set(), selected = new Map(), mustClose = new Set(), inputs = new Set(['status.yml']);
   const tasks = parseStatusTasksSource(readAt('', 'status.yml'));
@@ -1276,6 +1322,8 @@ function checkStagedReviews(root) {
     const currentTasks = new Map(tasks.map(t => [t.id, t]));
     for (const id of new Set([...beforeTasks.keys(), ...currentTasks.keys()])) {
       const old = beforeTasks.get(id), next = currentTasks.get(id);
+      if (['type', 'source', 'iteration', 'layer', 'depends_on', 'delivery', 'status', 'assigned_to', 'branch', 'risk'].some(k => old?.[k] !== next?.[k])
+          && [old, next].some(t => t && ITER_SOURCES.has(t.source))) select(id);
       if ((foundationFollowUp(old) || foundationFollowUp(next))
           && ['type', 'source', 'iteration', 'status'].some(k => old?.[k] !== next?.[k])) select(id);
       if (['depends_on', 'iteration', 'layer', 'source', 'delivery'].some(k => old?.[k] !== next?.[k])) {
@@ -1285,6 +1333,8 @@ function checkStagedReviews(root) {
     for (const task of tasks) if (task.status === 'merged' && beforeTasks.get(task.id)?.status !== 'merged'
         && (task.type === 'develop' || ITER_SOURCES.has(task.source) || ['bug', 'optimization', 'foundation'].includes(task.source))) { select(task.id, true); mustClose.add(task.id); }
   }
+  for (const [id] of selected) for (const task of [beforeTasks.get(id), tasks.find(t => t.id === id)])
+    if (task && ITER_SOURCES.has(task.source) && /^v\d+(?:\.\d+)*$/.test(task.iteration || '')) iterations.add(task.iteration);
   for (const version of iterations) for (const part of ['queue', 'sprint.md', 'prd.md', 'trd.md']) inputs.add(`iterations/${version}/${part}`);
   for (const [id] of selected) {
     if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(id || '')) throw new Error('审查 task-id 非法');
@@ -1300,7 +1350,20 @@ function checkStagedReviews(root) {
   if (dirty) throw new Error('提交审查相关产物有未暂存变化，不能用工作树替暂存版本背书：' + dirty);
   const untracked = gitOutput(root, ['ls-files', '--others', '--exclude-standard', '--', ...inputs]).trim();
   if (untracked) throw new Error('提交审查相关产物未加入暂存区：' + untracked);
-  for (const version of iterations) checkSprint(version, root, false);
+  for (const version of iterations) {
+    const prd = `iterations/${version}/prd.md`;
+    const beforePrd = readAt('HEAD', prd), afterPrd = readAt('', prd);
+    const currentAcIds = new Set(prdAcDefinitions(afterPrd).keys());
+    const removedAcIds = new Set([...prdAcDefinitions(beforePrd).keys()].filter(id => !currentAcIds.has(id)));
+    const removedCoverageIds = new Set(coveragePreimages.filter(file => file.startsWith(`iterations/${version}/queue/`))
+      .flatMap(file => sourceAcRefIds(readAt('HEAD', file))));
+    const historicalTaskIds = new Set(tasks.filter(task => task.iteration === version && task.status === 'merged'
+      && beforeTasks.get(task.id)?.status === 'merged' && !selected.has(task.id)
+      && JSON.stringify(task) === JSON.stringify(beforeTasks.get(task.id))).map(task => task.id));
+    checkSprint(version, root, false, {
+      historicalTaskIds, changedAcIds: changedPrdAcIds(beforePrd, afterPrd), removedAcIds, removedCoverageIds,
+    });
+  }
   for (const [id, required] of selected) {
     const task = tasks.find(t => t.id === id);
     taskCarrierErrors(root, id, findTaskPackages(root, id)).forEach(message => fail('任务载体', id, message));
