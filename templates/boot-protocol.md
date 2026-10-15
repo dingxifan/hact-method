@@ -28,7 +28,9 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 
 ## 2. 最小加载规则
 
-以下规定加载入口与触发条件；信息相关性、读取与采信、必要历史/证据及事实变化后的补读按 `protocols/runtime-context.md`。该引用不改变 Task 必需输入或下列触发条件，不要求递归预加载全部 Protocol；统一目标与职责见 Method `BRIEF.md`。
+按当前 Task 及下一项已授权动作选择输入，不因材料存在而全读，也不因属于历史而排除会改变当前判断的事实或证据。最小加载不能省略 Task 必需输入、约束、Authority 或 evidence；读取材料不改变其 Git Truth 接受层级。
+
+发现具体疑点、事实冲突、证据缺口或影响面扩大时，补读所需来源；信息仍不足则如实报告缺口。所依赖的权威事实变化后，重新读取相关来源并核对已有判断、授权与验证是否仍适用。
 
 ### 2.1 先加载一个 Task Contract
 

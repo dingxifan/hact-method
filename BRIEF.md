@@ -12,8 +12,7 @@
 |---|---|
 | 什么需持久化、何时成为正式事实 | `protocols/git-truth.md`：接受层级、durable decision 与必要 evidence；不保存完整讨论或另建上下文副本 |
 | 当前任务承诺什么、实际事实是否仍成立 | `tasks/`：Authoritative Inputs、freshness、受影响调用链及验证，不能只相信任务包或总结 |
-| 何时加载哪些规范 | `templates/boot-protocol.md`：单 Task 起步、按动作触发，不递归预加载全部方法文件 |
-| 当前信息如何选择、采信和补读 | `protocols/runtime-context.md`：最小充分、读取与采信分开、具体疑点驱动补读与重新核对 |
+| 何时加载哪些规范及补读事实 | `templates/boot-protocol.md`：单 Task 起步、按动作触发，保留必要输入并按具体疑点补读，不递归预加载全部方法文件 |
 | 如何证明结论、恢复工作及行使权限 | 既有 Review、Recovery、Authority Protocol：固定候选与原始证据、现实核验、有效授权；选择信息不能替代这些要求 |
 
 正文减法使这些已有来源更清楚，不改变 Task 必需输入、质量与授权边界。任务结束只将必要事实放入原有载体，不要求经验提取、Context 摘要、自动归档或新的信息管理流程。保留历史不等于默认继承，能重新取得的信息在当前判断需要时仍必须读取。
