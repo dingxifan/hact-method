@@ -21,7 +21,7 @@ sprint_id: <待填>          # 所属 Sprint 标识，如 v4-s1；由 plan-sprin
 layers: <待填>             # [frontend] / [backend] / [shared]（数组写法）
 source: <待填>             # sprint / integration / manual-test / bug / optimization
 task_type: <待填>          # dev-frontend（layers=[frontend]）/ dev-backend（layers=[backend]）/ shared 时显式指定
-contract-impact: <待填>    # governed（只实现已确认 PRD/TRD/Foundation/project 技术约束）/ none（不触及共享契约）；B 类局部兼容 governed 见 dispatch-new
+contract-impact: <待填>    # governed（只实现已确认 PRD/TRD/Foundation/project 技术约束）/ none（不触及共享契约）；B 类局部兼容 governed 见 protocols/b-intake.md
 # baseline: visual        # 仅「视觉地基包」加此行；普通任务包不写。见顶部说明 + plan-sprint Step 2
 # design-reference-format: sliced-v1  # frontend 必填；backend/shared 删除
 urgency: normal           # normal（默认）/ hotfix

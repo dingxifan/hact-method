@@ -63,24 +63,15 @@ System Reviewer 首次 report 必须针对最终 system candidate 做 `full` rev
 
 ## 3. Reviewer 输入
 
-默认允许：
+只提供当前 review 所需的固定事实：
 
-- fixed candidate snapshot
-- Task Contract 的 reviewer projection
-- authoritative upstream artifacts
-- relevant code / project facts
-- 必要 evidence
-- 当前 finding 实际需要的 Shared Protocol
+- Method SHA、fixed candidate snapshot/identity；
+- 同源 Task Contract reviewer projection、authoritative upstream artifacts；
+- 允许范围内的 relevant code/project facts 与 original evidence；
+- 当前 finding 需要的 Shared Protocol；
+- targeted re-review 所需的 prior report 与 open finding IDs。
 
-默认不提供：
-
-- Owner 的完整生成聊天
-- Owner 的私有推理
-- Owner 的辩护性总结
-- 与当前 review 无关的大量历史上下文
-- 与当前 finding 无关的全部 Shared Protocol
-
-Reviewer 自己读取权威事实。
+不提供 Owner 完整聊天、私有推理、辩护性总结、mutable-worktree narrative、无关历史尝试或无关的全部 Protocol。Reviewer 自读权威事实，brief 与固定读取边界按 §14；projection 与 review depth 按 §2。
 
 ## 4. Protocol loading
 
@@ -180,26 +171,8 @@ Reviewer 可以给出 pass、blocking finding、evidence insufficient，但不�
 
 ## 14. Independent Review isolation
 
-每次 Independent Review 必须使用 fixed candidate + review brief，并使 Fresh Isolated Context 可证明。Owner narrative 不是 review evidence。
+每次 Independent Review 使用 fixed candidate + review brief，并使 Fresh Isolated Context 可证明；Owner narrative 不是 evidence。输入及排除项统一按 §3。
 
-允许输入仅为当前 review 所需的固定事实：
-
-- Method SHA；
-- Task Contract；
-- relevant Shared Protocol；
-- fixed candidate identity；
-- authoritative upstream artifacts；
-- original evidence；
-- targeted re-review 所需的 prior report 与 open finding IDs。
-
-默认排除：
-
-- Owner full chat；
-- Owner private reasoning；
-- Owner defensive summary；
-- irrelevant prior attempts；
-- mutable worktree narrative。
-
-Review brief 明确：candidate tree、allowed paths/scope、review focus、authoritative inputs 与 evidence。Targeted review 再加入 prior report 与 open finding IDs。Git tree 已绑定所有文件内容，不逐文件重复运输 blob receipt。
+Brief 明确 candidate tree、allowed paths/scope、review focus、authoritative inputs 与 evidence；targeted review 加 prior report 和 open finding IDs。Git tree 已绑定内容，不逐文件重复运输 blob receipt。
 
 Reviewer 只从 immutable candidate 读取 brief 允许的内容。Owner 改变 implementation、test 或被审 artifact 后必须形成新 candidate；旧 report 保持历史 judgement。

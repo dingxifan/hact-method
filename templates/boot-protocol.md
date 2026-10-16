@@ -28,6 +28,10 @@ node ../hact-method-lab/scripts/sync-method.cjs --read tasks/develop.md --root .
 
 ## 2. 最小加载规则
 
+按当前 Task 及下一项已授权动作选择输入，不因材料存在而全读，也不因属于历史而排除会改变当前判断的事实或证据。最小加载不能省略 Task 必需输入、约束、Authority 或 evidence；读取材料不改变其 Git Truth 接受层级。
+
+发现具体疑点、事实冲突、证据缺口或影响面扩大时，补读所需来源；信息仍不足则如实报告缺口。所依赖的权威事实变化后，重新读取相关来源并核对已有判断、授权与验证是否仍适用。
+
 ### 2.1 先加载一个 Task Contract
 
 用户已经明确 Task 时，直接加载对应 `tasks/{task}.md`，由 Task 自身检查 Preconditions；不要先根据 Gate 猜另一个 Task。

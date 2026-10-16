@@ -107,6 +107,10 @@ Owner 必须重新读取权威输入。单个 develop Owner 的总结、任务�
 | Integration evidence | `integration-tests/evidence/` 或项目等价位置 | 真实运行证据，按项目当前 schema |
 | System Review reports | `iterations/vN/system-review/review-NNN.md` | `system-review/v2`；full/targeted report chain 与 stable findings |
 
+### 执行与交审责任
+
+Codex 是本 Task 的主执行窗口，承接候选、真实运行、证据、交审、修复承接、复验和已授权收尾；普通失败按 `runtime/codex.md` §5 在原范围继续，不逐项返回原 ChatGPT 窗口重新派发。经 ChatGPT 交接时，原窗口一次交付绑定 repository、BASE_SHA、Method SHA 的目标/范围/约束与短 Brief，结束后回读结果，不逐场景调度或兼任 fresh System Reviewer。业务修复仍经 `develop(source=integration)` / `revise-doc`，reviewer 只负责独立判断与报告，均不增加 Task、状态或确认点。
+
 ### State updates
 
 - `status.yml`：每个 iteration 恰有一个 `type: integration-verify` 的 Core Task work item，沿用 `可取 → taken-by → done → merged`；`source` 为 `null`，详细 findings/evidence 不复制进 status
@@ -148,6 +152,8 @@ Semantic / Holistic System Independent Review SHOULD 按 `protocols/review.md` �
 首次 report 对 final candidate 做 `full` review。后续 report 为 `targeted` 或 `full`；每次 invocation 形成新 immutable report，targeted report 引用 predecessor 与 open finding IDs。
 
 Evidence insufficient 不能建立 pass。报告按 `templates/review-briefs/system-review.md`；`check-system-review.js` 机械核 report chain、candidate 与 finding closure。
+
+Codex 按 `protocols/review.md` §3/§14 和 System Review brief 一次提供本次 full/targeted scope 内完整可读的固定 Contract、源码/调用链与原始 evidence 引用，包括当前运行结论、未运行边界及原因；复审带新候选、prior report/finding IDs、修复增量和证据复用依据。长正文走文件或准确 Git 引用，不用摘要代替原文，不重复搬运未变化且仍有效的内容。交审不以全部 runtime PASS 为新前置，两条 lane 仍可交换 evidence；finding 集中写本次 immutable report，新发现沿原报告链如实追加，不逐条返回原 ChatGPT 讨论，也不隐藏新问题。
 
 ### 5.4 System finding closure
 
@@ -328,6 +334,8 @@ Runtime Integration Verification 是同一 Task 的另一条 assurance lane，�
 integration-verify 不产生 Gate approval。上述 Authority 若已针对当前 exact boundary 明确取得，且 final system candidate、target 与风险边界未变化，后续 verification、结果持久化与 Task `merged` 连续完成，不再把“是否合并验证结果”当成新的用户决定。
 
 ## 8. Completion & Handoff
+
+按既有完成条件结束后，统一返回 immutable RESULT_SHA、final system candidate、两条 lane 的实际结论、result/report/evidence 指针及必要未运行/未完成项；需要回传原 ChatGPT 时，由其回读对应 Git truth，不重述过程或逐包重审。真实 blocker 仅按 Runtime §5 的边界提前返回，不能冒充成功；Task merged 和 G4 接受继续分开，不增加“是否合并验证结果”的确认。
 
 ### `done`
 

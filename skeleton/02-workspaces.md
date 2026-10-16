@@ -2,13 +2,13 @@
 
 > **本文回答**：v2 有几个工作区？每个工作区是什么"心态"？文件读写权限的边界？
 >
-> **不回答**：有哪些任务（→ `04-task-catalog.md`）；任务状态怎么流转（→ `05-state-machine.md`）。
+> **不回答**：有哪些任务（→ `../tasks/README.md`）；任务状态怎么流转（→ `../protocols/state.md`）。
 
 ---
 
 ## 1. 三个工作区，按"心态"切割
 
-工作区切的**不是"谁"**——是"做什么类型的事时所处的心智状态"。同一用户可以在不同心态间切换，每次切换 = 开新运行时会话，进对应的工作目录。
+工作区切的**不是"谁"**——是"做什么类型的事时所处的心智状态"。同一用户可按工作目标进入对应目录；切换目录本身不要求另开会话。
 | 工作区 | 心态 | 物理形态 |
 |---|---|---|
 | **hact-method** | 方法论 | `{工作区根}/hact-method-lab/` |
@@ -45,15 +45,10 @@
 
 **触发场景**：调整方法论 / 跨项目浏览 / 立新项目。
 
-**典型任务**（详见 04）：
-- `init-project`（立项）
-- 纯读浏览（无任务实体）
-
-**无 task 包的活动**：
-- 方法论调整（改 skeleton / specs / templates / BRIEF / 等）——**发散性工作，不预定义为 task type**，由获用户明确授权的执行人直接做（BRIEF.md 决策 #20）
+正常任务见 ../tasks/README.md。方法论调整是获用户明确授权后直接处理的发散性工作，不强行预定义 Task 类型（BRIEF 决策 #20）；纯读浏览不创建任务实体。
 
 **文件权限**：
-- **可写**：`hact-method/` 自身所有文件（skeleton / specs-* / templates / AGENTS / BRIEF / STATUS）
+- **工作位置**：方法论仓的 tasks / protocols / runtime / templates 与入口文档；实际写集按本次用户授权。
 - **可读**：各项目仓的编排状态（按需）
 - **不写**：具体项目的代码
 
@@ -63,30 +58,20 @@
 
 **触发场景**：一切与具体项目相关的工作——无论是编排（写 PRD / 规划迭代）还是开发循环（写代码 / 推 PR）。
 
-**典型任务**：
-- `draft-prd-vN`（含 G1 签字）
-- `draft-tech-design`（含 G2 签字；出 TRD + 验证入口）
-- `revise-doc`（修订归项目根）
-- `plan-sprint`（含 G3 签字）
-- `develop`（写代码 + per-task 独立审查 + 推 PR 并合并到 master）
-- `integration-verify`（System Verification：系统语义独审 + runtime 联调验证）
-- `manual-test`（含 G4 签字）
-- `deploy`（部署归项目根）
-- `wrap-up-iteration`（含 G5 签字）
-- `dispatch-new`（B 类入口：派新 BUG / 优化）
+项目工作使用 ../tasks/README.md 的 canonical Task；B 类先经 ../protocols/b-intake.md 调查。
 
 **物理形态**：项目仓根目录（`{工作区根}/{project-name}/`，与方法论仓同级），代码与协调文件合并存放。
 
 **文件权限**：
-- **可写**：当前项目仓的所有内容（代码 + 协调文件）
-- **可读**：`hact-method` 自身规范文件（skeleton / specs / templates）
+- **工作位置**：当前项目仓的代码与协调文件；实际写集仍受 Task Contract 和 Human Authority 限制。
+- **可读**：`hact-method` 当前 Task / Protocol / Runtime / template（同一 adopted SHA）
 - **不写**：`hact-method` 自身规范、其他项目的目录
 
 ---
 
 ## 4. 可选个人积累
 
-可用任意已有笔记工具；不要求每人一仓，不由 init-project 自动创建，不是开发/收尾依赖。仅按持有人明确许可访问，见 `guide/05-个人积累仓管理.md`。
+可用任意已有笔记工具；不要求每人一仓，不由 init-project 自动创建，不是开发/收尾依赖。仅按持有人明确许可访问，见 `../guide/05-个人积累仓管理.md`。
 
 ## 5. 跨工作区与规范切换
 

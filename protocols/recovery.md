@@ -50,9 +50,7 @@ Task boundary 默认也是 context boundary。下一个 Task Owner 从 Accepted 
 
 普通 bounded operation 不创建 recovery record；artifact、validation 与 review truth 进入各自权威对象。
 
-non-idempotent / external action 开始前必须按 `external-effect.md` 固定 intent、request key、Authority 与 Git receipt。backend 支持 request-key lookup / idempotency 时，响应丢失后先查询同一 execution identity。
-
-backend 支持 request-key lookup / idempotency 时，先持久化 request key，再 start；响应丢失时先按 request key 查询真实 execution identity。
+non-idempotent / external action 开始前按 `external-effect.md` 固定 intent、request key、Authority 与 Git receipt；先持久化 request key 再 start。backend 支持 lookup/idempotency 时，响应丢失先按同一 request key 查询真实 execution identity。
 
 若 start 结果不确定，且 backend 没有可恢复的 request identity，则进入：
 
