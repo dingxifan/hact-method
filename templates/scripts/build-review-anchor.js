@@ -2,7 +2,7 @@
 'use strict';
 // Generate facts and drafts, never approvals or finding closures.
 const cp = require('child_process'), crypto = require('crypto'), fs = require('fs'), path = require('path');
-const { parseFrontmatter, scalarText, listItems, parseReportFindings, findTaskPackages, taskCarrierErrors } = require('./check-sprint.js');
+const { parseFrontmatter, scalarText, listItems, parseReportFindings, findTaskPackages, taskCarrierErrors, reviewCodeLimit } = require('./check-sprint.js');
 const slash = value => value.replace(/\\/g, '/');
 function git(root, args) { return cp.execFileSync('git', args, { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] }); }
 function anchor(root, base, head) {
@@ -13,7 +13,10 @@ function anchor(root, base, head) {
   return { base: b, head: h, names, hash: crypto.createHash('sha256').update(bytes).digest('hex') };
 }
 function fields(a) {
-  return `reviewed_base: ${a.base}\nreviewed_head: ${a.head}\ndiff_sha256: ${a.hash}\nchanged_files: ${JSON.stringify(a.names)}\n`;
+  return `reviewed_base: ${a.base}\nreviewed_head: ${a.head}\ndiff_sha256: ${a.hash}\n${yamlList('changed_files', a.names)}`;
+}
+function yamlList(key, values) {
+  return values.length ? `${key}:\n${values.map(value => `  - ${value}`).join('\n')}\n` : `${key}: []\n`;
 }
 function locate(root, task) {
   if (!/^[A-Za-z0-9][A-Za-z0-9-]*$/.test(task || '')) throw new Error('Invalid task id');
@@ -70,7 +73,10 @@ function draft(root, args) {
   if (onlyEvidence && targets.some(f => f.action !== 'request-evidence'))
     throw new Error('同快照只能补原有证据缺口，不能冒充已完成代码整改');
   const changesCode = increment.names.some(n => n !== info.packagePath && n !== 'status.yml' && !n.startsWith(info.dir + '/'));
-  if (changesCode && history.codeReviews >= 3) throw new Error('已有三个实质代码审查快照；先按既有升级规则处理');
+  const limit = reviewCodeLimit(root, task, info.fm);
+  if (changesCode && history.codeReviews >= limit) throw new Error(limit === 3
+    ? '已有三个实质代码审查快照；先按既有升级规则处理'
+    : '已用尽 Human Authority 批准的一次追加快照（累计四次）；停止并升级');
   if (onlyEvidence) {
     for (const name of history.names) {
       const fm = parseFrontmatter(path.join(absoluteDir, name));
@@ -89,7 +95,7 @@ function draft(root, args) {
     findings = 'findings:\n' + selected.map(s => s.trimEnd()).join('\n');
   }
   return { file: `${info.dir}/round-${String(number).padStart(2, '0')}.md`, text:
-    `---\nschema: develop-review-round/v2\nreview_policy: bounded-v1\ntask_id: ${task}\nround: ${number}\nmode: ${full ? 'full' : 'targeted'}\nrisk: ${scalarText(info.fm.risk) || 'standard'}\nprior_report: ${priorRel || 'null'}\ntarget_finding_ids: ${JSON.stringify(targets.map(f => f.id))}\nbase_ref: ${scalarText(preflight.base_ref)}\n${fields(a)}evidence_only: ${onlyEvidence}\nevidence_files: []\nescalate_to_full: false\nconclusion: pending\n---\n\n## 本轮证据与判断\n\n待独立审查员填写新证据、问题判断和结论；前序上下文引用 prior_report，不重抄。${onlyEvidence ? '补齐 evidence_files，并核原始运行证据。' : ''}\n\n## Findings\n\n\`\`\`yaml\n${findings}\n\`\`\`\n` };
+    `---\nschema: develop-review-round/v2\nreview_policy: bounded-v1\ntask_id: ${task}\nround: ${number}\nmode: ${full ? 'full' : 'targeted'}\nrisk: ${scalarText(info.fm.risk) || 'standard'}\nprior_report: ${priorRel || 'null'}\n${yamlList('target_finding_ids', targets.map(f => f.id))}base_ref: ${scalarText(preflight.base_ref)}\n${fields(a)}evidence_only: ${onlyEvidence}\nevidence_files: []\nescalate_to_full: false\nconclusion: pending\n---\n\n## 本轮证据与判断\n\n待独立审查员填写新证据、问题判断和结论；前序上下文引用 prior_report，不重抄。${onlyEvidence ? '补齐 evidence_files，并核原始运行证据。' : ''}\n\n## Findings\n\n\`\`\`yaml\n${findings}\n\`\`\`\n` };
 }
 function main(argv) {
   if (!argv[0]?.startsWith('--')) {

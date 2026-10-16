@@ -331,7 +331,7 @@ result: pass
   const anchor = childProcess.spawnSync(process.execPath, [anchorScript, baseTree, reviewedHead1, tempRoot], { encoding: 'utf8' });
   assert.strictEqual(anchor.status, 0, anchor.stderr);
   assert.ok(anchor.stdout.includes(`diff_sha256: ${diffEvidence(baseTree, reviewedHead1).hash}`));
-  assert.ok(anchor.stdout.includes('"scripts/check-guard.js"'));
+  assert.ok(anchor.stdout.includes('  - scripts/check-guard.js'));
   const emptyAnchor = childProcess.spawnSync(process.execPath, [anchorScript, reviewedHead1, reviewedHead1, tempRoot], { encoding: 'utf8' });
   assert.strictEqual(emptyAnchor.status, 0, emptyAnchor.stderr);
   assert.match(emptyAnchor.stdout, /changed_files: \[\]/);
@@ -388,6 +388,38 @@ result: pass
   git(['add', 'tests/enforcement/guard.spec.ts']);
   const head4 = git(['write-tree']).trim();
   assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: head4 }), /三个实质代码审查/, 'evidence exception does not grant a fourth implementation attempt');
+  const extensionTaskPath = `b-queue/${TASK_ID}.md`;
+  const beforeExtension = fs.readFileSync(path.join(tempRoot, extensionTaskPath), 'utf8');
+  const extensionFm = `review-extension-authority: decisions.md#${TASK_ID}-review-extension\n`;
+  write(extensionTaskPath, beforeExtension.replace(/^---\r?\n/, `---\n${extensionFm}`));
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: head4 }), /ENOENT/, 'missing decision does not grant extension');
+  write('decisions.md', `### ${TASK_ID}-review-extension\n\n### Other\nUnrelated decision\n`);
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: head4 }), /非空决定/, 'another heading is not authority');
+  write('decisions.md', `### ${TASK_ID}-review-extension\nUser approved one additional snapshot for the fixed third candidate and remaining finding.\n`);
+  const fourthCode = generator.draft(tempRoot, { task: TASK_ID, head: head4 });
+  assert.match(fourthCode.text, /conclusion: pending/, 'authority never grants review pass');
+  write(`${reportDir}/round-05.md`, fourthCode.text.replace('conclusion: pending', 'conclusion: evidence-needed'));
+  const approvedFourthAudit = checkRound(true);
+  assert.strictEqual(approvedFourthAudit.status, 0, approvedFourthAudit.stdout + approvedFourthAudit.stderr);
+  write(extensionTaskPath, beforeExtension);
+  assert.match(checkRound(true).stdout, /超出上限 3/, 'audit also rejects a manually supplied fourth report without authority');
+  write(extensionTaskPath, beforeExtension.replace(/^---\r?\n/, `---\n${extensionFm}`));
+  write('tests/enforcement/guard.spec.ts', 'const fifth = true;\n');
+  git(['add', 'tests/enforcement/guard.spec.ts']);
+  const head5 = git(['write-tree']).trim();
+  assert.throws(() => generator.draft(tempRoot, { task: TASK_ID, head: head5 }), /累计四次/, 'human exception cannot recur');
+  const fifthCode = fourthCode.text.replace('round: 5', 'round: 6')
+    .replace('round-04.md', 'round-05.md')
+    .replace(`reviewed_base: ${head3}`, `reviewed_base: ${head4}`)
+    .replace(`reviewed_head: ${head4}`, `reviewed_head: ${head5}`)
+    .replace(/diff_sha256: [a-f0-9]+/, `diff_sha256: ${diffEvidence(head4, head5).hash}`)
+    .replace('conclusion: pending', 'conclusion: evidence-needed');
+  write(`${reportDir}/round-06.md`, fifthCode);
+  assert.match(checkRound(true).stdout, /超出上限 4/, 'audit rejects a manually supplied fifth implementation snapshot');
+  fs.unlinkSync(path.join(tempRoot, reportDir, 'round-06.md'));
+  fs.unlinkSync(path.join(tempRoot, reportDir, 'round-05.md'));
+  write(extensionTaskPath, beforeExtension);
+  fs.unlinkSync(path.join(tempRoot, 'decisions.md'));
   fs.unlinkSync(path.join(tempRoot, reportDir, 'round-03.md'));
   fs.unlinkSync(path.join(tempRoot, reportDir, 'round-04.md'));
   fs.writeFileSync(roundTwoPath, evidenceSecond);
