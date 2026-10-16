@@ -399,6 +399,10 @@ blocking finding 出现时：
 
 每个 Task 最多允许 **3 个包含 implementation / test 实质变化的 code review snapshot**，包括首次 policy-selected candidate review。纯 evidence 补证不消耗这 3 个实质代码 snapshot 配额，但仍属于 review history。
 
+三次用尽且仍有 blocking finding 时停止自动整改并升级给用户。用户可以针对该 Task 的固定第三次候选、仍开放 finding 和限定修复范围，明确批准**仅一次追加实质代码 snapshot（累计上限 4）**。将原话、日期、Task ID、第三次候选 SHA 与 finding/范围记入既有 `decisions.md` 的 `### <task-id>-review-extension`，在任务包增加 `review-extension-authority: decisions.md#<task-id>-review-extension`。这是 Human Authority 决定的指针，不是新的阶段、轮次账或自动扩额。Reviewer 必须核该决定实际覆盖本轮增量；检查器只核指针可定位和累计额度，不代替授权语义判断。
+
+未经该明确裁决仍上限 3；批准后保留全部报告、finding ID 与 Git 推导的累计计数，第五次实质代码 snapshot 一律拒绝。追加候选仍须必要验证、Fresh Independent Review、无开放阻断与原有敏感风险裁决，不能用批准扩额代替修复或接受带阻断合并。追加一次后仍未闭合则重新向用户报告未完成及后续取舍，不自动续批、拆同一修复或重开 Task 清零。
+
 同一 snapshot、同一问题只做一次集中的 evidence 补证；仍不能判断时暂停并 escalation，不无限循环。
 
 Runtime 切换、恢复、新 reviewer、finding id 变化都不能清零上述边界。

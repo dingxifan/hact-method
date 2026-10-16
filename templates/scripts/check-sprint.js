@@ -488,6 +488,19 @@ function taskCarrierErrors(root, id, packages, reviewDir = '') {
   return errors;
 }
 
+function reviewCodeLimit(root, taskId, taskFm) {
+  const authority = scalarText(taskFm && taskFm['review-extension-authority']);
+  if (!authority) return 3;
+  const heading = `${taskId}-review-extension`;
+  if (authority !== `decisions.md#${heading}`) throw new Error('review-extension-authority 必须指向本 Task 的 decisions.md 决定');
+  const text = fs.readFileSync(path.join(root, 'decisions.md'), 'utf8');
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const record = text.split(new RegExp(`^### ${escaped}\\r?\\n`, 'm'))[1]?.split(/^#{1,3} /m)[0];
+  if (!record?.trim())
+    throw new Error('review-extension-authority 缺可定位的非空决定；授权语义仍需独审');
+  return 4;
+}
+
 function governanceWritePath(name, taskPackagePath, reviewReportDir) {
   const file = String(name || '').replace(/\\/g, '/').replace(/^\.\//, '');
   const task = String(taskPackagePath || '').replace(/\\/g, '/');
@@ -540,6 +553,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
   let declaredTaskFiles = [];
   let taskPackagePath = '';
   let taskPackageSchema = '';
+  let codeReviewLimit = 3, codeReviews = 0;
   const taskPackages = findTaskPackages(root, id);
   errors.push(...taskCarrierErrors(root, id, taskPackages, relDir));
   if (!foundationReview) {
@@ -549,6 +563,8 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     else {
       taskPackagePath = path.relative(root, taskPackages[0]).replace(/\\/g, '/');
       const packageFm = parseFrontmatter(taskPackages[0]);
+      try { codeReviewLimit = reviewCodeLimit(root, id, packageFm); }
+      catch (error) { errors.push(error.message); }
       taskPackageSchema = scalarText(packageFm && packageFm['package-schema']);
       declaredTaskFiles = listItems(packageFm && packageFm.files).map(normalizeFileAsset).sort();
     }
@@ -613,6 +629,10 @@ function reviewAuditErrors(root, id, cr, options = {}) {
       const fixed = fixedDiffEvidence(root, r('reviewed_base'), r('reviewed_head'));
       if (fixed.error) errors.push(`${file}: 固定 diff 不可复现：${fixed.error}`);
       else {
+        const increment = previousReviewedHead ? fixedDiffEvidence(root, previousReviewedHead, r('reviewed_head')) : fixed;
+        if (increment.error) errors.push(`${file}: 累计代码增量不可复现：${increment.error}`);
+        else if (increment.names.some(name => !governanceWritePath(name, taskPackagePath, relDir))) codeReviews++;
+        if (codeReviews > codeReviewLimit) errors.push(`${file}: 实质代码审查快照 ${codeReviews} 超出上限 ${codeReviewLimit}，停止并升级`);
         if (r('diff_sha256') !== fixed.hash) errors.push(`${file}: diff_sha256 与 git diff --binary 实际字节不一致`);
         if (JSON.stringify(reportedChangedFiles) !== JSON.stringify(fixed.names))
           errors.push(`${file}: changed_files 与固定 diff 实际文件集不一致`);
@@ -1479,4 +1499,4 @@ function main() {
 if (require.main === module) main();
 module.exports = { TASK_PACKAGE_REQUIRED: REQUIRED,
   sharedAssetConflicts, dependencyReadinessErrors, parseFrontmatter, listItems, scalarText,
-  parseReportFindings, fixedDiffEvidence, findTaskPackages, taskCarrierErrors, governanceWritePath };
+  parseReportFindings, fixedDiffEvidence, findTaskPackages, taskCarrierErrors, governanceWritePath, reviewCodeLimit };
