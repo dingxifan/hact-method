@@ -4,7 +4,7 @@ Task 语义在 `tasks/`，共性纪律在 `protocols/`；本文只说明 ChatGPT
 
 ## 1. Role and truth boundary
 
-ChatGPT 承担 reasoning、需求、PRD/UX/TRD、计划与 acceptance judgement，不因模型能力获得更高 Authority。Chat/Project 中的草稿和讨论不是 Shared Project Truth，只有固定并进入 Git 的 artifact 才按接受层级用于后续工作。
+项目工作默认可在 Codex 中完成，ChatGPT Work 按需承担 reasoning、需求、PRD/UX/TRD、计划与 acceptance judgement，不独占这些工作，也不因模型能力获得更高 Authority。Chat/Project 中的草稿和讨论不是 Shared Project Truth，只有固定并进入 Git 的 artifact 才按接受层级用于后续工作。
 
 需要真实仓库写入、command/test/checker 或 Git 操作时，把稳定文件与 bounded Execution Packet 人工交给 Codex。用户负责搬运稳定结果及必要决定，不负责 AI 的排序、会话维护或中间 reasoning。
 
@@ -16,7 +16,7 @@ ChatGPT 承担 reasoning、需求、PRD/UX/TRD、计划与 acceptance judgement�
 
 ## 3. Minimal manual handoff
 
-只传递本次 operation 必需的控制信息，长文档与多文件正文走独立文件：
+仅实际从 ChatGPT Work 等入口交给 Codex 时使用本节；Codex 直接任务不额外制作 Packet、文件或回传材料。只传递本次 operation 必需的控制信息及简短 Execution Brief，长文档与多文件正文走独立文件：
 
 ```text
 Repository:
@@ -37,7 +37,7 @@ Return:
 
 ### Sprint-level Develop handoff
 
-ChatGPT 从当前 `BASE_SHA`、已完成/剩余 Accepted Task Packages、依赖图、工作量、已知复杂度及验证/审查边界，决定下一个 execution-window scope，不预排未来窗口。当前复杂/大型 Task 可以独占窗口。
+当前入口从当前 `BASE_SHA`、已完成/剩余 Accepted Task Packages、依赖图、工作量、已知复杂度及验证/审查边界决定下一个 execution-window scope，不预排未来窗口。Codex 直接任务在当前环境建立并实际激活 Goal，无需 ChatGPT 起草或 Packet；复杂/大型 Task 可以独占窗口。以下顺序仅适用于真实跨入口交接：
 
 按顺序输出两个独立部分：
 
@@ -46,7 +46,7 @@ ChatGPT 从当前 `BASE_SHA`、已完成/剩余 Accepted Task Packages、依赖�
 
 Packet 内写 `Goal:` 不能代替激活。Goal/Packet 明确 Codex 只在当前窗口按依赖、工作量、耦合和验证边界组织 Wave，不跨范围或增加产品/核心技术语义、权限；用户不写 Goal、不逐包排序。窗口和 Wave 的 Task 约束见 `tasks/develop.md` §5.9，模型选择仍由 Human 决定。
 
-返回后，ChatGPT 重新读取 immutable `RESULT_SHA` 的相关 artifact/code/state 与 evidence，判断结果并在 Sprint 尚有范围时重算下一窗口；不继承完整聊天或维护旧窗口过程。
+跨入口返回后，ChatGPT 重新读取 immutable `RESULT_SHA` 的相关 artifact/code/state 与 evidence，判断结果并在 Sprint 尚有范围及已有授权时重算下一有界窗口；不继承完整聊天或维护旧窗口过程。Codex 直接任务由当前入口完成同样的 Git 核对与窗口选择，不要求返回 ChatGPT。
 
 ## 4. Frozen artifact persistence
 

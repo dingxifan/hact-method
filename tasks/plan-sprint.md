@@ -112,23 +112,19 @@ G2 未 approved 时，本 Task 不能进入 `可取`。
 | Sprint plan | `iterations/vN/sprint.md` | 人类可读的任务、依赖与交付视图 |
 | Task registration | `status.yml tasks[]` | 与 queue / sprint 同步登记；初始 `status: 可取` |
 
-### 工作段、固定分工与一次性交付
+### 工作段与按需交接
 
-本 Task 的分工固定为：ChatGPT 完成整体拆包的规划意图，一次交给 Codex；Codex 在同一执行窗口连续完成任务包成稿与全局收口，统一回传结果。三个工作段属于同一个 `plan-sprint`，不新增 Task、流程、状态、独立审查轮次或人工确认点；不编号登记，也不增加独立产物路径。
+本 Task 默认可在 Codex 内连续完成整体拆包、任务包成稿及全局收口，ChatGPT Work 可按需参与规划。三个工作段属于同一个 `plan-sprint`，不新增 Task、状态、独立审查轮次、人工确认点或独立产物路径。
 
-| 工作段 | 固定执行方 | 本段必须一次性交付的结果 |
-|---|---|---|
-| 整体拆包 | ChatGPT | 基于权威输入的完整规划意图文件：用户交付闭环、范围与约束、拆包意图、PRD AC / 技术约束承接、可观察验证目标及关键取舍；随文件交付简短 Execution Brief，不提前宣称已完成文件级工程拆包 |
-| 任务包成稿 | Codex | 根据规划意图与真实源码完成工程拆包，确定 package 数量和边界、`files`、`depends_on`、`asset-writes`、`intent / oracle`、风险及必要 `api-contract`，写全既有 schema 的 Task Packages、`sprint.md` 和对应 `status.yml tasks[]`；不留下必填字段、AC 映射或接口契约占位 |
-| 全局收口与交付 | Codex | 对账 AC 双向覆盖、依赖、共享写集及 queue ↔ sprint ↔ status 一致性，固定 Git candidate，按下文 Verification / Review / Completion 连续完成检查、独审、修复复核和已授权的 Git delivery，统一返回 `RESULT_SHA`、实际检查与审查结论及必要未完成项 |
+| 工作段 | 必须完成的结果 |
+|---|---|
+| 整体拆包 | 基于权威输入明确用户交付闭环、范围与约束、拆包意图、PRD AC / 技术约束承接、可观察验证目标及关键取舍 |
+| 任务包成稿 | 核真实源码与规划依据，确定 package 数量和边界、`files`、`depends_on`、`asset-writes`、`intent / oracle`、风险及必要 `api-contract`，写全既有 schema 的 Task Packages、`sprint.md` 和对应 `status.yml tasks[]`，不留下必填字段、AC 映射或接口契约占位 |
+| 全局收口与交付 | 对账 AC 双向覆盖、依赖、共享写集及 queue ↔ sprint ↔ status 一致性，固定 Git candidate，按下文连续完成检查、独审、修复复核和已授权 Git delivery，提供 `RESULT_SHA`、实际检查 / 审查结论及必要未完成项 |
 
-ChatGPT 在第一工作段内完成必要读取、判断、写作与自查，交齐规划意图文件和 Execution Brief，不以逐文件调查笔记、“下一步将……”或内部 Draft 版本结束并等待催促。文件冻结的是规划意图与约束，不是完整 Task Packages；源码调查与工程成稿由 Codex 一并完成，不安排逐批查源码、逐段回 ChatGPT 加工的往返。
+Codex 可在已批准 Product / Technical Contract、已确认规划约束及既有 Authority 内调整 package 数量、工程边界、依赖与写集。普通路径、格式、检查失败及可可靠推导的规划问题在当前窗口修正，不逐包请示；涉及 §3 / §7 的取舍、上游 Contract 缺口、必要输入或能力缺口，按既有规则处理。可按业务闭环分组完整成稿，但不新增批准或交接点。
 
-Execution Brief 复用 `runtime/chatgpt.md` 的既有交接格式，绑定 repository、`BASE_SHA`、同一 adopted Method SHA、规划意图文件和目标路径，明确授权 Codex 完成工程规划、检查、独审、整改及 Git delivery 的范围与停止条件；不是仅原样落盘的 persistence 请求，也不注册为新的 HACT 对象。交接后沿用同一 Task 与已有 Authority，不新增认领或批准要求。
-
-Codex 可在已批准的 Product / Technical Contract、规划意图及既有 Human Authority 内调整 package 数量、工程边界、依赖和写集；普通路径、格式、检查失败及可从权威输入可靠推导的规划问题在当前执行窗口内修正，不逐包回传、不逐项请示。涉及 §3 / §7 的 Human Authority 取舍、上游 Contract 缺口、必要输入或能力缺口及运行环境强制中断时，按既有规则处理并说明具体问题、影响和已完成内容，不为保持一次交接而绕过这些边界。
-
-Codex 可按业务闭环分组完整成稿，但分组只组织当前窗口内的工作，不增加交接、Task、状态或确认点；第二、第三工作段连续执行，统一回传。普通规划执行路径只有一次 ChatGPT → Codex 执行交接和一次结果回传，不逐工作段请求“是否继续”；结果回传后发生的 G3 批准按 §8 持久化，不重派规划工作。
+仅真实跨入口时交完整规划意图文件 / bundle 与简短 Execution Brief，复用 `runtime/chatgpt.md` §3，绑定 repository、`BASE_SHA`、同一 adopted Method SHA、文件和目标路径、工程规划 / 验证 / 独审 / 整改 / Git delivery 的授权范围与停止条件。文件冻结规划意图与约束，不冒充完整 Task Packages；不逐批查源码再返回加工。Codex 直接任务不额外制作交接或返回 ChatGPT 的材料；跨入口交接沿用同一 Task 与 Authority，不新增认领、状态或批准。
 
 ### State updates
 
@@ -438,9 +434,7 @@ Reviewer 不替用户决定团队交付偏好或 G3。
 
 ## 8. Completion & Handoff
 
-ChatGPT 交齐规划意图文件与 Execution Brief 只完成第一工作段，不表示本 Task 已 `done`、`merged` 或满足 G3 readiness。聊天内容自查不能证明文件存在、queue ↔ sprint ↔ status 一致、checker PASS、Independent Review 闭合或 Git candidate 已形成；这些结论须引用 Codex 在固定 snapshot 上的实际执行证据。
-
-Codex 完成执行后统一返回结果、immutable `RESULT_SHA` 与必要 evidence pointers；ChatGPT 回读该 snapshot 的规划产物、state 和证据后，向用户呈现明确候选及既有 G3 决定，不追加“规划内容确认”或逐包批准。若 G3 在结果回传后批准，传递该明确 snapshot 的 Authority 决定并按下文 G3 边界完成记录持久化与 Git delivery；这是执行既有决定，不重新拆包、重派规划或再次询问同一批准。
+规划意图文件或成稿不表示本 Task 已 `done`、`merged` 或满足 G3 readiness。文件存在、queue ↔ sprint ↔ status 一致、checker PASS、Independent Review 闭合及 Git candidate 必须由固定 snapshot 与实际证据证明，不能只引用聊天自查。当前入口回读该 snapshot 的规划产物、state 与 evidence 后向用户呈现既有 G3 决定；仅真实跨入口才返回 immutable `RESULT_SHA` 与 evidence pointers 并由接收方回读。不追加“规划内容确认”或逐包批准；G3 批准绑定明确 snapshot 后按下文记录与 Git delivery，不重新拆包或重复批准。
 
 ### `done`
 
