@@ -4,16 +4,16 @@
 
 ## 工作入口
 
-ChatGPT 承担 reasoning、design、document authoring 与 acceptance judgement，Codex 是 repository execution environment。主线首次处理任务先由 Codex 运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，再以 `--read templates/boot-protocol.md --root .` 读取已采用 SHA 的入口。Task/Protocol/Runtime 都读同一 adopted SHA，检查器使用项目 `scripts/` 副本。
+项目工作默认在 Codex 中连续完成需求澄清、设计、规划、执行与验证，ChatGPT Work 按需使用；用户决定与 Authority 不因入口改变。主线首次处理任务先由 Codex 运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，再以 `--read templates/boot-protocol.md --root .` 读取已采用 SHA 的入口。Task/Protocol/Runtime 都读同一 adopted SHA，检查器使用项目 `scripts/` 副本。
 
 项目完整采用 current schema，缺失或不匹配 fail closed；旧项目先在 Core 外按 `guide/08-旧项目全面接入新版.md` normalization，不混读旧入口或增加兼容豁免。进入任务后按 Git truth、state 与 recovery evidence 接续，用户补充条件或询问进度不重跑启动、不清空有效授权。
 
-人工交接绑定 `BASE_SHA`，长正文走文件。Sprint Develop 先激活 ChatGPT 生成的当前窗口 Goal，再交 Packet；格式见 `runtime/chatgpt.md` §3，Task 范围见 `tasks/develop.md` §5.9。完成后返回 immutable `RESULT_SHA` 与有用结果，Owner 回读 Git truth；Packet/Wave/window 不成为持久对象。
+真实跨入口交接绑定 `BASE_SHA`，长正文走文件及短 Execution Brief / Packet，结果以 immutable `RESULT_SHA` 回读。Codex 直接任务不额外制作交接或回传材料；Sprint Develop 由当前入口确定有界窗口并实际激活 Goal，Codex 内直接建立，跨入口才按 `runtime/chatgpt.md` §3 交 Packet。Task 范围见 `tasks/develop.md` §5.9；窗口完成后核 Git truth 决定下一已授权窗口，不自行跨 scope，Packet/Wave/window 不成为持久对象。
 
 ## 自主执行与边界
 
 - 分析/评审请求先检查报告；明确目标在已授权范围内连续完成工程、验证、独审、整改与 Git delivery。普通困难不返回 ChatGPT、不要求实施前二选一；具体执行与提前返回条件按 `runtime/codex.md` §5。
-- 普通工程决策由 Codex 完成，不发明无法从 Accepted Truth 与 Contract 推导的产品或核心技术语义。必要 Human Authority 在当前 interaction 请求；范围取舍、生产/外部效果及不可逆操作按既有边界，用户停止与系统安全/预算控制优先。
+- Codex 可提出并讨论候选产品或核心技术方案；普通工程决策在 Accepted Truth、Contract 与已有授权内完成，候选不得自行成为 Human Approval 或改写已批准 Contract。必要 Human Authority 在当前 interaction 请求；范围取舍、生产/外部效果及不可逆操作按既有边界，用户停止与系统安全/预算控制优先。
 - 保留无关改动，按 Task/共享资产确定写集；共享工作树、索引、数据库或端口的冲突写入须串行或隔离。压缩恢复先核实际状态再继续，不用聊天摘要覆盖契约与证据。
 
 ## 委派与独立审查

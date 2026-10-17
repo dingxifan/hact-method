@@ -267,11 +267,11 @@ Owner 与 Reviewer 都必须根据实际 fixed diff 独立判断风险。若实�
 
 ### 5.9.1 Sprint and execution-window Goal
 
-Sprint 是完整 Accepted Develop scope；ChatGPT 根据当前 BASE_SHA、已完成/剩余 packages、依赖、工作量、复杂度与验证/审查边界设定下一窗口，可让大型/复杂包独占，不预排未来窗口。交接时先由用户激活 ChatGPT 生成的 Goal，再提交 Packet，用户不负责编写 Goal 或逐包排序；格式见 `runtime/chatgpt.md` §3。
+Sprint 是完整 Accepted Develop scope；当前入口根据当前 BASE_SHA、已完成/剩余 packages、依赖、工作量、复杂度与验证/审查边界设定下一有界窗口，可让大型/复杂包独占，不预排未来窗口。Codex 直接任务在当前环境建立并实际激活 execution-window Goal；仅真实跨入口时按 `runtime/chatgpt.md` §3 交接 Goal 与 Packet。文本中的 Goal 字段不等于实际激活，用户不负责编写 Goal 或逐包排序。
 
 Goal 明确本窗口 packages、成功条件、自主范围、Human Boundary、依赖/共享写约束及 RESULT_SHA。Codex 不能因窗口外 Task eligible 跨范围。每个 Task Package 仍分别完成 freshness、实现、验证、fixed candidate、独审、修复和已授权 Git delivery；满足依赖且无共享写冲突的窗口内任务可并行，冲突时串行，后续 Task 重新核 freshness。
 
-局部 blocker 只暂停该 Task 及窗口内依赖，其他安全工作继续；具体授权不替代 review/revision/Gate。窗口完成或达到 Runtime §5 的真实 blocker 返回边界时，带稳定 RESULT_SHA、实际结论与必要未完成项返回 ChatGPT；Owner 回读 Git truth 后决定下一窗口，不维护前一窗口剩余 Wave 的额外状态。
+局部 blocker 只暂停该 Task 及窗口内依赖，其他安全工作继续；具体授权不替代 review/revision/Gate。窗口完成或达到 Runtime §5 的真实 blocker 边界时，在当前入口说明稳定 RESULT_SHA、实际结论与必要未完成项；仅真实跨入口才返回来源会话并由接收方回读。Codex 直接任务可在核最新 Git truth 与已有授权后建立下一有界窗口，不自动跨 scope，不维护前一窗口剩余 Wave 的额外状态。
 
 ### 5.9.2 Lightweight Wave execution
 

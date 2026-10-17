@@ -57,7 +57,7 @@ review: required
 - 当前 HACT Method fixed SHA 已知。
 - Owner 具备生成正式 artifact 的能力。
 
-原型制作与真实浏览器验证由 Codex 按 §4 的固定分工执行；要进入 `merged`，必须具备可真实执行原型的 browser capability。能力缺口按既有规则处理，不能用聊天静态判断或伪造 evidence 代替执行。
+UX 设计、原型制作与真实浏览器验证可由 Codex 在同一环境连续执行；要进入 `merged`，必须具备可真实执行原型的 browser capability。能力缺口按既有规则处理，不能用聊天静态判断或伪造 evidence 代替执行。
 
 纯后端、无用户可见交互且 PRD 全部标记 `draft-ux: 不需要` 时，不创建本 Task。
 
@@ -105,13 +105,13 @@ review: required
 | UX evidence | `iterations/vN/ux-evidence/` | 浏览器动作、前置数据、结果、版本 / hash 与失败原因 |
 | Confirmed design | `design.md` | 更新本期实际页面和已接受的视觉 / 状态规格 |
 
-### 固定分工与一次性交接
+### 工作方式与按需交接
 
-ChatGPT 连续完成 UX 设计与自查，一次交付用户任务、稳定 U/S、动线—界面地图、主辅路径、失败 / 取消 / 返回 / 恢复行为、视觉约束和 PRD AC coverage / exclusion 的完整设计文件及简短 Execution Brief。交接内容决定业务行为、入口和落点，不能只交界面主题、未决关键设计或等待 Codex 自行定义的产品规则；不逐页面交接，也不为制作方便增加设计确认点。用户明确选择的外部设计会话仍按既有规则提供设计输入，不据此新增会话或 Gate。
+本 Task 默认可在 Codex 内连续完成用户任务、稳定 U/S、动线—界面地图、主辅路径、失败 / 取消 / 返回 / 恢复行为、视觉约束及 PRD AC coverage / exclusion 的设计，再制作自包含交互原型，写全各项正式产物。HTML anchor、实际页面映射及 browser evidence 来自真实原型与执行，不编造占位或未经执行的 PASS。连续完成浏览器验证、结构检查、Fresh Isolated Independent Review、修复与定向复核，并提供同一固定版本的真实体验入口和证据。
 
-Codex 根据该设计制作自包含交互原型，保持既定动线、视觉约束和模拟状态，写全 `ux-flows.md`、`prototype.html`、`prototype-map.md` 与 `design.md` 候选内容；HTML anchor、实际页面映射及 browser evidence 由真实原型和执行补齐，不要求 ChatGPT 提前编造。Codex 在同一窗口连续完成浏览器验证、结构检查、Fresh Isolated Independent Review、修复和定向复核，返回同一固定版本的文件、真实体验入口、证据与 `RESULT_SHA`；正式候选不得留下映射占位或未经执行的 PASS。
+Codex 可讨论候选体验方案，但不得自行新增业务承诺或决定 §7 的重要体验取舍；Product Contract 缺口按 revision 处理。用户对当前原型的真实体验接受仍是完成条件，设计自查、原型实现或独审均不能代替。
 
-Execution Brief 复用 `runtime/chatgpt.md` 的既有格式，绑定 repository、`BASE_SHA`、同一 adopted Method SHA、设计文件、目标路径、允许范围、验证与停止条件，明确授权原型实现及验证，而非仅原样落盘。冻结的是完整 UX 设计要求，Codex 可在这些要求内解决原型实现和验证问题，不得新增业务承诺或改变 §7 的重要体验取舍。交接沿用同一 Task 与已有 Authority，不新增 Task、状态、认领或页面批准；正常制作与验证只有一次执行交接和一次统一回传，不逐次传回代码或浏览器过程。真实语义问题、能力缺口及强制中断按既有规则处理。
+ChatGPT Work 可按需参与 UX 设计；用户明确选择外部设计会话时仍按既有规则提供输入。仅真实跨入口时交完整设计文件及简短 Execution Brief，复用 `runtime/chatgpt.md` §3，绑定 repository、`BASE_SHA`、同一 adopted Method SHA、文件、目标路径、授权范围、验证与停止条件。Brief 明确授权原型实现及验证，冻结完整设计要求；不逐页面交接或新增确认点。Codex 直接任务不额外制作交接或返回 ChatGPT 的材料。
 
 ### State updates
 
@@ -323,7 +323,7 @@ Blocking finding 必须给出 U/S、复现动作、实际 / 预期和影响。
 
 ## 8. Completion & Handoff
 
-ChatGPT 交出 UX 设计不表示原型已实现、浏览器已走通、本 Task 已 `done` 或用户已接受。ChatGPT 回读 Codex 返回的固定 snapshot、当前版本 evidence 与独审结论后，按 §5.8 / §5.9 向用户提供任务情境、真实入口与预期结果；不能以设计聊天自评代替独审或体验接受。用户对当前版本的修改反馈在同一 Task 内落实、复验受影响路径并按变化范围复审，再体验修改后的版本；这是既有体验收敛，不新增确认点，也不受一次正常交接的限制。接受后仅按已有 Authority 更新已接受的 `design.md` / 接受记录及完成 Git 收尾，不再次请求同一接受或另签 UX Gate。
+设计完成不表示原型已实现、浏览器已走通、本 Task 已 `done` 或用户已接受。当前入口依据 fixed snapshot、当前版本 evidence 与独审结论，按 §5.8 / §5.9 提供任务情境、真实入口与预期结果；仅真实跨入口才返回 `RESULT_SHA` 并由接收方回读。不能以设计自评代替独审或体验接受。修改反馈在同一 Task 内落实、复验受影响路径并按变化范围复审，再体验修改后的版本。接受后按已有 Authority 更新已接受的 `design.md` / 接受记录及完成 Git 收尾，不重复接受或另签 UX Gate。
 
 ### `done`
 

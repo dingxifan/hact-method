@@ -158,7 +158,7 @@ Task 确定后：
 
 1. 加载 `tasks/{task}.md` 与本次动作需要的 Authoritative Inputs；
 2. 按 §2 的触发规则加载实际需要的 Shared Protocol；
-3. 需要 repository execution 时，将带 `BASE_SHA` 的 stable bounded Execution Packet 人工交给 Codex；
+3. Codex 内直接任务在当前环境继续；仅真实跨入口到 Codex 时交付带 `BASE_SHA` 的 stable 文件与短 bounded Execution Brief / Packet；
 4. 只有需要 Codex-specific realization 时加载 `runtime/codex.md`；
 5. 做 Minimum Execution Preflight：`Target / Collision / Boundary / Validation`；
 6. 直接开始正式修改 / review / verification。

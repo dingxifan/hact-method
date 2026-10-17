@@ -77,13 +77,11 @@ Owner 必须自己读取 Git 中的 Accepted Project Truth。不得用上一期�
 | 产品长期事实 | `project.md` | 仅更新长期产品事实 |
 | V0 as-built ledger | `iterations/vN/as-built-ledger.md` | 仅在适用时 |
 
-### 固定分工与一次性交接
+### 工作方式与按需交接
 
-ChatGPT 连续完成需求还原、必要产品取舍、完整 PRD 内容和自查，一次交付 PRD 文件、必要的 `project.md` 产品事实修改内容及简短 Execution Brief。交付内容必须覆盖下文必含结构、AC 与 UX routing，不能只交产品方向或把必要产品语义留给 Codex 猜测；不逐章节交接，不以“下一步将……”等待催促。
+本 Task 默认可在 Codex 内连续完成需求澄清、方案比较、PRD 成稿、自查、真实 as-built 核对及适用 ledger、固定 Git candidate、检查、独立内容审查、整改复核和已授权 Git delivery。内容必须覆盖下文必含结构、AC 与 UX routing。Codex 可提出未批准的产品方案，但产品方向、范围与重要取舍由用户决定；不得自行修改已批准的 Product Contract 或 AC intent，产品缺口及影响承诺的 as-built 漂移按既有 Authority / revision 处理。
 
-Codex 负责将上述内容落到既有路径，核对适用的真实 as-built 事实并形成 ledger，固定 Git candidate，连续完成本 Task 的检查、独立内容审查、不改变产品承诺的整改复核及已授权 Git delivery，统一回传结果。Codex 可修正格式、引用和可从权威输入推导的事实表达，不得借检查或落盘重新选择产品方向、增减范围或改写 AC intent；产品缺口、影响产品承诺的 as-built 漂移及 §7 的取舍按既有 Human Authority / revision 规则处理。
-
-Execution Brief 复用 `runtime/chatgpt.md` 的既有格式，绑定 repository、`BASE_SHA`、同一 adopted Method SHA、实际文件、目标路径、允许范围、验证与停止条件；PRD 内容按 frozen artifact persistence 处理，事实核对与 review 仍须实际执行。交接沿用同一 Task 与已有 Authority，不新增 Task、状态、认领或逐章批准。正常执行只有一次 ChatGPT → Codex 交接和一次结果回传，普通问题在 Codex 窗口内修正，不逐项送回聊天加工；必要决定、能力缺口和强制中断按既有规则说明。
+ChatGPT Work 可按需参与需求与内容工作。仅真实跨入口时交付完整 PRD 文件、必要的 `project.md` 产品事实内容及简短 Execution Brief，复用 `runtime/chatgpt.md` §3，绑定 repository、`BASE_SHA`、同一 adopted Method SHA、实际文件、目标路径、授权范围、验证与停止条件。已冻结内容按 frozen artifact persistence 处理；必要产品语义不能留给执行端猜测。交接沿用同一 Task 与 Authority，普通问题在 Codex 内修正，不逐章节往返；Codex 直接任务不额外制作交接或返回 ChatGPT 的材料。
 
 ### State
 - `status.yml` 中对应 `draft-prd` Task lifecycle
@@ -210,7 +208,7 @@ Reviewer 不替用户判断产品方向，也不负责 TRD 级技术设计。
 
 ## 8. Completion & Handoff
 
-ChatGPT 成稿与交接不等于本 Task 已 `done`、`merged` 或满足 G1 readiness；聊天自查不能代替固定 Git candidate、真实 as-built evidence、checker 或 Independent Review。Codex 返回 immutable `RESULT_SHA`、实际检查与审查结论及必要未完成项；ChatGPT 回读该 snapshot 的产物、state 和证据后呈现既有 G1 决定，不再追加“PRD 内容确认”。若 G1 在回传后批准，只传递绑定该 snapshot 的 Authority 并完成下文规定的记录与 Git 收尾，不重新起草或重复批准。
+成稿或交接不等于本 Task 已 `done`、`merged` 或满足 G1 readiness；自查不能代替固定 Git candidate、真实 as-built evidence、checker 或 Independent Review。当前入口从 fixed snapshot 的产物、state 和证据向用户呈现既有 G1 决定；仅真实跨入口才返回 immutable `RESULT_SHA` 并由接收方回读，不追加“PRD 内容确认”。G1 批准只绑定该 snapshot，按下文记录与 Git 收尾，不重新起草或重复批准。
 
 ### `done`
 
