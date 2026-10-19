@@ -76,7 +76,8 @@ function draft(root, args) {
   const limit = reviewCodeLimit(root, task, info.fm);
   if (changesCode && history.codeReviews >= limit) throw new Error(limit === 3
     ? '已有三个实质代码审查快照；先按既有升级规则处理'
-    : '已用尽 Human Authority 批准的一次追加快照（累计四次）；停止并升级');
+    : limit === 4 ? '已用尽 Human Authority 批准的一次追加快照（累计四次）；停止并升级'
+    : `已用尽 Human Authority 明确批准的实质代码快照额度（累计 ${limit} 次）；停止并升级`);
   if (onlyEvidence) {
     for (const name of history.names) {
       const fm = parseFrontmatter(path.join(absoluteDir, name));
