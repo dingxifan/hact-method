@@ -495,10 +495,18 @@ function reviewCodeLimit(root, taskId, taskFm) {
   if (authority !== `decisions.md#${heading}`) throw new Error('review-extension-authority 必须指向本 Task 的 decisions.md 决定');
   const text = fs.readFileSync(path.join(root, 'decisions.md'), 'utf8');
   const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const record = text.split(new RegExp(`^### ${escaped}\\r?\\n`, 'm'))[1]?.split(/^#{1,3} /m)[0];
+  const records = text.split(new RegExp(`^### ${escaped}\\r?\\n`, 'm'));
+  if (records.length !== 2) throw new Error('review-extension-authority 须唯一定位本 Task 决定');
+  const record = records[1].split(/^#{1,3} /m)[0];
   if (!record?.trim())
     throw new Error('review-extension-authority 缺可定位的非空决定；授权语义仍需独审');
-  return 4;
+  const limits = record.split(/\r?\n/).filter(line => /^[ \t]*max-substantive-snapshots\b/.test(line));
+  if (!limits.length) return 4;
+  const match = limits.length === 1 && /^max-substantive-snapshots: ([1-9]\d*)[ \t]*$/.exec(limits[0]);
+  const limit = match ? Number(match[1]) : NaN;
+  if (!Number.isSafeInteger(limit) || limit <= 4)
+    throw new Error('max-substantive-snapshots 须为唯一的、明确大于 4 的安全整数；授权语义仍需独审');
+  return limit;
 }
 
 function governanceWritePath(name, taskPackagePath, reviewReportDir) {
