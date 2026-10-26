@@ -413,6 +413,8 @@ function gitOutput(root, args, encoding = 'utf8') {
   return childProcess.execFileSync('git', args, {
     cwd: root,
     encoding,
+    // Fixed binary diffs include evidence assets; retain all bytes within a bounded limit.
+    maxBuffer: 64 * 1024 * 1024,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 }
@@ -431,7 +433,8 @@ function fixedDiffEvidence(root, base, head) {
       .toString('utf8').split('\0').filter(Boolean).map(name => name.replace(/\\/g, '/')).sort();
     return { hash: crypto.createHash('sha256').update(bytes).digest('hex'), names };
   } catch (error) {
-    return { error: String(error.stderr || error.message).trim() };
+    // An empty stderr Buffer is truthy, including when Git output exceeds maxBuffer.
+    return { error: String(error.stderr || '').trim() || String(error.message || error).trim() };
   }
 }
 
