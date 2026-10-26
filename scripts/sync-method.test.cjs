@@ -16,7 +16,7 @@ const forgedProject = path.join(temp, 'forged-project');
 const retiredDriftProject = path.join(temp, 'retired-drift-project');
 const run = (cwd, args) => childProcess.execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 function init(root) {
-  fs.mkdirSync(root, { recursive: true }); run(root, ['init', '-q']);
+  fs.mkdirSync(root, { recursive: true }); run(root, ['init', '-q', '-b', 'main']);
   run(root, ['config', 'user.email', 'test@example.com']); run(root, ['config', 'user.name', 'Test']);
 }
 function commit(root, message) { run(root, ['add', '-A']); run(root, ['commit', '-qm', message]); }
@@ -45,6 +45,8 @@ assert.ok(sync.inspect(project, source).rows.every(row => row.state === 'missing
 assert.strictEqual(sync.install(project, source).state, 'verified');
 assert.strictEqual(sync.verify(project, source).state, 'verified');
 assert.strictEqual(sync.runtimeCheck(project, method).source, source.source);
+assert.strictEqual(sync.startup(project, method, method).state, 'current');
+assert.throws(() => sync.startup(project, method, path.join(temp, 'missing-remote')), /git|repository/i);
 assert.strictEqual(sync.readAdopted(project, method, 'templates/AGENTS.md'), 'current agents\n');
 assert.throws(() => sync.install(customProject, source), /legacy normalization/);
 assert.strictEqual(fs.readFileSync(path.join(customProject, 'AGENTS.md'), 'utf8'), 'project rules\n');
@@ -60,12 +62,38 @@ fs.rmSync(path.join(method, 'templates', 'scripts', 'retired-check.js'));
 fs.writeFileSync(path.join(method, 'templates', 'scripts', 'check-gate.js'), 'console.log("gate-v2")\n');
 commit(method, 'next method');
 const next = sync.loadSource(method, 'HEAD');
+const beforeStartup = run(project, ['status', '--porcelain=v1']);
+const update = sync.startup(project, method, method);
+assert.strictEqual(update.state, 'upgrade-required');
+assert.strictEqual(update.target, next.source);
+assert.strictEqual(update.source, source.source);
+assert.strictEqual(sync.runtimeCheck(project, method).source, source.source, 'discovery must not upgrade project');
+assert.strictEqual(run(project, ['status', '--porcelain=v1']), beforeStartup);
 assert.strictEqual(sync.install(project, next).state, 'verified');
+assert.strictEqual(sync.startup(project, method, method).state, 'current');
 assert.ok(!fs.existsSync(path.join(project, 'scripts', 'retired-check.js')), 'clean retired Method-owned file must be removed');
+run(method, ['update-ref', 'refs/heads/main', source.source]);
+assert.throws(() => sync.startup(project, method, method), /ahead of or diverges/);
+run(method, ['update-ref', 'refs/heads/main', next.source]);
 assert.strictEqual(fs.readFileSync(path.join(project, 'project-owned.txt'), 'utf8'), 'keep\n');
 assert.strictEqual(fs.readFileSync(path.join(project, 'scripts', 'check-gate.js'), 'utf8'), 'console.log("gate-v2")\n');
 assert.throws(() => sync.install(retiredDriftProject, next), /retired\/orphan Method path requires resolution/);
 assert.strictEqual(fs.readFileSync(path.join(retiredDriftProject, 'scripts', 'retired-check.js'), 'utf8'), 'project customization\n');
+
+// A conflict discovered after earlier files in template order must be zero-write.
+const conflictProject = path.join(temp, 'conflict-project');
+init(conflictProject);
+fs.writeFileSync(path.join(conflictProject, 'README.md'), 'project\n'); commit(conflictProject, 'project');
+sync.install(conflictProject, next); commit(conflictProject, 'installed');
+fs.writeFileSync(path.join(conflictProject, 'gitee-ops.md'), 'custom ops\n'); commit(conflictProject, 'custom ops');
+fs.writeFileSync(path.join(method, 'templates', 'AGENTS.md'), 'new agents\n');
+fs.writeFileSync(path.join(method, 'templates', 'gitee-ops.md'), 'new ops\n');
+commit(method, 'conflicting upgrade');
+const conflictSource = sync.loadSource(method, 'HEAD');
+const conflictBefore = fs.readFileSync(path.join(conflictProject, 'AGENTS.md'), 'utf8');
+assert.throws(() => sync.install(conflictProject, conflictSource), /drifted/);
+assert.strictEqual(fs.readFileSync(path.join(conflictProject, 'AGENTS.md'), 'utf8'), conflictBefore);
+assert.strictEqual(run(conflictProject, ['status', '--porcelain=v1']), '');
 
 const forgedBytes = fs.readFileSync(path.join(forgedProject, 'README.md'));
 fs.mkdirSync(path.join(forgedProject, '_meta'), { recursive: true });
@@ -85,6 +113,7 @@ assert.throws(() => sync.verify(project, next), /file-manifest-mismatch/);
 run(project, ['checkout', '--', '_meta/method-sync.json']);
 fs.writeFileSync(path.join(project, 'AGENTS.md'), 'unrecorded drift\n');
 assert.throws(() => sync.verify(project, next), /installed-content-drift/);
+assert.throws(() => sync.startup(project, method, method), /installed-content-drift/);
 assert.throws(() => sync.install(project, next), /worktree must be clean/);
 
 if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('temp escaped');

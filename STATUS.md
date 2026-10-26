@@ -2,12 +2,12 @@
 
 ## 当前状态
 
-以下状态记录截至 2026-09-25，不由本次文档整理推导新的项目验收结论。
+当前候选状态更新于 2026-10-26；下述存量接入结果保持其原时间与证据边界。
 
-- 当前阶段：**存量接入与文档 Task 收口·已实现待真实项目试点**。
-- 原状态更新：2026-09-25。
-- 当前计划：`_meta/plans/2026-09-25-legacy-adoption-and-document-closeout/task_plan.md`，与 `_meta/.current_plan` 保持一致。
-- 该阶段固定基线：commit `a9bcde43a5ce8b2ee95c63b0fabc1fe0ff563c58` / tree `620f36f83132c661f5a74cf6ca4c788af67257f8`，不是当前仓库 HEAD 的声明。
+- 当前阶段：**统一方法论入口与自动试升级·本地候选机械验证通过，待独审与项目试点**。
+- 当前计划：`_meta/plans/2026-10-26-unified-method-startup/task_plan.md`，与 `_meta/.current_plan` 保持一致。
+- 本次基线：`e04aa858a8a43105f1a50c4388a3a5d29d0e3099`。默认目标统一为官方 Accepted main，SHA 保留实际安装与审查追溯；自动试升级由 Codex 主线在隔离候选中执行，冲突/失败停止。
+- 尚未分发项目、独立审查、push 或 merge；METHOD-UPGRADE-F001 真实项目回归未在本仓复跑或关闭。旧项目接入结果仍见原阶段记录。
 
 ## 已有结果与限制
 

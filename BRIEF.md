@@ -20,7 +20,7 @@
 ## 当前唯一执行基线
 
 - `tasks/` 是唯一任务执行契约，`protocols/` 定义跨任务不变量，`runtime/` 只实现运行时能力；检查器与真实证据负责质量控制。旧 specs 双层、自动中转、watcher、轮询账、恢复胶囊和兼容入口已退役。
-- 项目工作默认在 Codex 中连续完成需求澄清、设计、规划、仓库执行与验证；ChatGPT Work 按需使用，不独占设计或规划。真实跨入口交接使用稳定文件与短 Execution Brief / Packet，Codex 内直接任务不额外制作往返材料。Git 是 Shared Project Truth；执行按已采用的 fixed Method SHA，不静默混入工作树最新版。
+- 项目工作默认在 Codex 中连续完成需求澄清、设计、规划、仓库执行与验证；ChatGPT Work 按需使用，不独占设计或规划。真实跨入口交接使用稳定文件与短 Execution Brief / Packet，Codex 内直接任务不额外制作往返材料。Git 是 Shared Project Truth；新工作入口统一检查官方 Accepted main，自动隔离试升级，冲突或验证失败停止。实际安装 SHA 保留为执行同源、审查与追溯依据；已有执行/审查链不在中途热切换，不静默混入工作树最新版。
 - 以结论可恢复为目标，默认同一运行时完成有界工作；一个用户动作最多一次对外交接的偏好不阻止必要 fresh review/re-review。普通失败与机械错误在既定范围内修正复验，外部效果收据只按 `protocols/external-effect.md` 的触发条件使用。
 - 权威输入、固定候选、独立审查、真实验证、Gate 人签与外部效果核验保留。系统语义独审适合且 immutable sources 完整时优先 Fresh ChatGPT reviewer；runtime integration verification 由 Codex 执行。两条 lane 同属 `integration-verify`，必要结论最终对同一 fixed final candidate 有效；系统 finding 须在新候选经 fresh review 关闭。
 - **结果严格，机制克制。** 先确定 Contract、最终不变量、安全/Authority 边界、不可逆恢复与外部兼容义务，再选择最小充分机制。可从权威事实重推、重算或廉价重建的中间信息默认不持久化；仅为完整过程审计、可观测或更多保险，不足以增加长期状态、记录或控制层。

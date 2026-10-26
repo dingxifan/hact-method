@@ -4,7 +4,9 @@
 
 ## 工作入口
 
-项目工作默认在 Codex 中连续完成需求澄清、设计、规划、执行与验证，ChatGPT Work 按需使用；用户决定与 Authority 不因入口改变。主线首次处理任务先由 Codex 运行 `node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .`，再以 `--read templates/boot-protocol.md --root .` 读取已采用 SHA 的入口。Task/Protocol/Runtime 都读同一 adopted SHA，检查器使用项目 `scripts/` 副本。
+项目工作默认在 Codex 中连续完成需求澄清、设计、规划、执行与验证，ChatGPT Work 按需使用；用户决定与 Authority 不因入口改变。主线开始新的工作前先运行 `node ../hact-method-lab/scripts/sync-method.cjs --startup --root .`，向官方 main 核对更新。返回 current 后，以 `--read templates/boot-protocol.md --root .` 读取实际安装版本。返回 upgrade-required（退出码 3）时，按输出 target 对应的 `guide/07-同步方法论.md` 自动在隔离候选中尝试升级，验证通过再应用；项目定制冲突、验证失败或无法确认官方版本时停止并报告，不反复索取普通升级许可。用 `git -C ../hact-method-lab show <target>:guide/07-同步方法论.md` 读取本次固定目标的升级说明。Task/Protocol/Runtime 与项目检查器必须同源；source SHA 用于记录实际采用结果和固定审查依据，不再由各协作者自行选择日常版本。
+
+已有 Task 的执行/审查链恢复、委派与复审沿用已固定 Method，不在中途自动升级；先核项目 manifest 与该链的 Method 是否一致，存在不一致时停止协调。新工作入口统一检查更新；已启动的协作者不会被新版本发布自动热切换。
 
 项目完整采用 current schema，缺失或不匹配 fail closed；旧项目先在 Core 外按 `guide/08-旧项目全面接入新版.md` normalization，不混读旧入口或增加兼容豁免。进入任务后按 Git truth、state 与 recovery evidence 接续，用户补充条件或询问进度不重跑启动、不清空有效授权。
 

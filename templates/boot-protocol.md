@@ -4,13 +4,15 @@
 
 ## 1. 规范来源
 
-项目已采用版本以 `_meta/method-sync.json` 的 `source` SHA 为唯一方法论来源。首次启动或升级后运行：
+新工作默认采用官方仓 Accepted `main`，不由协作者各选 SHA。主线入口运行：
 
 ```bash
-node ../hact-method-lab/scripts/sync-method.cjs --runtime-check --root .
+node ../hact-method-lab/scripts/sync-method.cjs --startup --root .
 ```
 
-只核一次；不在每轮复审重跑。输出版本漂移时先按项目既有升级流程处理，不能把方法论工作树的最新内容静默混进当前 adopted SHA。
+只在新工作入口核一次，不在每轮复审或压缩恢复重跑。current 表示实际安装与本次查询的官方 main 一致；upgrade-required（退出码 3）表示已取得固定 target，主线按该 target 的 `guide/07-同步方法论.md` 自动隔离试升级，通过兼容性验证再应用。冲突、失败或网络不可达时停止并报告，不能把本地缓存称为官方最新版。
+
+`_meta/method-sync.json.source` 保留实际安装 SHA，供执行同源、追溯与审查固定。已有工作/审查链继续使用其固定 Method；恢复时运行 `--runtime-check` 并比对链与 manifest，不能在链中途混入新规则。其他协作者已经更新项目时，旧会话须重新核对，不得凭旧上下文继续写入。没有后台推送、会话热更新或全项目自动分发。
 
 方法论文件通过同一 SHA 读取。例如：
 

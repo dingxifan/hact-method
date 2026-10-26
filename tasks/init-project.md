@@ -29,7 +29,7 @@ review: conditional
 
 - 确认稳定且唯一的项目标识 / repository identity
 - 创建独立项目 repository 与最小目录结构
-- 从一个固定 HACT Method SHA 播种项目模板、检查器和运行入口
+- 从官方 Accepted main 解析本次固定 HACT Method SHA，再同源播种项目模板、检查器和运行入口；不由协作者各自选择日常版本
 - 创建项目根 `status.yml`，建立后续 Task 的统一状态入口
 - 建立项目与所采用 Method SHA 的 durable linkage / sync metadata
 - 建立首次 Git snapshot 与可验证 remote truth
