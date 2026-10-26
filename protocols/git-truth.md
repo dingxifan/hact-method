@@ -47,7 +47,11 @@ Shared Candidate Truth 可以交 reviewer / escalation / specialist check，但�
 
 需要返回 ChatGPT 的 operation 成功完成后，或因真实 blocker 返回时，Codex 提供最近稳定的 immutable `RESULT_SHA`，并仅在既有 Authority / Git policy 允许时使其成为 ChatGPT 可读取的 remote Git truth。普通项目变更若已完成 Candidate → Accepted Truth，`RESULT_SHA` 必须是 PR merge 后实际 Accepted branch 的 immutable SHA；source branch / candidate SHA 只能作为 candidate pointer，不能冒充最终 Accepted result。返回消息只需清楚说明结果、`RESULT_SHA` 与实际有用的上下文；snapshot 的 remote ref/state 或仅本地可读等限制应如实说明。不要求正式 Result Packet 对象或固定结果 schema。ChatGPT 必须重新读取 `RESULT_SHA` 及本次涉及的 artifact / code / state，不能只根据消息宣布完成。snapshot handshake 保持 `BASE_SHA → Codex execution → RESULT_SHA → re-read Git truth`；下一轮从已确认的 Accepted / Result snapshot 重新建立基线。
 
-`init-project` 没有既存项目 `BASE_SHA`：它以 fixed Method SHA、用户确认的 repository identity 与新仓初始事实 bootstrap；首个可验证 remote snapshot 建立后，其 commit SHA 成为后续正式共同基线。Packet 只是人工临时格式，不是 Git Truth。
+`init-project` 没有既存项目 `BASE_SHA`：它将官方 Accepted main 解析为本次 fixed Method SHA，以用户确认的 repository identity 与新仓初始事实 bootstrap；首个可验证 remote snapshot 建立后，其 commit SHA 成为后续正式共同基线。Packet 只是人工临时格式，不是 Git Truth。
+
+新工作默认跟随官方 Accepted main，按 `guide/07-同步方法论.md` 自动隔离试升级；实际安装的 Method SHA 仍为该次执行/审查的 immutable provenance。升级发现与实际采用是两回事，不能把发现新版本、官方 bytes 一致或候选安装成功当作项目兼容性已通过。既有 review/Task 历史不因升级改写，进行中的链不自动热切换；正式 Git acceptance、Gate 与外部效果授权不由自动升级取得。
+
+方法论更新面向未来，不追溯要求旧事实符合当前格式或流程。已接受的历史 judgement 保持其原适用范围，不因新规则自动失效，也不自动证明当前候选。当前工作依赖旧 evidence 时兼容读取并核实适用性；只有具体正确性、身份歧义或证据缺口才触发定向核查，不以升级名义重新验收整个历史。
 
 ## 4. Git 保存什么
 

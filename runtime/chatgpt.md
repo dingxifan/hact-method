@@ -10,7 +10,7 @@ Task 语义在 `tasks/`，共性纪律在 `protocols/`；本文只说明 ChatGPT
 
 ## 2. Bootstrap and repository reading
 
-确认 repository、adopted Method SHA 与当前 Task/state，读取对应 Task、权威输入及当前动作触发的 Protocol，不预加载全部规范；用户明确 Task 时不重新路由。init-project 的 bootstrap 例外与 B Intake 分别按原契约。
+确认 repository、实际安装的 Method SHA 与当前 Task/state，读取对应 Task、权威输入及当前动作触发的 Protocol，不预加载全部规范；用户明确 Task 时不重新路由。新工作更新检查与隔离试升级由 Codex 按 `guide/07-同步方法论.md` 连续完成，ChatGPT 不另选个人版本或从本地 Method 工作树混读；进行中链与交接沿用同一已固定 Method。init-project 的 bootstrap 例外与 B Intake 分别按原契约。
 
 完整 artifact 必须完整读取。交接绑定明确 `BASE_SHA`，不能只读 floating main；优先 Accepted、fixed candidate 或 Gate approved snapshot。完整 handshake 及接受边界见 `protocols/git-truth.md`。
 

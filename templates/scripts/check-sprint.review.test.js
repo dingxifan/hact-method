@@ -176,7 +176,7 @@ result: pass
   write(`b-reviews/${TASK_ID}/round-01.md`, historicalRound);
   write('status.yml', historicalStatus);
   write('archived-profile.json', '{"selector_revision":1,"historical":true}\n');
-  assert.match(runAudit().stdout, /retired field/, 'current report rejects retired profile/standards fields');
+  assert.strictEqual(runAudit().status, 0, 'historical extra fields do not restore retired rules or invalidate evidence');
   write('status.yml', canonicalStatus);
   fs.writeFileSync(roundOnePath, canonicalRoundOne.replace(`task_id: ${TASK_ID}`, 'task_id: another-task'), 'utf8');
   assert.match(runAudit().stdout, /task_id 不匹配/, 'report identity remains mandatory without profile');
@@ -252,8 +252,37 @@ result: pass
   const priorRound = fs.readFileSync(roundOnePath, 'utf8');
   const historicalPrior = priorRound.replace('mode: full', 'mode: full\nreview_profile: archived-profile.json\nstandards_checked: [BE-OLD-01]');
   fs.writeFileSync(roundOnePath, historicalPrior, 'utf8');
-  assert.match(runAudit().stdout, /retired field/, 'targeted review rejects retired prior-report fields');
+  assert.strictEqual(runAudit().status, 0, 'targeted review can reuse prior reports containing retired fields');
   fs.writeFileSync(roundOnePath, priorRound, 'utf8');
+  // Rejected history remains immutable: a targeted deletion may remove a path
+  // absent from today's files, while the final cumulative candidate is in scope.
+  const quoteLists = text => text
+    .replace(/^target_finding_ids:.*$/m, `target_finding_ids: ${JSON.stringify([`${TASK_ID}-F001`])}`)
+    .replace(/^changed_files:\n((?:  - .*\n)*)/m, (_, lines) =>
+      `changed_files: ${JSON.stringify(lines.trimEnd().split('\n').map(line => line.slice(4)))}\n`);
+  const rejectedHistory = reportText({
+    taskId: TASK_ID, round: 1, mode: 'full', prior: null, targets: [],
+    baseRef, base: baseTree, head: cumulativeHead, changedFiles: [...changedFiles, 'src/unrelated.ts'],
+    conclusion: 'revise',
+    body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: open\n    action: fix-code`,
+  });
+  const repairedHistory = reportText({
+    taskId: TASK_ID, round: 2, mode: 'targeted', prior: priorReport, targets: [`${TASK_ID}-F001`],
+    baseRef, base: cumulativeHead, head: reviewedHead2,
+    changedFiles: ['src/unrelated.ts', 'tests/enforcement/guard.spec.ts'], conclusion: 'pass',
+    body: `findings:\n  - id: ${TASK_ID}-F001\n    severity: blocking\n    status: verified-closed`,
+  });
+  const quotedFirst = quoteLists(rejectedHistory).replace(/^target_finding_ids:.*$/m, 'target_finding_ids: []');
+  const quotedRepair = quoteLists(repairedHistory);
+  fs.writeFileSync(roundOnePath, quotedFirst);
+  fs.writeFileSync(roundTwoPath, quotedRepair);
+  const repaired = runAudit();
+  assert.strictEqual(repaired.status, 0, `JSON lists and rejected-then-repaired history: ${repaired.stdout}\n${repaired.stderr}`);
+  assert.strictEqual(fs.readFileSync(roundOnePath, 'utf8'), quotedFirst, 'audit must not rewrite historical report');
+  fs.writeFileSync(roundOnePath, quotedFirst.replace(/diff_sha256: [0-9a-f]{64}/, `diff_sha256: ${'d'.repeat(64)}`));
+  assert.match(runAudit().stdout, /diff_sha256 与/, 'historical compatibility must still reject forged diff evidence');
+  fs.writeFileSync(roundOnePath, priorRound);
+  fs.writeFileSync(roundTwoPath, canonicalRoundTwo);
   const currentTaskPath = path.join(tempRoot, `b-queue/${TASK_ID}.md`);
   const currentTask = fs.readFileSync(currentTaskPath, 'utf8');
   fs.writeFileSync(currentTaskPath, currentTask

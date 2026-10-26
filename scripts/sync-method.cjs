@@ -11,6 +11,7 @@ const POLICY = 'templates/method-install-policy.json';
 const MANIFEST_SCHEMA = 'hact-method-install/v2';
 const POLICY_SCHEMA = 'hact-method-install-policy/v1';
 const OWNERSHIP = new Set(['method-owned', 'merged', 'project-owned']);
+const OFFICIAL = 'https://github.com/dingxifan/hact-method.git';
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 
 function git(root, args, options = {}) {
@@ -177,9 +178,11 @@ function install(projectRoot, source) {
     if (actual !== item.installed_sha256) throw new Error(`retired/orphan Method path requires resolution; preserved because installed copy drifted: ${item.path}`);
     if (item.ownership === 'method-owned') retired.push(safe(result.root, item.path));
   }
+  // Resolve all ownership conflicts before the first write. A late merged-file
+  // conflict must not leave earlier Method-owned paths partially upgraded.
+  const decisions = result.rows.map(row => ({ row, decision: decideInstall(result.root, row, priorByPath.get(row.to)) }));
   const files = [];
-  for (const row of result.rows) {
-    const decision = decideInstall(result.root, row, priorByPath.get(row.to));
+  for (const { row, decision } of decisions) {
     if (decision.bytes) writeAtomic(safe(result.root, row.to), decision.bytes);
     files.push({ path: row.to, ownership: row.ownership, source_sha256: row.sha256, installed_sha256: decision.installed_sha256 });
   }
@@ -221,6 +224,26 @@ function runtimeCheck(projectRoot, methodRoot) {
   return verify(root, loadSource(methodRoot, metadata.source));
 }
 
+// Discovery never changes the project's installation. The main agent performs
+// the upgrade in an isolated project candidate before applying a reviewed diff.
+function startup(projectRoot, methodRoot, official = OFFICIAL) {
+  const installed = runtimeCheck(projectRoot, methodRoot);
+  const networkOptions = { timeout: 30000, env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } };
+  const remote = git(methodRoot, ['ls-remote', '--exit-code', '--heads', official, 'refs/heads/main'], networkOptions);
+  const match = remote.match(/^([0-9a-f]{40})\s+refs\/heads\/main$/);
+  if (!match) throw new Error('official Method main could not be resolved; freshness unknown');
+  const target = match[1];
+  if (target === installed.source) return { ...installed, state: 'current', target };
+  // Fetch the exact advertised object; a concurrent main update must not silently
+  // change this startup's target. Never update a local Method branch or checkout.
+  git(methodRoot, ['fetch', '--no-tags', official, target], networkOptions);
+  const source = loadSource(methodRoot, target);
+  try { git(methodRoot, ['merge-base', '--is-ancestor', installed.source, target]); }
+  catch { throw new Error('installed Method is ahead of or diverges from official main; explicit migration required'); }
+  return { ...installed, state: 'upgrade-required', target: source.source,
+    instruction: 'Automatically prepare an isolated project upgrade using guide/07-同步方法论.md at target; do not start project work before validation and application succeed.' };
+}
+
 function readAdopted(projectRoot, methodRoot, relative) {
   const root = gitRoot(projectRoot);
   const metadata = readJson(fs.readFileSync(safe(root, META)), 'Method ownership manifest');
@@ -245,6 +268,7 @@ function parse(argv) {
     if (arg === '--install') options.action = 'install';
     else if (arg === '--verify') options.action = 'verify';
     else if (arg === '--runtime-check') options.action = 'runtime-check';
+    else if (arg === '--startup') options.action = 'startup';
     else if (arg === '--read') { options.action = 'read'; options.file = argv[++i]; }
     else if (arg === '--root') options.root = path.resolve(argv[++i]);
     else if (arg === '--method-root') options.methodRoot = path.resolve(argv[++i]);
@@ -256,6 +280,12 @@ function parse(argv) {
 
 function main(argv = process.argv.slice(2)) {
   const options = parse(argv);
+  if (options.action === 'startup') {
+    const result = startup(options.root, options.methodRoot);
+    console.log(JSON.stringify(result));
+    if (result.state !== 'current') process.exitCode = 3;
+    return;
+  }
   if (options.action === 'read') { process.stdout.write(readAdopted(options.root, options.methodRoot, options.file)); return; }
   if (options.action === 'runtime-check') { console.log(JSON.stringify(runtimeCheck(options.root, options.methodRoot))); return; }
   const source = loadSource(options.methodRoot, options.ref);
@@ -269,5 +299,5 @@ if (require.main === module) {
 }
 module.exports = {
   META, MANIFEST_SCHEMA, sha256, git, gitRoot, safe, writeAtomic, loadSource, expected, inspect,
-  install, verify, runtimeCheck, readAdopted, writeManifest, currentHash, ensureClean, readOwnedManifest,
+  install, verify, runtimeCheck, startup, readAdopted, writeManifest, currentHash, ensureClean, readOwnedManifest,
 };

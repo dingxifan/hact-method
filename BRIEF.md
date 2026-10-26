@@ -20,7 +20,7 @@
 ## 当前唯一执行基线
 
 - `tasks/` 是唯一任务执行契约，`protocols/` 定义跨任务不变量，`runtime/` 只实现运行时能力；检查器与真实证据负责质量控制。旧 specs 双层、自动中转、watcher、轮询账、恢复胶囊和兼容入口已退役。
-- 项目工作默认在 Codex 中连续完成需求澄清、设计、规划、仓库执行与验证；ChatGPT Work 按需使用，不独占设计或规划。真实跨入口交接使用稳定文件与短 Execution Brief / Packet，Codex 内直接任务不额外制作往返材料。Git 是 Shared Project Truth；执行按已采用的 fixed Method SHA，不静默混入工作树最新版。
+- 项目工作默认在 Codex 中连续完成需求澄清、设计、规划、仓库执行与验证；ChatGPT Work 按需使用，不独占设计或规划。真实跨入口交接使用稳定文件与短 Execution Brief / Packet，Codex 内直接任务不额外制作往返材料。Git 是 Shared Project Truth；新工作入口统一检查官方 Accepted main，自动隔离试升级，冲突或验证失败停止。实际安装 SHA 保留为执行同源、审查与追溯依据；已有执行/审查链不在中途热切换，不静默混入工作树最新版。
 - 以结论可恢复为目标，默认同一运行时完成有界工作；一个用户动作最多一次对外交接的偏好不阻止必要 fresh review/re-review。普通失败与机械错误在既定范围内修正复验，外部效果收据只按 `protocols/external-effect.md` 的触发条件使用。
 - 权威输入、固定候选、独立审查、真实验证、Gate 人签与外部效果核验保留。系统语义独审适合且 immutable sources 完整时优先 Fresh ChatGPT reviewer；runtime integration verification 由 Codex 执行。两条 lane 同属 `integration-verify`，必要结论最终对同一 fixed final candidate 有效；系统 finding 须在新候选经 fresh review 关闭。
 - **结果严格，机制克制。** 先确定 Contract、最终不变量、安全/Authority 边界、不可逆恢复与外部兼容义务，再选择最小充分机制。可从权威事实重推、重算或廉价重建的中间信息默认不持久化；仅为完整过程审计、可观测或更多保险，不足以增加长期状态、记录或控制层。
@@ -28,7 +28,7 @@
 - 动态 Task/Gate 状态只写 `status.yml`。个人积累、学科准入、重复总账、成本计时、反馈清空与数量归档退出必经链；私人仓与旧记录不自动删除。仍有效的既有决定不因换会话重复确认，Human Authority 边界见 `protocols/authority.md`。
 - 普通 Candidate→Accepted Truth 必须 `source branch → PR → merge → Accepted branch SHA verification`，direct push 只发布 candidate/source branch；已通过 PR merge 的 Accepted SHA 可按 Git Truth 同步授权镜像。首次 bootstrap 尚无 Accepted branch 时使用既有例外。
 - 约束由 PRD/TRD、Foundation、`project.md` 技术层、任务 do-not 与 check/test/config 各自承载；Standards 及公共/栈候选库、生成/匹配/回填/收缩机制退役，模型自主选择等价实现，不生成通用编码说明。
-- 项目采用本版按 `templates/method-install-policy.json` 区分 Method-owned、merged、project-owned；存量项目逐仓确认，经 `guide/08-旧项目全面接入新版.md` 的一次性 normalization、所有权归类、隔离候选和独立迁移审查后整体进入 current schema，不维护日常兼容层，不删除项目原有业务/类型/安全检查，不补造历史 Task/Gate/review。
+- 项目采用本版按 `templates/method-install-policy.json` 区分 Method-owned、merged、project-owned；存量项目逐仓确认，只在安装来源或所有权无法直接证明时按 `guide/08-旧项目全面接入新版.md` 处理必要接入。新规则约束新工作；历史 Task/Gate/review 保持原貌，仍有效的证据应兼容读取，不要求整体进入当前 schema、补字段或重新验收。进行中的链按既有契约接续；当前动作确实依赖且不能安全读取的部分才定向处理。不删除项目原有业务/类型/安全检查，不新增通用历史迁移层。
 - 开发方可信但会犯错；审查聚焦规范、错误及实际外部风险，不要求抵抗开发者恶意绕过。审查范围以 `templates/review-briefs/review-scope.md` 为准。建议不隐式阻断，必要证据与固定候选质量链不缩减。
 - 提交只核本次涉及的任务证据，保留全局依赖与共享资产检查；未变历史 round 不反复重审。末轮 round 即最终独审结论，不再重复 final-review。复用固定 Method 来源与项目脚本，files 只维护当前落点、不自登记任务包；原审查员接续、三次实质代码审查额度从 Git 增量推导，同快照同问题集中补证一次，历史报告和计数保留，不增加轮次账/写集字段或审查阶段。实际节时尚待项目验证。
 

@@ -83,8 +83,11 @@ assert.ok(fs.existsSync(path.join(project, normalizer.EVIDENCE)), 'initial norma
 
 makeLegacyProject(duplicateProject, 'tasks:\n  - id: repeated\n    status: merged\n  - id: repeated\n    status: 可取\n');
 const blocked = normalizer.buildPlan(duplicateProject, target2);
-assert.ok(blocked.blockers.some(item => item.code === 'DUPLICATE_ACTIVE_TASK_ID'));
-assert.throws(() => normalizer.applyPlan(duplicateProject, target2, blocked), /normalization blockers remain/);
+assert.deepStrictEqual(blocked.blockers, [], 'historical duplicate IDs do not block Method installation');
+assert.deepStrictEqual(blocked.task_identity.duplicates, [{ id: 'repeated', count: 2 }]);
+const historyBefore = fs.readFileSync(path.join(duplicateProject, 'status.yml'));
+normalizer.applyPlan(duplicateProject, target2, blocked);
+assert.deepStrictEqual(fs.readFileSync(path.join(duplicateProject, 'status.yml')), historyBefore, 'installation preserves task history byte for byte');
 
 if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('temp escaped');
 fs.rmSync(temp, { recursive: true, force: true });

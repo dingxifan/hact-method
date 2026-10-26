@@ -23,6 +23,8 @@ try {
   write(root, 'tasks/develop.md', '# develop\n');
   write(root, '.gitignore', '.claude/\n');
   assert.deepStrictEqual(validate(root), []);
+  write(root, '_meta/plans/current-only/task_plan.md', '# 新规则面向未来，历史保持兼容\n');
+  assert.deepStrictEqual(validate(root), [], 'plan need not pledge historical schema normalization');
 
   write(root, 'STATUS.md', '# STATUS\n当前阶段：第三阶段·写执行层规范\n以下保留各批历史记录\n');
   assert(validate(root).some(error => error.includes('active retired route')));
