@@ -119,7 +119,8 @@ function buildPlan(projectRoot, source) {
   if (legacy.kind === 'invalid') blockers.push({ code: 'INVALID_LEGACY_METADATA', detail: sync.META });
   if (legacy.kind === 'unprovable') blockers.push({ code: 'LEGACY_SOURCE_UNPROVABLE', detail: legacy.source });
   const duplicates = duplicateIds(root);
-  for (const duplicate of duplicates) blockers.push({ code: 'DUPLICATE_ACTIVE_TASK_ID', detail: duplicate });
+  // Installation does not migrate task history. Report duplicates for the
+  // selected task's routing checks; do not force historical IDs to be rewritten.
 
   const previous = new Map(legacy.files.map(item => [item.path, item]));
   const targetRows = sync.expected(source);

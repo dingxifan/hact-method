@@ -8,7 +8,7 @@
 
 已有 Task 的执行/审查链恢复、委派与复审沿用已固定 Method，不在中途自动升级；先核项目 manifest 与该链的 Method 是否一致，存在不一致时停止协调。新工作入口统一检查更新；已启动的协作者不会被新版本发布自动热切换。
 
-项目完整采用 current schema，缺失或不匹配 fail closed；旧项目先在 Core 外按 `guide/08-旧项目全面接入新版.md` normalization，不混读旧入口或增加兼容豁免。进入任务后按 Git truth、state 与 recovery evidence 接续，用户补充条件或询问进度不重跑启动、不清空有效授权。
+新工作使用当前契约；历史事实与报告保持原貌，仍有效的旧证据应兼容读取，不因升级补字段、改格式或重新验收。安装来源/所有权不清时按 `guide/08-旧项目全面接入新版.md` 处理必要接入；安装 manifest 的版本要求不扩展为历史 Task/Gate/review 全面归一化。当前动作确实依赖而无法安全判读时仅暂停受影响动作，按原固定来源核查。进入任务后按 Git truth、state 与 recovery evidence 接续，用户补充条件或询问进度不重跑启动、不清空有效授权。
 
 真实跨入口交接绑定 `BASE_SHA`，长正文走文件及短 Execution Brief / Packet，结果以 immutable `RESULT_SHA` 回读。Codex 直接任务不额外制作交接或回传材料；Sprint Develop 由当前入口确定有界窗口并实际激活 Goal，Codex 内直接建立，跨入口才按 `runtime/chatgpt.md` §3 交 Packet。Task 范围见 `tasks/develop.md` §5.9；窗口完成后核 Git truth 决定下一已授权窗口，不自行跨 scope，Packet/Wave/window 不成为持久对象。
 

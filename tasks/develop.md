@@ -177,6 +177,8 @@ blocking freshness finding 未关闭前不得继续新增代码。
 
 允许 Owner 在**不改变业务/技术 Contract** 的前提下修正实际 implementation landing，例如真实文件位置与原预期不同；必须留下简短证据说明。
 
+`files` 描述当前累计候选的预期落点，不追溯要求已被拒绝的历史快照符合今天的列表。审计仍核每轮真实固定 diff、hash、finding 闭环和实质审查额度；范围核对以 preflight base 到末轮 head 的累计候选为准，删除历史越界改动的修复增量不单独作为再次越界。当前候选仍越界或有具体未授权行为时照常阻断；保留历史不构成补授历史操作权限。
+
 ### 5.2.1 Contract 内的最小实现
 
 在满足 Accepted Product / Technical Contract 的前提下，优先更少对象、更短状态链、更少 durable truth，并复用现有机制。不得主动新增 TRD 未要求、且没有明确 Contract / invariant / security / recovery / external compatibility 依据的 audit table、generation、receipt、lock、checkpoint、history log 或平行状态层。

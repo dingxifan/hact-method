@@ -4,16 +4,16 @@
 
 当前候选状态更新于 2026-10-26；下述存量接入结果保持其原时间与证据边界。
 
-- 当前阶段：**统一方法论入口与自动试升级·本地候选机械验证通过，待独审与项目试点**。
+- 当前阶段：**统一方法论入口与历史兼容收敛·本地候选验证及定向独审通过，未分发**。
 - 当前计划：`_meta/plans/2026-10-26-unified-method-startup/task_plan.md`，与 `_meta/.current_plan` 保持一致。
 - 本次基线：`e04aa858a8a43105f1a50c4388a3a5d29d0e3099`。默认目标统一为官方 Accepted main，SHA 保留实际安装与审查追溯；自动试升级由 Codex 主线在隔离候选中执行，冲突/失败停止。
-- 尚未分发项目、独立审查、push 或 merge；METHOD-UPGRADE-F001 真实项目回归未在本仓复跑或关闭。旧项目接入结果仍见原阶段记录。
+- 本轮按用户裁决改为“新规则面向未来、历史原貌兼容接续”；不要求全项目历史进入当前 schema。解析与累计范围检查修复已通过合成回归；定向独审在修复 tree `970f43c068a6b5d097dc4a0a73a6f913e00854f2` 关闭本候选 UPGRADE-COMPAT-F001。真实项目固定对象尚未取得，原 METHOD-UPGRADE-F001 未关闭。未分发项目、push 或 merge。
 
 ## 已有结果与限制
 
 方法基础、当前版收敛、存量接入与文档 Task 收口在原状态中记为完成；真实项目试行仍待开始。
 
-存量接入保持 current-only Core：一次性 normalization、文件所有权策略及独立迁移审查置于 Core 前；文档 Task 使用 task-specific completion checker 与 immutable document review chain；重复 Task ID fail closed，TRD 支持非表技术载体。原阶段候选 `4ec849f` 的记录为 23 fixtures、45 JS/CJS syntax checks、路径/入口/diff 检查通过，Fresh Targeted Re-review 关闭 B001–B004、无新阻断；这些是当时的验证结论，不代表后续任意候选或项目采用通过。
+2026-09-25 阶段采用过 current-only Core 与一次性 normalization 边界；本轮以未来规则及必要安装接入取代全面归一化要求，不改写当时证据。文档 Task 的 task-specific completion checker、immutable review chain 与 TRD 非表技术载体继续保留；当前动作身份歧义仍须核查，无关历史重复 ID 不阻断安装。原阶段候选 `4ec849f` 的记录为 23 fixtures、45 JS/CJS syntax checks、路径/入口/diff 检查通过，Fresh Targeted Re-review 关闭 B001–B004、无新阻断；这些是当时的验证结论，不代表后续任意候选或项目采用通过。
 
 原阶段记录“尚未 push、分发或运行真实项目试点”只描述当时状态；后续 repository delivery 以实际 Git 为准，不据此改写历史。当前入口只使用 `tasks/`、`protocols/`、模板及项目检查器，不从旧 specs、旧模型档位或迁移故事推导执行要求。
 

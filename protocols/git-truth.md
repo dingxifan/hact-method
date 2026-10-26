@@ -51,6 +51,8 @@ Shared Candidate Truth 可以交 reviewer / escalation / specialist check，但�
 
 新工作默认跟随官方 Accepted main，按 `guide/07-同步方法论.md` 自动隔离试升级；实际安装的 Method SHA 仍为该次执行/审查的 immutable provenance。升级发现与实际采用是两回事，不能把发现新版本、官方 bytes 一致或候选安装成功当作项目兼容性已通过。既有 review/Task 历史不因升级改写，进行中的链不自动热切换；正式 Git acceptance、Gate 与外部效果授权不由自动升级取得。
 
+方法论更新面向未来，不追溯要求旧事实符合当前格式或流程。已接受的历史 judgement 保持其原适用范围，不因新规则自动失效，也不自动证明当前候选。当前工作依赖旧 evidence 时兼容读取并核实适用性；只有具体正确性、身份歧义或证据缺口才触发定向核查，不以升级名义重新验收整个历史。
+
 ## 4. Git 保存什么
 
 Git 保存 durable project truth：

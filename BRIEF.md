@@ -28,7 +28,7 @@
 - 动态 Task/Gate 状态只写 `status.yml`。个人积累、学科准入、重复总账、成本计时、反馈清空与数量归档退出必经链；私人仓与旧记录不自动删除。仍有效的既有决定不因换会话重复确认，Human Authority 边界见 `protocols/authority.md`。
 - 普通 Candidate→Accepted Truth 必须 `source branch → PR → merge → Accepted branch SHA verification`，direct push 只发布 candidate/source branch；已通过 PR merge 的 Accepted SHA 可按 Git Truth 同步授权镜像。首次 bootstrap 尚无 Accepted branch 时使用既有例外。
 - 约束由 PRD/TRD、Foundation、`project.md` 技术层、任务 do-not 与 check/test/config 各自承载；Standards 及公共/栈候选库、生成/匹配/回填/收缩机制退役，模型自主选择等价实现，不生成通用编码说明。
-- 项目采用本版按 `templates/method-install-policy.json` 区分 Method-owned、merged、project-owned；存量项目逐仓确认，经 `guide/08-旧项目全面接入新版.md` 的一次性 normalization、所有权归类、隔离候选和独立迁移审查后整体进入 current schema，不维护日常兼容层，不删除项目原有业务/类型/安全检查，不补造历史 Task/Gate/review。
+- 项目采用本版按 `templates/method-install-policy.json` 区分 Method-owned、merged、project-owned；存量项目逐仓确认，只在安装来源或所有权无法直接证明时按 `guide/08-旧项目全面接入新版.md` 处理必要接入。新规则约束新工作；历史 Task/Gate/review 保持原貌，仍有效的证据应兼容读取，不要求整体进入当前 schema、补字段或重新验收。进行中的链按既有契约接续；当前动作确实依赖且不能安全读取的部分才定向处理。不删除项目原有业务/类型/安全检查，不新增通用历史迁移层。
 - 开发方可信但会犯错；审查聚焦规范、错误及实际外部风险，不要求抵抗开发者恶意绕过。审查范围以 `templates/review-briefs/review-scope.md` 为准。建议不隐式阻断，必要证据与固定候选质量链不缩减。
 - 提交只核本次涉及的任务证据，保留全局依赖与共享资产检查；未变历史 round 不反复重审。末轮 round 即最终独审结论，不再重复 final-review。复用固定 Method 来源与项目脚本，files 只维护当前落点、不自登记任务包；原审查员接续、三次实质代码审查额度从 Git 增量推导，同快照同问题集中补证一次，历史报告和计数保留，不增加轮次账/写集字段或审查阶段。实际节时尚待项目验证。
 

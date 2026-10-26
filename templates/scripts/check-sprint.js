@@ -25,7 +25,8 @@
  *
  * 序列化前提（见 templates/queue/task-package.md + sub3c-design D1）：任务包用 YAML frontmatter。
  *   纯 Node 无外部依赖；frontmatter / status.yml 用针对本 schema 的容错行扫描，非完整 YAML AST。
- * 当前 Method 要求 status.yml、current package schema 与 current review schema；缺失直接 FAIL。
+ * 新工作按当前 package/review schema 检查；已知旧表达兼容读取。
+ * 未支持的旧 schema 按原固定 Method 定向核查，不在此默认放行或要求重写历史。
  */
 'use strict';
 const fs = require('fs');
@@ -82,8 +83,15 @@ function parseFrontmatterLines(raw) {
         cur = { type: 'inline-empty-list', text: '[]', items: [] };
       } else if (/^\[.*\]$/.test(restNoComment)) {
         const inner = restNoComment.slice(1, -1).trim();
+        // JSON string arrays are valid YAML flow sequences. Decode strings
+        // before comparing identities/paths; splitting leaves quotes in values.
+        let items;
+        if (/^"/.test(inner)) {
+          items = JSON.parse(restNoComment);
+          if (!items.every(item => typeof item === 'string')) throw new Error('frontmatter list must contain strings');
+        } else items = inner ? inner.split(',').map(x => x.trim()).filter(Boolean) : [];
         cur = { type: 'list', text: restNoComment,
-                items: inner ? inner.split(',').map(x => x.trim()).filter(Boolean) : [] };
+                items };
       } else if (restNoComment === '>' || restNoComment === '|') {
         cur = { type: 'block', text: '', items: [] };     // 后续缩进行并入
       } else if (restNoComment !== '') {
@@ -171,7 +179,8 @@ function dependencyReadinessErrors(packages, selectedIds, statusTasks) {
   const errors = [];
   const order = new Map(selectedIds.map((id, index) => [id, index]));
   const byPackage = new Map(packages.map(pkg => [pkg.id, pkg]));
-  const byStatus = new Map((statusTasks || []).map(task => [task.id, task]));
+  const relevant = new Set([...selectedIds, ...packages.flatMap(pkg => pkg.deps)]);
+  const byStatus = new Map((statusTasks || []).filter(task => relevant.has(task.id)).map(task => [task.id, task]));
   if (new Set(selectedIds).size !== selectedIds.length) errors.push('任务集含重复 task-id');
   for (const id of selectedIds) {
     const pkg = byPackage.get(id);
@@ -585,8 +594,7 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     const mode = r('mode');
     const risk = r('risk');
     const reportSchema = r('schema');
-    for (const retired of ['review_profile', 'review_profile_version', 'standards_checked'])
-      if (rp && Object.prototype.hasOwnProperty.call(rp, retired)) errors.push(`${file}: retired field ${retired} is forbidden`);
+    // Historical extra fields are preserved but do not restore retired rules.
     if (!rp || r('task_id') !== id) errors.push(`${file}: task_id 不匹配`);
     if (Number(r('round')) !== index + 1) errors.push(`${file}: round 与文件序号不符`);
     if (!['full', 'targeted'].includes(mode)) errors.push(`${file}: mode 非法`);
@@ -644,11 +652,6 @@ function reviewAuditErrors(root, id, cr, options = {}) {
         if (r('diff_sha256') !== fixed.hash) errors.push(`${file}: diff_sha256 与 git diff --binary 实际字节不一致`);
         if (JSON.stringify(reportedChangedFiles) !== JSON.stringify(fixed.names))
           errors.push(`${file}: changed_files 与固定 diff 实际文件集不一致`);
-        if (declaredTaskFiles.length) {
-          const implementationFiles = fixed.names.filter(name => !governanceWritePath(name, taskPackagePath, relDir));
-          const undeclared = implementationFiles.filter(name => !declaredTaskFiles.includes(name.toLowerCase()));
-          if (undeclared.length) errors.push(`${file}: 固定 diff 超出任务包 files：${undeclared.join(', ')}`);
-        }
       }
     }
     if (!['pass', 'revise', 'evidence-needed'].includes(r('conclusion'))) errors.push(`${file}: conclusion 非法`);
@@ -699,6 +702,18 @@ function reviewAuditErrors(root, id, cr, options = {}) {
     lastConclusion = r('conclusion');
     previousEscalated = r('escalate_to_full') === 'true';
   });
+  // Current files describe the cumulative candidate, not every rejected snapshot
+  // or the deletion delta that repaired it. Each round's fixed diff, hash and
+  // finding lineage are still verified above without rewriting old reports.
+  if (declaredTaskFiles.length && isSha40(preflightBaseTree) && isSha40(previousReviewedHead)) {
+    const cumulative = fixedDiffEvidence(root, preflightBaseTree, previousReviewedHead);
+    if (cumulative.error) errors.push(`末轮累计候选不可复现：${cumulative.error}`);
+    else {
+      const undeclared = cumulative.names.filter(name => !governanceWritePath(name, taskPackagePath, relDir)
+        && !declaredTaskFiles.includes(name.toLowerCase()));
+      if (undeclared.length) errors.push(`末轮累计候选: 固定 diff 超出任务包 files：${undeclared.join(', ')}`);
+    }
+  }
   if (!options.inProgress) {
     if (reports.length && lastConclusion !== 'pass') errors.push('末轮 report.conclusion 必须为 pass');
     if (reports.length && previousEscalated) errors.push('末轮仍要求 escalate_to_full，审查尚未闭合');
@@ -762,7 +777,8 @@ function checkReady(subject, root) {
     fail('认领就绪', 'status.yml', '缺 status.yml，无法证明依赖已 merged');
     return;
   }
-  const duplicateIds = duplicateTaskIds(statusTasks);
+  const relevantIds = new Set([...selectedIds, ...packages.flatMap(pkg => pkg.deps)]);
+  const duplicateIds = duplicateTaskIds(statusTasks.filter(task => relevantIds.has(task.id)));
   if (duplicateIds.length) {
     fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${duplicateIds.join(', ')}`);
     return;
@@ -805,7 +821,8 @@ function checkWaveReady(subject, root) {
     fail('wave 准入', 'status.yml', '缺 status.yml，无法证明依赖与 active consumer');
     return;
   }
-  const duplicateIds = duplicateTaskIds(statusTasks);
+  const relevantIds = new Set([...selectedIds, ...packages.flatMap(pkg => pkg.deps)]);
+  const duplicateIds = duplicateTaskIds(statusTasks.filter(task => relevantIds.has(task.id)));
   if (duplicateIds.length) {
     fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${duplicateIds.join(', ')}`);
     return;
@@ -1221,7 +1238,8 @@ function checkSprint(iteration, root, audit = true, scope = null) {
   // 集合本就不可信，基于它下的判断没有证据力。
   const queueIds = packages.map(p => p.id);
   const stTasks = parseStatusTasks(path.join(root, 'status.yml'));   // 第 9 项也用，故不进抑制块
-  const duplicateStatusIds = duplicateTaskIds(stTasks);
+  const relevantStatusIds = new Set(checkedPackages.flatMap(pkg => [pkg.id, ...pkg.deps]));
+  const duplicateStatusIds = duplicateTaskIds(stTasks).filter(id => !scope || relevantStatusIds.has(id));
   if (duplicateStatusIds.length) fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${duplicateStatusIds.join(', ')}`);
   if (unparsed > 0) {
     human('三方一致', `queue 有 ${unparsed} 个包 frontmatter 解析失败（见上方 FAIL），queue 侧集合不完整 —— 三方一致本轮不比对（避免把一个格式问题放大成 N 条假漂移）；修好解析后重跑即恢复`);
@@ -1330,11 +1348,21 @@ function checkStagedReviews(root) {
   const tasks = parseStatusTasksSource(readAt('', 'status.yml'));
   const previousTasks = parseStatusTasksSource(readAt('HEAD', 'status.yml'));
   const duplicateCurrent = duplicateTaskIds(tasks), duplicatePrevious = duplicateTaskIds(previousTasks);
-  if (duplicateCurrent.length || duplicatePrevious.length) {
-    fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${[...new Set([...duplicateCurrent, ...duplicatePrevious])].join(', ')}`);
+  const duplicateIds = new Set([...duplicateCurrent, ...duplicatePrevious]);
+  const unchangedHistory = new Set([...duplicateIds].filter(id => {
+    const before = previousTasks.filter(task => task.id === id), after = tasks.filter(task => task.id === id);
+    return before.length > 1 && after.every(task => task.status === 'merged')
+      && JSON.stringify(before) === JSON.stringify(after)
+      && !staged.some(file => file.endsWith(`/${id}.md`) || file.includes(`/${id}/`));
+  }));
+  const changedDuplicates = [...duplicateIds].filter(id => !unchangedHistory.has(id));
+  if (changedDuplicates.length) {
+    fail('task identity', 'status.yml', `存在重复 task id，禁止静默 Map 覆盖：${changedDuplicates.join(', ')}`);
     return;
   }
-  const beforeTasks = new Map(previousTasks.map(t => [t.id, t]));
+  // Unchanged completed duplicate groups are historical evidence, not a task
+  // identity to choose with last-write-wins. Keep them out of routing maps.
+  const beforeTasks = new Map(previousTasks.filter(t => !duplicateIds.has(t.id)).map(t => [t.id, t]));
   const select = (id, required = false) => selected.set(id, required || selected.get(id) || false);
   for (const file of staged) {
     const queue = file.match(/^iterations\/(v\d+(?:\.\d+)*)\/(?:sprint\.md|queue\/([^/]+)\.md)$/);
@@ -1347,7 +1375,7 @@ function checkStagedReviews(root) {
     if (review) select(review[1], /^round-\d+\.md$/.test(review[2]));
   }
   if (staged.includes('status.yml')) {
-    const currentTasks = new Map(tasks.map(t => [t.id, t]));
+    const currentTasks = new Map(tasks.filter(t => !duplicateIds.has(t.id)).map(t => [t.id, t]));
     for (const id of new Set([...beforeTasks.keys(), ...currentTasks.keys()])) {
       const old = beforeTasks.get(id), next = currentTasks.get(id);
       if (['type', 'source', 'iteration', 'layer', 'depends_on', 'delivery', 'status', 'assigned_to', 'branch', 'risk'].some(k => old?.[k] !== next?.[k])
@@ -1358,8 +1386,13 @@ function checkStagedReviews(root) {
         for (const t of [old, next]) if (t && ITER_SOURCES.has(t.source) && /^v\d+(?:\.\d+)*$/.test(t.iteration || '')) iterations.add(t.iteration);
       }
     }
-    for (const task of tasks) if (task.status === 'merged' && beforeTasks.get(task.id)?.status !== 'merged'
+    for (const task of tasks) if (!unchangedHistory.has(task.id) && task.status === 'merged' && beforeTasks.get(task.id)?.status !== 'merged'
         && (task.type === 'develop' || ITER_SOURCES.has(task.source) || ['bug', 'optimization', 'foundation'].includes(task.source))) { select(task.id, true); mustClose.add(task.id); }
+  }
+  for (const [id] of selected) {
+    const deps = findTaskPackages(root, id).flatMap(file => listItems(parseFrontmatter(file)?.depends_on));
+    const ambiguous = [id, ...deps].filter(taskId => duplicateIds.has(taskId));
+    if (ambiguous.length) fail('task identity', 'status.yml', `当前任务或依赖存在重复 task id：${ambiguous.join(', ')}`);
   }
   for (const [id] of selected) for (const task of [beforeTasks.get(id), tasks.find(t => t.id === id)])
     if (task && ITER_SOURCES.has(task.source) && /^v\d+(?:\.\d+)*$/.test(task.iteration || '')) iterations.add(task.iteration);
@@ -1386,8 +1419,9 @@ function checkStagedReviews(root) {
     const removedCoverageIds = new Set(coveragePreimages.filter(file => file.startsWith(`iterations/${version}/queue/`))
       .flatMap(file => sourceAcRefIds(readAt('HEAD', file))));
     const historicalTaskIds = new Set(tasks.filter(task => task.iteration === version && task.status === 'merged'
-      && beforeTasks.get(task.id)?.status === 'merged' && !selected.has(task.id)
-      && JSON.stringify(task) === JSON.stringify(beforeTasks.get(task.id))).map(task => task.id));
+      && !selected.has(task.id) && (unchangedHistory.has(task.id)
+        || (beforeTasks.get(task.id)?.status === 'merged'
+          && JSON.stringify(task) === JSON.stringify(beforeTasks.get(task.id))))).map(task => task.id));
     checkSprint(version, root, false, {
       historicalTaskIds, changedAcIds: changedPrdAcIds(beforePrd, afterPrd), removedAcIds, removedCoverageIds,
     });

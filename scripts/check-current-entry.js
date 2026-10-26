@@ -23,8 +23,6 @@ function validate(root = process.cwd()) {
   else {
     const plan = path.join(root, pointer, 'task_plan.md');
     if (!fs.existsSync(plan)) errors.push(`current plan target missing: ${pointer}/task_plan.md`);
-    else if (!/当前版|current-only/i.test(fs.readFileSync(plan, 'utf8')))
-      errors.push('current plan does not declare the current-only model');
   }
 
   const briefCurrent = read(root, 'BRIEF.md').split(/^## 关键设计决策/m)[0];

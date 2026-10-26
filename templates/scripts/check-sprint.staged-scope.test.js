@@ -107,8 +107,16 @@ try {
   scenario('untracked queue package cannot back staged coverage', ({ addNew, write, expect }) => {
     addNew(); write(packagePath('demo-v2-003'), pkg('demo-v2-003', { ac: 'AC-99' })); expect(2, /未加入暂存区/);
   });
-  scenario('duplicate identity still rejected globally', ({ addNew, write, read, git, expect }) => {
+  scenario('new duplicate identity still rejected', ({ addNew, write, read, git, expect }) => {
     addNew(); write('status.yml', read('status.yml') + `  - id: ${oldId}\n    source: manual-test\n    iteration: v2\n`); git(['add', '.']); expect(1, /重复 task id/);
+  });
+  for (const dependency of [false, true]) scenario(`unchanged completed duplicate history, referenced=${dependency}`, ({ addNew, write, read, git, expect }) => {
+    const duplicate = state([oldId]).replace(/^tasks:\n/, '');
+    write('status.yml', read('status.yml') + duplicate);
+    git(['add', '.']); git(['commit', '-qm', 'existing duplicate completed history']);
+    addNew(dependency ? { dep: oldId } : {});
+    write('status.yml', read('status.yml') + duplicate); git(['add', '.']);
+    expect(dependency ? 1 : 0, dependency ? /重复 task id/ : undefined);
   });
   scenario('queue sprint registration stays global', ({ addNew, write, git, expect }) => {
     addNew(); write('iterations/v2/sprint.md', sprint([newId])); git(['add', '.']); expect(1, /queue 有但 sprint.md 无/);

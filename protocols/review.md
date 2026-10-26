@@ -107,6 +107,8 @@ Owner 的 risk、files、test 清单和“已验证”声明只是待核输入�
 
 相同 snapshot、依赖、配置和环境下仍然有效的 evidence 可以复用；不要为了形式重复运行。
 
+新规则约束新工作；旧报告和证据不因 Method 升级补字段、改格式或重做审查。已知合法旧表达应兼容读取，无关的退役字段可忽略而不恢复其旧机制。未知格式不能默认通过；当前动作确实依赖它时，按原 Method 与固定 snapshot 定向核查，保留原事实与 finding lineage，不把接续问题扩大为全项目历史整改。
+
 ## 7. Task-specific focus
 
 Shared Review Protocol 只定义共性纪律。每个 Task 的特殊审查重点写在同一 Task Contract 的 §7，不创建平行真相。
