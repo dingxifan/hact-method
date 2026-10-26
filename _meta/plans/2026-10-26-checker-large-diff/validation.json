@@ -1,0 +1,104 @@
+[
+  {
+    "test": "templates/scripts/check-sprint.design-reference.test.js",
+    "exit": 0,
+    "stdout": "✅ check-sprint design-reference 正反夹具通过\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.foundation-carrier.test.js",
+    "exit": 0,
+    "stdout": "foundation carrier: registration, merge, fixed review, binding, missing/duplicate/dirty inputs, restricted routing and V0 PASS\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.governance-plane.test.js",
+    "exit": 0,
+    "stdout": "✅ check-sprint implementation/governance plane separation keeps full fixed-diff audit\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.large-diff.test.js",
+    "exit": 0,
+    "stdout": "check-sprint large diff: complete binary hash/names, missing object and bounded failure passed\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.ready.test.js",
+    "exit": 0,
+    "stdout": "✅ check-sprint ready 正反夹具通过\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.review.test.js",
+    "exit": 0,
+    "stdout": "check-sprint review: fixed snapshots, findings, targeted recovery and foundation passed\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.shared-assets.test.js",
+    "exit": 0,
+    "stdout": "✅ check-sprint shared-assets 正反夹具通过\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.staged-scope.test.js",
+    "exit": 0,
+    "stdout": "✅ staged scope 29 个 Git 正反夹具通过\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.task-identity.test.js",
+    "exit": 0,
+    "stdout": "✅ duplicate task id fails closed before review selection\n",
+    "stderr": ""
+  },
+  {
+    "test": "templates/scripts/check-sprint.worktree.test.js",
+    "exit": 0,
+    "stdout": "✅ check-sprint worktree 正反夹具通过\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "node",
+      "templates/scripts/check-sprint.js",
+      "--review-chain",
+      "bonus-archive-test-window",
+      "/Users/winniema/.codex/worktrees/method-official-upgrade/loxson-salary-new",
+      "--in-progress"
+    ],
+    "exit": 0,
+    "stdout": "\n=== check-sprint (review-chain:bonus-archive-test-window) 报告 ===\n通过 1 项 / 失败 0 项\n\n✅ 确定性判据全部通过（语义判据仍需人核）\n\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "node",
+      "scripts/check-current-entry.js"
+    ],
+    "exit": 0,
+    "stdout": "PASS: current entry documents point only to the current model\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "node",
+      "--check",
+      "templates/scripts/check-sprint.js"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]
