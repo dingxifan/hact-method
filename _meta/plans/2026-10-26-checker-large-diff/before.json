@@ -1,0 +1,5 @@
+{
+  "exit": 1,
+  "stdout": "",
+  "stderr": "node:assert:149\n  throw new AssertionError(obj);\n  ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- '45b57d188ad404fb9826bd715f9af9ccdb195b7272f6a7813f639f7646b0d306'\n\n    at Object.<anonymous> (/private/var/folders/fl/_hpr__7d45z8x3gtwzbgdz800000gn/T/hact-before-large-diff-bwsovwvo/check-sprint.large-diff.test.js:30:10)\n    at Module._compile (node:internal/modules/cjs/loader:1829:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1969:10)\n    at Module.load (node:internal/modules/cjs/loader:1552:32)\n    at Module._load (node:internal/modules/cjs/loader:1354:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: '45b57d188ad404fb9826bd715f9af9ccdb195b7272f6a7813f639f7646b0d306',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v25.9.0\n"
+}
